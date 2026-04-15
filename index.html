@@ -46,8 +46,55 @@
           <div class="step-dot">4</div><span>Enviado</span>
         </div>
       </nav>
+
+      <button id="btnSettings" class="header-btn" title="Configuración del agente" aria-label="Configuración del agente">⚙</button>
     </div>
   </header>
+
+  <!-- ======================== MODAL · CONFIGURACIÓN DEL AGENTE ======================== -->
+  <div class="modal-backdrop" id="profileModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 class="modal-title">Configuración del agente</h2>
+        <button class="modal-close" id="btnProfileClose" aria-label="Cerrar">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-hint" id="profileHint">
+          Personaliza tus datos. Aparecerán en el correo y el PDF que reciba el cliente.
+        </p>
+
+        <div class="form-row">
+          <label class="form-label required">Nombre completo</label>
+          <input class="form-control" id="p-name" placeholder="Ej: Juan Carlos Hernandez Vargas" />
+        </div>
+
+        <div class="form-row">
+          <label class="form-label required">Correo (debe coincidir con tu cuenta Gmail)</label>
+          <input class="form-control" id="p-email" type="email" placeholder="tu@dominio.com" />
+        </div>
+
+        <div class="grid-2" style="gap:12px;">
+          <div class="form-row">
+            <label class="form-label required">Teléfono</label>
+            <input class="form-control" id="p-phone" placeholder="8888-8888" />
+          </div>
+          <div class="form-row">
+            <label class="form-label required">Licencia SUGESE</label>
+            <input class="form-control" id="p-license" placeholder="00-0000" />
+          </div>
+        </div>
+
+        <div class="modal-info">
+          <strong>Privacidad:</strong> tus datos se guardan solo en este navegador (localStorage).
+          No se envían a ningún servidor. Si limpias el cache del navegador deberás volver a configurarlos.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btnProfileCancel">Cancelar</button>
+        <button class="btn btn-primary" id="btnProfileSave">Guardar perfil</button>
+      </div>
+    </div>
+  </div>
 
   <main class="container">
 
@@ -240,6 +287,7 @@
   <!-- ======================== CÓDIGO PROPIO (orden crítico) ======================== -->
   <script src="js/config.js"></script>
   <script src="js/state.js"></script>
+  <script src="js/agent-profile.js"></script>
   <script src="js/router.js"></script>
   <script src="js/pdf-extract.js"></script>
   <script src="js/pdf-modify.js"></script>

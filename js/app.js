@@ -82,9 +82,107 @@ document.addEventListener('DOMContentLoaded', function () {
     showView(1);
   });
 
+  // ============ MODAL DE CONFIGURACION DEL AGENTE ============
+  document.getElementById('btnSettings').addEventListener('click', function () {
+    openProfileModal(false);
+  });
+  document.getElementById('btnProfileClose').addEventListener('click', closeProfileModal);
+  document.getElementById('btnProfileCancel').addEventListener('click', closeProfileModal);
+  document.getElementById('btnProfileSave').addEventListener('click', handleProfileSave);
+
+  // ============ CARGAR PERFIL DEL AGENTE ============
+  // Si hay perfil guardado en localStorage, lo aplicamos sobre CFG.
+  // Si NO hay (primer uso en este navegador), abrimos el modal forzando configurar.
+  const savedProfile = loadProfile();
+  if (savedProfile) {
+    applyProfile(savedProfile);
+  } else {
+    openProfileModal(true);
+  }
+
   // ============ Inicializar GIS cuando este disponible ============
   _tryInitTokenClient();
 });
+
+/**
+ * Abre el modal de configuracion del agente.
+ * @param {boolean} firstTime - true si es el primer uso (mostrar hint amarillo + bloquear cancelar)
+ */
+function openProfileModal(firstTime) {
+  const modal = document.getElementById('profileModal');
+  const hint  = document.getElementById('profileHint');
+  const btnCancel = document.getElementById('btnProfileCancel');
+  const btnClose  = document.getElementById('btnProfileClose');
+
+  // Pre-llenar con valores actuales de CFG (default o perfil cargado)
+  document.getElementById('p-name').value    = CFG.FROM_NAME  || '';
+  document.getElementById('p-email').value   = CFG.FROM_EMAIL || '';
+  document.getElementById('p-phone').value   = CFG.PHONE      || '';
+  document.getElementById('p-license').value = CFG.LICENSE    || '';
+
+  if (firstTime) {
+    hint.textContent = 'Bienvenido. Antes de empezar, configura tus datos como agente. Solo se guardan en este navegador.';
+    hint.classList.add('first-time');
+    btnCancel.style.display = 'none';
+    btnClose.style.display  = 'none';
+  } else {
+    hint.textContent = 'Personaliza tus datos. Aparecerán en el correo y el PDF que reciba el cliente.';
+    hint.classList.remove('first-time');
+    btnCancel.style.display = '';
+    btnClose.style.display  = '';
+  }
+
+  modal.classList.add('active');
+  setTimeout(function () { document.getElementById('p-name').focus(); }, 100);
+}
+
+function closeProfileModal() {
+  document.getElementById('profileModal').classList.remove('active');
+}
+
+/**
+ * Valida y guarda el perfil del agente desde el modal.
+ */
+function handleProfileSave() {
+  const name    = document.getElementById('p-name').value.trim();
+  const email   = document.getElementById('p-email').value.trim();
+  const phone   = document.getElementById('p-phone').value.trim();
+  const license = document.getElementById('p-license').value.trim();
+
+  if (!name || name.split(/\s+/).length < 2) {
+    alert('Ingresa tu nombre completo (al menos dos palabras).');
+    document.getElementById('p-name').focus();
+    return;
+  }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    alert('Ingresa un correo valido. Recuerda: debe ser el mismo de tu cuenta Gmail.');
+    document.getElementById('p-email').focus();
+    return;
+  }
+  if (!phone) {
+    alert('Ingresa tu telefono.');
+    document.getElementById('p-phone').focus();
+    return;
+  }
+  if (!license) {
+    alert('Ingresa tu numero de licencia SUGESE.');
+    document.getElementById('p-license').focus();
+    return;
+  }
+
+  const profile = { name: name, email: email, phone: phone, license: license };
+  try {
+    saveProfile(profile);
+    applyProfile(profile);
+  } catch (e) {
+    alert(e.message);
+    return;
+  }
+
+  closeProfileModal();
+  // Si estamos en la vista 3 (redactar), regenerar la previa con los nuevos datos
+  if (S.step === 3) updatePreview();
+}
 
 // =====================================================================
 // HANDLERS DE FLUJO
