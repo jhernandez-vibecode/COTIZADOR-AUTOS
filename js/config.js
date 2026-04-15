@@ -13,6 +13,7 @@ const CFG = {
   // URLs usadas en el correo al cliente
   GUIDE_URL:   'https://cotizador-segurosdigitalesins-sdi.netlify.app/explicacion/',
   AGENDA_URL:  'https://forms.gle/NJB5s3zRQ7Hdv1xe7',
+  LOGO_URL:    'https://cotizador-segurosdigitalesins-sdi.netlify.app/img/ins-logo.png',
   WEBSITE:     'www.segurosdelins.com',
 
   // Pie del correo

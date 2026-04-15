@@ -84,7 +84,8 @@ function buildEmail(params) {
       <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:8px;overflow:hidden;max-width:600px;">
 
         <!-- 1. HEADER -->
-        <tr><td style="background:#0c2340;color:#ffffff;padding:32px 40px;text-align:center;">
+        <tr><td style="background:#0c2340;color:#ffffff;padding:28px 40px;text-align:center;">
+          <img src="${CFG.LOGO_URL}" alt="INS" height="52" style="display:block;margin:0 auto 14px;border:0;outline:none;text-decoration:none;max-height:52px;" />
           <h1 style="margin:0;font-size:22px;letter-spacing:1px;font-weight:700;">COTIZACION AUTOMOVILES</h1>
           <p style="margin:8px 0 0;font-size:13px;opacity:0.85;">Seguros del INS &middot; Su proteccion al volante</p>
           <p style="margin:8px 0 0;font-size:12px;opacity:0.75;">Agente ${_escape(CFG.FROM_NAME)} &middot; Licencia SUGESE ${_escape(CFG.LICENSE)}</p>
