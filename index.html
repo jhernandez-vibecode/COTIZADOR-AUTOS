@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cotizador SDI — Seguros Digitales INS</title>
+
+  <!-- Fuentes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind por CDN (utilidades extra puntuales) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Estilos propios -->
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- ======================== HEADER STICKY ======================== -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-logo">INS</div>
+        <div>
+          <div class="brand-title">Cotizador SDI</div>
+          <div class="brand-subtitle">Envío inteligente de cotizaciones</div>
+        </div>
+      </div>
+
+      <nav class="step-nav" id="stepNav">
+        <div class="step active" data-step="1">
+          <div class="step-dot">1</div><span>Subir PDF</span>
+        </div>
+        <div class="step-sep"></div>
+        <div class="step" data-step="2">
+          <div class="step-dot">2</div><span>Revisar datos</span>
+        </div>
+        <div class="step-sep"></div>
+        <div class="step" data-step="3">
+          <div class="step-dot">3</div><span>Redactar correo</span>
+        </div>
+        <div class="step-sep"></div>
+        <div class="step" data-step="4">
+          <div class="step-dot">4</div><span>Enviado</span>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- ======================== VISTA 1 · SUBIR PDF ======================== -->
+    <section class="view active" id="view1">
+      <div class="card">
+        <h2 class="card-title">1 · Cargar cotización INS</h2>
+
+        <label class="drop-zone" id="dropZone" for="fileInput">
+          <div class="drop-zone-icon">📄</div>
+          <div class="drop-zone-title">Arrastra el PDF o haz clic para seleccionar</div>
+          <div class="drop-zone-hint">Cotización oficial del INS (ASINS-170-XXXXX)</div>
+          <input type="file" id="fileInput" accept="application/pdf" />
+        </label>
+
+        <div class="progress" id="progressWrap">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="progress-label" id="progressLabel"></div>
+      </div>
+    </section>
+
+    <!-- ======================== VISTA 2 · REVISAR DATOS ======================== -->
+    <section class="view" id="view2">
+      <div class="grid-2">
+
+        <!-- Columna izquierda: formulario -->
+        <div class="card">
+          <h2 class="card-title">2 · Datos de la cotización</h2>
+
+          <div class="form-row">
+            <label class="form-label">Nº Cotización</label>
+            <input class="form-control" id="f-quote" readonly />
+          </div>
+
+          <div class="form-row">
+            <label class="form-label">Nombre del cliente</label>
+            <input class="form-control" id="f-client" readonly />
+          </div>
+
+          <div class="form-row">
+            <label class="form-label required">Correo del cliente</label>
+            <input class="form-control" id="f-email" type="email" placeholder="correo@ejemplo.com" />
+          </div>
+
+          <div class="form-row">
+            <label class="form-label">Descripción del vehículo</label>
+            <input class="form-control" id="f-vehicle" />
+          </div>
+
+          <div class="grid-2" style="gap: 12px;">
+            <div class="form-row">
+              <label class="form-label">Placa</label>
+              <input class="form-control" id="f-plate" readonly />
+            </div>
+            <div class="form-row">
+              <label class="form-label">Año</label>
+              <input class="form-control" id="f-year" readonly />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label class="form-label">Valor Asegurado</label>
+            <input class="form-control" id="f-valor" readonly />
+          </div>
+
+          <div class="form-row">
+            <label class="form-label">Forma de Aseguramiento</label>
+            <input class="form-control" id="f-forma" readonly />
+          </div>
+
+          <div class="form-row">
+            <label class="form-label">Sustitución de Repuestos</label>
+            <input class="form-control" id="f-sust" readonly />
+          </div>
+
+          <div class="form-row">
+            <label class="form-label">Interés Asegurable</label>
+            <select class="form-control" id="f-interes">
+              <option value="">(No especificar)</option>
+              <option value="propietario">Propietario Registral</option>
+              <option value="cero-km">Cero Kilómetros — En proceso de compra</option>
+              <option value="traspaso">En proceso de traspaso</option>
+              <option value="compra">En proceso de compra</option>
+            </select>
+          </div>
+
+          <div class="btn-group">
+            <button class="btn btn-secondary" id="btnBack2">← Volver</button>
+            <button class="btn btn-primary"   id="btnNext2">Continuar →</button>
+          </div>
+        </div>
+
+        <!-- Columna derecha: precios + PDF -->
+        <div class="card">
+          <h2 class="card-title">Precios y PDF limpio</h2>
+
+          <div class="price-table" id="priceTable">
+            <!-- llenado dinámicamente por app.js -->
+          </div>
+
+          <div class="deductibles" id="deductibles">
+            <strong>Deducibles:</strong>
+            <ul id="deductiblesList"></ul>
+          </div>
+
+          <div class="pdf-status" id="pdfStatus">
+            <span>✓ PDF limpio listo (sin Mensual ni Deducción Mensual)</span>
+            <button class="btn btn-secondary" id="btnDownloadPDF">Descargar</button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ======================== VISTA 3 · REDACTAR CORREO ======================== -->
+    <section class="view" id="view3">
+      <div class="grid-2">
+
+        <!-- Columna izquierda: configuración del correo -->
+        <div class="card">
+          <h2 class="card-title">3 · Configurar correo</h2>
+
+          <div class="form-row">
+            <label class="form-label">Para</label>
+            <input class="form-control" id="m-to" type="email" />
+          </div>
+
+          <div class="form-row">
+            <label class="form-label">Asunto</label>
+            <input class="form-control" id="m-subject" />
+          </div>
+
+          <div class="form-row">
+            <label class="form-label">Nombre en el saludo</label>
+            <input class="form-control" id="m-name" />
+          </div>
+
+          <div class="form-row">
+            <label class="form-label">Vehículo (como aparece en el correo)</label>
+            <input class="form-control" id="m-vehicle" />
+          </div>
+
+          <div class="form-row">
+            <label class="form-label">Nota personal (opcional)</label>
+            <textarea class="form-control" id="m-note" rows="3" placeholder="Mensaje adicional para el cliente..."></textarea>
+          </div>
+
+          <div class="form-row">
+            <span class="pill">📎 <span id="m-pdfname">COTIZACION.pdf</span></span>
+          </div>
+
+          <button class="btn btn-send" id="btnSend">Autorizar Gmail y Enviar</button>
+
+          <div class="btn-group">
+            <button class="btn btn-secondary" id="btnBack3">← Volver</button>
+          </div>
+        </div>
+
+        <!-- Columna derecha: vista previa en vivo -->
+        <div class="card">
+          <h2 class="card-title">Vista previa</h2>
+          <div class="preview-box" id="preview">
+            <p style="color: var(--gray-500); text-align: center; margin-top: 40px;">
+              Llena los campos a la izquierda para ver la vista previa.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ======================== VISTA 4 · ÉXITO ======================== -->
+    <section class="view" id="view4">
+      <div class="card success-box">
+        <div class="success-icon">✓</div>
+        <div class="success-title">¡Cotización enviada!</div>
+        <div class="success-msg" id="successMsg">La cotización fue enviada exitosamente.</div>
+        <button class="btn btn-primary" id="btnReset">Enviar otra cotización</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ======================== LIBRERÍAS EXTERNAS ======================== -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <!-- ======================== CÓDIGO PROPIO (orden crítico) ======================== -->
+  <script src="js/config.js"></script>
+  <script src="js/state.js"></script>
+  <!-- Próximos commits agregarán aquí: router.js, pdf-extract.js, pdf-modify.js,
+       email-template.js, gmail-auth.js, mime-builder.js, app.js -->
+
+  <script>
+    // Inicializa el worker de PDF.js (sin esto, PDF.js falla silenciosamente)
+    if (window.pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = CFG.PDFJS_WORKER;
+    }
+  </script>
+
+</body>
+</html>

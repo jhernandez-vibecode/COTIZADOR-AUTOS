@@ -1,0 +1,28 @@
+/**
+ * Cotizador SDI · Configuración global
+ *
+ * Todas las constantes públicas de la app. No contiene secretos:
+ * el Client ID de OAuth es información pública por diseño de Google.
+ */
+const CFG = {
+  // Identidad del remitente
+  CLIENT_ID:   '537940931884-nrg6uinkr02nt3q9s1tcjn17f4q6qr9j',
+  FROM_NAME:   'Juan Carlos Hernandez',
+  FROM_EMAIL:  'jhernandez@segurosdelins.com',
+
+  // URLs usadas en el correo al cliente
+  GUIDE_URL:   'https://cotizador-segurosdigitalesins-sdi.netlify.app/explicacion/',
+  AGENDA_URL:  'https://forms.gle/NJB5s3zRQ7Hdv1xe7',
+  WEBSITE:     'www.segurosdelins.com',
+
+  // Pie del correo
+  PHONE:       '8822-1348',
+  LICENSE:     '08-1318',
+
+  // Gmail API
+  GMAIL_SCOPE:    'https://www.googleapis.com/auth/gmail.send',
+  GMAIL_SEND_URL: 'https://gmail.googleapis.com/gmail/v1/users/me/messages/send',
+
+  // Worker de PDF.js
+  PDFJS_WORKER: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
+};
