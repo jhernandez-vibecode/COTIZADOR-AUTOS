@@ -19,8 +19,9 @@
  *   8. Sustitucion de repuestos (texto adaptado al PDF)
  *   9. Nota personal del agente (condicional, fondo naranja claro)
  *  10. CTA verde: "Agendar mi cita ahora" -> CFG.AGENDA_URL
- *  11. Notas importantes (Uber, valor de mercado, sustitucion)
- *  12. Footer navy con datos del agente
+ *  11. Bloque de urgencia + social proof (15 dias + estrellas)
+ *  12. Notas importantes (Uber, valor de mercado, sustitucion)
+ *  13. Footer navy con datos del agente
  *
  * API publica:
  *   - buildEmail(params) -> string HTML
@@ -193,7 +194,22 @@ ${notaHtml}
           </a>
         </td></tr>
 
-        <!-- 11. NOTAS IMPORTANTES -->
+        <!-- 11. URGENCIA + SOCIAL PROOF (espacio generoso para que el boton respire) -->
+        <tr><td style="padding:36px 40px 32px;text-align:center;">
+          <p style="margin:0 0 14px;font-size:14px;font-weight:bold;color:#0c2340;line-height:1.5;">
+            Esta cotizaci&oacute;n est&aacute; disponible por los pr&oacute;ximos 15 d&iacute;as.<br/>
+            &iexcl;No deje pasar esta oportunidad de proteger su veh&iacute;culo!
+          </p>
+          <p style="margin:0 0 16px;font-size:13px;color:#0369a1;font-weight:600;letter-spacing:0.3px;">
+            Es f&aacute;cil, es r&aacute;pido, es seguro.
+          </p>
+          <p style="margin:0;font-size:12px;color:#6b7280;line-height:1.5;">
+            <span style="color:#f59e0b;font-size:14px;letter-spacing:2px;">&#9733;&#9733;&#9733;&#9733;&#9733;</span><br/>
+            Miles de conductores ya est&aacute;n protegidos con nuestro proceso digital
+          </p>
+        </td></tr>
+
+        <!-- 12. NOTAS IMPORTANTES -->
         <tr><td style="padding:20px 40px 24px;">
           <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fef3c7;border-radius:6px;">
             <tr><td style="padding:14px 18px;">
@@ -207,7 +223,7 @@ ${notaHtml}
           </table>
         </td></tr>
 
-        <!-- 12. FOOTER -->
+        <!-- 13. FOOTER -->
         <tr><td style="background:#0c2340;color:#ffffff;padding:24px 40px;text-align:center;">
           <p style="margin:0;font-size:14px;font-weight:600;color:#cbd5e1;">${_escape(CFG.FROM_NAME)}</p>
           <p style="margin:4px 0 0;font-size:11px;color:#64748b;">Agente de Seguros INS &middot; Licencia SUGESE ${_escape(CFG.LICENSE)}</p>
