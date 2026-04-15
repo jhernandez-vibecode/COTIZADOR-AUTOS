@@ -208,10 +208,15 @@ ${notaHtml}
 
         <!-- 12. FOOTER -->
         <tr><td style="background:#0c2340;color:#ffffff;padding:24px 40px;text-align:center;">
-          <p style="margin:0;font-size:15px;font-weight:bold;">${_escape(CFG.FROM_NAME)}</p>
-          <p style="margin:6px 0 4px;font-size:12px;opacity:0.85;">Agente de Seguros INS &middot; Licencia SUGESE ${_escape(CFG.LICENSE)}</p>
-          <p style="margin:4px 0;font-size:12px;opacity:0.85;">Tel: ${_escape(CFG.PHONE)} &middot; ${_escape(CFG.FROM_EMAIL)}</p>
-          <p style="margin:8px 0 0;font-size:11px;opacity:0.6;">${_escape(CFG.WEBSITE)}</p>
+          <p style="margin:0;font-size:14px;font-weight:600;color:#cbd5e1;">${_escape(CFG.FROM_NAME)}</p>
+          <p style="margin:4px 0 0;font-size:11px;color:#64748b;">Agente de Seguros INS &middot; Licencia SUGESE ${_escape(CFG.LICENSE)}</p>
+          <p style="margin:12px 0 4px;font-size:12px;color:#64748b;">Tel: <span style="color:#cbd5e1;">${_escape(CFG.PHONE)}</span></p>
+          <p style="margin:6px 0 2px;font-size:14px;">
+            <a href="mailto:${_escape(CFG.FROM_EMAIL)}" style="color:#7dd3fc;text-decoration:underline;font-weight:bold;">${_escape(CFG.FROM_EMAIL)}</a>
+          </p>
+          <p style="margin:4px 0 0;font-size:14px;">
+            <a href="https://${_escape(CFG.WEBSITE)}" style="color:#7dd3fc;text-decoration:underline;font-weight:bold;">${_escape(CFG.WEBSITE)}</a>
+          </p>
         </td></tr>
 
       </table>
