@@ -263,7 +263,7 @@ function populateView2() {
   _setVal('f-client',  d.clientName);
   _setVal('f-plate',   d.plate);
   _setVal('f-year',    d.year);
-  _setVal('f-vehicle', (d.vehicleType + ' ' + d.year).trim());
+  _setVal('f-vehicle', (_cleanVehicleType(d.vehicleType) + ' ' + d.year).trim());
   _setVal('f-valor',   '\u20A1 ' + d.valor); // ₡
   _setVal('f-forma',   d.formaAseg);
   _setVal('f-sust',    d.sustRepos);
@@ -511,6 +511,27 @@ function _capitalize(s) {
 
 function _pdfFilename() {
   return 'COTIZACION-' + (S.data ? S.data.plate : 'INS') + '.pdf';
+}
+
+/**
+ * Normaliza el tipo de vehiculo para el display de la vista 2.
+ * El sistema del INS reporta algunos tipos con barra redundante que
+ * el agente no usa en la descripcion del correo:
+ *   "Rural/Jeep" -> "Rural"  (por convencion del agente)
+ *
+ * No altera el valor original en S.data.vehicleType: si el usuario
+ * necesita "Rural/Jeep" tal cual, puede editarlo manualmente en el
+ * input del paso 2.
+ *
+ * @param {string} type - tipo de vehiculo extraido del PDF
+ * @returns {string} tipo normalizado para display
+ */
+function _cleanVehicleType(type) {
+  if (!type) return '';
+  const t = type.trim();
+  // Caso conocido: INS reporta "Rural/Jeep", el agente usa solo "Rural"
+  if (/^Rural\s*\/\s*Jeep$/i.test(t)) return 'Rural';
+  return t;
 }
 
 function _escapeHtml(s) {
