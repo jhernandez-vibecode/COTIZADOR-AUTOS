@@ -214,9 +214,9 @@ ${notaHtml}
           <p style="margin:6px 0 2px;font-size:14px;">
             <a href="mailto:${_escape(CFG.FROM_EMAIL)}" style="color:#7dd3fc;text-decoration:underline;font-weight:bold;">${_escape(CFG.FROM_EMAIL)}</a>
           </p>
-          <p style="margin:4px 0 0;font-size:14px;">
+          ${CFG.WEBSITE ? `<p style="margin:4px 0 0;font-size:14px;">
             <a href="https://${_escape(CFG.WEBSITE)}" style="color:#7dd3fc;text-decoration:underline;font-weight:bold;">${_escape(CFG.WEBSITE)}</a>
-          </p>
+          </p>` : ''}
         </td></tr>
 
       </table>

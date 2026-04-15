@@ -119,6 +119,7 @@ function openProfileModal(firstTime) {
   document.getElementById('p-email').value   = CFG.FROM_EMAIL || '';
   document.getElementById('p-phone').value   = CFG.PHONE      || '';
   document.getElementById('p-license').value = CFG.LICENSE    || '';
+  document.getElementById('p-website').value = CFG.WEBSITE    || '';
 
   if (firstTime) {
     hint.textContent = 'Bienvenido. Antes de empezar, configura tus datos como agente. Solo se guardan en este navegador.';
@@ -148,6 +149,7 @@ function handleProfileSave() {
   const email   = document.getElementById('p-email').value.trim();
   const phone   = document.getElementById('p-phone').value.trim();
   const license = document.getElementById('p-license').value.trim();
+  const website = document.getElementById('p-website').value.trim();
 
   if (!name || name.split(/\s+/).length < 2) {
     alert('Ingresa tu nombre completo (al menos dos palabras).');
@@ -170,7 +172,16 @@ function handleProfileSave() {
     return;
   }
 
-  const profile = { name: name, email: email, phone: phone, license: license };
+  // Normalizar website: quitar https:// o http:// si lo pusieron, dejar solo dominio
+  const cleanWebsite = website.replace(/^https?:\/\//i, '').replace(/\/$/, '');
+
+  const profile = {
+    name:    name,
+    email:   email,
+    phone:   phone,
+    license: license,
+    website: cleanWebsite
+  };
   try {
     saveProfile(profile);
     applyProfile(profile);
