@@ -111,7 +111,7 @@ function buildEmail(params) {
 
         <!-- 4. CTA EXPLICADOR -->
         <tr><td style="padding:0 40px 8px;text-align:center;">
-          <a href="${CFG.GUIDE_URL}" style="display:inline-block;background:#0369a1;color:#ffffff;padding:14px 28px;border-radius:6px;text-decoration:none;font-weight:bold;font-size:14px;letter-spacing:0.5px;">
+          <a href="${_buildGuideUrl()}" style="display:inline-block;background:#0369a1;color:#ffffff;padding:14px 28px;border-radius:6px;text-decoration:none;font-weight:bold;font-size:14px;letter-spacing:0.5px;">
             VER EXPLICACION DE MI COTIZACION &rarr;
           </a>
         </td></tr>
@@ -305,4 +305,29 @@ function _escape(s) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+/**
+ * Construye el URL del explicador con los datos del agente como query params.
+ * El explicador lee esos params al cargar y personaliza el header, banner
+ * y footer con los datos del agente que envio la cotizacion.
+ *
+ * Formato: <CFG.GUIDE_URL>?n=<nombre>&l=<licencia>&w=<website>
+ *
+ * El cliente abre ese URL desde su correo; no tiene localStorage con los
+ * datos del agente (esta en OTRO navegador). Los query params son la unica
+ * forma de pasarle esa informacion.
+ *
+ * @returns {string} URL del explicador con query params
+ */
+function _buildGuideUrl() {
+  const base = CFG.GUIDE_URL;
+  const params = [];
+  if (CFG.FROM_NAME) params.push('n=' + encodeURIComponent(CFG.FROM_NAME));
+  if (CFG.LICENSE)   params.push('l=' + encodeURIComponent(CFG.LICENSE));
+  if (CFG.WEBSITE)   params.push('w=' + encodeURIComponent(CFG.WEBSITE));
+  if (params.length === 0) return base;
+  // Si GUIDE_URL ya tiene un '?' usamos '&', si no '?'
+  const sep = base.indexOf('?') === -1 ? '?' : '&';
+  return base + sep + params.join('&');
 }

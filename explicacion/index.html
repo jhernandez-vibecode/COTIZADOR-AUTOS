@@ -15,6 +15,15 @@
     <script type="text/babel">
         const { useState } = React;
 
+        // ==== Multi-agente: los datos del agente vienen en query params del URL ====
+        // El cotizador genera links del explicador con ?n=Nombre&l=Licencia&w=website
+        // para que el explicador sepa que agente envio la cotizacion al cliente.
+        // Si no hay params (o el URL se abre directo), usa los defaults del owner.
+        const _urlParams   = new URLSearchParams(window.location.search);
+        const agentName    = _urlParams.get('n') || 'Juan Carlos Hernandez Vargas';
+        const agentLicense = _urlParams.get('l') || '08-1318';
+        const agentWebsite = _urlParams.get('w') || 'www.segurosdelins.com';
+
         // --- ICONOS ---
         const Icon = ({ path, className, fill = "none" }) => (
             <svg className={className} viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" dangerouslySetInnerHTML={{ __html: path }} />
@@ -101,7 +110,7 @@
                             <div>
                                 <h1 className="text-2xl md:text-3xl font-bold">Guía de tu Cotización</h1>
                                 <p className="mt-1 text-blue-200 text-sm md:text-base">Entiende tu inversión de forma clara y sencilla</p>
-                                <p className="mt-1.5 text-blue-300 text-xs md:text-sm font-medium">Agente: Juan Carlos Hernandez Vargas • Licencia 08-1318</p>
+                                <p className="mt-1.5 text-blue-300 text-xs md:text-sm font-medium">Agente: {agentName} • Licencia {agentLicense}</p>
                             </div>
                         </div>
                         <div className="bg-blue-800 px-4 py-2 rounded-lg border border-blue-700 whitespace-nowrap">
@@ -118,7 +127,7 @@
                     <div className="max-w-4xl mx-auto flex items-center justify-center gap-2 text-center">
                         <Star className="w-5 h-5 flex-shrink-0 text-amber-900" fill="currentColor" />
                         <p className="text-sm font-bold text-amber-900">
-                            Esta guía visual es un beneficio exclusivo de la asesoría personalizada de la oficina del Agente Juan Carlos Hernández Vargas — no es un documento estándar del INS.
+                            Esta guía visual es un beneficio exclusivo de la asesoría personalizada de la oficina del Agente {agentName} — no es un documento estándar del INS.
                         </p>
                     </div>
                 </div>
@@ -407,10 +416,10 @@
                 <footer className="bg-gray-900 text-gray-300 py-10 text-center mt-6 border-t-4 border-blue-900">
                     <div className="max-w-4xl mx-auto px-4 space-y-4 text-sm">
                         <p className="font-bold text-white text-base">Esta aplicación pertenece a Seguros Digitales SDI®.</p>
-                        <p>Visítenos en{' '}<a href="https://www.segurosdelins.com" target="_blank" rel="noreferrer" className="text-blue-400 font-semibold hover:text-blue-300 hover:underline transition-colors">www.segurosdelins.com</a></p>
+                        <p>Visítenos en{' '}<a href={`https://${agentWebsite}`} target="_blank" rel="noreferrer" className="text-blue-400 font-semibold hover:text-blue-300 hover:underline transition-colors">{agentWebsite}</a></p>
                         <div className="border-t border-gray-800 pt-6 mt-4">
                             <p className="text-xs text-gray-400 max-w-3xl mx-auto leading-relaxed">
-                                © 2026 Propiedad Intelectual de Juan Carlos Hernández Vargas. Todos los derechos reservados. Esta plataforma es una herramienta de uso exclusivo para los clientes vinculados a la Licencia Sugese 08-1318. Queda prohibida su reproducción o uso por terceros sin autorización expresa del titular.
+                                © 2026 Propiedad Intelectual de {agentName}. Todos los derechos reservados. Esta plataforma es una herramienta de uso exclusivo para los clientes vinculados a la Licencia Sugese {agentLicense}. Queda prohibida su reproducción o uso por terceros sin autorización expresa del titular.
                             </p>
                         </div>
                     </div>
