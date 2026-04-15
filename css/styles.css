@@ -484,3 +484,47 @@ textarea.form-control { resize: vertical; min-height: 70px; }
   justify-content: flex-end;
   gap: 10px;
 }
+
+/* ============ RADIO GROUP (selector de proveedor en modal) ============ */
+.radio-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 2px solid var(--gray-200);
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-700);
+  background: #fff;
+  transition: border-color .15s, background .15s;
+  user-select: none;
+  flex: 1;
+  min-width: 160px;
+}
+
+.radio-option:hover {
+  border-color: var(--blue-light);
+  background: var(--gray-50);
+}
+
+.radio-option input[type="radio"] {
+  accent-color: var(--blue);
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.radio-option:has(input:checked) {
+  border-color: var(--blue);
+  background: #eff6ff;
+  color: var(--blue);
+}

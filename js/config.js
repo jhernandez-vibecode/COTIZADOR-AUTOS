@@ -24,6 +24,11 @@ const CFG = {
   GMAIL_SCOPE:    'https://www.googleapis.com/auth/gmail.send',
   GMAIL_SEND_URL: 'https://gmail.googleapis.com/gmail/v1/users/me/messages/send',
 
+  // Microsoft Outlook (Graph API)
+  MSAL_CLIENT_ID:   '70998ed5-2c92-4aba-b7e7-fb53b083f472',
+  OUTLOOK_SCOPE:    'https://graph.microsoft.com/Mail.Send',
+  OUTLOOK_SEND_URL: 'https://graph.microsoft.com/v1.0/me/sendMail',
+
   // Worker de PDF.js
   PDFJS_WORKER: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
 };

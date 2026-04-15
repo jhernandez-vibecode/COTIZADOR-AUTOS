@@ -59,7 +59,8 @@ function saveProfile(p) {
       phone:     (p.phone     || '').trim(),
       license:   (p.license   || '').trim(),
       website:   (p.website   || '').trim(),
-      agendaUrl: (p.agendaUrl || '').trim()
+      agendaUrl: (p.agendaUrl || '').trim(),
+      provider:  (p.provider  === 'outlook') ? 'outlook' : 'gmail'
     }));
   } catch (e) {
     console.error('[profile] error guardando localStorage:', e);
@@ -84,6 +85,8 @@ function applyProfile(p) {
   // agendaUrl: solo sobrescribir si el agente puso uno propio
   // (si lo deja vacio se mantiene el default del config.js)
   if (p.agendaUrl) CFG.AGENDA_URL = p.agendaUrl;
+  // provider: 'gmail' (default) o 'outlook'
+  S.provider = (p.provider === 'outlook') ? 'outlook' : 'gmail';
 }
 
 /**
