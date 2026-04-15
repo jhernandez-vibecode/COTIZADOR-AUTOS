@@ -120,6 +120,7 @@ function openProfileModal(firstTime) {
   document.getElementById('p-phone').value   = CFG.PHONE      || '';
   document.getElementById('p-license').value = CFG.LICENSE    || '';
   document.getElementById('p-website').value = CFG.WEBSITE    || '';
+  document.getElementById('p-agenda').value  = CFG.AGENDA_URL || '';
 
   if (firstTime) {
     hint.textContent = 'Bienvenido. Antes de empezar, configura tus datos como agente. Solo se guardan en este navegador.';
@@ -145,11 +146,12 @@ function closeProfileModal() {
  * Valida y guarda el perfil del agente desde el modal.
  */
 function handleProfileSave() {
-  const name    = document.getElementById('p-name').value.trim();
-  const email   = document.getElementById('p-email').value.trim();
-  const phone   = document.getElementById('p-phone').value.trim();
-  const license = document.getElementById('p-license').value.trim();
-  const website = document.getElementById('p-website').value.trim();
+  const name      = document.getElementById('p-name').value.trim();
+  const email     = document.getElementById('p-email').value.trim();
+  const phone     = document.getElementById('p-phone').value.trim();
+  const license   = document.getElementById('p-license').value.trim();
+  const website   = document.getElementById('p-website').value.trim();
+  const agendaUrl = document.getElementById('p-agenda').value.trim();
 
   if (!name || name.split(/\s+/).length < 2) {
     alert('Ingresa tu nombre completo (al menos dos palabras).');
@@ -171,16 +173,36 @@ function handleProfileSave() {
     document.getElementById('p-license').focus();
     return;
   }
+  if (!agendaUrl) {
+    alert('Ingresa el link de tu formulario de cita. Puede ser un Google Forms, Calendly o similar.');
+    document.getElementById('p-agenda').focus();
+    return;
+  }
 
   // Normalizar website: quitar https:// o http:// si lo pusieron, dejar solo dominio
   const cleanWebsite = website.replace(/^https?:\/\//i, '').replace(/\/$/, '');
 
+  // Normalizar agendaUrl: si no tiene protocolo, agregarle https://
+  // (para que el link funcione en el correo)
+  let cleanAgenda = agendaUrl;
+  if (cleanAgenda && !/^https?:\/\//i.test(cleanAgenda)) {
+    cleanAgenda = 'https://' + cleanAgenda;
+  }
+
+  // Validar formato basico del link de agenda si se puso algo
+  if (cleanAgenda && !/^https?:\/\/[^\s]+\.[^\s]+/.test(cleanAgenda)) {
+    alert('El link del formulario de cita no parece valido. Ejemplo: https://forms.gle/AbCdEf123');
+    document.getElementById('p-agenda').focus();
+    return;
+  }
+
   const profile = {
-    name:    name,
-    email:   email,
-    phone:   phone,
-    license: license,
-    website: cleanWebsite
+    name:      name,
+    email:     email,
+    phone:     phone,
+    license:   license,
+    website:   cleanWebsite,
+    agendaUrl: cleanAgenda
   };
   try {
     saveProfile(profile);
