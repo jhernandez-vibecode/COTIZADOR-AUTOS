@@ -134,7 +134,7 @@ function buildEmail(params) {
                 <span style="color:#16a34a;font-weight:bold;">&#10003;</span> Asistencia 24/7 en carretera
               </td>
               <td style="padding:6px 0 6px 8px;font-size:13px;color:#374151;vertical-align:top;">
-                <span style="color:#16a34a;font-weight:bold;">&#10003;</span> Multiasistencia extendida
+                <span style="color:#16a34a;font-weight:bold;">&#10003;</span> 10% de descuento en pago anual
               </td>
             </tr>
             <tr>
@@ -199,7 +199,7 @@ ${notaHtml}
             <tr><td style="padding:14px 18px;">
               <p style="margin:0 0 8px;font-size:12px;font-weight:bold;color:#78350f;letter-spacing:0.5px;">NOTAS IMPORTANTES</p>
               <ul style="margin:0;padding-left:18px;font-size:12px;color:#78350f;line-height:1.6;">
-                <li>Si el vehiculo se utiliza para servicios de transporte privado (Uber, DiDi, etc.), debe declararlo para no afectar la cobertura.</li>
+                <li>Este seguro NO cubre actividades de UBER o similares.</li>
                 <li>El valor asegurado debe corresponder al valor de mercado del vehiculo. En caso de diferencia, podria aplicarse el principio de proporcion.</li>
                 <li>La sustitucion de repuestos depende de la disponibilidad y antiguedad del vehiculo segun la modalidad contratada.</li>
               </ul>

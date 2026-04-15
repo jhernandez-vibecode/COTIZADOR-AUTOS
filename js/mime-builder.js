@@ -35,13 +35,14 @@ function buildMIME(args) {
   const boundary = '__cotizador_sdi_' + Date.now() + '_' + Math.random().toString(36).slice(2);
 
   const subject64 = _encodeRFC2047(args.subject);
+  const fromEnc   = _encodeFromHeader(args.from);
   const pdf64     = _wrapBase64(_uint8ToBase64(args.pdfBytes), 76);
 
   // CRLF es obligatorio en MIME/SMTP, no usar \n solo
   const CRLF = '\r\n';
 
   const message =
-    'From: '         + args.from                       + CRLF +
+    'From: '         + fromEnc                         + CRLF +
     'To: '           + args.to                         + CRLF +
     'Subject: '      + subject64                       + CRLF +
     'MIME-Version: 1.0'                                + CRLF +
@@ -121,4 +122,32 @@ function _encodeRFC2047(subject) {
   if (/^[\x20-\x7E]*$/.test(subject)) return subject;
   const b64 = btoa(unescape(encodeURIComponent(subject)));
   return '=?UTF-8?B?' + b64 + '?=';
+}
+
+/**
+ * Codifica el header From: para que el nombre con tildes o caracteres no-ASCII
+ * no se muestre como mojibake (HernÃƒÂ¡ndez en lugar de Hernández) en los
+ * clientes de correo. Solo codifica el nombre (la parte entre comillas),
+ * la direccion email se deja tal cual.
+ *
+ * Formato esperado de entrada: '"Nombre" <correo@dominio>'
+ * Formato de salida si hay no-ASCII: '=?UTF-8?B?<b64>?= <correo@dominio>'
+ * Si el nombre es ASCII puro, devuelve el from intacto.
+ *
+ * @param {string} from - header From: completo
+ * @returns {string} header From: con nombre codificado si hace falta
+ */
+function _encodeFromHeader(from) {
+  const m = from.match(/^"([^"]+)"\s*(<[^>]+>)$/);
+  if (!m) return from; // no parseable, devolverlo tal cual
+
+  const name  = m[1];
+  const email = m[2];
+
+  // Si el nombre es ASCII puro, no hace falta codificar
+  if (/^[\x20-\x7E]*$/.test(name)) return '"' + name + '" ' + email;
+
+  // Codificar el nombre en RFC 2047
+  const b64 = btoa(unescape(encodeURIComponent(name)));
+  return '=?UTF-8?B?' + b64 + '?= ' + email;
 }
