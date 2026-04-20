@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- Sombra bajo el carro -->
+  <ellipse cx="64" cy="110" rx="52" ry="4" fill="#000" opacity="0.18"/>
+
+  <!-- Carroceria principal (rojo vibrante estilo emoji) -->
+  <path d="M 10 78
+           Q 10 66, 22 62
+           L 34 44
+           Q 40 38, 50 38
+           L 82 38
+           Q 92 38, 98 44
+           L 112 62
+           Q 120 64, 120 74
+           L 120 94
+           Q 120 102, 112 102
+           L 16 102
+           Q 8 102, 8 94
+           L 8 82
+           Q 8 78, 10 78 Z" fill="#ef4444"/>
+
+  <!-- Brillo sutil arriba -->
+  <path d="M 22 64
+           L 34 46
+           Q 40 40, 50 40
+           L 82 40
+           Q 90 40, 96 46
+           L 108 62 Z" fill="#f87171" opacity="0.85"/>
+
+  <!-- Ventanas (azul cielo estilo emoji) -->
+  <path d="M 38 62
+           L 48 48
+           Q 52 44, 58 44
+           L 76 44
+           Q 82 44, 86 48
+           L 96 62 Z" fill="#7dd3fc"/>
+
+  <!-- Divisor entre ventana delantera y trasera -->
+  <rect x="65" y="44" width="3" height="18" fill="#dc2626"/>
+
+  <!-- Puerta: linea sutil -->
+  <line x1="64" y1="70" x2="64" y2="98" stroke="#b91c1c" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- Manijas -->
+  <rect x="44" y="76" width="14" height="3" rx="1.5" fill="#7f1d1d"/>
+  <rect x="72" y="76" width="14" height="3" rx="1.5" fill="#7f1d1d"/>
+
+  <!-- Faro delantero (amarillo) -->
+  <circle cx="114" cy="82" r="5" fill="#fde047"/>
+  <circle cx="114" cy="82" r="2.5" fill="#fef9c3"/>
+
+  <!-- Luz trasera (rojo oscuro) -->
+  <rect x="6" y="78" width="6" height="10" rx="2" fill="#991b1b"/>
+
+  <!-- Rueda trasera -->
+  <circle cx="32" cy="100" r="14" fill="#1f2937"/>
+  <circle cx="32" cy="100" r="6" fill="#9ca3af"/>
+  <circle cx="32" cy="100" r="2" fill="#374151"/>
+
+  <!-- Rueda delantera -->
+  <circle cx="96" cy="100" r="14" fill="#1f2937"/>
+  <circle cx="96" cy="100" r="6" fill="#9ca3af"/>
+  <circle cx="96" cy="100" r="2" fill="#374151"/>
+</svg>
