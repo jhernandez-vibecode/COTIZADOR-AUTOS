@@ -1,0 +1,591 @@
+---
+name: cotizador-sdi
+description: >
+  Especialista en Cotizador SDI - App web vanilla JS que extrae datos
+  de PDFs de cotizacion INS, los limpia, genera correo HTML personalizado
+  y lo envia via Gmail API o Outlook (Microsoft Graph). Multi-agente via
+  localStorage, sin backend. Stack 100% sin build (HTML + JS vanilla +
+  Tailwind CDN). Usar cuando Juan Carlos pida construir, modificar o
+  depurar cualquier modulo de esta app. Leer COMPLETO antes de escribir
+  cualquier codigo.
+---
+
+# Cotizador SDI - Checkpoint 20 abril 2026
+
+## Estado actual
+APP COMPLETA Y FUNCIONAL EN PRODUCCION. 16 commits desde init.
+Multi-agente operativo via localStorage. Gmail Y Outlook soportados
+(selector de proveedor en modal ⚙). Correo con logo INS y headers
+RFC 2047. Probado en produccion con PDF real BRK454 y cotizacion THG170.
+
+## Decisiones recientes
+
+### 20 abril 2026 — Fix link del formulario de cita (dos botones) + override localStorage
+- **Juan Carlos reporto** que el boton "Agendar mi cita ahora" del correo
+  apuntaba al formulario viejo. Hay DOS botones con ese texto: (1) en la
+  plantilla del correo (via `CFG.AGENDA_URL`) y (2) en `/explicacion/` (hardcoded).
+- **Link viejo:** `https://forms.gle/NJB5s3zRQ7Hdv1xe7`
+- **Link nuevo:** `https://forms.gle/tqSaZBDcZfNgNktC7`
+- **Archivos modificados:**
+  - `js/config.js:15` — `AGENDA_URL`
+  - `explicacion/index.html:395` — `href` del CTA verde
+- **Commit:** `6a024e3` fix(agenda): actualizar link del formulario de cita
+- **GOTCHA importante:** `agent-profile.js:87` hace `if (p.agendaUrl) CFG.AGENDA_URL = p.agendaUrl;`
+  Es decir, si el agente ya tiene guardado un `agendaUrl` en `localStorage['cotizador_sdi_agent_v1']`,
+  ese valor **sobrescribe** el del `config.js` al cargar la app. Por eso JC seguia viendo el link
+  viejo en el correo aunque el commit ya estaba desplegado.
+- **Fix para el agente:** abrir la app → ⚙ → actualizar campo "Link del formulario de cita"
+  → Guardar. Esto actualiza el localStorage.
+- **IMPLICACION futura:** cualquier cambio a un default en `config.js` que el perfil tambien sobrescriba
+  (FROM_NAME, WEBSITE, AGENDA_URL) requiere que cada agente actualice SU perfil manualmente.
+  El codigo del repo no puede forzar el cambio.
+
+### 20 abril 2026 — Sitio duplicado en Netlify (pendiente borrar)
+- Juan Carlos creo por error un segundo sitio Netlify: `cotizador-autos-sdi.netlify.app`
+- **NO esta en la lista de origenes autorizados de OAuth Google** → login rechazado con
+  `Error 400: redirect_uri_mismatch` si se intenta usar.
+- **Accion:** JC debe borrar el sitio duplicado desde app.netlify.com → Site configuration
+  → General → Danger zone → Delete this site.
+- **URL oficial unica:** `https://cotizador-segurosdigitalesins-sdi.netlify.app`
+
+### 15 abril 2026 — Soporte Outlook completo
+- **Hermano de Juan Carlos** usa Outlook en su oficina (no quiere abrir Gmail).
+- Se implemento MSAL.js 2.x + Microsoft Graph API para envio desde Outlook.
+- Selector de proveedor (radio Gmail/Outlook) en modal ⚙ del agente.
+- Azure App registrada: "Cotizados SDI Outlook"
+  - Application (client) ID: `70998ed5-2c92-4aba-b7e7-fb53b083f472`
+  - Directory (tenant) ID:   `93b104e6-35e1-476f-a6a9-6ca8ef7f1928`
+  - Redirect URI: SPA → https://cotizador-segurosdigitalesins-sdi.netlify.app
+  - Tipos de cuenta: organizativas + personales Microsoft (opcion 3)
+- Nuevos archivos: `outlook-auth.js`, `outlook-sender.js`
+- Proveedor guardado en localStorage junto al perfil del agente.
+
+### 15 abril 2026 — Fix mojibake + ajustes de contenido
+- **Fix critico RFC 2047 en From:** `_encodeFromHeader()` en mime-builder.js
+  codifica el nombre del agente como `=?UTF-8?B?...?=` si tiene no-ASCII.
+  Sin esto "Hernández" aparecia como "HernÃƒÂ¡ndez" en Gmail.
+- **Beneficios:** "Multiasistencia extendida" → "10% de descuento en pago anual".
+- **Notas:** Uber/DiDi ahora dice "NO cubre actividades de UBER o similares".
+- **Logo INS** en header del correo (URL externa Netlify, no base64).
+
+### 14 abril 2026 — Multi-agente
+- localStorage + misma URL Netlify (sin backend, sin multiples deploys).
+- Cada agente configura una vez en su navegador via ⚙.
+- `agent-profile.js`: `saveProfile / loadProfile / applyProfile / clearProfile / isFirstTime`.
+
+## Proposito
+App web interna que automatiza el envio de cotizaciones de automoviles
+INS a clientes. Flujo de 3 clicks: subir PDF → revisar → enviar.
+
+## Infraestructura
+- **URL produccion:** https://cotizador-segurosdigitalesins-sdi.netlify.app
+- **Explicador integrado:** https://cotizador-segurosdigitalesins-sdi.netlify.app/explicacion/
+- **Repo:** jhernandez-vibecode/COTIZADOR-AUTOS (GitHub, PRIVADO, branch main)
+- **Deploy:** automatico GitHub → Netlify (1-2 min)
+- **Owner email:** jhernandez@segurosdelins.com (Juan Carlos Hernandez Vargas, licencia SUGESE 08-1318)
+- **Owner phone:** 8822-1348
+
+## Stack (sin npm, sin build)
+```
+PDF.js  3.11.174  → https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js
+                     worker: pdf.worker.min.js (mismo CDN)
+pdf-lib 1.17.1   → https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js
+Google Identity  → https://accounts.google.com/gsi/client  (async defer)
+MSAL.js 2.38.3   → https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js  (async defer)
+Tailwind CDN     → https://cdn.tailwindcss.com
+Google Fonts     → Sora (display + cuerpo)
+```
+
+## OAuth Google (proyecto compartido con SASINS)
+- **Client ID:** `446215450096-6edmqnq4u9dg8hr9nd620mgcl6rv182m.apps.googleusercontent.com`
+- **Nombre Google Cloud:** "Cotizador Autos SDI"
+- **Proyecto:** Sistema-Seguros Vencimientos
+- **Origin autorizado:** `https://cotizador-segurosdigitalesins-sdi.netlify.app`
+- **Scope:** `https://www.googleapis.com/auth/gmail.send`
+- **Pantalla consentimiento:** modo Testing → invitar agentes nuevos
+  agregando su correo Gmail como Test User en
+  https://console.cloud.google.com/apis/credentials/consent
+
+## OAuth Microsoft (Azure)
+- **Application (client) ID:** `70998ed5-2c92-4aba-b7e7-fb53b083f472`
+- **Directory (tenant) ID:**   `93b104e6-35e1-476f-a6a9-6ca8ef7f1928`
+- **Authority:** `https://login.microsoftonline.com/common` (personal + organizativo)
+- **Redirect URI:** SPA → `https://cotizador-segurosdigitalesins-sdi.netlify.app`
+- **Scope:** `https://graph.microsoft.com/Mail.Send`
+- **Lib:** MSAL.js 2.x via CDN (`window.msal.PublicClientApplication`)
+
+## Arquitectura de archivos
+```
+COTIZADOR-AUTOS/
+├── README.md
+├── .gitignore
+├── index.html              ← Shell: header sticky + step-nav 4 pasos + 4 vistas + modal config
+├── css/
+│   └── styles.css          ← Variables marca, drop-zone, step-dots, precios, modal, btn, radio-group
+├── img/
+│   └── ins-logo.png        ← Logo INS para el header del correo
+├── js/
+│   ├── config.js           ← CFG: client_id, MSAL_CLIENT_ID, FROM_NAME/EMAIL/PHONE/LICENSE/WEBSITE, URLs
+│   ├── state.js            ← S: { step, data, modPDF, accessToken, tokenClient, msalInstance, outlookToken, provider, prevTimer }
+│   ├── agent-profile.js    ← localStorage: load/save/apply/clear/isFirstTime + campo provider
+│   ├── router.js           ← showView(n), updateStepNav(n)
+│   ├── pdf-extract.js      ← extractData(arrayBuffer) → objeto con todos los campos
+│   ├── pdf-modify.js       ← modifyPDF(ab, rowsToRemove, pageWidth) → Uint8Array
+│   ├── email-template.js   ← buildEmail(params) → string HTML del correo
+│   ├── gmail-auth.js       ← initTokenClient, getToken, clearToken, sendEmail (Gmail API)
+│   ├── mime-builder.js     ← buildMIME({to,from,subject,html,pdfBytes,filename}) → base64url
+│   ├── outlook-auth.js     ← initMSAL, getOutlookToken, clearOutlookToken (MSAL)
+│   ├── outlook-sender.js   ← sendOutlookEmail({to,subject,html,pdfBytes,filename}) (Graph API)
+│   └── app.js              ← Eventos UI, orquestacion, populate, modal handlers, provider bifurcacion
+└── explicacion/            ← Explicador visual integrado (link del correo)
+    ├── index.html          ← React standalone (Babel CDN)
+    └── INS BLANCO.png
+```
+
+### Orden de carga JS en index.html (CRITICO — no cambiar)
+```
+config.js → state.js → agent-profile.js → router.js → pdf-extract.js →
+pdf-modify.js → email-template.js → gmail-auth.js → mime-builder.js →
+outlook-auth.js → outlook-sender.js → app.js
+```
+
+## Flujo de 4 pasos (UX)
+
+### Paso 1 - Cargar PDF
+- Drop zone + file input (acepta solo PDF)
+- Al seleccionar: progress bar 4 fases (10%→35%→65%→100%)
+- handleFileSelect: extractData() → modifyPDF() → populate() → showView(2)
+
+### Paso 2 - Revisar datos (layout 2 columnas)
+**Columna izquierda - Formulario (9 campos):**
+- N° Cotizacion (readonly)
+- Nombre del cliente (readonly, extraido del PDF)
+- **Correo del cliente** (REQUERIDO, manual - no esta en el PDF)
+- Descripcion del vehiculo (editable, pre-llenado tipo+año)
+- Placa, Año, Valor Asegurado (readonly)
+- Forma de Aseguramiento (readonly)
+- Sustitucion de Repuestos (readonly)
+- **Interes Asegurable** (desplegable opcional):
+  - Propietario Registral
+  - Vehiculo Cero Kilometros (en proceso de compra)
+  - En proceso de traspaso
+  - En proceso de compra
+
+**Columna derecha - Precios y PDF:**
+- Tabla 5 filas con visual de eliminados:
+  - ~~Mensual~~ → fondo rojo, tachado, badge "ELIMINADO"
+  - Trimestral → visible
+  - Semestral → visible
+  - Anual → fondo verde con badge "(-10%)"
+  - ~~Deduccion Mensual~~ → eliminado igual que mensual
+- Deducibles extraidos del PDF (lista)
+- Boton "Descargar" del PDF modificado (Blob + objectURL)
+
+### Paso 3 - Redactar correo (layout 2 columnas)
+**Columna izquierda - Configuracion:**
+- Para (correo cliente, editable)
+- Asunto (pre-llenado: "Oferta Seguro Automoviles - Placa XXXX")
+- Nombre en saludo (primer nombre capitalizado)
+- Vehiculo
+- Nota personal opcional (textarea)
+- Pill con nombre del PDF adjunto
+- Boton "Autorizar Gmail y Enviar" o "Autorizar Outlook y Enviar" (dinamico)
+
+**Columna derecha - Vista previa LIVE:**
+- Iframe con srcdoc del HTML del correo
+- Se actualiza al escribir (debounce 300ms)
+
+### Paso 4 - Exito
+- Checkmark verde, mensaje confirmacion con correo destino
+- Boton "Enviar otra cotizacion" → resetAll() → showView(1)
+
+## Modal de Configuracion del agente (⚙)
+Boton ⚙ en el header. Form con 6 campos:
+- Nombre completo (required, min 2 palabras)
+- Correo (required, regex email — label cambia segun proveedor seleccionado)
+- Telefono (required)
+- Licencia SUGESE (required)
+- **Sitio web (opcional)** — si vacio, se omite del footer del correo
+- **Link formulario de cita** (required, Google Forms u otro)
+- **Proveedor de correo** (radio): 📧 Gmail (Google) | 📨 Outlook / Microsoft 365
+
+Modo "primer uso": modal aparece automaticamente, hint amarillo de bienvenida,
+botones cerrar/cancelar OCULTOS (obligatorio configurar antes de usar).
+
+## Proveedor de correo (Gmail vs Outlook)
+
+### Flujo Gmail
+1. `getToken()` → popup Google si no hay token → S.accessToken (cache 1h)
+2. `buildMIME({...})` → string base64url multipart/mixed
+3. `sendEmail(raw)` → POST `https://gmail.googleapis.com/gmail/v1/users/me/messages/send`
+
+### Flujo Outlook
+1. `getOutlookToken()` → acquireTokenSilent; si falla → acquireTokenPopup → S.outlookToken
+2. No se construye MIME. El cuerpo es JSON puro:
+   ```json
+   {
+     "message": {
+       "subject": "...",
+       "body": { "contentType": "HTML", "content": "..." },
+       "toRecipients": [{ "emailAddress": { "address": "..." } }],
+       "attachments": [{
+         "@odata.type": "#microsoft.graph.fileAttachment",
+         "name": "COTIZACION-XXX.pdf",
+         "contentType": "application/pdf",
+         "contentBytes": "<base64 del PDF>"
+       }]
+     },
+     "saveToSentItems": true
+   }
+   ```
+3. `sendOutlookEmail({...})` → POST `https://graph.microsoft.com/v1.0/me/sendMail` (devuelve 202)
+
+### Conversion Uint8Array → base64 (outlook-sender.js)
+```javascript
+// Chunks de 8192 para no saturar el call stack con PDFs grandes
+let binary = '';
+const CHUNK = 8192;
+for (let i = 0; i < bytes.length; i += CHUNK) {
+  binary += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+}
+const pdfBase64 = btoa(binary);
+```
+
+### handleSend bifurcacion (app.js)
+```javascript
+const isOutlook = (S.provider === 'outlook');
+if (isOutlook) {
+  await getOutlookToken();
+  await sendOutlookEmail({ to, subject, html, pdfBytes, filename });
+} else {
+  await getToken();
+  const raw = buildMIME({ to, from, subject, html, pdfBytes, filename });
+  await sendEmail(raw);
+}
+```
+
+## PDF: Extraccion de datos (pdf-extract.js)
+
+### Estrategia
+1. PDF.js extrae items con coordenadas (x, y) bottom-up
+2. `_groupByY(items, 2)` agrupa items con Y similar (±2px) → reconstruye filas visuales
+3. `_findField(rows, regex)` busca patron en cada fila concatenada
+
+### Campos pagina 1
+```javascript
+quoteNum     ← /(ASINS-\d+-\d+)/i
+cotizDate    ← /Fecha de cotizaci[oó]n:\s*(.+?)(?:\s|$)/i
+clientName   ← /Nombre completo:\s*(.+)/i
+plate        ← /N[uú]mero de placa:\s*([A-Z0-9-]+)/i
+year         ← /A[ñn]o veh[ií]culo:\s*(\d+)/i
+vehicleType  ← /Tipo de veh[ií]culo:\s*(.+)/i
+valor        ← /Valor Asegurado:\s*([\d,]+\.?\d*)/i
+sustRepos    ← /Sustituci[oó]n de repuestos:\s*(.+)/i
+formaAseg    ← /Forma de Aseguramiento:\s*(.+)/i
+```
+
+### Campos pagina 2
+```javascript
+prices.mensual     ← fila /^Mensual$/i + valor /^[\d,]+\.\d{2}$/
+prices.trimestral  ← /^Trimestral$/i + valor
+prices.semestral   ← /^Semestral$/i + valor
+prices.anual       ← /^Anual$/i + valor
+prices.deduccion   ← /^Deducci[oó]n Mensual$/i + valor
+deductibles[]      ← lineas que empiezan con /^Cobertura\s/i
+rowsToRemove[]     ← [{ y: float, label: string }] para mensual y deduccion
+pageWidth          ← p2.view[2] (siempre 612 = Letter US)
+pageHeight         ← p2.view[3] (siempre 792)
+```
+
+### Validaciones obligatorias (lanzan Error)
+- PDF debe tener ≥ 2 paginas
+- Debe encontrarse quoteNum, plate y prices.anual
+
+### Normalizacion vehicleType (app.js)
+```javascript
+// _cleanVehicleType: INS reporta "Rural/Jeep" pero el agente usa solo "Rural"
+if (/^Rural\s*\/\s*Jeep$/i.test(t)) return 'Rural';
+```
+
+## PDF: Modificacion (pdf-modify.js)
+
+### Tecnica: rectangulos blancos
+```javascript
+p2.drawRectangle({
+  x:           28,                  // X_MARGIN
+  y:           row.y - 5,           // Y del item de texto - 5
+  width:       pageWidth - 56,      // ancho util
+  height:      21,                  // ROW_HEIGHT
+  color:       rgb(1, 1, 1),        // blanco
+  borderWidth: 0
+})
+```
+
+### Filas SIEMPRE eliminadas (rowsToRemove de extractData)
+1. Mensual + su monto
+2. Deduccion Mensual + su monto
+
+### Importante (decision tecnica)
+- Los rectangulos solo cubren VISUALMENTE el texto. El texto sigue en el PDF
+  subyacente (Ctrl+F lo encuentra). Tecnica aprobada por Juan Carlos para
+  envio al cliente.
+
+## Template del correo (email-template.js)
+
+### Estructura HTML (12 secciones)
+1. Header navy con **logo INS** + "COTIZACION AUTOMOVILES" + agente + licencia SUGESE
+2. Saludo: "ESTIMADO/A: [NOMBRE]" + "VEHICULO: [VEHICULO]"
+3. Texto introduccion (fijo)
+4. CTA azul: "VER EXPLICACION DE MI COTIZACION" → CFG.GUIDE_URL
+5. BENEFICIOS INCLUIDOS (6 items con check verde):
+   - Cobertura Total (A,B,C,D,F,H)
+   - Indemnizacion del Deducible (IDD)
+   - Asistencia 24/7 en carretera
+   - 10% de descuento en pago anual
+   - Contratacion 100% en linea
+   - Exencion de Deducible (Cobertura C)
+6. Interes Asegurable (CONDICIONAL, fondo azul claro)
+7. Tabla precios (Trim/Sem/Anual con badge -10%)
+8. Bloque Sustitucion de Repuestos (texto adaptado, fondo azul claro)
+9. Nota agente (CONDICIONAL, fondo naranja)
+10. CTA verde: "Agendar mi cita ahora" → CFG.AGENDA_URL
+11. Notas importantes (UBER no cubre, valor mercado, sustitucion - fondo amarillo)
+12. Footer navy con datos del agente + correo y website (CONDICIONAL website)
+
+### Footer estilos
+- Nombre agente: gris claro #cbd5e1 semibold
+- Agente/Licencia: gris medio #64748b tenue
+- Tel: gris medio (numero en gris claro)
+- Correo y Website: celeste brillante #7dd3fc bold + underline (DESTACAN)
+- Envueltos en `<a mailto:>` y `<a https://>` para evitar reformateo Gmail
+
+### Mapeos
+```javascript
+interestMap = {
+  propietario: 'Propietario Registral',
+  'cero-km':   'Vehiculo Cero Kilometros (en proceso de compra)',
+  traspaso:    'En proceso de traspaso',
+  compra:      'En proceso de compra'
+}
+
+// _sustitucionText(label) - case-insensitive y sin acentos
+// "garantia plus"        → "8 anos / 80,000 km"  ← antes que "garantia"
+// "garantia"             → "5 anos / 60,000 km"
+// "repuesto original"    → "originales en taller multimarca o especializado"
+// "repuesto alternativo" → "genericos y/o usados segun disponibilidad"
+// default                → "condiciones estandar de sustitucion del INS"
+```
+
+## Gmail: Autenticacion (gmail-auth.js)
+
+### Token Model de Google Identity Services
+- `initTokenClient()` idempotente, reintenta cada 300ms hasta que GIS cargue
+- `getToken()` Promise<string>, popup solo si no hay token cacheado en S.accessToken
+- `clearToken()` para forzar nuevo popup (token expirado)
+- `sendEmail(raw)` POST a Gmail API. Si 401 → clearToken + error claro
+
+## Outlook: Autenticacion (outlook-auth.js)
+
+### MSAL PublicClientApplication (Token popup model)
+- `initMSAL()` idempotente — crea instancia en S.msalInstance
+  - clientId: CFG.MSAL_CLIENT_ID
+  - authority: `https://login.microsoftonline.com/common`
+  - cacheLocation: sessionStorage
+- `getOutlookToken()` — intenta silent con cuentas de sessionStorage; si falla → `acquireTokenPopup`
+- `clearOutlookToken()` — limpia S.outlookToken
+
+## MIME (mime-builder.js) — solo Gmail
+
+### Estructura multipart/mixed
+```
+From: "Nombre" <correo>        ← _encodeFromHeader() RFC 2047 si tiene no-ASCII
+To: cliente@destinatario.com
+Subject: [RFC 2047 si tiene no-ASCII]
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="__cotizador_sdi_<ts>_<rand>"
+
+--<boundary>
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+[HTML del correo]
+
+--<boundary>
+Content-Type: application/pdf
+Content-Disposition: attachment; filename="COTIZACION-PLACA.pdf"
+Content-Transfer-Encoding: base64
+
+[PDF en base64 wrapped a 76 chars/linea]
+
+--<boundary>--
+```
+
+### Detalles tecnicos criticos
+- Boundary: `__cotizador_sdi_<Date.now()>_<Math.random().toString(36).slice(2)>`
+- CRLF como separador (NO solo LF)
+- _uint8ToBase64: chunks de 32KB para no saturar el call stack
+- _base64UrlEncode: `unescape(encodeURIComponent(...))` para UTF-8 + replace `+/=` por `-_<vacio>`
+- **_encodeFromHeader:** parsea `"Nombre" <email>` y codifica SOLO el nombre
+  en `=?UTF-8?B?...?=` si tiene caracteres no-ASCII.
+
+## Multi-agente (agent-profile.js)
+
+### Datos en localStorage (`cotizador_sdi_agent_v1`)
+```javascript
+{
+  name:      string,   // required
+  email:     string,   // required, debe coincidir con cuenta del proveedor elegido
+  phone:     string,   // required
+  license:   string,   // required
+  website:   string,   // opcional — '' omite el bloque del footer
+  agendaUrl: string,   // required — link Google Forms, Calendly, etc.
+  provider:  string    // 'gmail' (default) | 'outlook'
+}
+```
+
+### applyProfile(p) sobrescribe CFG y S
+- CFG.FROM_NAME  ← p.name
+- CFG.FROM_EMAIL ← p.email
+- CFG.PHONE      ← p.phone
+- CFG.LICENSE    ← p.license
+- CFG.WEBSITE    ← p.website (puede ser '' para ocultar)
+- CFG.AGENDA_URL ← p.agendaUrl (solo si no vacio)
+- S.provider     ← p.provider || 'gmail'
+
+### Para invitar a un nuevo agente (Gmail)
+1. Agregar su correo como Test User en
+   https://console.cloud.google.com/apis/credentials/consent
+2. El agente abre la URL Netlify → modal de bienvenida → llenar perfil → seleccionar Gmail → guardar
+
+### Para un agente con Outlook
+1. El agente abre la URL Netlify → modal de bienvenida
+2. Llena su nombre, correo Outlook, telefono, licencia
+3. Selecciona "📨 Outlook / Microsoft 365"
+4. Guarda → ya puede enviar desde su cuenta Microsoft (popup la primera vez)
+
+## CONFIG (config.js)
+```javascript
+const CFG = {
+  // Gmail
+  CLIENT_ID:      '446215450096-6edmqnq4u9dg8hr9nd620mgcl6rv182m.apps.googleusercontent.com',
+  GMAIL_SCOPE:    'https://www.googleapis.com/auth/gmail.send',
+  GMAIL_SEND_URL: 'https://gmail.googleapis.com/gmail/v1/users/me/messages/send',
+
+  // Outlook / Microsoft
+  MSAL_CLIENT_ID:   '70998ed5-2c92-4aba-b7e7-fb53b083f472',
+  OUTLOOK_SCOPE:    'https://graph.microsoft.com/Mail.Send',
+  OUTLOOK_SEND_URL: 'https://graph.microsoft.com/v1.0/me/sendMail',
+
+  // Identidad del remitente (sobrescribible por perfil)
+  FROM_NAME:   'Juan Carlos Hernandez Vargas',
+  FROM_EMAIL:  'jhernandez@segurosdelins.com',
+  PHONE:       '8822-1348',
+  LICENSE:     '08-1318',
+  WEBSITE:     'www.segurosdelins.com',  // opcional
+
+  // URLs usadas en el correo
+  GUIDE_URL:   'https://cotizador-segurosdigitalesins-sdi.netlify.app/explicacion/',
+  AGENDA_URL:  'https://forms.gle/tqSaZBDcZfNgNktC7',
+  LOGO_URL:    'https://cotizador-segurosdigitalesins-sdi.netlify.app/img/ins-logo.png',
+
+  // Worker PDF.js
+  PDFJS_WORKER: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
+};
+```
+
+## Estado global (state.js)
+```javascript
+const S = {
+  step:         1,        // 1..4
+  data:         null,     // resultado de extractData()
+  modPDF:       null,     // Uint8Array del PDF limpiado
+  accessToken:  null,     // token OAuth Gmail (1h)
+  tokenClient:  null,     // instancia GIS
+  msalInstance: null,     // instancia MSAL (Outlook)
+  outlookToken: null,     // token OAuth Microsoft
+  provider:     'gmail',  // 'gmail' | 'outlook' — se carga del perfil
+  prevTimer:    null      // debounce de vista previa
+};
+```
+
+## Diseno Visual (styles.css)
+```css
+--navy:       #0c2340   /* Header, footer, textos principales */
+--blue:       #0369a1   /* Botones, acentos */
+--blue-light: #0ea5e9   /* Progress, highlights */
+--green:      #16a34a   /* Boton enviar, precio anual */
+--amber:      #d97706   /* Notas */
+--red:        #dc2626   /* Filas eliminadas */
+font-family:  'Sora', sans-serif
+
+/* Radio group para selector de proveedor */
+.radio-group    → flex, gap 12px, flex-wrap
+.radio-option   → flex, padding 10px 16px, border 2px solid gray-200, cursor pointer
+.radio-option:has(input:checked) → border blue, background #eff6ff, color blue
+```
+
+## Reglas de desarrollo
+
+### Flujo obligatorio
+1. Codigo en `C:/tmp/COTIZADOR-AUTOS/` (clone temporal)
+2. **Paths absolutos `C:/...` SIEMPRE** (Bash y Write resuelven `/tmp` distinto en Windows)
+3. `node --check archivo.js` antes de cualquier commit
+4. Commit con mensaje descriptivo + Co-Authored-By Claude
+5. Push con autorizacion explicita de Juan Carlos
+6. Netlify deploya en 1-2 min
+
+### Errores a evitar
+- NO usar `\n` dentro de template literals con onclick → rompe JS
+- NO hardcodear coordenadas Y del PDF → usar extraccion dinamica via _groupByY
+- NO olvidar `pdfjsLib.GlobalWorkerOptions.workerSrc` al inicializar PDF.js
+- El PDF de cotizacion INS siempre tiene 2 paginas; verificar antes de operar pagina 2
+- MIME multipart: el boundary NO puede aparecer dentro del contenido base64
+- El token de Gmail dura 1 hora; si expira al enviar, limpiar con clearToken()
+- MSAL: acquireTokenSilent falla si no hay cuenta en sessionStorage → caer a acquireTokenPopup
+- Comparar sustitucion de repuestos case-insensitive (PDF dice "garantia plus" minuscula)
+- Mantener orden estricto de carga JS en index.html (ver seccion "Orden de carga")
+
+### Testing en Node
+Wrapper en `C:/tmp/pdf-test/` con pdfjs-dist + pdf-lib instalados.
+Usa `vm.runInContext` con sandbox que polyfilla:
+- window.pdfjsLib, window.PDFLib (libs como globals + propiedad de window)
+- btoa/atob (Buffer.from)
+- localStorage (objeto en memoria con get/set/remove)
+
+## Historial completo de commits (16 commits)
+
+```
+b301934  init: estructura base + shell visual + explicador integrado
+b23a166  fix(config): usar Client ID OAuth real
+1b03190  feat(router): showView + updateStepNav
+c0e0ca7  feat(pdf-extract): extraccion del PDF INS                ⭐ TESTEADO
+df788b3  feat(pdf-modify): tapar Mensual + Deduccion Mensual      ⭐ TESTEADO
+f623768  feat(email-template): HTML del correo                    ⭐ APROBADO
+06e92e7  feat(gmail+mime): OAuth + MIME multipart                 ⭐ TESTEADO
+a0a800e  feat(app): orquestacion completa end-to-end              ⭐ FINAL
+9db55e6  style(email): footer mas tenue (correo y web destacan)
+25c4bd4  feat(profile): perfil multi-agente via localStorage      ⭐ MULTI-AGENTE
+4921120  feat(profile): sitio web tambien editable por agente
+0c1437f  feat(email): logo INS en el header del correo            ⭐ BRANDING
+46c7ab4  fix(email): mojibake en From + ajustes de contenido      ⭐ ANTI-SPAM
+0117a57  feat(profile): link agenda editable + rural/jeep fix     ⭐ AJUSTE CAMPO
+71de232  feat(outlook): soporte Outlook/Microsoft 365 via MSAL    ⭐ OUTLOOK
+6a024e3  fix(agenda): actualizar link del formulario de cita      ⭐ LINK NUEVO
+[checkpoint 20 abr 2026]
+```
+
+## Pendientes
+1. **Probar Outlook end-to-end:** hermano de Juan Carlos configura perfil con su correo
+   Microsoft, selecciona "Outlook", envia primera cotizacion → verificar que llega con PDF.
+2. **Configurar SPF/DKIM en segurosdelins.com** (pendiente): si Juan Carlos comparte
+   donde esta hosteado el dominio, configurar para mejorar entregabilidad Gmail.
+3. **Considerar publicar la app** en Google Cloud (sale del modo Testing) si el numero
+   de agentes crece a 5+ — elimina limite de 100 Test Users y el "App no verificada".
+
+## Contexto del agente
+- Juan Carlos Hernandez Vargas, agente INS, licencia SUGESE 08-1318
+- Solo agente, oficina pequeña, no programador
+- Necesita codigo completo y listo para copiar, sin snippets parciales
+- Stack: HTML/JS puro, Tailwind CDN, sin frameworks ni npm
+- Prefiere respuestas directas sin rodeos
+- Email: jhernandez@segurosdelins.com · Tel: 8822-1348
