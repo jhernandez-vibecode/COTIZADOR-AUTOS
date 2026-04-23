@@ -14,7 +14,7 @@ description: >
 # Cotizador SDI - Checkpoint 23 abril 2026
 
 ## Estado actual
-APP COMPLETA Y FUNCIONAL EN PRODUCCION. 18 commits desde init.
+APP COMPLETA Y FUNCIONAL EN PRODUCCION. 19 commits desde init.
 Multi-agente operativo via localStorage. Gmail Y Outlook soportados
 (selector de proveedor en modal ⚙). Correo con logo INS y headers
 RFC 2047. Probado en produccion con PDF real BRK454 y cotizacion THG170.
@@ -99,8 +99,9 @@ function parsePremium(s) {
 `index.html` header: boton 🧮 (`.header-btn` como `<a>`) apunta a `cancelacion/`.
 
 **Commits:**
-- `feat(cancelacion)`: nueva pagina calculadora de cancelacion anticipada Clausula 33
-- `feat(cancelacion): envio de informe al cliente via Gmail + link desde header`
+- `69001c9` feat(cancelacion): nueva pagina calculadora de cancelacion anticipada Clausula 33 + link header
+- `4b0d381` fix(cancelacion): label dinamico por forma de pago + tabla Clausula 33 siempre visible
+- `d09e637` style(cancelacion): tabla Clausula 33 en correo con fondo navy oscuro igual que la app
 
 ### 20 abril 2026 — Fix link del formulario de cita (dos botones) + override localStorage
 - **Juan Carlos reporto** que el boton "Agendar mi cita ahora" del correo
