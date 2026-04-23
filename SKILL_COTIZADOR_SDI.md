@@ -14,7 +14,7 @@ description: >
 # Cotizador SDI - Checkpoint 23 abril 2026
 
 ## Estado actual
-APP COMPLETA Y FUNCIONAL EN PRODUCCION. 19 commits desde init.
+APP COMPLETA Y FUNCIONAL EN PRODUCCION. 20 commits desde init.
 Multi-agente operativo via localStorage. Gmail Y Outlook soportados
 (selector de proveedor en modal ⚙). Correo con logo INS y headers
 RFC 2047. Probado en produccion con PDF real BRK454 y cotizacion THG170.
@@ -28,21 +28,34 @@ Condiciones Generales del Seguro Voluntario de Automoviles del INS.
 
 **Campos del formulario:**
 - Nombre del cliente, Correo del cliente (para envio), Numero de poliza, Placa
-- Fecha inicio vigencia, Fecha fin vigencia, Fecha de cancelacion
-- Prima anual (₡), Forma de pago, Motivo/nota opcional
+- **Fecha de emision** (fin de vigencia se calcula automatico = emision + 1 año)
+- Fecha de cancelacion
+- Prima pagada (₡) — lo que el cliente pago en su periodo (semestral, trimestral, etc.)
+- Forma de pago (solo informativo, NO multiplica), Motivo/nota opcional
 
-**Tres escenarios de calculo (Clausula 33):**
+**Dos escenarios de calculo (Clausula 33):**
 
 1. **≤ 5 dias naturales desde emision:** 100% devolucion, sin cargos.
-2. **Poliza a corto plazo:** prorata de dias transcurridos sobre dias totales,
-   mas cargo administrativo del 8%.
-   - `prima_devengada = (dias_trans / dias_total) × prima + 8% × prima`
-   - `prima_a_devolver = prima - prima_devengada`
-3. **Poliza anual (≥ 355 dias):** tabla de factores Clausula 33.
-   - Si meses transcurridos < 6: `factor_efectivo = factor_tabla × 50%`
-   - Si meses transcurridos ≥ 6: `factor_efectivo = factor_tabla`
-   - `prima_devengada = prima × factor_efectivo`
-   - `prima_a_devolver = prima - prima_devengada`
+2. **> 5 dias:** tabla de factores Clausula 33, aplicada sobre la **prima pagada**.
+   - `idx = Math.min(monthsComplete(emission, cancel), 11)`
+   - Si meses < 6: `factor_efectivo = factor_tabla × 50%`
+   - Si meses ≥ 6: `factor_efectivo = factor_tabla`
+   - `prima_devengada = prima_pagada × factor_efectivo`
+   - `devuelta = prima_pagada - prima_devengada`
+
+**REGLA CLAVE — prima pagada, NO prima anual:**
+El campo prima = lo que el cliente efectivamente pago en su periodo de pago.
+Para un cliente semestral en el primer semestre: ingresa 175.525 (no 351.050).
+El calculo se hace sobre ese monto. Si el cliente pagara el segundo semestre en
+septiembre, ese es un pago futuro que aun no realizo — no entra al calculo.
+NO se multiplica por el numero de periodos (esto era el bug anterior).
+
+**Recargos por fraccionamiento (GUIA SUSCRIPCION 2025, pag. 9):**
+SVA Colones: Semestral 8%, Trimestral 11%, Mensual 13%.
+Estos recargos estan incluidos en la prima que pago el cliente. La Clausula 33
+no hace distincion explicita — se aplica el factor sobre el monto total pagado
+(prima neta + recargo). Si en el futuro se requiere separar el recargo, agregar
+campo opcional para descontarlo antes de aplicar el factor.
 
 **Tabla de factores Clausula 33 (12 filas):**
 ```
@@ -102,6 +115,7 @@ function parsePremium(s) {
 - `69001c9` feat(cancelacion): nueva pagina calculadora de cancelacion anticipada Clausula 33 + link header
 - `4b0d381` fix(cancelacion): label dinamico por forma de pago + tabla Clausula 33 siempre visible
 - `d09e637` style(cancelacion): tabla Clausula 33 en correo con fondo navy oscuro igual que la app
+- `3185ebe` fix(cancelacion): fecha emision unica + calculo sobre prima pagada sin multiplicar
 
 ### 20 abril 2026 — Fix link del formulario de cita (dos botones) + override localStorage
 - **Juan Carlos reporto** que el boton "Agendar mi cita ahora" del correo
