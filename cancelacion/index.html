@@ -265,18 +265,13 @@
 
       <div class="grid-2" style="gap:12px;">
         <div class="form-row">
-          <label class="form-label required">Inicio de vigencia</label>
-          <input class="form-control" id="c-start" type="date" />
+          <label class="form-label required">Fecha de emisión</label>
+          <input class="form-control" id="c-emission" type="date" />
         </div>
         <div class="form-row">
-          <label class="form-label required">Fin de vigencia</label>
-          <input class="form-control" id="c-end" type="date" />
+          <label class="form-label required">Fecha de cancelación</label>
+          <input class="form-control" id="c-cancel" type="date" />
         </div>
-      </div>
-
-      <div class="form-row">
-        <label class="form-label required">Fecha de cancelación</label>
-        <input class="form-control" id="c-cancel" type="date" />
       </div>
 
       <div class="form-row">
@@ -441,15 +436,7 @@ function updatePremiumLabel() {
   const input   = document.getElementById('c-premium');
   lbl.textContent       = cfg.label;
   input.placeholder     = cfg.placeholder;
-  if (cfg.mult > 1) {
-    const v = parsePremium(input.value);
-    hint.textContent   = v > 0
-      ? '→ Prima anual equivalente: ' + fmt(v * cfg.mult)
-      : '→ Se multiplicará ×' + cfg.mult + ' para obtener la prima anual';
-    hint.style.display = 'block';
-  } else {
-    hint.style.display = 'none';
-  }
+  hint.style.display = 'none';
 }
 
 // ══ INIT ══
@@ -480,102 +467,80 @@ document.getElementById('btnReset').addEventListener('click', () => {
 //  CALCULAR
 // ══════════════════════════════════════════════════════════════
 function calculate() {
-  const name    = document.getElementById('c-name').value.trim();
-  const email   = document.getElementById('c-email').value.trim();
-  const policy  = document.getElementById('c-policy').value.trim();
-  const plate   = document.getElementById('c-plate').value.trim().toUpperCase();
-  const startV  = document.getElementById('c-start').value;
-  const endV    = document.getElementById('c-end').value;
-  const cancelV = document.getElementById('c-cancel').value;
-  const payment       = document.getElementById('c-payment').value;
-  const note          = document.getElementById('c-note').value.trim();
-  const premiumPeriod = parsePremium(document.getElementById('c-premium').value);
-  const paymentMult   = (PAYMENT_CFG[payment] || PAYMENT_CFG.Anual).mult;
-  const premium       = premiumPeriod * paymentMult; // siempre prima anual equivalente
+  const name      = document.getElementById('c-name').value.trim();
+  const email     = document.getElementById('c-email').value.trim();
+  const policy    = document.getElementById('c-policy').value.trim();
+  const plate     = document.getElementById('c-plate').value.trim().toUpperCase();
+  const emissionV = document.getElementById('c-emission').value;
+  const cancelV   = document.getElementById('c-cancel').value;
+  const payment   = document.getElementById('c-payment').value;
+  const note      = document.getElementById('c-note').value.trim();
+  const premium   = parsePremium(document.getElementById('c-premium').value);
 
   const missing = [];
-  if (!name)        missing.push('Nombre del cliente');
-  if (!policy)      missing.push('Número de póliza');
-  if (!startV)      missing.push('Inicio de vigencia');
-  if (!endV)        missing.push('Fin de vigencia');
-  if (!cancelV)     missing.push('Fecha de cancelación');
-  if (premiumPeriod <= 0) missing.push('Prima válida');
+  if (!name)       missing.push('Nombre del cliente');
+  if (!policy)     missing.push('Número de póliza');
+  if (!emissionV)  missing.push('Fecha de emisión');
+  if (!cancelV)    missing.push('Fecha de cancelación');
+  if (premium <= 0) missing.push('Prima válida');
   if (missing.length) { alert('Faltan campos:\n• ' + missing.join('\n• ')); return; }
 
-  const start  = new Date(startV  + 'T00:00:00');
-  const end    = new Date(endV    + 'T00:00:00');
-  const cancel = new Date(cancelV + 'T00:00:00');
+  const emission = new Date(emissionV + 'T00:00:00');
+  const cancel   = new Date(cancelV   + 'T00:00:00');
 
-  if (cancel < start) { alert('La fecha de cancelación no puede ser anterior al inicio de vigencia.'); return; }
-  if (cancel > end)   { alert('La fecha de cancelación no puede ser posterior al fin de vigencia.'); return; }
+  // Fin de vigencia = emisión + 1 año
+  const end = new Date(emission);
+  end.setFullYear(end.getFullYear() + 1);
 
-  const elapsedDays   = daysBetween(start, cancel);
-  const elapsedMonths = monthsComplete(start, cancel);
-  const totalDays     = daysBetween(start, end);
-  const isAnnual      = totalDays >= 355;
+  if (cancel < emission) { alert('La fecha de cancelación no puede ser anterior a la fecha de emisión.'); return; }
+  if (cancel > end)      { alert('La fecha de cancelación excede la vigencia anual de la póliza.'); return; }
 
-  let badgeHTML, detailsHTML, tableHTML = '', devuelta, retenida, scenarioName, scenarioKey, activeFactorIdx = -1;
+  const elapsedDays   = daysBetween(emission, cancel);
+  const elapsedMonths = monthsComplete(emission, cancel);
 
-  // ─── Escenario 1: ≤ 5 días naturales ───
+  let badgeHTML, detailsHTML, devuelta, retenida, scenarioName, scenarioKey, activeFactorIdx = -1;
+
+  // ─── Escenario 1: ≤ 5 días desde emisión → 100% devolución ───
   if (elapsedDays <= 5) {
-    devuelta = premium; retenida = 0;
+    devuelta     = premium; retenida = 0;
     scenarioKey  = 's1';
     scenarioName = 'Cancelación dentro de los 5 días · 100% devolución';
     badgeHTML    = `<span class="scenario-badge badge-s1">✓ ${scenarioName}</span>`;
     detailsHTML  = rows([
-      ['Días transcurridos',            `${elapsedDays} día${elapsedDays !== 1 ? 's' : ''}`, ''],
-      ['Aplica',                        'Cláusula 33, punto 1', ''],
-      ['Cargo administrativo',          'Ninguno', ''],
-      ['Prima devengada (INS retiene)', fmt(0), ''],
+      ['Días transcurridos desde emisión', `${elapsedDays} día${elapsedDays !== 1 ? 's' : ''}`, ''],
+      ['Aplica',                           'Cláusula 33, punto 1', ''],
+      ['Prima devengada (INS retiene)',    fmt(0), ''],
     ]);
   }
 
-  // ─── Escenario 2: póliza a corto plazo ───
-  else if (!isAnnual) {
-    const prop  = elapsedDays / totalDays;
-    const admin = premium * 0.08;
-    retenida = Math.min(premium * prop + admin, premium);
-    devuelta = Math.max(premium - retenida, 0);
-    scenarioKey  = 's2';
-    scenarioName = 'Póliza a corto plazo · Prorrata − 8% adm.';
-    badgeHTML    = `<span class="scenario-badge badge-s2">⏱ ${scenarioName}</span>`;
-    detailsHTML  = rows([
-      ['Días transcurridos',            `${elapsedDays} de ${totalDays} días`, ''],
-      ['Proporción transcurrida',       `${(prop * 100).toFixed(2)}%`, ''],
-      ['Prima proporcional',            fmt(premium * prop), ''],
-      ['Cargo por administración (8%)', fmt(admin), 'accent'],
-      ['Total retenido por INS',        fmt(retenida), 'accent'],
-    ]);
-  }
-
-  // ─── Escenario 3: póliza anual, tabla de factores ───
+  // ─── Escenario 2: tabla Cláusula 33 según mes transcurrido ───
   else {
     const idx        = Math.min(elapsedMonths, 11);
     activeFactorIdx  = idx;
     const inFirst6   = elapsedMonths < 6;
     const factorBase = TABLA[idx].factor;
     const factorEft  = inFirst6 ? factorBase * 0.5 : factorBase;
-    retenida = premium * factorEft;
-    devuelta = premium - retenida;
-    scenarioKey  = inFirst6 ? 's3a' : 's3b';
+    retenida    = premium * factorEft;
+    devuelta    = premium - retenida;
+    scenarioKey = inFirst6 ? 's3a' : 's3b';
     scenarioName = inFirst6
-      ? 'Póliza anual · Primeros 6 meses (factor ×50%)'
-      : 'Póliza anual · Tabla Cláusula 33';
-    badgeHTML  = `<span class="scenario-badge badge-${scenarioKey}">📅 ${scenarioName}</span>`;
-    tableHTML  = buildFactorTable(idx);
+      ? 'Cláusula 33 · Primeros 6 meses (factor ×50%)'
+      : 'Cláusula 33 · Más de 6 meses';
+    badgeHTML = `<span class="scenario-badge badge-${scenarioKey}">📅 ${scenarioName}</span>`;
     detailsHTML = rows([
-      ['Meses completos transcurridos',  `${elapsedMonths} mes${elapsedMonths !== 1 ? 'es' : ''}  (${elapsedDays} días)`, ''],
-      ['Factor tabla (Cláusula 33)',      `${(factorBase * 100).toFixed(0)}%`, ''],
+      ['Tiempo desde emisión',            `${elapsedMonths} mes${elapsedMonths !== 1 ? 'es' : ''} completo${elapsedMonths !== 1 ? 's' : ''} (${elapsedDays} días)`, ''],
+      ['Fila tabla Cláusula 33',          TABLA[idx].label, ''],
+      ['Factor tabla',                    `${(factorBase * 100).toFixed(0)}%`, ''],
       inFirst6
-        ? ['Reducción primeros 6 meses', '×50% — Cláusula 33, punto 3', 'accent']
-        : ['Período',                    'Más de 6 meses · factor completo', ''],
-      ['Factor efectivo aplicado',       `${(factorEft * 100).toFixed(1)}%`, 'accent'],
-      ['Prima devengada (INS retiene)',  fmt(retenida), ''],
+        ? ['Reducción primeros 6 meses',  '×50% — Cláusula 33, punto 3', 'accent']
+        : ['Período',                     'Más de 6 meses · factor completo', ''],
+      ['Factor efectivo (INS retiene)',   `${(factorEft * 100).toFixed(1)}%`, 'accent'],
+      ['Prima devengada (INS retiene)',   fmt(retenida), ''],
     ]);
   }
 
   const tableSection = `<hr class="result-divider"><div class="result-label" style="margin-bottom:8px;">Tabla de referencia — Cláusula 33</div>${buildFactorTable(activeFactorIdx)}`;
-  const noteSection = note
+  const noteSection  = note
     ? `<hr class="result-divider"><div class="note-box"><strong>Nota:</strong> ${esc(note)}</div>`
     : '';
 
@@ -597,7 +562,7 @@ function calculate() {
       <span>Póliza ${esc(policy)}</span>
       <span>Placa ${esc(plate)}</span>
       <span>Pago ${esc(payment)}</span>
-      <span>${fmtDate(start)} → ${fmtDate(end)}</span>
+      <span>Emitida ${fmtDate(emission)} · Vence ${fmtDate(end)}</span>
     </div>
   </div>
 
@@ -615,7 +580,7 @@ function calculate() {
   <div class="disclaimer">
     Cálculo informativo según Cláusula 33, Condiciones Generales del Seguro Voluntario
     de Automóviles, INS. El monto final debe ser confirmado por el INS.
-    Prima anual equivalente: ${fmt(premium)}${paymentMult > 1 ? ' (' + payment + ' ' + fmt(premiumPeriod) + ' ×' + paymentMult + ')' : ''}.
+    Base del cálculo: prima pagada ${esc(payment).toLowerCase()} ${fmt(premium)}.
   </div>
 
   ${sendBtn}
@@ -625,11 +590,10 @@ function calculate() {
   document.getElementById('btnPrint').style.display = 'block';
   document.getElementById('btnReset').style.display = 'block';
 
-  // Guardar estado para el envío
-  LAST_CALC = { name, email, policy, plate, start, end, cancel,
-                premium, premiumPeriod, paymentMult, payment, note,
+  LAST_CALC = { name, email, policy, plate, emission, end, cancel,
+                premium, payment, note,
                 devuelta, retenida,
-                elapsedDays, elapsedMonths, totalDays, isAnnual, scenarioName };
+                elapsedDays, elapsedMonths, scenarioName };
 
   if (hasSendEmail) {
     document.getElementById('btnSendEmail').addEventListener('click', handleSend);
@@ -721,7 +685,7 @@ function buildCancelEmail(c) {
 
   const activeFIdx = Math.min(c.elapsedMonths || 0, 11);
   const clausula33Table = TABLA.map((r, i) => {
-    const isActive = c.isAnnual && c.elapsedDays > 5 && i === activeFIdx;
+    const isActive = c.elapsedDays > 5 && i === activeFIdx;
     const bg     = isActive ? 'rgba(74,222,128,.18)' : (i % 2 === 0 ? 'rgba(255,255,255,.04)' : 'rgba(255,255,255,.08)');
     const color  = isActive ? '#4ade80' : 'rgba(255,255,255,.75)';
     const fw     = isActive ? '700' : '400';
@@ -782,7 +746,7 @@ function buildCancelEmail(c) {
           </tr>
           <tr>
             <td style="font-size:13px;color:#6b7280;padding:4px 0;">Vigencia</td>
-            <td style="font-size:13px;font-weight:700;color:#111827;">${fmtD(c.start)} — ${fmtD(c.end)}</td>
+            <td style="font-size:13px;font-weight:700;color:#111827;">${fmtD(c.emission)} — ${fmtD(c.end)}</td>
           </tr>
           <tr>
             <td style="font-size:13px;color:#6b7280;padding:4px 0;">Fecha de cancelación</td>
