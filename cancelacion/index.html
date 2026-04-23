@@ -280,12 +280,6 @@
       </div>
 
       <div class="form-row">
-        <label class="form-label required">Prima anual (₡)</label>
-        <input class="form-control" id="c-premium" type="text" inputmode="numeric"
-               placeholder="Ej: 570.891" autocomplete="off" />
-      </div>
-
-      <div class="form-row">
         <label class="form-label">Forma de pago</label>
         <select class="form-control" id="c-payment">
           <option value="Anual">Anual</option>
@@ -293,6 +287,13 @@
           <option value="Trimestral" selected>Trimestral</option>
           <option value="Mensual">Mensual</option>
         </select>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label required" id="c-premium-label">Prima trimestral (₡)</label>
+        <input class="form-control" id="c-premium" type="text" inputmode="numeric"
+               placeholder="Ej: 142.722" autocomplete="off" />
+        <div id="c-premium-hint" style="margin-top:6px;font-size:12px;color:var(--blue);font-weight:600;display:none;"></div>
       </div>
 
       <div class="form-row">
@@ -424,12 +425,43 @@ function buildFactorTable(activeIdx) {
 // ══ ESTADO DEL CÁLCULO (compartido con handleSend) ══
 let LAST_CALC = null;
 
+// ══ MULTIPLICADORES Y LABELS por forma de pago ══
+const PAYMENT_CFG = {
+  Anual:      { mult: 1,  label: 'Prima anual (₡)',      placeholder: 'Ej: 570.891' },
+  Semestral:  { mult: 2,  label: 'Prima semestral (₡)',  placeholder: 'Ej: 285.445' },
+  Trimestral: { mult: 4,  label: 'Prima trimestral (₡)', placeholder: 'Ej: 142.722' },
+  Mensual:    { mult: 12, label: 'Prima mensual (₡)',     placeholder: 'Ej: 47.574'  },
+};
+
+function updatePremiumLabel() {
+  const payment = document.getElementById('c-payment').value;
+  const cfg     = PAYMENT_CFG[payment] || PAYMENT_CFG.Anual;
+  const lbl     = document.getElementById('c-premium-label');
+  const hint    = document.getElementById('c-premium-hint');
+  const input   = document.getElementById('c-premium');
+  lbl.textContent       = cfg.label;
+  input.placeholder     = cfg.placeholder;
+  if (cfg.mult > 1) {
+    const v = parsePremium(input.value);
+    hint.textContent   = v > 0
+      ? '→ Prima anual equivalente: ' + fmt(v * cfg.mult)
+      : '→ Se multiplicará ×' + cfg.mult + ' para obtener la prima anual';
+    hint.style.display = 'block';
+  } else {
+    hint.style.display = 'none';
+  }
+}
+
 // ══ INIT ══
 document.getElementById('c-cancel').valueAsDate = new Date();
+updatePremiumLabel();
+
+document.getElementById('c-payment').addEventListener('change', updatePremiumLabel);
 
 document.getElementById('c-premium').addEventListener('blur', function () {
   const v = parsePremium(this.value);
   if (v > 0) this.value = v.toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  updatePremiumLabel();
 });
 
 document.getElementById('btnCalc').addEventListener('click', calculate);
@@ -455,9 +487,11 @@ function calculate() {
   const startV  = document.getElementById('c-start').value;
   const endV    = document.getElementById('c-end').value;
   const cancelV = document.getElementById('c-cancel').value;
-  const premium = parsePremium(document.getElementById('c-premium').value);
-  const payment = document.getElementById('c-payment').value;
-  const note    = document.getElementById('c-note').value.trim();
+  const payment       = document.getElementById('c-payment').value;
+  const note          = document.getElementById('c-note').value.trim();
+  const premiumPeriod = parsePremium(document.getElementById('c-premium').value);
+  const paymentMult   = (PAYMENT_CFG[payment] || PAYMENT_CFG.Anual).mult;
+  const premium       = premiumPeriod * paymentMult; // siempre prima anual equivalente
 
   const missing = [];
   if (!name)        missing.push('Nombre del cliente');
@@ -465,7 +499,7 @@ function calculate() {
   if (!startV)      missing.push('Inicio de vigencia');
   if (!endV)        missing.push('Fin de vigencia');
   if (!cancelV)     missing.push('Fecha de cancelación');
-  if (premium <= 0) missing.push('Prima anual válida');
+  if (premiumPeriod <= 0) missing.push('Prima válida');
   if (missing.length) { alert('Faltan campos:\n• ' + missing.join('\n• ')); return; }
 
   const start  = new Date(startV  + 'T00:00:00');
@@ -480,7 +514,7 @@ function calculate() {
   const totalDays     = daysBetween(start, end);
   const isAnnual      = totalDays >= 355;
 
-  let badgeHTML, detailsHTML, tableHTML = '', devuelta, retenida, scenarioName, scenarioKey;
+  let badgeHTML, detailsHTML, tableHTML = '', devuelta, retenida, scenarioName, scenarioKey, activeFactorIdx = -1;
 
   // ─── Escenario 1: ≤ 5 días naturales ───
   if (elapsedDays <= 5) {
@@ -517,6 +551,7 @@ function calculate() {
   // ─── Escenario 3: póliza anual, tabla de factores ───
   else {
     const idx        = Math.min(elapsedMonths, 11);
+    activeFactorIdx  = idx;
     const inFirst6   = elapsedMonths < 6;
     const factorBase = TABLA[idx].factor;
     const factorEft  = inFirst6 ? factorBase * 0.5 : factorBase;
@@ -539,9 +574,7 @@ function calculate() {
     ]);
   }
 
-  const tableSection = tableHTML
-    ? `<hr class="result-divider"><div class="result-label" style="margin-bottom:8px;">Tabla Cláusula 33</div>${tableHTML}`
-    : '';
+  const tableSection = `<hr class="result-divider"><div class="result-label" style="margin-bottom:8px;">Tabla de referencia — Cláusula 33</div>${buildFactorTable(activeFactorIdx)}`;
   const noteSection = note
     ? `<hr class="result-divider"><div class="note-box"><strong>Nota:</strong> ${esc(note)}</div>`
     : '';
@@ -582,7 +615,7 @@ function calculate() {
   <div class="disclaimer">
     Cálculo informativo según Cláusula 33, Condiciones Generales del Seguro Voluntario
     de Automóviles, INS. El monto final debe ser confirmado por el INS.
-    Prima anual ingresada: ${fmt(premium)}.
+    Prima anual equivalente: ${fmt(premium)}${paymentMult > 1 ? ' (' + payment + ' ' + fmt(premiumPeriod) + ' ×' + paymentMult + ')' : ''}.
   </div>
 
   ${sendBtn}
@@ -594,7 +627,8 @@ function calculate() {
 
   // Guardar estado para el envío
   LAST_CALC = { name, email, policy, plate, start, end, cancel,
-                premium, payment, note, devuelta, retenida,
+                premium, premiumPeriod, paymentMult, payment, note,
+                devuelta, retenida,
                 elapsedDays, elapsedMonths, totalDays, isAnnual, scenarioName };
 
   if (hasSendEmail) {
@@ -679,11 +713,23 @@ function buildCancelEmail(c) {
 
   const noteRow = c.note
     ? `<tr>
-        <td colspan="2" style="padding:12px 14px;background:#fef3c7;font-size:13px;color:#78350f;border-radius:0 0 8px 8px;">
+        <td colspan="2" style="padding:12px 14px;background:#fef3c7;font-size:13px;color:#78350f;">
           <strong>Nota del agente:</strong> ${esc(c.note)}
         </td>
        </tr>`
     : '';
+
+  const activeFIdx = Math.min(c.elapsedMonths || 0, 11);
+  const clausula33Table = TABLA.map((r, i) => {
+    const isActive = c.isAnnual && c.elapsedDays > 5 && i === activeFIdx;
+    const bg = isActive ? '#dcfce7' : (i % 2 === 0 ? '#f9fafb' : '#ffffff');
+    const fw = isActive ? '700' : '400';
+    const color = isActive ? '#166534' : '#374151';
+    return `<tr>
+      <td style="padding:7px 14px;font-size:12px;color:${color};font-weight:${fw};background:${bg};border-bottom:1px solid #f3f4f6;">${r.label}</td>
+      <td style="padding:7px 14px;font-size:12px;font-weight:${fw};color:${color};background:${bg};border-bottom:1px solid #f3f4f6;text-align:right;">${(r.factor*100).toFixed(0)}%</td>
+    </tr>`;
+  }).join('');
 
   return `<!DOCTYPE html>
 <html lang="es">
@@ -784,6 +830,23 @@ function buildCancelEmail(c) {
           </tr>
           ${noteRow}
         </table>
+      </div>
+
+      <!-- TABLA CLÁUSULA 33 -->
+      <div style="margin-bottom:24px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#6b7280;margin-bottom:10px;">
+          Tabla de referencia — Cláusula 33
+        </div>
+        <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
+          <tr style="background:#0c2340;">
+            <td style="padding:8px 14px;font-size:11px;font-weight:700;color:rgba(255,255,255,.7);letter-spacing:.5px;text-transform:uppercase;">Tiempo transcurrido</td>
+            <td style="padding:8px 14px;font-size:11px;font-weight:700;color:rgba(255,255,255,.7);letter-spacing:.5px;text-transform:uppercase;text-align:right;">Factor (% prima anual)</td>
+          </tr>
+          ${clausula33Table}
+        </table>
+        <p style="margin:8px 0 0;font-size:11px;color:#9ca3af;">
+          * Si la cancelación ocurre dentro de los primeros 6 meses, el factor se aplica al 50%.
+        </p>
       </div>
 
       <!-- DISCLAIMER -->
