@@ -5,20 +5,102 @@ description: >
   de PDFs de cotizacion INS, los limpia, genera correo HTML personalizado
   y lo envia via Gmail API o Outlook (Microsoft Graph). Multi-agente via
   localStorage, sin backend. Stack 100% sin build (HTML + JS vanilla +
-  Tailwind CDN). Usar cuando Juan Carlos pida construir, modificar o
-  depurar cualquier modulo de esta app. Leer COMPLETO antes de escribir
+  Tailwind CDN). Incluye calculadora de cancelacion anticipada con envio
+  de informe al cliente. Usar cuando Juan Carlos pida construir, modificar
+  o depurar cualquier modulo de esta app. Leer COMPLETO antes de escribir
   cualquier codigo.
 ---
 
-# Cotizador SDI - Checkpoint 20 abril 2026
+# Cotizador SDI - Checkpoint 23 abril 2026
 
 ## Estado actual
-APP COMPLETA Y FUNCIONAL EN PRODUCCION. 16 commits desde init.
+APP COMPLETA Y FUNCIONAL EN PRODUCCION. 18 commits desde init.
 Multi-agente operativo via localStorage. Gmail Y Outlook soportados
 (selector de proveedor en modal ⚙). Correo con logo INS y headers
 RFC 2047. Probado en produccion con PDF real BRK454 y cotizacion THG170.
+**Calculadora de cancelacion anticipada** disponible en `/cancelacion/`.
 
 ## Decisiones recientes
+
+### 23 abril 2026 — Calculadora de cancelacion anticipada (`/cancelacion/`)
+Nueva pagina standalone en `cancelacion/index.html` que implementa la Clausula 33 de las
+Condiciones Generales del Seguro Voluntario de Automoviles del INS.
+
+**Campos del formulario:**
+- Nombre del cliente, Correo del cliente (para envio), Numero de poliza, Placa
+- Fecha inicio vigencia, Fecha fin vigencia, Fecha de cancelacion
+- Prima anual (₡), Forma de pago, Motivo/nota opcional
+
+**Tres escenarios de calculo (Clausula 33):**
+
+1. **≤ 5 dias naturales desde emision:** 100% devolucion, sin cargos.
+2. **Poliza a corto plazo:** prorata de dias transcurridos sobre dias totales,
+   mas cargo administrativo del 8%.
+   - `prima_devengada = (dias_trans / dias_total) × prima + 8% × prima`
+   - `prima_a_devolver = prima - prima_devengada`
+3. **Poliza anual (≥ 355 dias):** tabla de factores Clausula 33.
+   - Si meses transcurridos < 6: `factor_efectivo = factor_tabla × 50%`
+   - Si meses transcurridos ≥ 6: `factor_efectivo = factor_tabla`
+   - `prima_devengada = prima × factor_efectivo`
+   - `prima_a_devolver = prima - prima_devengada`
+
+**Tabla de factores Clausula 33 (12 filas):**
+```
+Hasta 1 mes             → 40%   (idx 0)
+Mas de 1 a 2 meses      → 48%   (idx 1)
+Mas de 2 a 3 meses      → 55%   (idx 2)
+Mas de 3 a 4 meses      → 62%   (idx 3)
+Mas de 4 a 5 meses      → 68%   (idx 4)
+Mas de 5 a 6 meses      → 75%   (idx 5)
+Mas de 6 a 7 meses      → 79%   (idx 6)
+Mas de 7 a 8 meses      → 84%   (idx 7)
+Mas de 8 a 9 meses      → 89%   (idx 8)
+Mas de 9 a 10 meses     → 93%   (idx 9)
+Mas de 10 a 11 meses    → 96%   (idx 10)
+Mas de 11 a 12 meses    → 100%  (idx 11)
+```
+Seleccion: `idx = Math.min(monthsComplete(start, cancel), 11)`.
+`monthsComplete(a, b)`: meses calendario completos; si `b.getDate() < a.getDate()`, se resta 1.
+
+**Envio de informe al cliente (Gmail):**
+- La pagina importa `../js/config.js`, `state.js`, `agent-profile.js`, `gmail-auth.js`, `mime-builder.js`
+- Llama `applyProfile(loadProfile())` al inicio para usar los datos del agente de localStorage
+- `buildMIMESimple({to, from, subject, html})` — version HTML-only de buildMIME (sin adjunto PDF)
+- `buildCancelEmail(calc)` — genera el HTML del informe: header navy+logo INS, datos poliza,
+  monto destacado en verde, tabla de detalle, disclaimer, footer con datos del agente
+- `handleSend()` usa `getToken()` + `sendEmail(raw)` (mismo flujo que cotizador principal)
+- Boton "Enviar informe" aparece en el resultado SOLO si se ingreso correo del cliente
+
+**Bug critico resuelto: parsePremium y locale es-CR**
+El blur handler formatea el campo prima a formato es-CR ("570.891,00" = 570,891 colones).
+Si `parsePremium` usaba solo `parseFloat(s.replace(/[^\d.]/g,''))`, el comma se strippeaba
+convirtiendo "570.891,00" en "57089100" (×100). Solucion con parser inteligente:
+```javascript
+function parsePremium(s) {
+  let v = s.replace(/[^\d.,]/g, '');
+  const lastDot = v.lastIndexOf('.');
+  const lastComma = v.lastIndexOf(',');
+  if (lastDot >= 0 && lastComma >= 0) {
+    // ambos: el posterior es decimal
+    if (lastComma > lastDot) v = v.replace(/\./g,'').replace(',','.');  // es-CR
+    else                     v = v.replace(/,/g,'');                    // English
+  } else if (lastComma >= 0) {
+    const after = v.slice(lastComma + 1);
+    v = after.length !== 3 ? v.replace(',','.') : v.replace(/,/g,'');
+  } else if (lastDot >= 0) {
+    const after = v.slice(lastDot + 1);
+    if (after.length === 3) v = v.replace(/\./g,'');
+  }
+  return parseFloat(v) || 0;
+}
+```
+
+**Link desde el cotizador principal:**
+`index.html` header: boton 🧮 (`.header-btn` como `<a>`) apunta a `cancelacion/`.
+
+**Commits:**
+- `feat(cancelacion)`: nueva pagina calculadora de cancelacion anticipada Clausula 33
+- `feat(cancelacion): envio de informe al cliente via Gmail + link desde header`
 
 ### 20 abril 2026 — Fix link del formulario de cita (dos botones) + override localStorage
 - **Juan Carlos reporto** que el boton "Agendar mi cita ahora" del correo
@@ -137,6 +219,8 @@ COTIZADOR-AUTOS/
 │   ├── outlook-auth.js     ← initMSAL, getOutlookToken, clearOutlookToken (MSAL)
 │   ├── outlook-sender.js   ← sendOutlookEmail({to,subject,html,pdfBytes,filename}) (Graph API)
 │   └── app.js              ← Eventos UI, orquestacion, populate, modal handlers, provider bifurcacion
+├── cancelacion/            ← Calculadora de cancelacion anticipada (standalone)
+│   └── index.html          ← HTML+JS autocontenido, importa ../js/* para envio Gmail
 └── explicacion/            ← Explicador visual integrado (link del correo)
     ├── index.html          ← React standalone (Babel CDN)
     └── INS BLANCO.png
@@ -552,7 +636,7 @@ Usa `vm.runInContext` con sandbox que polyfilla:
 - btoa/atob (Buffer.from)
 - localStorage (objeto en memoria con get/set/remove)
 
-## Historial completo de commits (16 commits)
+## Historial completo de commits (18 commits)
 
 ```
 b301934  init: estructura base + shell visual + explicador integrado
@@ -572,6 +656,9 @@ a0a800e  feat(app): orquestacion completa end-to-end              ⭐ FINAL
 71de232  feat(outlook): soporte Outlook/Microsoft 365 via MSAL    ⭐ OUTLOOK
 6a024e3  fix(agenda): actualizar link del formulario de cita      ⭐ LINK NUEVO
 [checkpoint 20 abr 2026]
+[pendiente]  feat(cancelacion): calculadora Clausula 33 + boton en header  ⭐ NUEVA FEATURE
+[pendiente]  docs(skill): sync SKILL_COTIZADOR_SDI.md checkpoint 23 abr
+[checkpoint 23 abr 2026]
 ```
 
 ## Pendientes

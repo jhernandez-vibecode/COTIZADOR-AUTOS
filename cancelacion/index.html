@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora de Cancelación — Seguros Digitales INS</title>
+
+  <link rel="icon" type="image/svg+xml" href="../img/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../css/styles.css" />
+
+  <style>
+    .calc-main {
+      max-width: 1100px;
+      margin: 32px auto;
+      padding: 0 24px;
+    }
+
+    /* ── RESULT CARD (dark panel) ── */
+    .result-card {
+      background: var(--navy);
+      border-radius: 12px;
+      padding: 28px;
+      color: #fff;
+      position: relative;
+      overflow: hidden;
+    }
+    .result-card::before {
+      content: '';
+      position: absolute;
+      top: -70px; right: -70px;
+      width: 200px; height: 200px;
+      background: rgba(255,255,255,.03);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .result-card::after {
+      content: '';
+      position: absolute;
+      bottom: -50px; left: -50px;
+      width: 160px; height: 160px;
+      background: rgba(255,255,255,.025);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .result-client {
+      padding: 14px 16px;
+      background: rgba(255,255,255,.07);
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .result-client-name {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .result-client-meta {
+      font-size: 12px;
+      opacity: .65;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+
+    .scenario-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 13px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .3px;
+      margin-bottom: 18px;
+    }
+    .badge-s1  { background: rgba(74,222,128,.18); color: #4ade80; }
+    .badge-s2  { background: rgba(251,191,36,.18);  color: #fbbf24; }
+    .badge-s3a { background: rgba(147,197,253,.18); color: #93c5fd; }
+    .badge-s3b { background: rgba(167,139,250,.18); color: #c4b5fd; }
+
+    .result-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      opacity: .55;
+      margin-bottom: 4px;
+    }
+    .result-amount {
+      font-size: 44px;
+      font-weight: 700;
+      color: #4ade80;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .result-currency {
+      font-size: 13px;
+      opacity: .6;
+      margin-bottom: 22px;
+    }
+
+    .result-divider {
+      border: none;
+      border-top: 1px solid rgba(255,255,255,.10);
+      margin: 18px 0;
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      font-size: 13px;
+      margin-bottom: 9px;
+      gap: 12px;
+    }
+    .result-row:last-child { margin-bottom: 0; }
+    .result-row-label { opacity: .65; flex: 1; }
+    .result-row-value { font-weight: 600; text-align: right; white-space: nowrap; }
+    .result-row-value.accent   { color: #fbbf24; }
+    .result-row-value.positive { color: #4ade80; }
+
+    /* ── FACTOR TABLE (inside dark card) ── */
+    .factor-tbl { border-radius: 8px; overflow: hidden; margin-top: 4px; }
+    .factor-tbl-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 7px 12px;
+      font-size: 12px;
+      background: rgba(255,255,255,.04);
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .factor-tbl-row:last-child { border-bottom: none; }
+    .factor-tbl-row.active { background: rgba(74,222,128,.14); font-weight: 700; }
+    .factor-tbl-row.active .ftl,
+    .factor-tbl-row.active .ftv { color: #4ade80; }
+    .ftl { opacity: .7; }
+    .ftv { font-weight: 600; }
+
+    /* ── SEND BUTTON (inside result card) ── */
+    .btn-enviar {
+      width: 100%;
+      padding: 13px;
+      background: #16a34a;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background .15s, transform .15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-enviar:hover:not(:disabled) { background: #15803d; transform: translateY(-1px); }
+    .btn-enviar:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* ── SUCCESS SEND STATE ── */
+    .send-success {
+      margin-top: 16px;
+      padding: 12px 14px;
+      background: rgba(74,222,128,.15);
+      border-radius: 8px;
+      font-size: 13px;
+      color: #4ade80;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      border: 2px dashed var(--gray-200);
+      border-radius: 12px;
+      padding: 60px 28px;
+      text-align: center;
+      color: var(--gray-500);
+      background: var(--gray-50);
+    }
+    .empty-icon { font-size: 52px; margin-bottom: 14px; }
+    .empty-text { font-size: 14px; font-weight: 500; line-height: 1.6; }
+
+    /* ── DISCLAIMER ── */
+    .disclaimer {
+      margin-top: 18px;
+      padding: 11px 14px;
+      background: rgba(255,255,255,.05);
+      border-radius: 8px;
+      font-size: 11px;
+      opacity: .55;
+      line-height: 1.6;
+    }
+    .note-box {
+      margin-top: 0;
+      padding: 11px 14px;
+      background: rgba(255,255,255,.06);
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 1.5;
+      opacity: .8;
+    }
+
+    /* ── PRINT ── */
+    @media print {
+      .app-header { background: var(--navy) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .no-print { display: none !important; }
+      .calc-main { margin: 0; padding: 12px; }
+      .result-card { background: var(--navy) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════ HEADER ══════════════════════ -->
+<header class="app-header">
+  <div class="header-inner">
+    <div class="brand">
+      <div class="brand-logo">INS</div>
+      <div>
+        <div class="brand-title">Calculadora de Cancelación</div>
+        <div class="brand-subtitle">Devolución por cancelación anticipada · Cláusula 33</div>
+      </div>
+    </div>
+    <a href="../" class="btn btn-secondary no-print"
+       style="font-size:13px;padding:8px 16px;color:#fff;border-color:rgba(255,255,255,.25);background:rgba(255,255,255,.08);">
+      ← Cotizador
+    </a>
+  </div>
+</header>
+
+<!-- ══════════════════════ MAIN ══════════════════════ -->
+<main class="calc-main">
+  <div class="grid-2">
+
+    <!-- ────────── FORMULARIO ────────── -->
+    <div class="card">
+      <h2 class="card-title">Datos de la cancelación</h2>
+
+      <div class="form-row">
+        <label class="form-label required">Nombre del cliente</label>
+        <input class="form-control" id="c-name" placeholder="Ej: María López Sánchez" autocomplete="off" />
+      </div>
+
+      <div class="form-row">
+        <label class="form-label required">Correo del cliente</label>
+        <input class="form-control" id="c-email" type="email" placeholder="cliente@correo.com" />
+      </div>
+
+      <div class="grid-2" style="gap:12px;">
+        <div class="form-row">
+          <label class="form-label required">Número de póliza</label>
+          <input class="form-control" id="c-policy" placeholder="Ej: 03-0123456" />
+        </div>
+        <div class="form-row">
+          <label class="form-label required">Placa</label>
+          <input class="form-control" id="c-plate" placeholder="Ej: ABC123" style="text-transform:uppercase;" />
+        </div>
+      </div>
+
+      <div class="grid-2" style="gap:12px;">
+        <div class="form-row">
+          <label class="form-label required">Inicio de vigencia</label>
+          <input class="form-control" id="c-start" type="date" />
+        </div>
+        <div class="form-row">
+          <label class="form-label required">Fin de vigencia</label>
+          <input class="form-control" id="c-end" type="date" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label required">Fecha de cancelación</label>
+        <input class="form-control" id="c-cancel" type="date" />
+      </div>
+
+      <div class="form-row">
+        <label class="form-label required">Prima anual (₡)</label>
+        <input class="form-control" id="c-premium" type="text" inputmode="numeric"
+               placeholder="Ej: 570.891" autocomplete="off" />
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">Forma de pago</label>
+        <select class="form-control" id="c-payment">
+          <option value="Anual">Anual</option>
+          <option value="Semestral">Semestral</option>
+          <option value="Trimestral" selected>Trimestral</option>
+          <option value="Mensual">Mensual</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <label class="form-label">Motivo / Nota para el cliente (opcional)</label>
+        <textarea class="form-control" id="c-note" rows="2"
+                  placeholder="Ej: Venta del vehículo, cambio de aseguradora..."></textarea>
+      </div>
+
+      <button class="btn btn-send" id="btnCalc" style="margin-top:8px;">
+        Calcular devolución
+      </button>
+
+      <button class="btn btn-secondary no-print" id="btnPrint"
+              style="width:100%;margin-top:10px;display:none;">
+        🖨️ Imprimir resultado
+      </button>
+
+      <button class="btn btn-secondary no-print" id="btnReset"
+              style="width:100%;margin-top:8px;display:none;font-size:13px;">
+        Calcular otra cancelación
+      </button>
+    </div>
+
+    <!-- ────────── RESULTADOS ────────── -->
+    <div id="resultPanel">
+      <div class="empty-state">
+        <div class="empty-icon">🧮</div>
+        <div class="empty-text">
+          Ingresa los datos de la póliza<br>y presiona <strong>Calcular devolución</strong>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ══════════════════════ MÓDULOS EXTERNOS ══════════════════════ -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js" async defer></script>
+
+<!-- ══════════════════════ MÓDULOS DEL COTIZADOR ══════════════════════ -->
+<script src="../js/config.js"></script>
+<script src="../js/state.js"></script>
+<script src="../js/agent-profile.js"></script>
+<script src="../js/gmail-auth.js"></script>
+<script src="../js/mime-builder.js"></script>
+<script src="../js/outlook-auth.js"></script>
+<script src="../js/outlook-sender.js"></script>
+
+<script>
+// ── Aplica el perfil del agente guardado en localStorage ──
+(function () {
+  try { applyProfile(loadProfile()); } catch (e) {}
+})();
+
+// ══════════════════════════════════════════════════════════════
+//  TABLA CLÁUSULA 33 — Condiciones Generales del Seguro
+//  Voluntario de Automóviles, INS Costa Rica
+// ══════════════════════════════════════════════════════════════
+const TABLA = [
+  { label: 'Hasta 1 mes',           factor: 0.40 },
+  { label: 'Más de 1 a 2 meses',    factor: 0.48 },
+  { label: 'Más de 2 a 3 meses',    factor: 0.55 },
+  { label: 'Más de 3 a 4 meses',    factor: 0.62 },
+  { label: 'Más de 4 a 5 meses',    factor: 0.68 },
+  { label: 'Más de 5 a 6 meses',    factor: 0.75 },
+  { label: 'Más de 6 a 7 meses',    factor: 0.79 },
+  { label: 'Más de 7 a 8 meses',    factor: 0.84 },
+  { label: 'Más de 8 a 9 meses',    factor: 0.89 },
+  { label: 'Más de 9 a 10 meses',   factor: 0.93 },
+  { label: 'Más de 10 a 11 mes.',   factor: 0.96 },
+  { label: 'Más de 11 a 12 meses',  factor: 1.00 },
+];
+
+// ══ UTILIDADES ══
+function fmt(n) {
+  return '₡\u202f' + n.toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function fmtEmail(n) {
+  // Para el correo usamos formato con punto de miles y coma decimal (es-CR)
+  return '₡' + n.toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function parsePremium(s) {
+  let v = s.replace(/[^\d.,]/g, '');
+  if (!v) return 0;
+  const lastDot   = v.lastIndexOf('.');
+  const lastComma = v.lastIndexOf(',');
+  if (lastDot >= 0 && lastComma >= 0) {
+    if (lastComma > lastDot) v = v.replace(/\./g, '').replace(',', '.'); // es-CR
+    else                     v = v.replace(/,/g, '');                    // English
+  } else if (lastComma >= 0) {
+    const after = v.slice(lastComma + 1);
+    v = after.length !== 3 ? v.replace(',', '.') : v.replace(/,/g, '');
+  } else if (lastDot >= 0) {
+    const after = v.slice(lastDot + 1);
+    if (after.length === 3) v = v.replace(/\./g, '');
+  }
+  return parseFloat(v) || 0;
+}
+
+function daysBetween(a, b) {
+  return Math.round((b - a) / 86400000);
+}
+
+function monthsComplete(a, b) {
+  let m = (b.getFullYear() - a.getFullYear()) * 12 + (b.getMonth() - a.getMonth());
+  if (b.getDate() < a.getDate()) m--;
+  return Math.max(0, m);
+}
+
+function fmtDate(d) {
+  return d.toLocaleDateString('es-CR', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function buildFactorTable(activeIdx) {
+  return '<div class="factor-tbl">' +
+    TABLA.map((r, i) => {
+      const cls = i === activeIdx ? 'factor-tbl-row active' : 'factor-tbl-row';
+      return `<div class="${cls}"><span class="ftl">${r.label}</span><span class="ftv">${(r.factor*100).toFixed(0)}%</span></div>`;
+    }).join('') + '</div>';
+}
+
+// ══ ESTADO DEL CÁLCULO (compartido con handleSend) ══
+let LAST_CALC = null;
+
+// ══ INIT ══
+document.getElementById('c-cancel').valueAsDate = new Date();
+
+document.getElementById('c-premium').addEventListener('blur', function () {
+  const v = parsePremium(this.value);
+  if (v > 0) this.value = v.toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+});
+
+document.getElementById('btnCalc').addEventListener('click', calculate);
+document.getElementById('btnPrint').addEventListener('click', () => window.print());
+document.getElementById('btnReset').addEventListener('click', () => {
+  document.getElementById('resultPanel').innerHTML =
+    '<div class="empty-state"><div class="empty-icon">🧮</div>' +
+    '<div class="empty-text">Ingresa los datos de la póliza<br>y presiona <strong>Calcular devolución</strong></div></div>';
+  document.getElementById('btnPrint').style.display = 'none';
+  document.getElementById('btnReset').style.display = 'none';
+  LAST_CALC = null;
+  document.getElementById('c-name').focus();
+});
+
+// ══════════════════════════════════════════════════════════════
+//  CALCULAR
+// ══════════════════════════════════════════════════════════════
+function calculate() {
+  const name    = document.getElementById('c-name').value.trim();
+  const email   = document.getElementById('c-email').value.trim();
+  const policy  = document.getElementById('c-policy').value.trim();
+  const plate   = document.getElementById('c-plate').value.trim().toUpperCase();
+  const startV  = document.getElementById('c-start').value;
+  const endV    = document.getElementById('c-end').value;
+  const cancelV = document.getElementById('c-cancel').value;
+  const premium = parsePremium(document.getElementById('c-premium').value);
+  const payment = document.getElementById('c-payment').value;
+  const note    = document.getElementById('c-note').value.trim();
+
+  const missing = [];
+  if (!name)        missing.push('Nombre del cliente');
+  if (!policy)      missing.push('Número de póliza');
+  if (!startV)      missing.push('Inicio de vigencia');
+  if (!endV)        missing.push('Fin de vigencia');
+  if (!cancelV)     missing.push('Fecha de cancelación');
+  if (premium <= 0) missing.push('Prima anual válida');
+  if (missing.length) { alert('Faltan campos:\n• ' + missing.join('\n• ')); return; }
+
+  const start  = new Date(startV  + 'T00:00:00');
+  const end    = new Date(endV    + 'T00:00:00');
+  const cancel = new Date(cancelV + 'T00:00:00');
+
+  if (cancel < start) { alert('La fecha de cancelación no puede ser anterior al inicio de vigencia.'); return; }
+  if (cancel > end)   { alert('La fecha de cancelación no puede ser posterior al fin de vigencia.'); return; }
+
+  const elapsedDays   = daysBetween(start, cancel);
+  const elapsedMonths = monthsComplete(start, cancel);
+  const totalDays     = daysBetween(start, end);
+  const isAnnual      = totalDays >= 355;
+
+  let badgeHTML, detailsHTML, tableHTML = '', devuelta, retenida, scenarioName, scenarioKey;
+
+  // ─── Escenario 1: ≤ 5 días naturales ───
+  if (elapsedDays <= 5) {
+    devuelta = premium; retenida = 0;
+    scenarioKey  = 's1';
+    scenarioName = 'Cancelación dentro de los 5 días · 100% devolución';
+    badgeHTML    = `<span class="scenario-badge badge-s1">✓ ${scenarioName}</span>`;
+    detailsHTML  = rows([
+      ['Días transcurridos',            `${elapsedDays} día${elapsedDays !== 1 ? 's' : ''}`, ''],
+      ['Aplica',                        'Cláusula 33, punto 1', ''],
+      ['Cargo administrativo',          'Ninguno', ''],
+      ['Prima devengada (INS retiene)', fmt(0), ''],
+    ]);
+  }
+
+  // ─── Escenario 2: póliza a corto plazo ───
+  else if (!isAnnual) {
+    const prop  = elapsedDays / totalDays;
+    const admin = premium * 0.08;
+    retenida = Math.min(premium * prop + admin, premium);
+    devuelta = Math.max(premium - retenida, 0);
+    scenarioKey  = 's2';
+    scenarioName = 'Póliza a corto plazo · Prorrata − 8% adm.';
+    badgeHTML    = `<span class="scenario-badge badge-s2">⏱ ${scenarioName}</span>`;
+    detailsHTML  = rows([
+      ['Días transcurridos',            `${elapsedDays} de ${totalDays} días`, ''],
+      ['Proporción transcurrida',       `${(prop * 100).toFixed(2)}%`, ''],
+      ['Prima proporcional',            fmt(premium * prop), ''],
+      ['Cargo por administración (8%)', fmt(admin), 'accent'],
+      ['Total retenido por INS',        fmt(retenida), 'accent'],
+    ]);
+  }
+
+  // ─── Escenario 3: póliza anual, tabla de factores ───
+  else {
+    const idx        = Math.min(elapsedMonths, 11);
+    const inFirst6   = elapsedMonths < 6;
+    const factorBase = TABLA[idx].factor;
+    const factorEft  = inFirst6 ? factorBase * 0.5 : factorBase;
+    retenida = premium * factorEft;
+    devuelta = premium - retenida;
+    scenarioKey  = inFirst6 ? 's3a' : 's3b';
+    scenarioName = inFirst6
+      ? 'Póliza anual · Primeros 6 meses (factor ×50%)'
+      : 'Póliza anual · Tabla Cláusula 33';
+    badgeHTML  = `<span class="scenario-badge badge-${scenarioKey}">📅 ${scenarioName}</span>`;
+    tableHTML  = buildFactorTable(idx);
+    detailsHTML = rows([
+      ['Meses completos transcurridos',  `${elapsedMonths} mes${elapsedMonths !== 1 ? 'es' : ''}  (${elapsedDays} días)`, ''],
+      ['Factor tabla (Cláusula 33)',      `${(factorBase * 100).toFixed(0)}%`, ''],
+      inFirst6
+        ? ['Reducción primeros 6 meses', '×50% — Cláusula 33, punto 3', 'accent']
+        : ['Período',                    'Más de 6 meses · factor completo', ''],
+      ['Factor efectivo aplicado',       `${(factorEft * 100).toFixed(1)}%`, 'accent'],
+      ['Prima devengada (INS retiene)',  fmt(retenida), ''],
+    ]);
+  }
+
+  const tableSection = tableHTML
+    ? `<hr class="result-divider"><div class="result-label" style="margin-bottom:8px;">Tabla Cláusula 33</div>${tableHTML}`
+    : '';
+  const noteSection = note
+    ? `<hr class="result-divider"><div class="note-box"><strong>Nota:</strong> ${esc(note)}</div>`
+    : '';
+
+  const hasSendEmail = !!email;
+  const sendBtn = hasSendEmail
+    ? `<button class="btn-enviar no-print" id="btnSendEmail">
+        ✉ Enviar informe al cliente
+       </button>
+       <div id="sendStatus"></div>`
+    : `<div style="margin-top:18px;font-size:12px;opacity:.5;text-align:center;">
+        Agrega el correo del cliente para enviar el informe.
+       </div>`;
+
+  const html = `
+<div class="result-card">
+  <div class="result-client">
+    <div class="result-client-name">${esc(name)}</div>
+    <div class="result-client-meta">
+      <span>Póliza ${esc(policy)}</span>
+      <span>Placa ${esc(plate)}</span>
+      <span>Pago ${esc(payment)}</span>
+      <span>${fmtDate(start)} → ${fmtDate(end)}</span>
+    </div>
+  </div>
+
+  ${badgeHTML}
+
+  <div class="result-label">Devolución al cliente</div>
+  <div class="result-amount">${fmt(devuelta)}</div>
+  <div class="result-currency">Colones costarricenses</div>
+
+  <hr class="result-divider">
+  ${detailsHTML}
+  ${tableSection}
+  ${noteSection}
+
+  <div class="disclaimer">
+    Cálculo informativo según Cláusula 33, Condiciones Generales del Seguro Voluntario
+    de Automóviles, INS. El monto final debe ser confirmado por el INS.
+    Prima anual ingresada: ${fmt(premium)}.
+  </div>
+
+  ${sendBtn}
+</div>`;
+
+  document.getElementById('resultPanel').innerHTML = html;
+  document.getElementById('btnPrint').style.display = 'block';
+  document.getElementById('btnReset').style.display = 'block';
+
+  // Guardar estado para el envío
+  LAST_CALC = { name, email, policy, plate, start, end, cancel,
+                premium, payment, note, devuelta, retenida,
+                elapsedDays, elapsedMonths, totalDays, isAnnual, scenarioName };
+
+  if (hasSendEmail) {
+    document.getElementById('btnSendEmail').addEventListener('click', handleSend);
+  }
+}
+
+function rows(data) {
+  return data.map(([label, val, cls]) =>
+    `<div class="result-row">
+      <span class="result-row-label">${label}</span>
+      <span class="result-row-value ${cls}">${val}</span>
+    </div>`
+  ).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  ENVÍO DE CORREO
+// ══════════════════════════════════════════════════════════════
+async function handleSend() {
+  if (!LAST_CALC) return;
+
+  const btn    = document.getElementById('btnSendEmail');
+  const status = document.getElementById('sendStatus');
+  btn.disabled = true;
+  btn.textContent = 'Autorizando…';
+  status.innerHTML = '';
+
+  try {
+    const html    = buildCancelEmail(LAST_CALC);
+    const subject = 'Informe de cancelación anticipada — Póliza ' + LAST_CALC.policy;
+    const from    = '"' + CFG.FROM_NAME + '" <' + CFG.FROM_EMAIL + '>';
+    const raw     = buildMIMESimple({ to: LAST_CALC.email, from, subject, html });
+
+    btn.textContent = 'Enviando…';
+    const token = await getToken();
+    S.accessToken = token;
+    await sendEmail(raw);
+
+    status.innerHTML = '<div class="send-success">✓ Informe enviado a ' + esc(LAST_CALC.email) + '</div>';
+    btn.textContent  = '✉ Informe enviado';
+  } catch (err) {
+    S.accessToken = null;
+    status.innerHTML = '<div style="margin-top:12px;padding:10px;background:rgba(220,38,38,.15);border-radius:8px;font-size:12px;color:#fca5a5;">'
+      + 'Error: ' + esc(err.message) + '</div>';
+    btn.disabled    = false;
+    btn.textContent = '✉ Enviar informe al cliente';
+  }
+}
+
+// ── MIME builder (HTML-only, sin adjunto PDF) ──
+function buildMIMESimple({ to, from, subject, html }) {
+  const CRLF    = '\r\n';
+  const sub64   = _encodeRFC2047(subject);
+  const fromEnc = _encodeFromHeader(from);
+  const msg =
+    'From: '        + fromEnc + CRLF +
+    'To: '          + to      + CRLF +
+    'Subject: '     + sub64   + CRLF +
+    'MIME-Version: 1.0'       + CRLF +
+    'Content-Type: text/html; charset=UTF-8' + CRLF +
+    'Content-Transfer-Encoding: 7bit'        + CRLF +
+    CRLF +
+    html;
+  return _base64UrlEncode(msg);
+}
+
+// ══════════════════════════════════════════════════════════════
+//  EMAIL TEMPLATE — Informe de cancelación anticipada INS
+// ══════════════════════════════════════════════════════════════
+function buildCancelEmail(c) {
+  const firstName = c.name.split(/\s+/).find(t => t.length > 1) || c.name;
+  const nombre    = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+  const fmtD      = d => d.toLocaleDateString('es-CR', { day: '2-digit', month: 'long', year: 'numeric' });
+
+  const factorRow = c.isAnnual && c.elapsedDays > 5
+    ? `<tr>
+        <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-size:13px;">Factor aplicado (Cláusula 33)</td>
+        <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;font-weight:700;font-size:13px;text-align:right;">${c.scenarioName}</td>
+       </tr>`
+    : '';
+
+  const noteRow = c.note
+    ? `<tr>
+        <td colspan="2" style="padding:12px 14px;background:#fef3c7;font-size:13px;color:#78350f;border-radius:0 0 8px 8px;">
+          <strong>Nota del agente:</strong> ${esc(c.note)}
+        </td>
+       </tr>`
+    : '';
+
+  return `<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:32px 0;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+
+  <!-- HEADER -->
+  <tr>
+    <td style="background:#0c2340;border-radius:12px 12px 0 0;padding:28px 32px;">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td>
+            <div style="display:inline-block;background:#0369a1;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:700;color:#fff;letter-spacing:.5px;">INS</div>
+            <div style="color:#fff;font-size:20px;font-weight:700;margin-top:10px;">Cancelación Anticipada de Póliza</div>
+            <div style="color:rgba(255,255,255,.65);font-size:13px;margin-top:4px;">Seguro Voluntario de Automóviles</div>
+          </td>
+          <td align="right" valign="middle">
+            <img src="${CFG.LOGO_URL}" alt="INS" height="44" style="display:block;opacity:.9;" />
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- BODY -->
+  <tr>
+    <td style="background:#ffffff;padding:32px;">
+
+      <p style="margin:0 0 20px;font-size:15px;color:#111827;">Estimada/o <strong>${esc(nombre)}</strong>,</p>
+      <p style="margin:0 0 24px;font-size:14px;color:#374151;line-height:1.6;">
+        Le confirmamos los detalles de la <strong>cancelación anticipada</strong> de su Seguro Voluntario de Automóvil
+        del INS y el monto que le será devuelto según la Cláusula 33 de las Condiciones Generales.
+      </p>
+
+      <!-- DATOS DE LA PÓLIZA -->
+      <div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;padding:18px 20px;margin-bottom:24px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#6b7280;margin-bottom:12px;">Datos de la póliza</div>
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="font-size:13px;color:#6b7280;padding:4px 0;width:45%;">Número de póliza</td>
+            <td style="font-size:13px;font-weight:700;color:#111827;">${esc(c.policy)}</td>
+          </tr>
+          <tr>
+            <td style="font-size:13px;color:#6b7280;padding:4px 0;">Placa</td>
+            <td style="font-size:13px;font-weight:700;color:#111827;">${esc(c.plate)}</td>
+          </tr>
+          <tr>
+            <td style="font-size:13px;color:#6b7280;padding:4px 0;">Vigencia</td>
+            <td style="font-size:13px;font-weight:700;color:#111827;">${fmtD(c.start)} — ${fmtD(c.end)}</td>
+          </tr>
+          <tr>
+            <td style="font-size:13px;color:#6b7280;padding:4px 0;">Fecha de cancelación</td>
+            <td style="font-size:13px;font-weight:700;color:#111827;">${fmtD(c.cancel)}</td>
+          </tr>
+          <tr>
+            <td style="font-size:13px;color:#6b7280;padding:4px 0;">Forma de pago</td>
+            <td style="font-size:13px;font-weight:700;color:#111827;">${esc(c.payment)}</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- MONTO A DEVOLVER (destacado) -->
+      <div style="background:#0c2340;border-radius:10px;padding:24px 28px;margin-bottom:24px;text-align:center;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:8px;">
+          Monto a devolverle
+        </div>
+        <div style="font-size:40px;font-weight:700;color:#4ade80;line-height:1;margin-bottom:6px;">
+          ${fmtEmail(c.devuelta)}
+        </div>
+        <div style="font-size:12px;color:rgba(255,255,255,.55);">Colones costarricenses</div>
+      </div>
+
+      <!-- DETALLE DEL CÁLCULO -->
+      <div style="margin-bottom:24px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#6b7280;margin-bottom:10px;">
+          Detalle del cálculo — Cláusula 33
+        </div>
+        <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;">
+          <tr>
+            <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-size:13px;">Escenario</td>
+            <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;font-weight:600;font-size:13px;text-align:right;color:#374151;">${esc(c.scenarioName)}</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-size:13px;">Prima anual</td>
+            <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;font-weight:700;font-size:13px;text-align:right;">${fmtEmail(c.premium)}</td>
+          </tr>
+          ${factorRow}
+          <tr>
+            <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-size:13px;">Prima devengada (retiene INS)</td>
+            <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;font-weight:700;font-size:13px;text-align:right;color:#d97706;">${fmtEmail(c.retenida)}</td>
+          </tr>
+          <tr style="background:#f0fdf4;">
+            <td style="padding:12px 14px;color:#166534;font-size:14px;font-weight:700;">Prima a devolver</td>
+            <td style="padding:12px 14px;font-weight:700;font-size:16px;text-align:right;color:#16a34a;">${fmtEmail(c.devuelta)}</td>
+          </tr>
+          ${noteRow}
+        </table>
+      </div>
+
+      <!-- DISCLAIMER -->
+      <p style="margin:0 0 24px;font-size:11px;color:#9ca3af;line-height:1.6;background:#f9fafb;padding:12px 14px;border-radius:6px;border-left:3px solid #e5e7eb;">
+        Este informe es de carácter informativo y se basa en la <strong>Cláusula 33</strong> de las
+        Condiciones Generales del Seguro Voluntario de Automóviles del INS. El monto exacto de la
+        devolución debe ser confirmado por el INS al momento de tramitar formalmente la cancelación.
+      </p>
+
+    </td>
+  </tr>
+
+  <!-- FOOTER AGENTE -->
+  <tr>
+    <td style="background:#f8fafc;border:1px solid #e5e7eb;border-top:none;border-radius:0 0 12px 12px;padding:22px 32px;">
+      <table width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+          <td>
+            <div style="font-size:14px;font-weight:700;color:#0c2340;">${esc(CFG.FROM_NAME)}</div>
+            <div style="font-size:12px;color:#6b7280;margin-top:3px;">Agente de Seguros INS · Licencia SUGESE ${esc(CFG.LICENSE)}</div>
+            <div style="font-size:12px;color:#6b7280;margin-top:2px;">📞 ${esc(CFG.PHONE)}&nbsp;&nbsp;✉ ${esc(CFG.FROM_EMAIL)}</div>
+            ${CFG.WEBSITE ? `<div style="font-size:12px;color:#6b7280;margin-top:2px;">🌐 ${esc(CFG.WEBSITE)}</div>` : ''}
+          </td>
+          <td align="right" valign="middle">
+            <div style="background:#0c2340;border-radius:8px;padding:6px 12px;font-size:13px;font-weight:700;color:#fff;letter-spacing:.5px;display:inline-block;">INS</div>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>`;
+}
+</script>
+</body>
+</html>
