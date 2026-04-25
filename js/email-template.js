@@ -74,6 +74,18 @@ function buildEmail(params) {
           </table>
         </td></tr>` : '';
 
+  // URL del explicador con todos los datos personalizados (separado del HTML para legibilidad)
+  const guideUrl = _buildGuideUrl({
+    clientName:    nombre,
+    vehicle:       vehiculo,
+    plate:         p.plate,
+    year:          p.year,
+    vehicleType:   _detectVehicleType(p.vehicleType),
+    valor:         p.valor,
+    sustReposCode: _sustReposToCode(p.sustRepos),
+    prices:        prices
+  });
+
   // ============ HTML COMPLETO ============
   return `<!DOCTYPE html>
 <html lang="es">
@@ -115,7 +127,7 @@ function buildEmail(params) {
 
         <!-- 4. CTA EXPLICADOR -->
         <tr><td style="padding:0 40px 8px;text-align:center;">
-          <a href="${_buildGuideUrl({ clientName: nombre, vehicle: vehiculo, plate: p.plate, year: p.year, vehicleType: _detectVehicleType(p.vehicleType), valor: p.valor, sustReposCode: _sustReposToCode(p.sustRepos), prices: prices })}" style="display:inline-block;background:#0369a1;color:#ffffff;padding:14px 28px;border-radius:6px;text-decoration:none;font-weight:bold;font-size:14px;letter-spacing:0.5px;">
+          <a href="${guideUrl}" style="display:inline-block;background:#0369a1;color:#ffffff;padding:14px 28px;border-radius:6px;text-decoration:none;font-weight:bold;font-size:14px;letter-spacing:0.5px;">
             VER EXPLICACION DE MI COTIZACION &rarr;
           </a>
         </td></tr>
@@ -331,8 +343,12 @@ function _sustReposToCode(label) {
  * @returns {string} 'g' (gasolina/di\u00e9sel) | 'e' (el\u00e9ctrico)
  */
 function _detectVehicleType(rawType) {
-  const norm = (rawType || '').toLowerCase();
-  if (norm.includes('electric') || norm.includes('el\u00e9ctric') || norm.includes('ev')) return 'e';
+  // Mismo patron que _sustReposToCode: NFD + strip de combining marks
+  // tolera 'el\u00e9ctrico' (NFC) y 'el\u00e9ctrico' (NFD) por igual.
+  const norm = (rawType || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (norm.includes('electric') || norm.includes('ev')) return 'e';
   return 'g';
 }
 
