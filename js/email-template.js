@@ -30,12 +30,16 @@
 /**
  * Construye el HTML completo del correo de cotizacion.
  * @param {object} params - parametros del correo
- * @param {string} params.nombre         - nombre del cliente para el saludo
- * @param {string} params.vehiculo       - descripcion del vehiculo
+ * @param {string} params.nombre         - nombre del cliente para el saludo (también va a explicador como `c`)
+ * @param {string} params.vehiculo       - descripcion del vehiculo (también va a explicador como `v`)
  * @param {object} params.prices         - { trimestral, semestral, anual } como strings ya formateados
  * @param {string} params.sustRepos      - texto exacto de "Sustitucion de repuestos" del PDF
  * @param {string} params.interes        - clave del dropdown (propietario, cero-km, traspaso, compra) o ''
  * @param {string} params.notaAdicional  - texto opcional del agente (linebreaks se preservan)
+ * @param {string} [params.plate]        - placa del vehículo (para explicador)
+ * @param {string|number} [params.year]  - año del vehículo (para explicador)
+ * @param {string|number} [params.valor] - valor asegurado (para explicador)
+ * @param {string} [params.vehicleType]  - tipo crudo del PDF; se mapea a 'g' (gasolina) por default
  * @returns {string} HTML completo del cuerpo del correo
  */
 function buildEmail(params) {
@@ -111,7 +115,7 @@ function buildEmail(params) {
 
         <!-- 4. CTA EXPLICADOR -->
         <tr><td style="padding:0 40px 8px;text-align:center;">
-          <a href="${_buildGuideUrl()}" style="display:inline-block;background:#0369a1;color:#ffffff;padding:14px 28px;border-radius:6px;text-decoration:none;font-weight:bold;font-size:14px;letter-spacing:0.5px;">
+          <a href="${_buildGuideUrl({ clientName: nombre, vehicle: vehiculo, plate: p.plate, year: p.year, vehicleType: _detectVehicleType(p.vehicleType), valor: p.valor, sustReposCode: _sustReposToCode(p.sustRepos), prices: prices })}" style="display:inline-block;background:#0369a1;color:#ffffff;padding:14px 28px;border-radius:6px;text-decoration:none;font-weight:bold;font-size:14px;letter-spacing:0.5px;">
             VER EXPLICACION DE MI COTIZACION &rarr;
           </a>
         </td></tr>
@@ -314,6 +318,22 @@ function _sustReposToCode(label) {
   if (norm.includes('repuesto original'))   return '0';
   if (norm.includes('repuesto alternativo')) return 'n';
   return 'n';
+}
+
+/**
+ * Detecta si el veh\u00edculo es el\u00e9ctrico o gasolina/di\u00e9sel a partir del
+ * texto del campo `vehicleType` del PDF. Por ahora el PDF est\u00e1ndar no
+ * distingue el\u00e9ctricos expl\u00edcitamente \u2014 devolvemos 'g' por default.
+ * Si en el futuro se agrega un campo o checkbox al cotizador, este
+ * helper centraliza la l\u00f3gica.
+ *
+ * @param {string} rawType - texto del campo vehicleType del PDF
+ * @returns {string} 'g' (gasolina/di\u00e9sel) | 'e' (el\u00e9ctrico)
+ */
+function _detectVehicleType(rawType) {
+  const norm = (rawType || '').toLowerCase();
+  if (norm.includes('electric') || norm.includes('el\u00e9ctric') || norm.includes('ev')) return 'e';
+  return 'g';
 }
 
 /**
