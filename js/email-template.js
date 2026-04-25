@@ -308,26 +308,58 @@ function _escape(s) {
 }
 
 /**
- * Construye el URL del explicador con los datos del agente como query params.
- * El explicador lee esos params al cargar y personaliza el header, banner
- * y footer con los datos del agente que envio la cotizacion.
+ * Construye el URL del explicador con datos del agente Y del cliente.
  *
- * Formato: <CFG.GUIDE_URL>?n=<nombre>&l=<licencia>&w=<website>
+ * Hasta v1: solo 3 params (n, l, w) del agente. Backward compatible.
+ * Desde v2: agrega 8 params del cliente y la cotización si se proveen.
+ *
+ * Formato completo:
+ *   <CFG.GUIDE_URL>?n=...&l=...&w=...&c=...&v=...&p=...&y=...&vt=...&va=...&sr=...&pa=...&ps=...&pt=...
  *
  * El cliente abre ese URL desde su correo; no tiene localStorage con los
- * datos del agente (esta en OTRO navegador). Los query params son la unica
- * forma de pasarle esa informacion.
+ * datos del agente. Los query params son la única forma de personalizar.
  *
+ * @param {object} [extras] - datos opcionales del cliente y la cotización
+ * @param {string} [extras.clientName]    - saludo del cliente (e.g. "Silvia Mariel")
+ * @param {string} [extras.vehicle]       - descripción del vehículo (e.g. "Sedan 2019")
+ * @param {string} [extras.plate]         - placa
+ * @param {string|number} [extras.year]   - año del vehículo
+ * @param {string} [extras.vehicleType]   - 'g' (gasolina) | 'e' (eléctrico)
+ * @param {string|number} [extras.valor]  - valor asegurado en colones
+ * @param {string} [extras.sustReposCode] - 'p' (Plus) | 'g' (Garantía) | '0' (nuevo) | 'n' (ninguno)
+ * @param {object} [extras.prices]        - { anual, semestral, trimestral } strings ya extraídos del PDF
  * @returns {string} URL del explicador con query params
  */
-function _buildGuideUrl() {
+function _buildGuideUrl(extras) {
   const base = CFG.GUIDE_URL;
   const params = [];
+
+  // Agente (backward compat)
   if (CFG.FROM_NAME) params.push('n=' + encodeURIComponent(CFG.FROM_NAME));
   if (CFG.LICENSE)   params.push('l=' + encodeURIComponent(CFG.LICENSE));
   if (CFG.WEBSITE)   params.push('w=' + encodeURIComponent(CFG.WEBSITE));
+
+  // Cliente + cotización (v2)
+  const x = extras || {};
+  const add = function (key, val) {
+    if (val !== undefined && val !== null && String(val).trim() !== '') {
+      params.push(key + '=' + encodeURIComponent(String(val).trim()));
+    }
+  };
+  add('c',  x.clientName);
+  add('v',  x.vehicle);
+  add('p',  x.plate);
+  add('y',  x.year);
+  add('vt', x.vehicleType);
+  add('va', x.valor);
+  add('sr', x.sustReposCode);
+  if (x.prices) {
+    add('pa', x.prices.anual);
+    add('ps', x.prices.semestral);
+    add('pt', x.prices.trimestral);
+  }
+
   if (params.length === 0) return base;
-  // Si GUIDE_URL ya tiene un '?' usamos '&', si no '?'
   const sep = base.indexOf('?') === -1 ? '?' : '&';
   return base + sep + params.join('&');
 }
