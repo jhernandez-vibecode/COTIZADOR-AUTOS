@@ -1631,6 +1631,146 @@ main { max-width: 880px; margin: 0 auto; padding: 0 24px 60px; }
 </div>
 
 <script>
+// ============ URL PARAMS ============
+const _params = new URLSearchParams(location.search);
+const data = {
+  // Agente
+  n:  _params.get('n')  || 'Juan Carlos Hernandez Vargas',
+  l:  _params.get('l')  || '08-1318',
+  w:  _params.get('w')  || 'www.segurosdelins.com',
+  // Cliente
+  c:  _params.get('c')  || '',
+  // Vehículo
+  v:  _params.get('v')  || '',
+  p:  _params.get('p')  || '',
+  y:  parseInt(_params.get('y'), 10) || null,
+  vt: _params.get('vt') || 'g',
+  // Cotización
+  va: parseInt(_params.get('va'), 10) || null,
+  sr: _params.get('sr') || null,
+  pa: _params.get('pa') || null,
+  ps: _params.get('ps') || null,
+  pt: _params.get('pt') || null
+};
+
+const fmt = (n) => '₡' + Number(n).toLocaleString('es-CR');
+const initials = (name) => name.split(/\s+/).filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase() || 'JC';
+
+// ============ APLICAR PERSONALIZACIÓN AL DOM ============
+function applyPersonalization() {
+  // Agente: header info
+  const agentInfo = document.querySelector('.agent-info');
+  if (agentInfo) agentInfo.innerHTML = `Agente: <b>${data.n}</b><br/>Lic. SUGESE ${data.l}`;
+  // Avatar JC del header → iniciales
+  document.querySelectorAll('.avatar, .celeb-avatar').forEach(el => el.textContent = initials(data.n));
+  // Chip del agente
+  const chipName = document.querySelector('.agent-chip-name');
+  if (chipName) chipName.textContent = data.n;
+  // Cinta dorada
+  const ribbon = document.querySelector('.gold-ribbon b');
+  if (ribbon) ribbon.textContent = data.n;
+  // Footer
+  document.querySelectorAll('.footer .copyright').forEach(el => {
+    el.innerHTML = `© ${new Date().getFullYear()} Propiedad Intelectual de ${data.n}. Todos los derechos reservados. Esta plataforma es una herramienta de uso exclusivo para los clientes vinculados a la Licencia Sugese ${data.l}. Queda prohibida su reproducción o uso por terceros sin autorización expresa del titular.`;
+  });
+  const webLink = document.querySelector('.footer a[href*="seguros"]');
+  if (webLink) {
+    webLink.href = 'https://' + data.w;
+    webLink.textContent = data.w;
+  }
+
+  // Cliente: greeting
+  const greetName = document.querySelector('.bubble .greet .name');
+  if (greetName) greetName.textContent = data.c || 'Cliente';
+  // Bubble — vehículo+placa
+  const bubble = document.querySelector('.bubble');
+  if (bubble && (data.v || data.p)) {
+    const veh = data.v || 'tu vehículo';
+    const plt = data.p ? `, placa ${data.p}` : '';
+    // Reemplazar el texto de personalización
+    bubble.innerHTML = bubble.innerHTML.replace(/Sedan 2019, placa BRK454/g, `${veh}${plt}`);
+  }
+  // Cierre — saludo personalizado
+  const closingMsg = document.querySelector('.closing .msg');
+  if (closingMsg && data.c) {
+    closingMsg.innerHTML = `${data.c}, espero que esta guía te haya ayudado a entender tu cotización con claridad. Si tenés cualquier duda, hablemos.`;
+  }
+  const closingSig = document.querySelector('.closing .signature');
+  if (closingSig) {
+    closingSig.innerHTML = `— ${data.n}<span class="lic">Tu agente · Lic. SUGESE ${data.l}</span>`;
+  }
+  // Celebración — título
+  const celebTitle = document.querySelector('.celeb-title');
+  if (celebTitle) {
+    celebTitle.innerHTML = `¡Excelente decisión,<br/><span class="name">${data.c || 'Cliente'}</span>! 🎉`;
+  }
+  const celebSub = document.querySelector('.celeb-sub');
+  if (celebSub && data.v) {
+    celebSub.innerHTML = `Acabas de dar el primer paso para <b>proteger tu ${data.v}</b> con una de las mejores coberturas del mercado.`;
+  }
+
+  // Sección 1 — montos D, F, H usan valor asegurado
+  if (data.va) {
+    const valFmt = fmt(data.va);
+    document.querySelectorAll('.bento-tile.green .amount, .bento-tile.purple .amount').forEach(el => {
+      el.textContent = valFmt;
+    });
+    // Subtitle de sección 1
+    const s1Sub = document.querySelector('#s1 .section-sub');
+    if (s1Sub) s1Sub.innerHTML = `Toca cada tarjeta para ver el detalle. Los montos se calculan sobre tu valor asegurado de <b>${valFmt}</b>.`;
+  }
+
+  // Sección 2 — auto-seleccionar plan según edad
+  if (data.y) {
+    const edad = new Date().getFullYear() - data.y;
+    const isPlus = edad <= 6;
+    const tabs = document.querySelectorAll('.plan-toggle .tab');
+    if (tabs.length === 2) {
+      tabs[0].classList.toggle('active', isPlus);
+      tabs[1].classList.toggle('active', !isPlus);
+    }
+    // Personalizar el copy del banner
+    const bannerSmall = document.querySelector('.tip-banner .small');
+    if (bannerSmall) {
+      bannerSmall.innerHTML = `El alcance del plan se ajusta a la antigüedad de tu vehículo. Para tu ${data.v || 'vehículo'} (${edad} años) te toca el <b>Plan ${isPlus ? 'Plus' : 'Básico'}</b>.`;
+    }
+  }
+
+  // Sección 4 — auto-resaltar fila según sr
+  if (data.sr) {
+    const map = { '0': 0, 'g': 1, 'p': 2, 'n': 3 };
+    const rows = document.querySelectorAll('#s4 .qrow');
+    if (rows.length === 4 && map[data.sr] !== undefined) {
+      // Quitar match de la fila default (Plus está hardcoded como match en el HTML)
+      rows.forEach(r => r.classList.remove('match'));
+      rows[map[data.sr]].classList.add('match');
+    }
+  }
+  // Header sección 4: vehículo+placa
+  const s4perso = document.querySelector('.s4-header .perso');
+  if (s4perso && (data.v || data.p)) {
+    const veh = data.v || 'tu vehículo';
+    const plt = data.p ? `, placa ${data.p}` : '';
+    s4perso.innerHTML = `Para tu <b>${veh}${plt}</b>, esto es lo que el INS te garantiza.`;
+  }
+
+  // Sección 5 — 3 precios reales
+  const priceCards = document.querySelectorAll('.pricing-grid .price-card .price');
+  if (priceCards.length === 3) {
+    if (data.pt) priceCards[0].textContent = '₡' + Number(data.pt).toLocaleString('es-CR');
+    if (data.ps) priceCards[1].textContent = '₡' + Number(data.ps).toLocaleString('es-CR');
+    if (data.pa) priceCards[2].textContent = '₡' + Number(data.pa).toLocaleString('es-CR');
+    // Si todos faltan, mostrar mensaje
+    if (!data.pt && !data.ps && !data.pa) {
+      const grid = document.querySelector('.pricing-grid');
+      if (grid) grid.innerHTML = '<p style="text-align:center;color:#64748b;font-size:14px;padding:20px;">Consulta a tu agente las opciones de pago disponibles.</p>';
+    }
+  }
+}
+
+// Aplicar al cargar
+applyPersonalization();
+
 // ============ STICKY NAV + INTERSECTION OBSERVER ============
 const sections = document.querySelectorAll('.section');
 const stickyDots = document.querySelectorAll('.sticky-dot');
@@ -1643,14 +1783,12 @@ const floatNext = document.getElementById('floatNext');
 let currentSection = 0;
 const sectionIds = ['s1', 's2', 's3', 's4', 's5'];
 
-// Sticky nav appears after scrolling past hero
 window.addEventListener('scroll', () => {
   const scrolled = window.scrollY > 200;
   stickyNav.classList.toggle('visible', scrolled);
   floatNav.classList.toggle('visible', scrolled);
 });
 
-// Intersection Observer — section in view
 const observer = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
@@ -1663,7 +1801,6 @@ const observer = new IntersectionObserver((entries) => {
     }
   });
 }, { threshold: 0.3 });
-
 sections.forEach(s => observer.observe(s));
 
 function updateActiveStates() {
@@ -1679,35 +1816,30 @@ function updateActiveStates() {
 
 stickyDots.forEach(dot => {
   dot.addEventListener('click', () => {
-    const target = dot.dataset.target;
-    document.getElementById(target).scrollIntoView({ behavior: 'smooth' });
+    document.getElementById(dot.dataset.target).scrollIntoView({ behavior: 'smooth' });
   });
 });
 
-// Step buttons en cada sección (prev/next prominentes)
 document.querySelectorAll('.step-btn[data-target]').forEach(btn => {
   btn.addEventListener('click', () => {
-    const target = btn.dataset.target;
-    document.getElementById(target).scrollIntoView({ behavior: 'smooth' });
+    document.getElementById(btn.dataset.target).scrollIntoView({ behavior: 'smooth' });
   });
 });
 
 floatPrev.addEventListener('click', () => {
-  if (currentSection > 0) {
-    document.getElementById(sectionIds[currentSection - 1]).scrollIntoView({ behavior: 'smooth' });
-  }
+  if (currentSection > 0) document.getElementById(sectionIds[currentSection - 1]).scrollIntoView({ behavior: 'smooth' });
 });
 floatNext.addEventListener('click', () => {
-  if (currentSection < sectionIds.length - 1) {
-    document.getElementById(sectionIds[currentSection + 1]).scrollIntoView({ behavior: 'smooth' });
-  }
+  if (currentSection < sectionIds.length - 1) document.getElementById(sectionIds[currentSection + 1]).scrollIntoView({ behavior: 'smooth' });
 });
 
 // ============ CELEBRATION OVERLAY ============
+const AGENDA_URL = 'https://forms.gle/tqSaZBDcZfNgNktC7';
+
 function openCelebration() {
   document.getElementById('celebBackdrop').classList.add('active');
-  // En producción: abrir Google Form en nueva pestaña tras 2.5s
-  // setTimeout(() => window.open('https://forms.gle/tqSaZBDcZfNgNktC7', '_blank'), 2500);
+  // Abrir Google Form en nueva pestaña tras 2.5s
+  setTimeout(() => window.open(AGENDA_URL, '_blank', 'noopener'), 2500);
 }
 function closeCelebration() {
   document.getElementById('celebBackdrop').classList.remove('active');
