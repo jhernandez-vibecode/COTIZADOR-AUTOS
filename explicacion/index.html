@@ -1,436 +1,1721 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guía de Cotización - Seguros Digitales SDI</title>
-    <link rel="icon" type="image/svg+xml" href="../img/favicon.svg" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guía de tu Cotización — Seguros Digitales SDI</title>
+<link rel="icon" type="image/svg+xml" href="../img/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0c2340;
+  --azul: #0369a1;
+  --azul-deep: #0c4a6e;
+  --green-fresh: #10b981;
+  --green-light: #34d399;
+  --green-deep: #059669;
+  --green-text: #047857;
+  --green-bg: #d1fae5;
+  --gold-bg: #fef3c7;
+  --gold-mid: #fbbf24;
+  --gold-deep: #f59e0b;
+  --gold-text: #78350f;
+  --cyan-light: #67e8f9;
+  --cyan-mid: #06b6d4;
+  --cyan-deep: #0e7490;
+  --cyan-bg: #ecfeff;
+  --bg: #f8fafc;
+  --border: #e0e7ef;
+  --muted: #64748b;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg);
+  color: #1e293b;
+  line-height: 1.55;
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  .confetti { display: none; }
+}
+
+/* ============ HEADER ============ */
+.app-header {
+  background: var(--navy);
+  color: #fff;
+  padding: 14px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.ins-logo {
+  background: var(--azul);
+  width: 56px; height: 36px;
+  border-radius: 6px;
+  display: grid; place-items: center;
+  font-weight: 800;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+}
+.brand-text { display: flex; flex-direction: column; line-height: 1.15; }
+.brand-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+}
+.brand-sub { font-size: 11px; opacity: .65; margin-top: 2px; }
+.header-right { display: flex; align-items: center; gap: 10px; }
+.pill-100 {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(13, 148, 136, .15);
+  color: #5eead4;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid rgba(13, 148, 136, .3);
+}
+.agent-info { text-align: right; font-size: 10px; opacity: .8; line-height: 1.3; }
+.agent-info b { color: #fff; opacity: 1; }
+
+/* ============ CINTA DORADA ============ */
+.gold-ribbon {
+  background: linear-gradient(90deg, var(--gold-bg) 0%, #fefce8 50%, var(--gold-bg) 100%);
+  border-bottom: 1px solid #fde68a;
+  padding: 9px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--gold-text);
+}
+.gold-ribbon .star { color: #ca8a04; }
+.gold-ribbon b { color: #422006; font-weight: 700; }
+
+/* ============ STICKY NAV ============ */
+.sticky-nav {
+  position: sticky;
+  top: 14px;
+  z-index: 50;
+  margin: 14px auto;
+  max-width: 760px;
+  background: rgba(255, 255, 255, .92);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 4px 16px rgba(12, 35, 64, .08);
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity .3s ease-out, transform .3s ease-out;
+  pointer-events: none;
+}
+.sticky-nav.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.sticky-nav .nav-label {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px; font-weight: 700;
+  color: var(--azul-deep);
+}
+.sticky-nav .nav-dots {
+  display: flex; gap: 4px; align-items: center; flex: 1; flex-wrap: wrap;
+}
+.sticky-dot {
+  display: flex; align-items: center; gap: 4px;
+  cursor: pointer;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 10px; font-weight: 600;
+  color: var(--muted);
+  transition: all .25s ease-out;
+  border: none; background: none;
+}
+.sticky-dot .num {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #cbd5e1; color: #fff;
+  display: grid; place-items: center;
+  font-size: 9px; font-weight: 700;
+  transition: all .25s ease-out;
+}
+.sticky-dot.active { background: #f0f9ff; color: var(--azul-deep); }
+.sticky-dot.active .num { background: var(--azul); transform: scale(1.15); }
+.sticky-dot.done .num { background: var(--green-fresh); }
+.sticky-dot:hover { background: #f1f5f9; }
+
+/* Mobile sticky nav: oculta labels, muestra solo números */
+@media (max-width: 720px) {
+  .sticky-nav {
+    margin: 10px;
+    padding: 6px 10px;
+    gap: 8px;
+  }
+  .sticky-nav .nav-label { display: none; }
+  .sticky-nav .nav-dots { gap: 6px; justify-content: center; }
+  .sticky-dot { padding: 4px; }
+  .sticky-dot span:not(.num) { display: none; }
+  .sticky-dot .num { width: 22px; height: 22px; font-size: 11px; }
+}
+
+/* ============ HERO ============ */
+.hero {
+  background: linear-gradient(180deg, #fff 0%, #f0f9ff 100%);
+  margin: 0 auto;
+  max-width: 880px;
+  padding: 36px 32px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.agent-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 5px 14px 5px 5px;
+  align-self: flex-start;
+  box-shadow: 0 2px 6px rgba(12, 35, 64, .06);
+}
+.avatar {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg, var(--azul), #0284c7);
+  color: #fff;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+}
+.agent-chip-info { display: flex; flex-direction: column; line-height: 1.15; }
+.agent-chip-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px; font-weight: 700;
+  color: var(--azul-deep);
+}
+.agent-chip-role { font-size: 10px; color: var(--muted); }
+
+.bubble {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 16px 16px 16px 4px;
+  padding: 22px 24px;
+  box-shadow: 0 6px 22px rgba(12, 35, 64, .07);
+  font-size: 15px;
+  color: #1e293b;
+  margin-left: 22px;
+  max-width: 92%;
+}
+.bubble .greet {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--azul-deep);
+  letter-spacing: -0.01em;
+  display: block;
+  margin-bottom: 12px;
+}
+.bubble .greet .name {
+  background: linear-gradient(180deg, transparent 60%, #fef08a 60%);
+  padding: 0 4px;
+}
+.bubble b { color: var(--azul-deep); }
+.bubble .roadmap {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: #f0f9ff;
+  border-radius: 10px;
+  border-left: 3px solid var(--azul);
+  font-size: 13px;
+  color: var(--azul-deep);
+}
+
+.progress-line {
+  display: flex; align-items: center; gap: 8px;
+  margin-left: 22px;
+  font-size: 11px; color: var(--muted);
+}
+.progress-line .label { font-weight: 600; }
+.progress-line .dots { display: flex; gap: 4px; }
+.progress-line .dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #cbd5e1;
+}
+.progress-line .dot.active { background: var(--azul); transform: scale(1.2); }
+.progress-line .step-label { color: var(--azul); font-weight: 600; }
+
+.cta-pill {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, var(--green-fresh), var(--green-deep));
+  color: #fff;
+  border-radius: 999px;
+  padding: 12px 22px;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 6px 18px rgba(13, 148, 136, .3);
+  align-self: center;
+  margin-top: 8px;
+  cursor: pointer;
+  border: none;
+  font-family: 'Inter', sans-serif;
+}
+.cta-pill:hover { transform: translateY(-1px); }
+
+/* ============ MAIN ============ */
+main { max-width: 880px; margin: 0 auto; padding: 0 24px 60px; }
+
+.section {
+  margin-top: 28px;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity .4s ease-out, transform .4s ease-out;
+  scroll-margin-top: 100px; /* deja espacio para que el sticky nav no tape el título */
+}
+.section.in-view { opacity: 1; transform: translateY(0); }
+
+.section-header {
+  margin-bottom: 16px;
+}
+.section-num {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--azul);
+  background: #f0f9ff;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+.section-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--azul-deep);
+  margin: 8px 0 4px;
+  letter-spacing: -0.01em;
+}
+.section-sub {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* ============ SECCIÓN 1 — COBERTURAS BENTO ============ */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+@media (max-width: 600px) { .bento-grid { grid-template-columns: 1fr; } }
+.bento-tile {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all .25s ease-out;
+}
+.bento-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(12, 35, 64, .08);
+  border-color: var(--azul);
+}
+.bento-tile .letter {
+  display: inline-grid;
+  place-items: center;
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  color: #fff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+.bento-tile.azul .letter { background: var(--azul); }
+.bento-tile.green .letter { background: var(--green-fresh); }
+.bento-tile.red .letter { background: #dc2626; }
+.bento-tile.purple .letter { background: #7c3aed; }
+.bento-tile h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--azul-deep);
+  margin: 0 0 4px;
+}
+.bento-tile .desc {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.45;
+  margin-bottom: 8px;
+}
+.bento-tile .amount {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--azul-deep);
+}
+
+/* ============ SECCIÓN 2 — ASISTENCIA ============ */
+.tip-banner {
+  background: linear-gradient(90deg, #f0fdfa 0%, #ecfdf5 100%);
+  border: 1px solid var(--green-light);
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.tip-banner .bulb {
+  background: var(--green-fresh);
+  color: #fff;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 16px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, .3);
+}
+.tip-banner .text { font-size: 13px; color: #065f46; line-height: 1.5; }
+.tip-banner b { color: var(--green-text); font-weight: 700; }
+.tip-banner .small { display: block; font-size: 11px; color: var(--green-text); margin-top: 4px; opacity: .9; }
+
+.plan-toggle {
+  display: flex;
+  gap: 4px;
+  background: #f1f5f9;
+  border-radius: 8px;
+  padding: 4px;
+  margin-bottom: 14px;
+  font-size: 12px;
+}
+.plan-toggle .tab {
+  flex: 1;
+  text-align: center;
+  padding: 8px 12px;
+  border-radius: 6px;
+  color: var(--muted);
+  font-weight: 600;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+}
+.plan-toggle .tab.active {
+  background: var(--green-fresh);
+  color: #fff;
+}
+
+.svc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+}
+.svc-row {
+  display: flex; align-items: center; gap: 10px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+}
+.svc-row .icon {
+  width: 28px; height: 28px;
+  background: var(--gold-bg);
+  border-radius: 6px;
+  display: grid; place-items: center;
+  color: var(--gold-deep);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.svc-row .name { flex: 1; font-weight: 600; color: #1e293b; }
+.svc-row .qty { font-size: 10px; color: var(--muted); white-space: nowrap; }
+
+/* ============ SECCIÓN 3 — IDD ============ */
+.idd-card {
+  background: linear-gradient(135deg, var(--navy), var(--azul-deep));
+  color: #fff;
+  border-radius: 14px;
+  padding: 26px;
+  position: relative;
+  overflow: hidden;
+}
+.idd-card::before {
+  content: '';
+  position: absolute;
+  right: -50px; top: -50px;
+  width: 180px; height: 180px;
+  background: radial-gradient(circle, rgba(16, 185, 129, .15), transparent 70%);
+  border-radius: 50%;
+}
+.idd-top { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding-bottom: 16px; border-bottom: 1px dashed rgba(255,255,255,.15); position: relative; }
+.idd-label { font-size: 11px; color: #93c5fd; text-transform: uppercase; letter-spacing: 0.05em; }
+.idd-compare { display: flex; align-items: center; gap: 18px; margin-top: 10px; }
+.idd-col-from { text-align: left; }
+.idd-col-from .small { font-size: 10px; opacity: .7; }
+.idd-col-from .from {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 28px; font-weight: 700;
+  color: #fca5a5;
+  text-decoration: line-through;
+}
+.idd-arrow { font-size: 22px; color: var(--gold-mid); }
+.idd-col-to { text-align: left; }
+.idd-col-to .small { font-size: 10px; opacity: .7; }
+.idd-col-to .to {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 42px; font-weight: 800;
+  color: var(--green-light);
+  line-height: 1;
+}
+.idd-side { text-align: right; font-size: 10px; color: #93c5fd; line-height: 1.4; }
+
+.idd-rules {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  position: relative;
+}
+@media (max-width: 600px) { .idd-rules { grid-template-columns: 1fr; } }
+.idd-rule {
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 8px;
+  padding: 14px;
+  display: flex; gap: 10px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.idd-rule .icon {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+.idd-rule.ok .icon { background: var(--green-fresh); color: #fff; }
+.idd-rule.warn .icon { background: var(--gold-mid); color: #422006; }
+.idd-rule b { color: #fff; }
+.idd-rule .meta { font-size: 10px; color: #93c5fd; margin-top: 4px; }
+
+/* ============ SECCIÓN 4 — REPUESTOS ============ */
+.s4-block {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.s4-header {
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  color: #fff;
+  padding: 24px 28px;
+  position: relative;
+  overflow: hidden;
+}
+.s4-header::before {
+  content: ''; position: absolute;
+  right: -40px; top: -40px;
+  width: 180px; height: 180px;
+  background: radial-gradient(circle, rgba(16, 185, 129, .15), transparent 70%);
+  border-radius: 50%;
+}
+.s4-header .num-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(16, 185, 129, .15);
+  color: var(--green-light);
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px; font-weight: 700;
+  border: 1px solid rgba(16, 185, 129, .3);
+  margin-bottom: 12px;
+  position: relative;
+}
+.s4-header h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 8px;
+  position: relative;
+}
+.s4-header .perso { font-size: 14px; color: #94a3b8; position: relative; }
+.s4-header .perso b { color: #fff; font-weight: 600; }
+
+.s4-body { padding: 26px 28px; display: flex; flex-direction: column; gap: 22px; }
+
+.s4-intro {
+  background: #f0f9ff;
+  border-left: 4px solid var(--azul);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: var(--azul-deep);
+}
+
+.sub-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+.sub-card h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 17px;
+  color: var(--azul-deep);
+  margin: 0 0 6px;
+  display: flex; align-items: center; gap: 10px;
+}
+.sub-num {
+  display: inline-grid; place-items: center;
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  background: #f0f9ff;
+  color: var(--azul);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+}
+.sub-card .lead { font-size: 13px; color: var(--muted); margin: 0 0 14px; }
+
+.qrow {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+.qrow.match {
+  background: linear-gradient(90deg, #fffbeb 0%, #fef3c7 100%);
+  border: 2px solid var(--gold-mid);
+  box-shadow: 0 0 0 4px rgba(251, 191, 36, .15);
+  transform: scale(1.01);
+}
+.qrow .age-icon {
+  display: grid; place-items: center;
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+.qrow .age-icon.fresh { background: var(--green-fresh); }
+.qrow .age-icon.good  { background: var(--azul); }
+.qrow .age-icon.plus  { background: var(--gold-deep); }
+.qrow .age-icon.older { background: #dc2626; }
+.qrow .age { font-weight: 700; color: var(--azul-deep); }
+.qrow .place { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.badge-q {
+  background: var(--green-bg);
+  color: var(--green-text);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.badge-q.gen { background: #fee2e2; color: #991b1b; }
+.qrow.match .badge-q.match-tag {
+  background: var(--gold-mid);
+  color: #422006;
+  font-size: 10px;
+  margin-right: 6px;
+}
+.you-tag {
+  display: inline-block;
+  background: #422006;
+  color: var(--gold-mid);
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 4px;
+  margin-left: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* === Eléctricos === */
+.electric {
+  background: linear-gradient(180deg, #f0f9ff 0%, var(--cyan-bg) 100%);
+  border: 2px solid var(--cyan-light);
+  border-radius: 14px;
+  padding: 22px;
+  position: relative;
+  margin-top: 4px;
+}
+.electric::before {
+  content: '⚡';
+  position: absolute;
+  top: -16px; left: 22px;
+  background: linear-gradient(135deg, var(--cyan-mid), #0891b2);
+  color: #fff;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 16px;
+  box-shadow: 0 4px 14px rgba(6, 182, 212, .4);
+}
+.electric .always-tag {
+  position: absolute;
+  top: -10px; right: 16px;
+  background: #fff;
+  color: var(--cyan-deep);
+  border: 1px solid var(--cyan-light);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.electric h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  color: var(--cyan-deep);
+  font-size: 18px;
+  margin: 8px 0 8px;
+  display: flex; align-items: center; gap: 10px;
+}
+.sub-num-elec {
+  display: inline-grid; place-items: center;
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--cyan-deep);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px; font-weight: 700;
+  border: 1px solid var(--cyan-light);
+}
+.electric .lead { color: #155e75; font-size: 13px; margin-bottom: 14px; }
+.electric .lead b { color: #164e63; }
+
+.battery-card {
+  background: #fff;
+  border: 1px solid var(--cyan-light);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+.battery-card .label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--cyan-deep);
+  font-weight: 700;
+}
+.battery-card .key {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 26px; font-weight: 800;
+  color: #155e75;
+  margin: 4px 0 6px;
+}
+.battery-card .key .of-value { font-size: 13px; color: var(--muted); font-weight: 500; }
+.battery-card .desc { font-size: 13px; color: #155e75; }
+.battery-card .desc b { color: #164e63; }
+.battery-card .ej {
+  background: var(--cyan-bg);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: #155e75;
+  margin-top: 8px;
+}
+.battery-card .ej b { color: #164e63; }
+
+.depr-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+@media (max-width: 600px) { .depr-grid { grid-template-columns: repeat(2, 1fr); } }
+.depr-tile {
+  background: #fff;
+  border: 2px solid;
+  border-radius: 10px;
+  padding: 12px 8px;
+  text-align: center;
+}
+.depr-tile .pct {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+}
+.depr-tile .age { font-size: 10px; margin-top: 6px; color: var(--muted); font-weight: 600; }
+.depr-tile.t1 { border-color: var(--green-light); }
+.depr-tile.t1 .pct { color: var(--green-text); }
+.depr-tile.t2 { border-color: var(--cyan-light); }
+.depr-tile.t2 .pct { color: var(--cyan-deep); }
+.depr-tile.t3 { border-color: var(--gold-mid); }
+.depr-tile.t3 .pct { color: #92400e; }
+.depr-tile.t4 { border-color: #fb923c; }
+.depr-tile.t4 .pct { color: #9a3412; }
+
+.who-chooses {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 13px;
+  color: #475569;
+}
+.who-chooses .icon {
+  background: var(--azul);
+  color: #fff;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  flex-shrink: 0;
+  font-weight: 700;
+}
+.who-chooses b { color: var(--azul-deep); }
+
+/* ============ STEP NAV BUTTONS (en cada sección) ============ */
+.step-nav-btns {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 28px;
+  flex-wrap: wrap;
+}
+.step-nav-btns.right-only { justify-content: flex-end; }
+.step-btn {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--azul-deep);
+  cursor: pointer;
+  transition: all .25s ease-out;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.step-btn:hover {
+  border-color: var(--azul);
+  background: #f0f9ff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(12, 35, 64, .08);
+}
+.step-btn.next {
+  background: linear-gradient(135deg, var(--azul), var(--azul-deep));
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 14px rgba(3, 105, 161, .25);
+}
+.step-btn.next:hover {
+  background: linear-gradient(135deg, var(--azul-deep), var(--navy));
+  box-shadow: 0 8px 22px rgba(3, 105, 161, .35);
+}
+@media (max-width: 600px) {
+  .step-btn { flex: 1; justify-content: center; padding: 12px 14px; font-size: 12px; }
+}
+
+/* ============ SECCIÓN 5 — PRICING ============ */
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  align-items: stretch;
+}
+@media (max-width: 600px) { .pricing-grid { grid-template-columns: 1fr; } }
+.price-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 22px 18px;
+  text-align: center;
+  position: relative;
+}
+.price-card .label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+}
+.price-card .price {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--azul-deep);
+  margin: 8px 0 4px;
+}
+.price-card .freq { font-size: 12px; color: var(--muted); }
+.price-card.featured {
+  background: linear-gradient(135deg, var(--green-fresh), var(--green-deep));
+  color: #fff;
+  border: none;
+  transform: scale(1.04);
+  box-shadow: 0 10px 30px rgba(16, 185, 129, .3);
+}
+.price-card.featured .label,
+.price-card.featured .price,
+.price-card.featured .freq { color: #fff; }
+.price-card.featured .badge-rec {
+  position: absolute;
+  top: -10px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--gold-mid);
+  color: #422006;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* ============ CIERRE ============ */
+.closing {
+  background: linear-gradient(180deg, #f0f9ff, #fff);
+  border-radius: 16px;
+  padding: 36px 28px;
+  text-align: center;
+  border: 1px solid var(--border);
+  margin-top: 28px;
+}
+.closing .msg {
+  font-size: 15px;
+  color: #475569;
+  max-width: 540px;
+  margin: 0 auto;
+}
+.closing .signature {
+  font-family: 'Space Grotesk', sans-serif;
+  font-style: italic;
+  color: var(--azul-deep);
+  font-size: 16px;
+  margin-top: 14px;
+}
+.closing .signature .lic {
+  font-size: 12px;
+  font-style: normal;
+  color: var(--muted);
+  display: block;
+  margin-top: 4px;
+}
+.cta-rect {
+  background: linear-gradient(135deg, var(--green-fresh), var(--green-deep));
+  color: #fff;
+  padding: 16px 32px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  margin-top: 18px;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, .35);
+  border: none;
+  cursor: pointer;
+  transition: transform .2s, box-shadow .2s;
+}
+.cta-rect:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(16, 185, 129, .45);
+}
+.diff-line {
+  font-size: 12px;
+  color: var(--gold-text);
+  margin-top: 18px;
+  font-style: italic;
+}
+
+/* ============ FOOTER ============ */
+.footer {
+  background: var(--navy);
+  color: #cbd5e1;
+  padding: 32px 24px;
+  text-align: center;
+  margin-top: 40px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.footer .bold { color: #fff; font-weight: 700; }
+.footer a { color: #93c5fd; text-decoration: none; }
+.footer .copyright {
+  border-top: 1px solid rgba(255,255,255,.1);
+  padding-top: 16px;
+  margin-top: 14px;
+  font-size: 11px;
+  color: #94a3b8;
+  max-width: 720px;
+  margin-left: auto; margin-right: auto;
+}
+
+/* ============ FLOATING NAV ============ */
+.float-nav {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 60;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px;
+  display: inline-flex;
+  gap: 4px;
+  box-shadow: 0 8px 22px rgba(12, 35, 64, .15);
+  align-items: center;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity .3s, transform .3s;
+}
+.float-nav.visible { opacity: 1; transform: translateY(0); }
+.float-nav button {
+  background: transparent;
+  border: none;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--azul-deep);
+  font-size: 14px;
+  display: grid; place-items: center;
+  transition: background .2s;
+}
+.float-nav button:hover { background: #f0f9ff; }
+.float-nav button:disabled { opacity: 0.3; cursor: not-allowed; }
+.float-nav .ctr {
+  align-self: center;
+  padding: 0 10px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* ============ CELEBRATION OVERLAY ============ */
+.celeb-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(12, 35, 64, .88);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow: hidden;
+}
+.celeb-backdrop.active { display: flex; }
+
+.celeb-modal {
+  position: relative;
+  max-width: 540px;
+  width: 100%;
+  text-align: center;
+  padding: 50px 32px 40px;
+  color: #fff;
+}
+.celeb-close {
+  position: absolute;
+  top: -10px; right: 0;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.2);
+  color: #fff;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  cursor: pointer;
+  font-size: 20px;
+  transition: background .2s;
+}
+.celeb-close:hover { background: rgba(255,255,255,.2); }
+
+.confetti {
+  position: absolute;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  opacity: 0;
+  animation: confetti-fall 4s ease-out infinite;
+}
+.confetti.c1 { top: 0%; left: 8%;  background: var(--green-light); animation-delay: 0s; }
+.confetti.c2 { top: 5%; left: 20%; background: var(--gold-mid); animation-delay: 0.4s; }
+.confetti.c3 { top: 0%; left: 35%; background: #60a5fa; animation-delay: 0.8s; }
+.confetti.c4 { top: 6%; left: 50%; background: var(--green-fresh); animation-delay: 1.2s; }
+.confetti.c5 { top: 0%; left: 65%; background: var(--gold-mid); animation-delay: 1.6s; }
+.confetti.c6 { top: 8%; left: 78%; background: #f472b6; animation-delay: 0.2s; }
+.confetti.c7 { top: 0%; left: 90%; background: var(--green-light); animation-delay: 1.0s; }
+.confetti.c8 { top: 12%; left: 15%; background: var(--gold-mid); animation-delay: 1.8s; }
+.confetti.c9 { top: 4%; left: 45%; background: #60a5fa; animation-delay: 0.6s; }
+.confetti.c10 { top: 10%; left: 70%; background: var(--green-fresh); animation-delay: 2.2s; }
+@keyframes confetti-fall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+  10%  { opacity: 1; }
+  100% { transform: translateY(400px) rotate(360deg); opacity: 0; }
+}
+
+.check-circle {
+  width: 88px; height: 88px;
+  background: linear-gradient(135deg, var(--green-fresh), var(--green-deep));
+  border-radius: 50%;
+  margin: 0 auto 22px;
+  display: grid; place-items: center;
+  box-shadow: 0 12px 40px rgba(16, 185, 129, .5),
+              0 0 0 12px rgba(16, 185, 129, .15),
+              0 0 0 24px rgba(16, 185, 129, .08);
+  animation: check-bounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes check-bounce {
+  0%   { transform: scale(0); opacity: 0; }
+  60%  { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.check-svg {
+  width: 44px; height: 44px;
+  stroke: #fff;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+.check-svg path {
+  stroke-dasharray: 60;
+  stroke-dashoffset: 60;
+  animation: check-draw 0.4s 0.4s ease-out forwards;
+}
+@keyframes check-draw { to { stroke-dashoffset: 0; } }
+
+.celeb-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 12px;
+  animation: fade-up 0.5s 0.3s ease-out backwards;
+}
+.celeb-title .name {
+  background: linear-gradient(180deg, transparent 60%, rgba(251, 191, 36, .4) 60%);
+  padding: 0 6px;
+}
+.celeb-sub {
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  color: #cbd5e1;
+  max-width: 420px;
+  margin: 0 auto 22px;
+  animation: fade-up 0.5s 0.5s ease-out backwards;
+}
+.celeb-sub b { color: var(--green-light); font-weight: 600; }
+
+.celeb-loader {
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 999px;
+  padding: 10px 22px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  animation: fade-up 0.5s 0.7s ease-out backwards;
+}
+.celeb-loader .dots { display: flex; gap: 4px; }
+.celeb-loader .dots span {
+  width: 6px; height: 6px;
+  background: var(--green-light);
+  border-radius: 50%;
+  animation: dot-pulse 1.4s ease-in-out infinite;
+}
+.celeb-loader .dots span:nth-child(2) { animation-delay: 0.2s; }
+.celeb-loader .dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes dot-pulse {
+  0%, 60%, 100% { opacity: 0.3; transform: scale(1); }
+  30% { opacity: 1; transform: scale(1.3); }
+}
+
+.celeb-signature {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 26px;
+  padding-top: 22px;
+  border-top: 1px solid rgba(255,255,255,.1);
+  animation: fade-up 0.5s 0.9s ease-out backwards;
+}
+.celeb-avatar {
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg, var(--azul), #0284c7);
+  color: #fff;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  border: 2px solid rgba(255,255,255,.2);
+}
+.celeb-sig-text { text-align: left; font-size: 12px; color: #cbd5e1; }
+.celeb-sig-text b { color: #fff; font-family: 'Space Grotesk', sans-serif; font-size: 13px; }
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+</style>
 </head>
 <body>
-    <div id="root"></div>
 
-    <script type="text/babel">
-        const { useState } = React;
+<!-- HEADER -->
+<header class="app-header">
+  <div class="brand">
+    <div class="ins-logo">INS</div>
+    <div class="brand-text">
+      <span class="brand-title">Guía de tu Cotización</span>
+      <span class="brand-sub">Explicador personalizado · Seguros Digitales SDI</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="pill-100">✓ Proceso 100% Digital</span>
+    <div class="agent-info">
+      Agente: <b>Juan Carlos Hernández</b><br/>
+      Lic. SUGESE 08-1318
+    </div>
+  </div>
+</header>
 
-        // ==== Multi-agente: los datos del agente vienen en query params del URL ====
-        // El cotizador genera links del explicador con ?n=Nombre&l=Licencia&w=website
-        // para que el explicador sepa que agente envio la cotizacion al cliente.
-        // Si no hay params (o el URL se abre directo), usa los defaults del owner.
-        const _urlParams   = new URLSearchParams(window.location.search);
-        const agentName    = _urlParams.get('n') || 'Juan Carlos Hernandez Vargas';
-        const agentLicense = _urlParams.get('l') || '08-1318';
-        const agentWebsite = _urlParams.get('w') || 'www.segurosdelins.com';
+<!-- CINTA DORADA -->
+<div class="gold-ribbon">
+  <span class="star">✦</span>
+  <span>Una herramienta diseñada por <b>Juan Carlos Hernández</b> para acompañar a sus clientes en cada decisión de seguro</span>
+</div>
 
-        // --- ICONOS ---
-        const Icon = ({ path, className, fill = "none" }) => (
-            <svg className={className} viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" dangerouslySetInnerHTML={{ __html: path }} />
-        );
-        const ShieldCheck = (p) => <Icon {...p} path='<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/>' />;
-        const Car = (p) => <Icon {...p} path='<path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>' />;
-        const HeartPulse = (p) => <Icon {...p} path='<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/>' />;
-        const Wrench = (p) => <Icon {...p} path='<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>' />;
-        const Umbrella = (p) => <Icon {...p} path='<path d="M22 12a10.06 10.06 0 0 0-20 0Z"/><path d="M12 12v8a2 2 0 0 0 4 0"/><path d="M12 2v1"/>' />;
-        const CheckCircle = (p) => <Icon {...p} path='<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/>' />;
-        const AlertTriangle = (p) => <Icon {...p} path='<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>' />;
-        const Calendar = (p) => <Icon {...p} path='<rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/>' />;
-        const ArrowRight = (p) => <Icon {...p} path='<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>' />;
-        const ChevronDown = (p) => <Icon {...p} path='<path d="m6 9 6 6 6-6"/>' />;
-        const ChevronUp = (p) => <Icon {...p} path='<path d="m18 15-6-6-6 6"/>' />;
-        const Star = (p) => <Icon {...p} path='<path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>' fill="currentColor" />;
-        const Zap = (p) => <Icon {...p} path='<path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>' />;
-        const Info = (p) => <Icon {...p} path='<circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>' />;
-        const Package = (p) => <Icon {...p} path='<path d="M16.5 9.4 7.55 4.24"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.29 7 12 12 20.71 7"/><line x1="12" x2="12" y1="22" y2="12"/>' />;
+<!-- STICKY NAV -->
+<nav class="sticky-nav" id="stickyNav">
+  <span class="nav-label">Recorrido</span>
+  <div class="nav-dots">
+    <button class="sticky-dot active" data-target="s1"><span class="num">1</span><span>Cubre</span></button>
+    <button class="sticky-dot" data-target="s2"><span class="num">2</span><span>Asistencia</span></button>
+    <button class="sticky-dot" data-target="s3"><span class="num">3</span><span>Deducible</span></button>
+    <button class="sticky-dot" data-target="s4"><span class="num">4</span><span>Repuestos</span></button>
+    <button class="sticky-dot" data-target="s5"><span class="num">5</span><span>Pagos</span></button>
+  </div>
+</nav>
 
-        // --- DATOS ---
-        const Coverages = [
-            { id: 'A y C', title: 'Daños a Terceros (A y C)', icon: <Car className="w-8 h-8 text-blue-500" />, description: 'Responsabilidad Civil. Si eres el responsable de un accidente, esta cobertura paga los daños ocasionados a otras personas (lesiones) y a sus bienes (otros vehículos, muros, postes).', details: 'Incluye la cobertura A (Personas) por hasta ₡300 millones por accidente y la cobertura C (Propiedad) por hasta ₡100 millones.' },
-            { id: 'D y F', title: 'Tu Vehículo: Colisión y Robo (D y F)', icon: <ShieldCheck className="w-8 h-8 text-green-500" />, description: 'Protección directa para tu carro. Cubre los gastos de reparación si chocas, te vuelcas, o la indemnización si te roban el vehículo.', details: 'Se asegura por el valor declarado de tu vehículo en el mercado. Aplica un deducible fijo.' },
-            { id: 'B', title: 'Gastos Médicos (B)', icon: <HeartPulse className="w-8 h-8 text-red-500" />, description: 'Servicios Médicos para vos y tus acompañantes. Cubre hospitalización, medicinas y atención médica en caso de un accidente de tránsito.', details: 'Monto cubierto: Hasta ₡15,000,000.00' },
-            { id: 'H', title: 'Riesgos Adicionales (H)', icon: <Umbrella className="w-8 h-8 text-purple-500" />, description: 'Protección contra la naturaleza y vandalismo. Cubre daños por inundaciones, temblores, caída de árboles, derrumbes o actos malintencionados de terceros.', details: 'Cubre hasta el valor total asegurado de tu vehículo.' },
-            { id: 'G y M', title: 'Asistencia en Carretera 24/7 (G y M)', icon: <Wrench className="w-8 h-8 text-orange-500" />, description: 'Tu salvavidas en la calle. Servicio de grúa, paso de corriente, cerrajero, cambio de llanta y envío de combustible.', details: 'Multiasistencia extendida para que nunca te quedes botado, sin importar la hora ni el lugar.' }
-        ];
+<!-- HERO -->
+<div class="hero">
+  <div class="agent-chip">
+    <div class="avatar">JC</div>
+    <div class="agent-chip-info">
+      <span class="agent-chip-name">Juan Carlos Hernández</span>
+      <span class="agent-chip-role">Tu agente · Te acompaña paso a paso</span>
+    </div>
+  </div>
 
-        function ExplicadorSeguro() {
-            const [activeCoverage, setActiveCoverage] = useState(null);
-            const [showAsistencia, setShowAsistencia] = useState(false);
-            const [asistenciaTab, setAsistenciaTab] = useState('plus');
-            const [vehicleType, setVehicleType] = useState('gasolina');
+  <div class="bubble">
+    <span class="greet">¡Hola, <span class="name">Silvia Mariel</span>! 👋</span>
+    Te preparé esta <b>guía visual personalizada</b> para que entendamos juntos tu cotización del <b>Sedan 2019, placa BRK454</b>.
+    <div class="roadmap">
+      <b>Tu recorrido en 5 pasos:</b><br/>
+      qué cubre tu cotización · asistencia 24/7 · cómo te protege ante un choque · qué pasa con los repuestos · y al final, las <b>3 opciones de pago</b> para que elijas la que más te conviene.
+    </div>
+  </div>
 
-            const asistenciasPlus = [
-                { serv: 'Remolque por avería / accidente', limite: 'Máximo 7 eventos', monto: '$200 por evento' },
-                { serv: 'Cerrajería', limite: 'Máximo 6 eventos', monto: '$150 por evento' },
-                { serv: 'Envío de combustible', limite: 'Máximo 6 eventos', monto: 'Costo del combustible' },
-                { serv: 'Cambio de llanta / Paso corriente', limite: 'Máximo 6 y 4 eventos', monto: '$125 por evento' },
-                { serv: 'Mini-rescate (Atoramiento)', limite: 'Máximo 4 eventos', monto: '$125 por evento' },
-                { serv: 'Renta de vehículo sustituto', limite: 'Máximo 4 eventos', monto: '$100 por evento' },
-                { serv: 'Taxi al aeropuerto (Ida y regreso)', limite: '2 viajes al año', monto: 'Servicio Incluido', destacado: true },
-            ];
+  <div class="progress-line">
+    <span class="label">Tu recorrido:</span>
+    <div class="dots">
+      <span class="dot active"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+    </div>
+    <span class="step-label">Paso 1 de 5</span>
+  </div>
 
-            const asistenciasBasico = [
-                { serv: 'Remolque por avería', limite: 'Máximo 6 eventos', monto: '$175 por evento' },
-                { serv: 'Remolque por accidente', limite: 'Máximo 7 eventos', monto: '$175 por evento' },
-                { serv: 'Cerrajería', limite: 'Máximo 4 eventos', monto: '$125 por evento' },
-                { serv: 'Envío de combustible', limite: 'Máximo 4 eventos', monto: 'Costo del combustible' },
-                { serv: 'Cambio de llanta / Paso corriente', limite: 'Máximo 4 y 3 eventos', monto: '$100 por evento' },
-                { serv: 'Mini-rescate (Atoramiento)', limite: 'Máximo 3 eventos', monto: '$100 por evento' },
-            ];
+  <button class="cta-pill" onclick="document.getElementById('s1').scrollIntoView({behavior:'smooth'})">
+    ▶ Empezar la guía
+  </button>
+</div>
 
-            const repuestosData = [
-                { condicion: 'Carro nuevo (≤3 años y ≤36,000 km)', tipo: 'Repuesto Original', taller: 'Agencia oficial de la marca', color: 'green' },
-                { condicion: 'Opción "Extensión de Garantía" (≤5 años, ≤60,000 km)', tipo: 'Repuesto Original', taller: 'Agencia oficial o taller autorizado', color: 'green' },
-                { condicion: 'Opción "Extensión de Garantía Plus" (≤8 años, ≤80,000 km)', tipo: 'Repuesto Original', taller: 'Agencia oficial o taller autorizado', color: 'blue' },
-                { condicion: 'Más de 3 años o más de 36,000 km (sin extensión)', tipo: 'Repuesto Genérico / Usado', taller: 'Taller multimarca o especializado', color: 'orange' },
-            ];
+<!-- MAIN -->
+<main>
 
-            const bateriaData = [
-                { rango: '0 – 24 meses', pct: '100%', color: 'green' },
-                { rango: '25 – 48 meses', pct: '80%', color: 'blue' },
-                { rango: '49 – 72 meses', pct: '60%', color: 'yellow' },
-                { rango: '73 – 96 meses', pct: '50%', color: 'orange' },
-            ];
+  <!-- ============ SECCIÓN 1 — COBERTURAS ============ -->
+  <section class="section" id="s1">
+    <div class="section-header">
+      <span class="section-num">📋 Sección 1 · Tu recorrido</span>
+      <h2 class="section-title">¿Qué incluye tu Cobertura Total?</h2>
+      <p class="section-sub">Toca cada tarjeta para ver el detalle. Los montos se calculan sobre tu valor asegurado de ₡10,000,000.</p>
+    </div>
 
-            const colorMap = {
-                green: { badge: 'bg-green-100 text-green-800', bar: 'bg-green-500', dot: 'bg-green-500' },
-                blue: { badge: 'bg-blue-100 text-blue-800', bar: 'bg-blue-500', dot: 'bg-blue-500' },
-                yellow: { badge: 'bg-yellow-100 text-yellow-800', bar: 'bg-yellow-500', dot: 'bg-yellow-500' },
-                orange: { badge: 'bg-orange-100 text-orange-800', bar: 'bg-orange-500', dot: 'bg-orange-500' },
-            };
+    <div class="bento-grid">
+      <div class="bento-tile azul">
+        <div class="letter">A</div>
+        <h3>Daños a Personas</h3>
+        <p class="desc">Si eres responsable de un accidente, pagamos las lesiones a otras personas.</p>
+        <div class="amount">₡300,000,000</div>
+      </div>
 
-            return (
-                <div className="min-h-screen bg-gray-50 font-sans text-gray-800">
+      <div class="bento-tile azul">
+        <div class="letter">C</div>
+        <h3>Daños a Propiedad</h3>
+        <p class="desc">Otros vehículos, muros, postes — propiedad ajena que dañes.</p>
+        <div class="amount">₡100,000,000</div>
+      </div>
 
-                {/* Header */}
-                <header className="bg-blue-900 text-white p-6 shadow-md">
-                    <div className="max-w-4xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-                        <div className="flex items-center gap-4 md:gap-6 flex-col md:flex-row text-center md:text-left">
-                            <img src="./INS BLANCO.png" alt="INS Logo" className="h-14 md:h-16 w-auto object-contain drop-shadow-md" />
-                            <div>
-                                <h1 className="text-2xl md:text-3xl font-bold">Guía de tu Cotización</h1>
-                                <p className="mt-1 text-blue-200 text-sm md:text-base">Entiende tu inversión de forma clara y sencilla</p>
-                                <p className="mt-1.5 text-blue-300 text-xs md:text-sm font-medium">Agente: {agentName} • Licencia {agentLicense}</p>
-                            </div>
-                        </div>
-                        <div className="bg-blue-800 px-4 py-2 rounded-lg border border-blue-700 whitespace-nowrap">
-                            <p className="text-sm font-semibold flex items-center justify-center gap-2">
-                                <ShieldCheck className="w-5 h-5 text-green-400" />
-                                Proceso 100% Digital
-                            </p>
-                        </div>
-                    </div>
-                </header>
+      <div class="bento-tile green">
+        <div class="letter">D</div>
+        <h3>Colisión y Vuelco</h3>
+        <p class="desc">Reparación de tu vehículo si chocas o te vuelcas.</p>
+        <div class="amount">₡10,000,000</div>
+      </div>
 
-                {/* Banner de asesoría exclusiva */}
-                <div className="bg-gradient-to-r from-yellow-400 to-amber-400 py-3 px-4 shadow-sm">
-                    <div className="max-w-4xl mx-auto flex items-center justify-center gap-2 text-center">
-                        <Star className="w-5 h-5 flex-shrink-0 text-amber-900" fill="currentColor" />
-                        <p className="text-sm font-bold text-amber-900">
-                            Esta guía visual es un beneficio exclusivo de la asesoría personalizada de la oficina del Agente {agentName} — no es un documento estándar del INS.
-                        </p>
-                    </div>
-                </div>
+      <div class="bento-tile green">
+        <div class="letter">F</div>
+        <h3>Robo</h3>
+        <p class="desc">Indemnización si te roban el vehículo.</p>
+        <div class="amount">₡10,000,000</div>
+      </div>
 
-                <main className="max-w-4xl mx-auto p-4 md:p-6 space-y-10">
+      <div class="bento-tile red">
+        <div class="letter">B</div>
+        <h3>Gastos Médicos</h3>
+        <p class="desc">Hospitalización y atención para vos y tus acompañantes.</p>
+        <div class="amount">₡15,000,000</div>
+      </div>
 
-                    {/* Intro */}
-                    <section className="bg-white rounded-2xl p-6 md:p-8 shadow-sm border border-gray-100 mt-6">
-                        <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                            ¡Hola! Analicemos tu propuesta <ArrowRight className="text-blue-500 w-6 h-6" />
-                        </h2>
-                        <p className="text-lg text-gray-600 mb-6">
-                            El <strong>precio detallado de tu póliza</strong> se encuentra en el documento PDF adjunto al correo. Sabemos que los seguros pueden tener muchos términos técnicos, por eso creamos esta guía para explicarte <strong>exactamente qué estás comprando</strong> y cómo te protege.
-                        </p>
-                        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg flex items-start gap-4">
-                            <Calendar className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
-                            <div>
-                                <h3 className="font-semibold text-blue-900">Modalidades de Pago Exclusivas</h3>
-                                <p className="text-blue-800 mt-1">
-                                    Para garantizar la mejor tarifa y estabilidad en tu póliza, trabajamos exclusivamente con pagos <strong>Anuales, Semestrales y Trimestrales</strong>. <em>(Recuerda que el pago anual incluye hasta un 10% de descuento).</em>
-                                </p>
-                            </div>
-                        </div>
-                    </section>
+      <div class="bento-tile purple">
+        <div class="letter">H</div>
+        <h3>Riesgos Naturales</h3>
+        <p class="desc">Inundaciones, temblores, caída de árboles, vandalismo.</p>
+        <div class="amount">₡10,000,000</div>
+      </div>
+    </div>
 
-                    {/* Coberturas */}
-                    <section>
-                        <div className="text-center mb-8">
-                            <h2 className="text-3xl font-bold text-gray-800">¿Qué incluye tu "Cobertura Total"?</h2>
-                            <p className="text-gray-500 mt-2">Toca cada tarjeta para ver los detalles de las letras en tu cotización (A, B, C, etc.)</p>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {Coverages.map((cov) => (
-                                <div
-                                    key={cov.id}
-                                    onClick={() => setActiveCoverage(activeCoverage === cov.id ? null : cov.id)}
-                                    className={`cursor-pointer transition-all duration-300 rounded-xl border-2 p-5 bg-white shadow-sm hover:shadow-md ${activeCoverage === cov.id ? 'border-blue-500 ring-4 ring-blue-50' : 'border-gray-100 hover:border-blue-300'}`}
-                                >
-                                    <div className="flex items-start gap-4">
-                                        <div className="bg-gray-50 p-3 rounded-lg flex-shrink-0">{cov.icon}</div>
-                                        <div>
-                                            <h3 className="font-bold text-lg text-gray-800">{cov.title}</h3>
-                                            <p className="text-sm text-gray-600 mt-1">{cov.description}</p>
-                                        </div>
-                                    </div>
-                                    <div className={`mt-4 pt-4 border-t border-gray-100 overflow-hidden transition-all duration-300 ${activeCoverage === cov.id ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0 pt-0 border-t-0'}`}>
-                                        <p className="text-sm font-medium text-blue-700 bg-blue-50 p-3 rounded-lg">{cov.details}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </section>
+    <nav class="step-nav-btns right-only">
+      <button class="step-btn next" data-target="s2">Siguiente: Asistencia 24/7 →</button>
+    </nav>
+  </section>
 
-                    {/* IDD */}
-                    <section className="bg-gradient-to-br from-gray-900 to-blue-900 rounded-2xl p-6 md:p-8 shadow-lg text-white">
-                        <div className="flex flex-col md:flex-row gap-8 items-center">
-                            <div className="flex-1">
-                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-400/20 text-yellow-300 text-sm font-bold mb-4">
-                                    <Star className="w-4 h-4" /> Beneficio Exclusivo
-                                </div>
-                                <h2 className="text-2xl md:text-3xl font-bold mb-4">Entendiendo el Deducible y la Cobertura IDD</h2>
-                                <p className="text-blue-100 mb-4 text-sm md:text-base leading-relaxed">
-                                    Normalmente, en cualquier choque, debes pagar un "deducible" (ej. ₡400,000) de tu bolsillo antes de que el seguro pague el resto. <strong>¡Pero nosotros incluimos la cobertura IDD e IGN!</strong>
-                                </p>
-                                <ul className="space-y-3">
-                                    <li className="flex items-start gap-3">
-                                        <CheckCircle className="text-green-400 w-5 h-5 flex-shrink-0 mt-0.5" />
-                                        <span className="text-sm md:text-base"><strong>IDD:</strong> Te reintegramos el 100% de ese deducible hasta en dos accidentes al año.</span>
-                                    </li>
-                                    <li className="flex items-start gap-3">
-                                        <CheckCircle className="text-green-400 w-5 h-5 flex-shrink-0 mt-0.5" />
-                                        <span className="text-sm md:text-base"><strong>N en C (Exención de deducible para daños a terceros):</strong> Con esta cobertura se cubren al 100% los daños del tercero que sean mayores a ₡750,000. Si el daño es menor a ₡750,000, solo pagas ₡150,000 de deducible al tercero y el seguro cubre el resto.</span>
-                                    </li>
-                                </ul>
-                                <p className="mt-6 text-yellow-400 font-semibold italic text-sm">
-                                    En resumen: Chocas, reparas tu carro, ¡y no sacas plata de tu bolsillo para el deducible!
-                                </p>
-                            </div>
-                            <div className="w-full md:w-1/3 bg-white/10 p-6 rounded-xl backdrop-blur-sm border border-white/20 text-center">
-                                <p className="text-sm text-blue-200 mb-2">En caso de accidente:</p>
-                                <div className="text-4xl font-black text-white mb-1">₡0*</div>
-                                <p className="text-xs font-medium text-yellow-400 uppercase tracking-wide">A pagar por deducible</p>
-                                <div className="text-[10px] text-blue-200 mt-4 leading-tight text-left space-y-2 bg-white/5 p-3 rounded-lg border border-white/10">
-                                    <p>* Gracias a la cobertura IDD de tu vehículo. Para daños a terceros aplica cobertura N en C.</p>
-                                    <p className="italic text-yellow-200/90"><strong>Nota Importante:</strong> No se cubren daños menores al deducible. Además, aplica un pago de ₡150,000 en daños a terceros cuando la pérdida del tercero sea menor a ₡750,000.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
+  <!-- ============ SECCIÓN 2 — ASISTENCIA ============ -->
+  <section class="section" id="s2">
+    <div class="section-header">
+      <span class="section-num">🛠 Sección 2 · Tu recorrido</span>
+      <h2 class="section-title">Tu asistencia 24/7 en carretera</h2>
+      <p class="section-sub">Cobertura G y M — siempre que necesites ayuda en la calle, te respaldamos.</p>
+    </div>
 
-                    {/* Asistencia */}
-                    <section className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden transition-all duration-300">
-                        <button onClick={() => setShowAsistencia(!showAsistencia)} className="w-full flex justify-between items-center p-5 md:p-6 bg-gray-50 hover:bg-gray-100 transition-colors">
-                            <div className="flex items-center gap-4 text-left">
-                                <div className="bg-orange-100 p-3 rounded-xl flex-shrink-0">
-                                    <Wrench className="w-6 h-6 text-orange-600" />
-                                </div>
-                                <div>
-                                    <h3 className="text-lg md:text-xl font-bold text-gray-800">Detalle de Beneficios de Asistencia (Cobertura M)</h3>
-                                    <p className="text-sm text-gray-500 font-normal">Conoce los límites de grúa, cerrajería, paso de corriente y más.</p>
-                                </div>
-                            </div>
-                            {showAsistencia ? <ChevronUp className="w-6 h-6 text-gray-400 flex-shrink-0" /> : <ChevronDown className="w-6 h-6 text-gray-400 flex-shrink-0" />}
-                        </button>
-                        {showAsistencia && (
-                            <div className="p-5 md:p-6 border-t border-gray-200 bg-white">
-                                <div className="flex bg-gray-100 rounded-lg p-1 mb-6 max-w-md mx-auto">
-                                    <button onClick={() => setAsistenciaTab('plus')} className={`flex-1 py-2 text-sm font-bold rounded-md transition-colors ${asistenciaTab === 'plus' ? 'bg-white shadow-sm text-blue-700' : 'text-gray-500 hover:text-gray-700'}`}>Plan Plus Extendido (0-6 años)</button>
-                                    <button onClick={() => setAsistenciaTab('basico')} className={`flex-1 py-2 text-sm font-bold rounded-md transition-colors ${asistenciaTab === 'basico' ? 'bg-white shadow-sm text-blue-700' : 'text-gray-500 hover:text-gray-700'}`}>Plan Básico (7-15 años)</button>
-                                </div>
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left text-sm border-collapse">
-                                        <thead>
-                                            <tr className="bg-blue-900 text-white">
-                                                <th className="p-3 rounded-tl-lg font-semibold">Servicio de Asistencia</th>
-                                                <th className="p-3 font-semibold">Límite de Eventos</th>
-                                                <th className="p-3 rounded-tr-lg font-semibold">Monto Máximo</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {(asistenciaTab === 'plus' ? asistenciasPlus : asistenciasBasico).map((item, index) => (
-                                                <tr key={index} className={`border-b border-gray-100 hover:bg-blue-50 ${item.destacado ? 'bg-yellow-50' : ''}`}>
-                                                    <td className="p-3 font-medium text-gray-800 flex items-center gap-2">
-                                                        {item.destacado && <span className="inline-block px-2 py-0.5 bg-yellow-400 text-yellow-900 text-[10px] font-bold rounded uppercase tracking-wide">Plus</span>}
-                                                        {item.serv}
-                                                    </td>
-                                                    <td className={`p-3 text-gray-600 ${item.destacado ? 'font-medium text-yellow-800' : ''}`}>{item.limite}</td>
-                                                    <td className={`p-3 text-gray-600 ${item.destacado ? 'font-medium text-yellow-800' : ''}`}>{item.monto}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <p className="text-xs text-gray-400 mt-4 text-center italic">Ambos planes incluyen orientación médica telefónica, referencias de talleres e información sin límite de eventos.</p>
-                            </div>
-                        )}
-                    </section>
+    <div class="tip-banner">
+      <div class="bulb">💡</div>
+      <div class="text">
+        <b>Buena noticia:</b> tienes asistencia 24/7 incluida.
+        <span class="small">El alcance del plan se ajusta a la antigüedad de tu vehículo. Para tu Sedan 2019 (7 años) te toca el <b>Plan Básico</b>.</span>
+      </div>
+    </div>
 
-                    {/* ===== NUEVA SECCIÓN: REPUESTOS ===== */}
-                    <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                        {/* Header de sección */}
-                        <div className="bg-gradient-to-r from-slate-800 to-slate-700 p-6 md:p-8">
-                            <div className="flex items-center gap-4 mb-3">
-                                <div className="bg-white/10 p-3 rounded-xl">
-                                    <Package className="w-7 h-7 text-white" />
-                                </div>
-                                <div>
-                                    <h2 className="text-2xl font-bold text-white">¿Qué pasa con los repuestos si choco?</h2>
-                                    <p className="text-slate-300 text-sm mt-1">El tipo de repuesto que el INS autoriza depende de la edad de tu vehículo</p>
-                                </div>
-                            </div>
+    <div class="plan-toggle">
+      <button class="tab">Plan Plus (0-6 años)</button>
+      <button class="tab active">★ Plan Básico (7-15 años) — Tu plan</button>
+    </div>
 
-                            {/* Toggle gasolina / eléctrico */}
-                            <div className="flex bg-white/10 rounded-xl p-1 mt-5 max-w-sm">
-                                <button
-                                    onClick={() => setVehicleType('gasolina')}
-                                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-bold rounded-lg transition-all ${vehicleType === 'gasolina' ? 'bg-white text-slate-800 shadow' : 'text-slate-300 hover:text-white'}`}
-                                >
-                                    <Car className="w-4 h-4" /> Gasolina / Diésel
-                                </button>
-                                <button
-                                    onClick={() => setVehicleType('electrico')}
-                                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-bold rounded-lg transition-all ${vehicleType === 'electrico' ? 'bg-white text-slate-800 shadow' : 'text-slate-300 hover:text-white'}`}
-                                >
-                                    <Zap className="w-4 h-4" /> Eléctrico
-                                </button>
-                            </div>
-                        </div>
+    <div class="svc-grid">
+      <div class="svc-row"><div class="icon">🚛</div><div class="name">Remolque por avería</div><div class="qty">6× · $175</div></div>
+      <div class="svc-row"><div class="icon">🚗</div><div class="name">Remolque por accidente</div><div class="qty">7× · $175</div></div>
+      <div class="svc-row"><div class="icon">🔑</div><div class="name">Cerrajería</div><div class="qty">4× · $125</div></div>
+      <div class="svc-row"><div class="icon">⛽</div><div class="name">Envío combustible</div><div class="qty">4× · costo</div></div>
+      <div class="svc-row"><div class="icon">🛞</div><div class="name">Cambio de llanta</div><div class="qty">4× · $100</div></div>
+      <div class="svc-row"><div class="icon">🔋</div><div class="name">Paso de corriente</div><div class="qty">3× · $100</div></div>
+      <div class="svc-row"><div class="icon">🚧</div><div class="name">Mini-rescate (atoramiento)</div><div class="qty">3× · $100</div></div>
+    </div>
 
-                        {/* Contenido Gasolina */}
-                        {vehicleType === 'gasolina' && (
-                            <div className="p-5 md:p-8 space-y-6">
+    <nav class="step-nav-btns">
+      <button class="step-btn prev" data-target="s1">← Coberturas</button>
+      <button class="step-btn next" data-target="s3">Siguiente: Deducible →</button>
+    </nav>
+  </section>
 
-                                {/* Tabla de repuestos */}
-                                <div>
-                                    <h3 className="font-bold text-gray-700 mb-4 text-base">Calidad del repuesto según antigüedad de tu vehículo:</h3>
-                                    <div className="space-y-3">
-                                        {repuestosData.map((item, i) => (
-                                            <div key={i} className={`flex flex-col md:flex-row md:items-center gap-3 p-4 rounded-xl border ${item.color === 'green' ? 'bg-green-50 border-green-200' : item.color === 'blue' ? 'bg-blue-50 border-blue-200' : 'bg-orange-50 border-orange-200'}`}>
-                                                <div className="flex-1">
-                                                    <p className="font-semibold text-gray-800 text-sm">{item.condicion}</p>
-                                                    <p className="text-xs text-gray-500 mt-0.5">{item.taller}</p>
-                                                </div>
-                                                <span className={`self-start md:self-center px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap ${colorMap[item.color].badge}`}>
-                                                    {item.tipo}
-                                                </span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
+  <!-- ============ SECCIÓN 3 — IDD ============ -->
+  <section class="section" id="s3">
+    <div class="section-header">
+      <span class="section-num">🛡 Sección 3 · Tu recorrido</span>
+      <h2 class="section-title">Tu protección al deducible (IDD + N en C)</h2>
+      <p class="section-sub">El deducible es lo que normalmente debes pagar de tu bolsillo en cualquier choque. Con la IDD, ese monto baja a cero.</p>
+    </div>
 
-                                {/* Regla del 80% */}
-                                <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
-                                    <div className="flex items-start gap-3">
-                                        <AlertTriangle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
-                                        <div>
-                                            <h4 className="font-bold text-amber-900 mb-1">Regla importante: el límite del 80%</h4>
-                                            <p className="text-sm text-amber-800 leading-relaxed">
-                                                Si la reparación de tu vehículo supera el <strong>80% de su valor</strong>, el INS lo declara como <strong>"Pérdida por Costos"</strong> y el pago máximo se limita a ese porcentaje del valor asegurado. En la práctica, esto funciona similar a una pérdida total.
-                                            </p>
-                                            <div className="mt-3 bg-white/70 rounded-lg p-3 text-xs text-amber-700 border border-amber-200">
-                                                <strong>Ejemplo:</strong> Tu carro vale ₡10,000,000 y la reparación cuesta ₡9,000,000 (90%). El INS paga máximo el 80% = ₡8,000,000, menos el deducible correspondiente.
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+    <div class="idd-card">
+      <div class="idd-top">
+        <div>
+          <div class="idd-label">Tu deducible en cualquier choque</div>
+          <div class="idd-compare">
+            <div class="idd-col-from">
+              <div class="small">Sin IDD</div>
+              <div class="from">₡400,000</div>
+            </div>
+            <div class="idd-arrow">→</div>
+            <div class="idd-col-to">
+              <div class="small">Con IDD</div>
+              <div class="to">₡0</div>
+            </div>
+          </div>
+        </div>
+        <div class="idd-side">
+          ★ Beneficio<br/>exclusivo IDD<br/>+ N en C
+        </div>
+      </div>
 
-                                {/* Nota del INS selecciona distribuidor */}
-                                <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl p-4">
-                                    <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                                    <p className="text-sm text-blue-800">
-                                        <strong>¿Quién elige dónde comprar el repuesto?</strong> El INS selecciona el proveedor y puede pagar directamente al distribuidor. El plazo de entrega puede ser de <strong>hasta 20 días hábiles</strong>. Si el repuesto no está disponible en Costa Rica, el INS calcula el costo con base en importación + flete + impuestos.
-                                    </p>
-                                </div>
-                            </div>
-                        )}
+      <div class="idd-rules">
+        <div class="idd-rule ok">
+          <div class="icon">✓</div>
+          <div>
+            <b>Daño mayor a ₡400.000</b><br/>
+            La IDD se activa: tú no pagas el deducible, te lo reintegramos.
+            <div class="meta">Hasta 2 choques al año</div>
+          </div>
+        </div>
+        <div class="idd-rule warn">
+          <div class="icon">!</div>
+          <div>
+            <b>Daño menor a ₡400.000</b><br/>
+            Corre por cuenta del <b style="color:var(--gold-mid);">asegurado</b>. La IDD se activa solo cuando el daño supera el deducible.
+            <div class="meta">Reparaciones pequeñas</div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-                        {/* Contenido Eléctrico */}
-                        {vehicleType === 'electrico' && (
-                            <div className="p-5 md:p-8 space-y-6">
+    <nav class="step-nav-btns">
+      <button class="step-btn prev" data-target="s2">← Asistencia</button>
+      <button class="step-btn next" data-target="s4">Siguiente: Repuestos →</button>
+    </nav>
+  </section>
 
-                                <div className="flex items-start gap-4 bg-blue-50 border border-blue-200 rounded-xl p-5">
-                                    <Zap className="w-7 h-7 text-blue-600 flex-shrink-0 mt-0.5" />
-                                    <div>
-                                        <h3 className="font-bold text-blue-900 mb-2 text-lg">Cobertura especial para la Batería</h3>
-                                        <p className="text-sm text-blue-800 leading-relaxed">
-                                            Las baterías de vehículos eléctricos son muy costosas. Por eso el INS tiene una cobertura especial: si el siniestro requiere <strong>reemplazar completamente la batería</strong>, el seguro cubre <strong>hasta un máximo del 40% del valor de tu vehículo</strong>. Sobre ese monto se aplica un porcentaje según la antigüedad del carro.
-                                        </p>
-                                    </div>
-                                </div>
+  <!-- ============ SECCIÓN 4 — REPUESTOS ============ -->
+  <section class="section" id="s4">
+    <div class="section-header">
+      <span class="section-num">📦 Sección 4 · Tu recorrido</span>
+      <h2 class="section-title">¿Qué pasa con los repuestos si chocás?</h2>
+      <p class="section-sub">Auto-detectamos el tipo de tu vehículo y te marcamos el plan que aplica.</p>
+    </div>
 
-                                {/* Tabla depreciación batería */}
-                                <div>
-                                    <h3 className="font-bold text-gray-700 mb-4">Porcentaje cubierto según edad del vehículo:</h3>
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                        {bateriaData.map((item, i) => (
-                                            <div key={i} className={`rounded-xl p-4 text-center border-2 ${item.color === 'green' ? 'bg-green-50 border-green-300' : item.color === 'blue' ? 'bg-blue-50 border-blue-300' : item.color === 'yellow' ? 'bg-yellow-50 border-yellow-300' : 'bg-orange-50 border-orange-300'}`}>
-                                                <div className={`text-3xl font-black mb-1 ${item.color === 'green' ? 'text-green-700' : item.color === 'blue' ? 'text-blue-700' : item.color === 'yellow' ? 'text-yellow-700' : 'text-orange-700'}`}>{item.pct}</div>
-                                                <div className="text-xs font-semibold text-gray-600">{item.rango}</div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
+    <div class="s4-block">
+      <div class="s4-header">
+        <div class="num-badge">📦 Tu vehículo</div>
+        <h2>Calidad de tu repuesto, garantizada</h2>
+        <div class="perso">Para tu <b>Sedan 2019, placa BRK454</b>, esto es lo que el INS te garantiza.</div>
+      </div>
 
-                                {/* Nota importante repuestos eléctrico */}
-                                <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
-                                    <div className="flex items-start gap-3">
-                                        <AlertTriangle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
-                                        <div>
-                                            <h4 className="font-bold text-amber-900 mb-1">Regla del 80% también aplica</h4>
-                                            <p className="text-sm text-amber-800">
-                                                Igual que en vehículos de gasolina, si la reparación total supera el 80% del valor asegurado, el caso se maneja como pérdida por costos. Esto es especialmente relevante en eléctricos, cuyas baterías pueden representar una parte importante del valor total del vehículo.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </section>
-                    {/* ===== FIN NUEVA SECCIÓN ===== */}
+      <div class="s4-body">
+        <div class="s4-intro">
+          ⓘ El tipo de repuesto que recibes <b>depende de la antigüedad de tu vehículo</b> y de la opción que cotizaste. Te muestro la tuya destacada.
+        </div>
 
-                    {/* CTA */}
-                    <section className="text-center py-12 flex flex-col items-center">
-                        <a
-                            href="https://forms.gle/tqSaZBDcZfNgNktC7"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="bg-[#469145] hover:bg-green-700 text-white text-xl font-bold py-4 px-10 rounded-2xl shadow-md transition-all transform hover:-translate-y-1 mb-6 inline-block"
-                        >
-                            ¡Agendar mi cita ahora!
-                        </a>
-                        <p className="text-lg text-gray-800 mb-10 max-w-2xl">
-                            Esta cotización estará disponible por los <strong>próximos 15 días</strong>. ¡No deje pasar esta oportunidad de proteger su vehículo!
-                        </p>
-                        <h3 className="text-2xl font-bold text-[#469145] mb-4">Es fácil, es rápido, es seguro.</h3>
-                        <div className="flex flex-col md:flex-row items-center justify-center gap-3 text-gray-600 font-medium md:text-lg">
-                            <div className="flex gap-1">
-                                {[1, 2, 3, 4, 5].map(i => <Star key={i} className="w-6 h-6 text-yellow-400" />)}
-                            </div>
-                            <span className="italic">Miles de conductores ya están protegidos con nuestro proceso digital</span>
-                        </div>
-                    </section>
-                </main>
+        <!-- A. CALIDAD -->
+        <div class="sub-card">
+          <h3><span class="sub-num">A</span>Calidad del repuesto según tu carro</h3>
+          <p class="lead">El INS clasifica los repuestos en 4 niveles según la edad del vehículo y la cobertura adquirida.</p>
 
-                {/* Footer */}
-                <footer className="bg-gray-900 text-gray-300 py-10 text-center mt-6 border-t-4 border-blue-900">
-                    <div className="max-w-4xl mx-auto px-4 space-y-4 text-sm">
-                        <p className="font-bold text-white text-base">Esta aplicación pertenece a Seguros Digitales SDI®.</p>
-                        <p>Visítenos en{' '}<a href={`https://${agentWebsite}`} target="_blank" rel="noreferrer" className="text-blue-400 font-semibold hover:text-blue-300 hover:underline transition-colors">{agentWebsite}</a></p>
-                        <div className="border-t border-gray-800 pt-6 mt-4">
-                            <p className="text-xs text-gray-400 max-w-3xl mx-auto leading-relaxed">
-                                © 2026 Propiedad Intelectual de {agentName}. Todos los derechos reservados. Esta plataforma es una herramienta de uso exclusivo para los clientes vinculados a la Licencia Sugese {agentLicense}. Queda prohibida su reproducción o uso por terceros sin autorización expresa del titular.
-                            </p>
-                        </div>
-                    </div>
-                </footer>
-                </div>
-            );
-        }
+          <div class="qrow">
+            <div class="age-icon fresh">✦</div>
+            <div>
+              <div class="age">Carro nuevo (≤3 años, ≤36,000 km)</div>
+              <div class="place">Agencia oficial de la marca</div>
+            </div>
+            <span class="badge-q">Repuesto Original</span>
+          </div>
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<ExplicadorSeguro />);
-    </script>
+          <div class="qrow">
+            <div class="age-icon good">★</div>
+            <div>
+              <div class="age">Extensión de Garantía (≤5 años, ≤60,000 km)</div>
+              <div class="place">Agencia oficial o taller autorizado</div>
+            </div>
+            <span class="badge-q">Repuesto Original</span>
+          </div>
+
+          <div class="qrow match">
+            <div class="age-icon plus">★</div>
+            <div>
+              <div class="age">
+                Extensión de Garantía Plus (≤8 años, ≤80,000 km)
+                <span class="you-tag">Tu plan</span>
+              </div>
+              <div class="place">Agencia oficial o taller autorizado</div>
+            </div>
+            <div>
+              <span class="badge-q match-tag">★ Tuyo</span>
+              <span class="badge-q">Repuesto Original</span>
+            </div>
+          </div>
+
+          <div class="qrow">
+            <div class="age-icon older">○</div>
+            <div>
+              <div class="age">Más de 3 años o más de 36,000 km (sin extensión)</div>
+              <div class="place">Taller multimarca o especializado</div>
+            </div>
+            <span class="badge-q gen">Repuesto Genérico</span>
+          </div>
+        </div>
+
+        <!-- B. ELÉCTRICOS -->
+        <div class="electric">
+          <span class="always-tag">★ Siempre visible · educativo</span>
+          <h3><span class="sub-num-elec">B</span>Si tu vehículo es eléctrico — o estás pensando en uno</h3>
+          <p class="lead">
+            Las baterías son el componente <b>más caro</b> de un vehículo eléctrico. El INS tiene una <b>cobertura especial</b> para esto que vale la pena entender, sea o no tu caso hoy.
+          </p>
+
+          <div class="battery-card">
+            <div class="label">Cobertura especial de batería</div>
+            <div class="key">Hasta <span style="color:var(--green-text);">40%</span> <span class="of-value">del valor de tu vehículo</span></div>
+            <div class="desc">
+              Si el siniestro requiere <b>reemplazar completamente la batería</b>, el INS cubre hasta el 40% del valor asegurado. Sobre ese 40% se aplica un <b>porcentaje según la antigüedad del vehículo</b>.
+            </div>
+            <div class="ej">
+              <b>Ejemplo:</b> Vehículo eléctrico de ₡15M → cobertura batería máxima = <b>₡6,000,000</b> (40%). Sobre ese monto aplica el % de la tabla de abajo según la edad del carro.
+            </div>
+          </div>
+
+          <div style="font-family:'Space Grotesk',sans-serif;color:var(--cyan-deep);font-size:13px;font-weight:700;margin-bottom:8px;">
+            Porcentaje cubierto según edad del vehículo:
+          </div>
+          <div class="depr-grid">
+            <div class="depr-tile t1"><div class="pct">100%</div><div class="age">0 – 24 meses</div></div>
+            <div class="depr-tile t2"><div class="pct">80%</div><div class="age">25 – 48 meses</div></div>
+            <div class="depr-tile t3"><div class="pct">60%</div><div class="age">49 – 72 meses</div></div>
+            <div class="depr-tile t4"><div class="pct">50%</div><div class="age">73 – 96 meses</div></div>
+          </div>
+        </div>
+
+        <!-- C. QUIÉN ELIGE -->
+        <div class="who-chooses">
+          <div class="icon">i</div>
+          <div>
+            <b>¿Quién elige dónde comprar el repuesto?</b><br/>
+            El INS selecciona el proveedor y puede pagar directamente al distribuidor. El plazo de entrega puede ser de <b>hasta 20 días hábiles</b>. Si el repuesto no está disponible en Costa Rica, el INS calcula el costo con base en <b>importación + flete + impuestos</b>.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="step-nav-btns">
+      <button class="step-btn prev" data-target="s3">← Deducible</button>
+      <button class="step-btn next" data-target="s5">Siguiente: Tus 3 opciones →</button>
+    </nav>
+  </section>
+
+  <!-- ============ SECCIÓN 5 — PRICING ============ -->
+  <section class="section" id="s5">
+    <div class="section-header">
+      <span class="section-num">💳 Sección 5 · Tu recorrido</span>
+      <h2 class="section-title">Tus 3 opciones de pago</h2>
+      <p class="section-sub">Elegí la modalidad que mejor se ajuste a tu bolsillo. El pago anual incluye un 10% de descuento.</p>
+    </div>
+
+    <div class="pricing-grid">
+      <div class="price-card">
+        <div class="label">Trimestral</div>
+        <div class="price">₡158,423</div>
+        <div class="freq">cada 3 meses</div>
+      </div>
+      <div class="price-card">
+        <div class="label">Semestral</div>
+        <div class="price">₡308,283</div>
+        <div class="freq">cada 6 meses</div>
+      </div>
+      <div class="price-card featured">
+        <div class="badge-rec">★ Recomendado · -10%</div>
+        <div class="label">Anual</div>
+        <div class="price">₡570,891</div>
+        <div class="freq">1 sola vez</div>
+      </div>
+    </div>
+
+    <nav class="step-nav-btns">
+      <button class="step-btn prev" data-target="s4">← Repuestos</button>
+      <button class="step-btn next" onclick="document.querySelector('.cta-rect').scrollIntoView({behavior:'smooth',block:'center'})">Agendar mi cita ✓</button>
+    </nav>
+  </section>
+
+  <!-- ============ CIERRE ============ -->
+  <div class="closing">
+    <p class="msg">Silvia Mariel, espero que esta guía te haya ayudado a entender tu cotización con claridad. Si tenés cualquier duda, hablemos.</p>
+    <div class="signature">
+      — Juan Carlos Hernández
+      <span class="lic">Tu agente · Lic. SUGESE 08-1318</span>
+    </div>
+    <button class="cta-rect" onclick="openCelebration()">
+      📅 Agende su cita de Aseguramiento
+    </button>
+    <p class="diff-line">
+      ✦ Esta guía la creé yo personalmente para mis clientes — un recurso exclusivo de mi oficina, no del INS.
+    </p>
+  </div>
+
+</main>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="bold">Esta aplicación pertenece a Seguros Digitales SDI®.</div>
+  <div>Visítenos en <a href="https://www.segurosdelins.com">www.segurosdelins.com</a></div>
+  <div class="copyright">
+    © 2026 Propiedad Intelectual de Juan Carlos Hernandez Vargas. Todos los derechos reservados. Esta plataforma es una herramienta de uso exclusivo para los clientes vinculados a la Licencia Sugese 08-1318. Queda prohibida su reproducción o uso por terceros sin autorización expresa del titular.
+  </div>
+</footer>
+
+<!-- FLOATING NAV -->
+<div class="float-nav" id="floatNav">
+  <button id="floatPrev" title="Anterior">←</button>
+  <span class="ctr"><span id="floatCtr">1</span> / 5</span>
+  <button id="floatNext" title="Siguiente">→</button>
+</div>
+
+<!-- CELEBRATION OVERLAY -->
+<div class="celeb-backdrop" id="celebBackdrop">
+  <div class="celeb-modal">
+    <button class="celeb-close" onclick="closeCelebration()" title="Cerrar">×</button>
+
+    <div class="confetti c1"></div>
+    <div class="confetti c2"></div>
+    <div class="confetti c3"></div>
+    <div class="confetti c4"></div>
+    <div class="confetti c5"></div>
+    <div class="confetti c6"></div>
+    <div class="confetti c7"></div>
+    <div class="confetti c8"></div>
+    <div class="confetti c9"></div>
+    <div class="confetti c10"></div>
+
+    <div class="check-circle">
+      <svg class="check-svg" viewBox="0 0 24 24">
+        <path d="M5 12l5 5L20 7"/>
+      </svg>
+    </div>
+
+    <h2 class="celeb-title">¡Excelente decisión,<br/><span class="name">Silvia Mariel</span>! 🎉</h2>
+    <p class="celeb-sub">Acabas de dar el primer paso para <b>proteger tu Sedan 2019</b> con una de las mejores coberturas del mercado.</p>
+
+    <div class="celeb-loader">
+      <span>Abriendo tu agenda</span>
+      <div class="dots"><span></span><span></span><span></span></div>
+    </div>
+
+    <div class="celeb-signature">
+      <div class="celeb-avatar">JC</div>
+      <div class="celeb-sig-text">
+        <b>Juan Carlos te acompaña</b><br/>
+        desde este momento hasta la activación de tu póliza.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ STICKY NAV + INTERSECTION OBSERVER ============
+const sections = document.querySelectorAll('.section');
+const stickyDots = document.querySelectorAll('.sticky-dot');
+const stickyNav = document.getElementById('stickyNav');
+const floatNav = document.getElementById('floatNav');
+const floatCtr = document.getElementById('floatCtr');
+const floatPrev = document.getElementById('floatPrev');
+const floatNext = document.getElementById('floatNext');
+
+let currentSection = 0;
+const sectionIds = ['s1', 's2', 's3', 's4', 's5'];
+
+// Sticky nav appears after scrolling past hero
+window.addEventListener('scroll', () => {
+  const scrolled = window.scrollY > 200;
+  stickyNav.classList.toggle('visible', scrolled);
+  floatNav.classList.toggle('visible', scrolled);
+});
+
+// Intersection Observer — section in view
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('in-view');
+      const idx = sectionIds.indexOf(entry.target.id);
+      if (idx !== -1) {
+        currentSection = idx;
+        updateActiveStates();
+      }
+    }
+  });
+}, { threshold: 0.3 });
+
+sections.forEach(s => observer.observe(s));
+
+function updateActiveStates() {
+  stickyDots.forEach((dot, i) => {
+    dot.classList.remove('active', 'done');
+    if (i < currentSection) dot.classList.add('done');
+    if (i === currentSection) dot.classList.add('active');
+  });
+  floatCtr.textContent = currentSection + 1;
+  floatPrev.disabled = currentSection === 0;
+  floatNext.disabled = currentSection === sectionIds.length - 1;
+}
+
+stickyDots.forEach(dot => {
+  dot.addEventListener('click', () => {
+    const target = dot.dataset.target;
+    document.getElementById(target).scrollIntoView({ behavior: 'smooth' });
+  });
+});
+
+// Step buttons en cada sección (prev/next prominentes)
+document.querySelectorAll('.step-btn[data-target]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.dataset.target;
+    document.getElementById(target).scrollIntoView({ behavior: 'smooth' });
+  });
+});
+
+floatPrev.addEventListener('click', () => {
+  if (currentSection > 0) {
+    document.getElementById(sectionIds[currentSection - 1]).scrollIntoView({ behavior: 'smooth' });
+  }
+});
+floatNext.addEventListener('click', () => {
+  if (currentSection < sectionIds.length - 1) {
+    document.getElementById(sectionIds[currentSection + 1]).scrollIntoView({ behavior: 'smooth' });
+  }
+});
+
+// ============ CELEBRATION OVERLAY ============
+function openCelebration() {
+  document.getElementById('celebBackdrop').classList.add('active');
+  // En producción: abrir Google Form en nueva pestaña tras 2.5s
+  // setTimeout(() => window.open('https://forms.gle/tqSaZBDcZfNgNktC7', '_blank'), 2500);
+}
+function closeCelebration() {
+  document.getElementById('celebBackdrop').classList.remove('active');
+}
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeCelebration();
+});
+</script>
+
 </body>
 </html>
