@@ -1251,7 +1251,7 @@ main { max-width: 880px; margin: 0 auto; padding: 0 24px 60px; }
 
   <div class="bubble">
     <span class="greet">¡Hola, <span class="name">Silvia Mariel</span>! 👋</span>
-    Te preparé esta <b>guía visual personalizada</b> para que entendamos juntos tu cotización del <b>Sedan 2019, placa BRK454</b>.
+    Te preparé esta <b>guía visual personalizada</b> para que entendamos juntos tu cotización del <b><span class="bubble-vehicle">Sedan 2019, placa BRK454</span></b>.
     <div class="roadmap">
       <b>Tu recorrido en 5 pasos:</b><br/>
       qué cubre tu cotización · asistencia 24/7 · cómo te protege ante un choque · qué pasa con los repuestos · y al final, las <b>3 opciones de pago</b> para que elijas la que más te conviene.
@@ -1705,13 +1705,12 @@ function applyPersonalization() {
   // Cliente: greeting
   const greetName = document.querySelector('.bubble .greet .name');
   if (greetName) greetName.textContent = data.c || 'Cliente';
-  // Bubble — vehículo+placa
-  const bubble = document.querySelector('.bubble');
-  if (bubble && (data.v || data.p)) {
+  // Bubble — vehículo+placa (usa span dedicado, no string-replace frágil)
+  const bubbleVehicle = document.querySelector('.bubble-vehicle');
+  if (bubbleVehicle && (data.v || data.p)) {
     const veh = data.v || 'tu vehículo';
     const plt = data.p ? `, placa ${data.p}` : '';
-    // Reemplazar el texto de personalización
-    bubble.innerHTML = bubble.innerHTML.replace(/Sedan 2019, placa BRK454/g, `${veh}${plt}`);
+    bubbleVehicle.textContent = `${veh}${plt}`;
   }
   // Cierre — saludo personalizado
   const closingMsg = document.querySelector('.closing .msg');
