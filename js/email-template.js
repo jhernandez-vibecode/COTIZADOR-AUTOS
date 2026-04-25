@@ -308,7 +308,7 @@ function _sustitucionText(label) {
 function _sustReposToCode(label) {
   const norm = (label || '')
     .toLowerCase()
-    .normalize('NFD').replace(/[̀-ͯ]/g, '');
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   if (norm.includes('garantia plus'))       return 'p';
   if (norm.includes('garantia'))            return 'g';
   if (norm.includes('repuesto original'))   return '0';
