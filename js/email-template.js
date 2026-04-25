@@ -293,6 +293,30 @@ function _sustitucionText(label) {
 }
 
 /**
+ * Mapea el texto de sustitucion de repuestos del PDF al codigo corto
+ * que usa el explicador como URL param `sr`.
+ *
+ *   "Extension de garantia Plus" -> 'p'
+ *   "Extension de garantia"      -> 'g'
+ *   "repuesto original"          -> '0'  (carro nuevo)
+ *   "repuesto alternativo"       -> 'n'  (sin extension, fila generica)
+ *   vacio / desconocido          -> 'n'  (default seguro)
+ *
+ * @param {string} label - texto del PDF
+ * @returns {string} codigo de una letra: 'p' | 'g' | '0' | 'n'
+ */
+function _sustReposToCode(label) {
+  const norm = (label || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '');
+  if (norm.includes('garantia plus'))       return 'p';
+  if (norm.includes('garantia'))            return 'g';
+  if (norm.includes('repuesto original'))   return '0';
+  if (norm.includes('repuesto alternativo')) return 'n';
+  return 'n';
+}
+
+/**
  * Escapa caracteres HTML peligrosos para evitar XSS si el agente
  * pega contenido inesperado en los campos del formulario.
  * @param {string} s - texto a escapar

@@ -87,5 +87,23 @@ test('separador correcto si GUIDE_URL ya tiene ?', () => {
   global.CFG.GUIDE_URL = 'https://example.com/explicacion/'; // restore
 });
 
+test('sustReposToCode mapea Plus correctamente', () => {
+  assertEq(_sustReposToCode('Extension de garantia Plus'), 'p');
+  assertEq(_sustReposToCode('extensión de Garantía PLUS'), 'p');
+});
+test('sustReposToCode mapea Garantía simple', () => {
+  assertEq(_sustReposToCode('Extension de garantia'), 'g');
+});
+test('sustReposToCode mapea Repuesto Original sin extensión', () => {
+  assertEq(_sustReposToCode('repuesto original'), '0');
+});
+test('sustReposToCode mapea Repuesto Alternativo', () => {
+  assertEq(_sustReposToCode('repuesto alternativo'), 'n');
+});
+test('sustReposToCode default a "n" si vacío', () => {
+  assertEq(_sustReposToCode(''), 'n');
+  assertEq(_sustReposToCode(null), 'n');
+});
+
 console.log(`\n${pass} pass, ${fail} fail`);
 process.exit(fail > 0 ? 1 : 0);
