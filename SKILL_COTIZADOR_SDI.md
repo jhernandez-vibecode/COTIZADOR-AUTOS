@@ -22,6 +22,88 @@ RFC 2047. Probado en produccion con PDF real BRK454 y cotizacion THG170.
 
 ## Decisiones recientes
 
+### 25 abril 2026 — Explicador v2 personalizado
+
+**Reescrito completo:** `/explicacion/index.html` migrado de React+Babel CDN a vanilla HTML+CSS+JS single-file. Carga ~40x mas liviana (sin compilacion en cliente) — total ~150 KB vs ~6 MB de la version React+Babel+Tailwind. Alineado con el resto del cotizador (sin build step).
+
+**Personalizacion por cliente via 11 URL params** (n, l, w, c, v, p, y, vt, va, sr, pa, ps, pt):
+- Greeting: `¡Hola, {nombre}!` con highlight amarillo en el nombre real del cliente
+- Vehiculo + placa en el hero (chip del agente + burbuja) y en el header de la seccion 4
+- Plan asistencia auto-seleccionado por edad del vehiculo (Plus 0-6 años / Basico 7-15)
+- Fila de calidad de repuestos auto-resaltada segun `sr` (Plus/Garantia/Nuevo/Sin extension)
+- Seccion 1 (coberturas D/F/H) muestra montos calculados sobre el valor asegurado real
+- Seccion 5 (3 opciones de pago) con primas reales del PDF (Trimestral/Semestral/Anual con badge -10%)
+
+**Backward compatible:** si el URL llega sin params, sigue funcionando con defaults (greeting generico "Cliente", agent default a Juan Carlos, seccion 5 muestra mensaje "Consulta a tu agente las opciones de pago").
+
+**Cambios estructurales del recorrido (vs explicador React anterior):**
+- Asistencia movida a Seccion 2 (era 4) — "tambien es una cobertura"
+- Eliminada la regla del 80% (gasolina y electricos) — pedido explicito JC
+- Electricos siempre visible como sub-seccion educativa de la Seccion 4
+- 3 opciones de pago ahora son una seccion dedicada al final (antes solo en el correo)
+- Removidos emojis como iconos estructurales (excepto algunos puntuales aprobados como ★ y 💡)
+
+**Nuevo: momento celebracion:** al hacer click en "Agende su cita de Aseguramiento", aparece overlay oscuro con check verde animado + 10 confettis cayendo + mensaje personalizado "¡Excelente decision, {nombre}!" + firma del agente con avatar JC. Abre el Google Form en nueva pestaña tras 2.5s. ESC y × cierran. Respeta `prefers-reduced-motion`.
+
+**Nueva paleta verde:** emerald-500/400 (`#10b981`/`#34d399`) reemplaza el teal-600 (`#0d9488`) en CTAs y badges. Mas vivo y alegre — pedido JC.
+
+**Navegacion nueva:**
+- Sticky bar superior pill con dots clickeables y labels (mobile ≤720px: solo numeros 1-5)
+- Floating ←/→ en esquina inferior derecha con contador "X/5"
+- Step buttons "← Anterior · Siguiente →" al final de cada seccion
+- Scroll suave + IntersectionObserver para fade-in de secciones
+- `scroll-margin-top: 100px` para que el sticky nav no tape titulos al saltar
+- Respeta `prefers-reduced-motion` (sin confetti, sin bounce)
+
+**CTA final:** "Agende su cita de Aseguramiento" rectangular puntas redondeadas (radius 10px, no pill), gradient emerald, texto Space Grotesk 700.
+
+**Diferenciador del agente (sutil + consistente):**
+- Cinta dorada bajo el header: "Una herramienta diseñada por {Juan Carlos} para acompañar..."
+- Firma + mensaje en el cierre: "Esta guia la cree yo personalmente para mis clientes..."
+- Footer copyright con propiedad intelectual del agente
+
+**Social proof preservado:** ★★★★★ + "Miles de conductores ya estan protegidos con nuestro proceso digital" en el cierre (debajo de la linea diferenciadora, separados por divisor sutil).
+
+**Modificaciones al cotizador (afuera de /explicacion/):**
+- `js/email-template.js`:
+  - `_buildGuideUrl(extras)` ampliado para aceptar 8 params nuevos del cliente.
+  - Helper `_sustReposToCode(label)` mapea texto del PDF a codigo corto (`p`/`g`/`0`/`n`).
+  - Helper `_detectVehicleType(rawType)` detecta gasolina/electrico (default `g`).
+  - Helper interno `num(val)` normaliza montos del PDF ("10,000,000.00") a numero limpio ("10000000") antes del URL-encode.
+  - `buildEmail()` recibe 4 nuevos params opcionales (`plate`, `year`, `valor`, `vehicleType`).
+  - URL del explicador ahora extraido a `const guideUrl` antes del return (legibilidad).
+- `js/app.js`: las 2 llamadas a `buildEmail()` (preview + send) pasan ahora `plate, year, valor, vehicleType` desde `S.data.*`.
+
+**Tests:** `tests/test-explicador-url.js` (Node, sin runner) — 11 casos cubren:
+- URL builder con 3, 11 y 13 params
+- Encoding de tildes
+- Manejo de extras vacios
+- Separador `?`/`&` cuando GUIDE_URL ya tiene query
+- Mapeo `_sustReposToCode` (Plus/Garantia/Original/Alternativo/default)
+- Normalizacion de montos del PDF (`"10,000,000.00"` → `"10000000"`)
+
+Wrapper E2E: `C:/tmp/pdf-test/test-e2e-explicador-url.js` — pipeline completo con PDF real (Silvia BRK454).
+
+**Backup del React+Babel anterior:** `explicacion/index-react-old.html` (no se sirve, queda como referencia).
+
+**Bug critico encontrado durante e2e (fixed antes de deploy):** `pdf-extract.js` devuelve montos con formato CR ("10,000,000.00"). Sin normalizacion, `parseInt('10,000,000.00')` → `10` y `Number('570,891.00')` → `NaN`, mostrando ₡10 y ₡NaN en produccion. Fix: `num()` helper en `_buildGuideUrl` strip-ea comas y `.00` antes del encode.
+
+**Commits del checkpoint** (rango con `feat(explicador):`, `test(explicador):`, `style(explicador):`, `refactor(explicador):`, `fix(explicador):`):
+- `13085d4` test(explicador): contract test for buildExplicadorURL
+- `ac9561c` feat(explicador): _buildGuideUrl accepts client+cotizacion data (11 params)
+- `f0850b7` feat(explicador): _sustReposToCode helper for sr param
+- `bcd9c78` style(explicador): _sustReposToCode regex matches sister _sustitucionText (escape form)
+- `62a9d32` feat(explicador): buildEmail passes client+cotizacion data to guide URL
+- `cb83d88` refactor(explicador): extract guideUrl const + NFD normalize in _detectVehicleType
+- `8aceb4f` feat(explicador): pass plate/year/valor/vehicleType from app.js to buildEmail
+- `4bfef48` feat(explicador): scaffold v2 vanilla HTML+CSS+JS (replaces React+Babel)
+- `a9af7a3` feat(explicador): URL params drive personalization (greeting/vehicle/plan/sr/prices)
+- `b31c89a` feat(explicador): restaurar social proof (★★★★★ + miles de conductores) en cierre
+- `7b899be` refactor(explicador): bubble-vehicle span replaces fragile string-replace
+- `0692317` fix(explicador): normalizar montos del PDF (10,000,000.00 → 10000000) en URL params
+
+**Pendiente fase 2 (no en este plan):** modernizacion visual del correo (`email-template.js` HTML del cuerpo). Este plan solo extendio el URL del CTA.
+
 ### 23 abril 2026 — Calculadora de cancelacion anticipada (`/cancelacion/`)
 Nueva pagina standalone en `cancelacion/index.html` que implementa la Clausula 33 de las
 Condiciones Generales del Seguro Voluntario de Automoviles del INS.

@@ -388,7 +388,11 @@ function updatePreview() {
     prices:        S.data.prices,
     sustRepos:     S.data.sustRepos,
     interes:       S.formData ? S.formData.interes : '',
-    notaAdicional: document.getElementById('m-note').value
+    notaAdicional: document.getElementById('m-note').value,
+    plate:         S.data.plate,
+    year:          S.data.year,
+    valor:         S.data.valor,
+    vehicleType:   S.data.vehicleType
   });
 
   const preview = document.getElementById('preview');
@@ -429,7 +433,11 @@ async function handleSend() {
       prices:        S.data.prices,
       sustRepos:     S.data.sustRepos,
       interes:       S.formData ? S.formData.interes : '',
-      notaAdicional: document.getElementById('m-note').value
+      notaAdicional: document.getElementById('m-note').value,
+      plate:         S.data.plate,
+      year:          S.data.year,
+      valor:         S.data.valor,
+      vehicleType:   S.data.vehicleType
     });
 
     const toAddr  = document.getElementById('m-to').value.trim();

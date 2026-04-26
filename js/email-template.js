@@ -30,12 +30,16 @@
 /**
  * Construye el HTML completo del correo de cotizacion.
  * @param {object} params - parametros del correo
- * @param {string} params.nombre         - nombre del cliente para el saludo
- * @param {string} params.vehiculo       - descripcion del vehiculo
+ * @param {string} params.nombre         - nombre del cliente para el saludo (también va a explicador como `c`)
+ * @param {string} params.vehiculo       - descripcion del vehiculo (también va a explicador como `v`)
  * @param {object} params.prices         - { trimestral, semestral, anual } como strings ya formateados
  * @param {string} params.sustRepos      - texto exacto de "Sustitucion de repuestos" del PDF
  * @param {string} params.interes        - clave del dropdown (propietario, cero-km, traspaso, compra) o ''
  * @param {string} params.notaAdicional  - texto opcional del agente (linebreaks se preservan)
+ * @param {string} [params.plate]        - placa del vehículo (para explicador)
+ * @param {string|number} [params.year]  - año del vehículo (para explicador)
+ * @param {string|number} [params.valor] - valor asegurado (para explicador)
+ * @param {string} [params.vehicleType]  - tipo crudo del PDF; se mapea a 'g' (gasolina) por default
  * @returns {string} HTML completo del cuerpo del correo
  */
 function buildEmail(params) {
@@ -69,6 +73,18 @@ function buildEmail(params) {
             </td></tr>
           </table>
         </td></tr>` : '';
+
+  // URL del explicador con todos los datos personalizados (separado del HTML para legibilidad)
+  const guideUrl = _buildGuideUrl({
+    clientName:    nombre,
+    vehicle:       vehiculo,
+    plate:         p.plate,
+    year:          p.year,
+    vehicleType:   _detectVehicleType(p.vehicleType),
+    valor:         p.valor,
+    sustReposCode: _sustReposToCode(p.sustRepos),
+    prices:        prices
+  });
 
   // ============ HTML COMPLETO ============
   return `<!DOCTYPE html>
@@ -111,7 +127,7 @@ function buildEmail(params) {
 
         <!-- 4. CTA EXPLICADOR -->
         <tr><td style="padding:0 40px 8px;text-align:center;">
-          <a href="${_buildGuideUrl()}" style="display:inline-block;background:#0369a1;color:#ffffff;padding:14px 28px;border-radius:6px;text-decoration:none;font-weight:bold;font-size:14px;letter-spacing:0.5px;">
+          <a href="${guideUrl}" style="display:inline-block;background:#0369a1;color:#ffffff;padding:14px 28px;border-radius:6px;text-decoration:none;font-weight:bold;font-size:14px;letter-spacing:0.5px;">
             VER EXPLICACION DE MI COTIZACION &rarr;
           </a>
         </td></tr>
@@ -293,6 +309,50 @@ function _sustitucionText(label) {
 }
 
 /**
+ * Mapea el texto de sustitucion de repuestos del PDF al codigo corto
+ * que usa el explicador como URL param `sr`.
+ *
+ *   "Extension de garantia Plus" -> 'p'
+ *   "Extension de garantia"      -> 'g'
+ *   "repuesto original"          -> '0'  (carro nuevo)
+ *   "repuesto alternativo"       -> 'n'  (sin extension, fila generica)
+ *   vacio / desconocido          -> 'n'  (default seguro)
+ *
+ * @param {string} label - texto del PDF
+ * @returns {string} codigo de una letra: 'p' | 'g' | '0' | 'n'
+ */
+function _sustReposToCode(label) {
+  const norm = (label || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (norm.includes('garantia plus'))       return 'p';
+  if (norm.includes('garantia'))            return 'g';
+  if (norm.includes('repuesto original'))   return '0';
+  if (norm.includes('repuesto alternativo')) return 'n';
+  return 'n';
+}
+
+/**
+ * Detecta si el veh\u00edculo es el\u00e9ctrico o gasolina/di\u00e9sel a partir del
+ * texto del campo `vehicleType` del PDF. Por ahora el PDF est\u00e1ndar no
+ * distingue el\u00e9ctricos expl\u00edcitamente \u2014 devolvemos 'g' por default.
+ * Si en el futuro se agrega un campo o checkbox al cotizador, este
+ * helper centraliza la l\u00f3gica.
+ *
+ * @param {string} rawType - texto del campo vehicleType del PDF
+ * @returns {string} 'g' (gasolina/di\u00e9sel) | 'e' (el\u00e9ctrico)
+ */
+function _detectVehicleType(rawType) {
+  // Mismo patron que _sustReposToCode: NFD + strip de combining marks
+  // tolera 'el\u00e9ctrico' (NFC) y 'el\u00e9ctrico' (NFD) por igual.
+  const norm = (rawType || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (norm.includes('electric') || norm.includes('ev')) return 'e';
+  return 'g';
+}
+
+/**
  * Escapa caracteres HTML peligrosos para evitar XSS si el agente
  * pega contenido inesperado en los campos del formulario.
  * @param {string} s - texto a escapar
@@ -308,26 +368,64 @@ function _escape(s) {
 }
 
 /**
- * Construye el URL del explicador con los datos del agente como query params.
- * El explicador lee esos params al cargar y personaliza el header, banner
- * y footer con los datos del agente que envio la cotizacion.
+ * Construye el URL del explicador con datos del agente Y del cliente.
  *
- * Formato: <CFG.GUIDE_URL>?n=<nombre>&l=<licencia>&w=<website>
+ * Hasta v1: solo 3 params (n, l, w) del agente. Backward compatible.
+ * Desde v2: agrega 8 params del cliente y la cotización si se proveen.
+ *
+ * Formato completo:
+ *   <CFG.GUIDE_URL>?n=...&l=...&w=...&c=...&v=...&p=...&y=...&vt=...&va=...&sr=...&pa=...&ps=...&pt=...
  *
  * El cliente abre ese URL desde su correo; no tiene localStorage con los
- * datos del agente (esta en OTRO navegador). Los query params son la unica
- * forma de pasarle esa informacion.
+ * datos del agente. Los query params son la única forma de personalizar.
  *
+ * @param {object} [extras] - datos opcionales del cliente y la cotización
+ * @param {string} [extras.clientName]    - saludo del cliente (e.g. "Silvia Mariel")
+ * @param {string} [extras.vehicle]       - descripción del vehículo (e.g. "Sedan 2019")
+ * @param {string} [extras.plate]         - placa
+ * @param {string|number} [extras.year]   - año del vehículo
+ * @param {string} [extras.vehicleType]   - 'g' (gasolina) | 'e' (eléctrico)
+ * @param {string|number} [extras.valor]  - valor asegurado en colones
+ * @param {string} [extras.sustReposCode] - 'p' (Plus) | 'g' (Garantía) | '0' (nuevo) | 'n' (ninguno)
+ * @param {object} [extras.prices]        - { anual, semestral, trimestral } strings ya extraídos del PDF
  * @returns {string} URL del explicador con query params
  */
-function _buildGuideUrl() {
+function _buildGuideUrl(extras) {
   const base = CFG.GUIDE_URL;
   const params = [];
+
+  // Agente (backward compat)
   if (CFG.FROM_NAME) params.push('n=' + encodeURIComponent(CFG.FROM_NAME));
   if (CFG.LICENSE)   params.push('l=' + encodeURIComponent(CFG.LICENSE));
   if (CFG.WEBSITE)   params.push('w=' + encodeURIComponent(CFG.WEBSITE));
+
+  // Cliente + cotización (v2)
+  const x = extras || {};
+  const add = function (key, val) {
+    if (val !== undefined && val !== null && String(val).trim() !== '') {
+      params.push(key + '=' + encodeURIComponent(String(val).trim()));
+    }
+  };
+  // Normaliza montos del PDF ("10,000,000.00") → "10000000" para que el
+  // explicador los pueda parsear con parseInt/Number sin romperse.
+  const num = function (val) {
+    if (val === undefined || val === null) return val;
+    return String(val).replace(/,/g, '').replace(/\.00$/, '');
+  };
+  add('c',  x.clientName);
+  add('v',  x.vehicle);
+  add('p',  x.plate);
+  add('y',  x.year);
+  add('vt', x.vehicleType);
+  add('va', num(x.valor));
+  add('sr', x.sustReposCode);
+  if (x.prices) {
+    add('pa', num(x.prices.anual));
+    add('ps', num(x.prices.semestral));
+    add('pt', num(x.prices.trimestral));
+  }
+
   if (params.length === 0) return base;
-  // Si GUIDE_URL ya tiene un '?' usamos '&', si no '?'
   const sep = base.indexOf('?') === -1 ? '?' : '&';
   return base + sep + params.join('&');
 }
