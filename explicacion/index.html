@@ -382,6 +382,56 @@ main { max-width: 880px; margin: 0 auto; padding: 0 24px 60px; }
   font-weight: 700;
   color: var(--azul-deep);
 }
+/* Cabecera del bento con letra + chevron */
+.bento-tile .bento-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.bento-tile .bento-head .letter {
+  margin-bottom: 0;
+}
+.bento-tile .chevron {
+  color: var(--muted);
+  font-size: 14px;
+  transition: transform .25s ease-out, color .25s ease-out;
+  user-select: none;
+}
+.bento-tile.expanded .chevron {
+  transform: rotate(180deg);
+  color: var(--azul);
+}
+/* Detalle expandible */
+.bento-tile .bento-detail {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 1px solid transparent;
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.55;
+  transition: max-height .35s ease-out, opacity .25s ease-out, margin-top .35s ease-out, padding-top .35s ease-out;
+}
+.bento-tile .bento-detail b { color: var(--azul-deep); }
+.bento-tile.expanded {
+  border-color: var(--azul);
+  box-shadow: 0 6px 22px rgba(3, 105, 161, .12);
+}
+.bento-tile.expanded .bento-detail {
+  max-height: 800px;
+  opacity: 1;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top-color: var(--border);
+}
+/* Foco para accesibilidad por teclado */
+.bento-tile:focus-visible {
+  outline: 2px solid var(--azul);
+  outline-offset: 2px;
+}
 
 /* ============ SECCIÓN 2 — ASISTENCIA ============ */
 .tip-banner {
@@ -1304,50 +1354,105 @@ main { max-width: 880px; margin: 0 auto; padding: 0 24px 60px; }
     <div class="section-header">
       <span class="section-num">📋 Sección 1 · Tu recorrido</span>
       <h2 class="section-title">¿Qué incluye tu Cobertura Total?</h2>
-      <p class="section-sub">Toca cada tarjeta para ver el detalle. Los montos se calculan sobre tu valor asegurado de ₡10,000,000.</p>
+      <p class="section-sub">Toca cada tarjeta para ver qué cubre exactamente. Los montos se calculan sobre tu valor asegurado de ₡10,000,000.</p>
     </div>
 
     <div class="bento-grid">
-      <div class="bento-tile azul">
-        <div class="letter">A</div>
+      <div class="bento-tile azul" role="button" tabindex="0" aria-expanded="false">
+        <div class="bento-head">
+          <span class="letter">A</span>
+          <span class="chevron" aria-hidden="true">▾</span>
+        </div>
         <h3>Daños a Personas</h3>
-        <p class="desc">Si eres responsable de un accidente, pagamos las lesiones a otras personas.</p>
+        <p class="desc">Responsabilidad civil si causás un accidente con lesiones o muerte de terceros.</p>
         <div class="amount">₡300,000,000</div>
+        <div class="bento-detail">
+          Si causás un accidente y otras personas resultan <b>lesionadas o fallecidas</b>, esta cobertura paga la responsabilidad civil hasta ₡300 millones por evento. Cubre además un <b>25% extra por daño moral probado</b> y los <b>honorarios y servicios médicos no amparados por el SOA</b> (Seguro Obligatorio Automotor).<br/><br/>
+          <b>Sin deducible</b> — vos no ponés un colón.
+        </div>
       </div>
 
-      <div class="bento-tile azul">
-        <div class="letter">C</div>
+      <div class="bento-tile azul" role="button" tabindex="0" aria-expanded="false">
+        <div class="bento-head">
+          <span class="letter">C</span>
+          <span class="chevron" aria-hidden="true">▾</span>
+        </div>
         <h3>Daños a Propiedad</h3>
-        <p class="desc">Otros vehículos, muros, postes — propiedad ajena que dañes.</p>
+        <p class="desc">Daños a otros vehículos, postes, muros, casas o cualquier propiedad ajena.</p>
         <div class="amount">₡100,000,000</div>
+        <div class="bento-detail">
+          Si con tu vehículo dañás <b>propiedad ajena</b> (otro carro, postes, muros, casas, comercios), esta cobertura paga por esos daños hasta ₡100 millones por evento.<br/><br/>
+          <b>Cómo funciona el deducible gracias a la cobertura N en C:</b><br/>
+          • Si el daño al tercero es <b>menor a ₡750.000</b>, vos pagás solo un deducible mínimo de <b>₡150.000</b> y el INS cubre la diferencia.<br/>
+          • Si el daño al tercero es <b>mayor a ₡750.000</b>, la cobertura paga el <b>100% sin deducible</b> para vos.<br/><br/>
+          Incluye también daños al vehículo de tu cónyuge, hijos o familiares hasta tercer grado (con deducible especial).
+        </div>
       </div>
 
-      <div class="bento-tile green">
-        <div class="letter">D</div>
+      <div class="bento-tile green" role="button" tabindex="0" aria-expanded="false">
+        <div class="bento-head">
+          <span class="letter">D</span>
+          <span class="chevron" aria-hidden="true">▾</span>
+        </div>
         <h3>Colisión y Vuelco</h3>
-        <p class="desc">Reparación de tu vehículo si chocas o te vuelcas.</p>
+        <p class="desc">Pérdidas directas, súbitas y accidentales de tu vehículo por choque o vuelco.</p>
         <div class="amount">₡10,000,000</div>
+        <div class="bento-detail">
+          Cubre las pérdidas directas, súbitas y accidentales que sufra tu vehículo a causa de <b>colisión o vuelco</b>, así como la <b>rotura o desprendimiento con daño de los cristales</b> de forma accidental y materialmente comprobable.<br/><br/>
+          Hasta el valor asegurado. Aplica deducible — pero recordá que con la <b>cobertura IDD</b> ese deducible te lo reintegramos en hasta 2 eventos al año.
+        </div>
       </div>
 
-      <div class="bento-tile green">
-        <div class="letter">F</div>
-        <h3>Robo</h3>
-        <p class="desc">Indemnización si te roban el vehículo.</p>
+      <div class="bento-tile green" role="button" tabindex="0" aria-expanded="false">
+        <div class="bento-head">
+          <span class="letter">F</span>
+          <span class="chevron" aria-hidden="true">▾</span>
+        </div>
+        <h3>Robo y/o Hurto</h3>
+        <p class="desc">Pérdidas accidentales por robo o hurto total o parcial del vehículo.</p>
         <div class="amount">₡10,000,000</div>
+        <div class="bento-detail">
+          Cubre las pérdidas directas, súbitas y accidentales por <b>robo o hurto total o parcial del vehículo</b>, los daños que resulten de la <b>tentativa</b> de producir esos delitos, el robo o hurto del <b>equipo especial asegurado</b>, y el <b>uso indebido, hurto de uso o retención indebida</b>.<br/><br/>
+          Hasta el valor asegurado. Aplica deducible — y la cobertura IDD te puede reintegrar ese deducible.
+        </div>
       </div>
 
-      <div class="bento-tile red">
-        <div class="letter">B</div>
-        <h3>Gastos Médicos</h3>
-        <p class="desc">Hospitalización y atención para vos y tus acompañantes.</p>
+      <div class="bento-tile red" role="button" tabindex="0" aria-expanded="false">
+        <div class="bento-head">
+          <span class="letter">B</span>
+          <span class="chevron" aria-hidden="true">▾</span>
+        </div>
+        <h3>Gastos Médicos Familiares</h3>
+        <p class="desc">Atención médica para vos y tu familia si resultan lesionados en un accidente.</p>
         <div class="amount">₡15,000,000</div>
+        <div class="bento-detail">
+          Si tenés un accidente de tránsito en territorio costarricense, esta cobertura paga los <b>gastos médicos</b> tuyos, de tu cónyuge o de cualquier familiar hasta tercer grado de consanguinidad o afinidad que viajara <b>dentro de la cabina del vehículo</b>.<br/><br/>
+          La atención se brinda al <b>100% en el Hospital del Trauma del INS</b> (o en las instalaciones médicas que el INS señale). Opera en exceso del Seguro Obligatorio Automotor. <b>No aplica deducible.</b>
+        </div>
       </div>
 
-      <div class="bento-tile purple">
-        <div class="letter">H</div>
-        <h3>Riesgos Naturales</h3>
-        <p class="desc">Inundaciones, temblores, caída de árboles, vandalismo.</p>
+      <div class="bento-tile purple" role="button" tabindex="0" aria-expanded="false">
+        <div class="bento-head">
+          <span class="letter">H</span>
+          <span class="chevron" aria-hidden="true">▾</span>
+        </div>
+        <h3>Riesgos Adicionales</h3>
+        <p class="desc">Naturaleza, vandalismo, incendio, animales y otros riesgos al vehículo.</p>
         <div class="amount">₡10,000,000</div>
+        <div class="bento-detail">
+          Cubre los daños al vehículo a consecuencia de:<br/>
+          • <b>Inundación</b> (desbordamientos de ríos, lagos, alcantarillado público).<br/>
+          • <b>Ciclón, huracán, tornado, tormenta</b> (declarados formalmente por las autoridades).<br/>
+          • <b>Temblor, terremoto, deslizamiento, hundimiento o derrumbe</b>.<br/>
+          • <b>Explosión externa</b>.<br/>
+          • <b>Vandalismo</b>: rayonazos, raspones, líquidos corrosivos, manchas de pintura, golpes, lanzamiento de piedras, proyectiles o balas.<br/>
+          • Daños durante <b>transporte terrestre o acuático</b> y maniobras de carga/descarga.<br/>
+          • <b>Caída de aeronaves</b> o sus partes.<br/>
+          • <b>Rayo o incendio</b> por cualquier causa.<br/>
+          • Levantamiento accidental de la <b>tapa del motor</b>.<br/>
+          • Daños provocados por <b>animales</b> (sean o no del Asegurado).<br/><br/>
+          Hasta el valor asegurado. Aplica deducible.
+        </div>
       </div>
     </div>
 
@@ -1879,6 +1984,30 @@ stickyDots.forEach(dot => {
 document.querySelectorAll('.step-btn[data-target]').forEach(btn => {
   btn.addEventListener('click', () => {
     document.getElementById(btn.dataset.target).scrollIntoView({ behavior: 'smooth' });
+  });
+});
+
+// ============ BENTO COBERTURAS — expand/collapse interactivo ============
+// Single-open: tocar una tarjeta cierra las demás (mejor para mobile, evita scroll caotico).
+const bentoTiles = document.querySelectorAll('.bento-tile');
+function toggleBento(tile) {
+  const wasOpen = tile.classList.contains('expanded');
+  bentoTiles.forEach(t => {
+    t.classList.remove('expanded');
+    t.setAttribute('aria-expanded', 'false');
+  });
+  if (!wasOpen) {
+    tile.classList.add('expanded');
+    tile.setAttribute('aria-expanded', 'true');
+  }
+}
+bentoTiles.forEach(tile => {
+  tile.addEventListener('click', () => toggleBento(tile));
+  tile.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      toggleBento(tile);
+    }
   });
 });
 
