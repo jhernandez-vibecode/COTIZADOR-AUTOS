@@ -10,10 +10,10 @@ const CFG = {
   FROM_NAME:   'Juan Carlos Hernandez Vargas',
   FROM_EMAIL:  'jhernandez@segurosdelins.com',
 
-  // URLs usadas en el correo al cliente
-  GUIDE_URL:   'https://cotizador-segurosdigitalesins-sdi.netlify.app/explicacion/',
+  // URLs usadas en el correo al cliente (custom domain via Portal SDI)
+  GUIDE_URL:   'https://cotizador.appsegurosdigitales.com/explicacion/',
   AGENDA_URL:  'https://forms.gle/tqSaZBDcZfNgNktC7',
-  LOGO_URL:    'https://cotizador-segurosdigitalesins-sdi.netlify.app/img/ins-logo.png',
+  LOGO_URL:    'https://cotizador.appsegurosdigitales.com/img/ins-logo.png',
   WEBSITE:     'www.segurosdelins.com',
 
   // Pie del correo
