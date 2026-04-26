@@ -1802,6 +1802,13 @@ function applyPersonalization() {
     s4perso.innerHTML = `Para tu <b>${veh}${plt}</b>, esto es lo que el INS te garantiza.`;
   }
 
+  // Sección eléctricos: solo visible si vt=e (vehículo eléctrico).
+  // El agente lo marca con un toggle en el cotizador antes de enviar el correo.
+  const electricSection = document.querySelector('.electric');
+  if (electricSection && data.vt !== 'e') {
+    electricSection.style.display = 'none';
+  }
+
   // Sección 5 — 3 precios reales
   const priceCards = document.querySelectorAll('.pricing-grid .price-card .price');
   if (priceCards.length === 3) {

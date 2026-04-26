@@ -76,6 +76,9 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById(id).addEventListener('input', schedulePreview);
   });
 
+  // Toggle "vehiculo electrico" — actualiza preview al cambiar
+  document.getElementById('f-electric').addEventListener('change', schedulePreview);
+
   // ============ VISTA 4 · Reset ============
   document.getElementById('btnReset').addEventListener('click', function () {
     resetAll();
@@ -376,6 +379,17 @@ function schedulePreview() {
 }
 
 /**
+ * Lee el estado del toggle "Vehiculo electrico" en el formulario step 2.
+ * Si esta marcado, el explicador mostrara la subseccion de cobertura
+ * especial de bateria; si no, queda oculta.
+ * @returns {boolean}
+ */
+function _isElectricChecked() {
+  var el = document.getElementById('f-electric');
+  return !!(el && el.checked);
+}
+
+/**
  * Regenera el HTML del correo y lo inyecta en el preview-box.
  * Usa un iframe sandboxed para aislar los estilos del correo del CSS de la app.
  */
@@ -392,7 +406,7 @@ function updatePreview() {
     plate:         S.data.plate,
     year:          S.data.year,
     valor:         S.data.valor,
-    vehicleType:   S.data.vehicleType
+    vehicleType:   _isElectricChecked() ? 'electric' : S.data.vehicleType
   });
 
   const preview = document.getElementById('preview');
@@ -437,7 +451,7 @@ async function handleSend() {
       plate:         S.data.plate,
       year:          S.data.year,
       valor:         S.data.valor,
-      vehicleType:   S.data.vehicleType
+      vehicleType:   _isElectricChecked() ? 'electric' : S.data.vehicleType
     });
 
     const toAddr  = document.getElementById('m-to').value.trim();
@@ -512,6 +526,9 @@ function resetAll() {
   document.querySelectorAll('input.form-control, textarea.form-control, select.form-control').forEach(function (el) {
     el.value = '';
   });
+  // Reset toggle electrico (default: off)
+  var elec = document.getElementById('f-electric');
+  if (elec) elec.checked = false;
   document.getElementById('preview').innerHTML =
     '<p style="color:#6b7280;text-align:center;margin-top:40px;">Llena los campos a la izquierda para ver la vista previa.</p>';
   document.getElementById('priceTable').innerHTML       = '';
