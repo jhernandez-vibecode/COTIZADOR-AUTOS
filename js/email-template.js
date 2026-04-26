@@ -28,7 +28,26 @@
  */
 
 /**
- * Construye el HTML completo del correo de cotizacion.
+ * Construye el HTML completo del correo de cotizacion (v2 — neuromarketing).
+ *
+ * Estructura nueva (AIDA + neuromarketing digital):
+ *   1. Header navy con logo INS + "Tu cotizacion esta lista"
+ *   2. Saludo personalizado + tarjeta del vehiculo (anclaje emocional)
+ *   3. Intro + CTA primario al explicador
+ *   4. 3 outcome benefits (Full Cobertura · Cero deducible · Asistencia 24/7)
+ *   5. Precios con anclaje invertido (Anual destacado al centro, -10%)
+ *   6. Sustitucion de repuestos
+ *   7. CTA "Agendar mi cita ahora" (camino limpio sin barreras)
+ *   8. Prueba social (estrellas + miles de conductores) — momentum tras CTA
+ *   9. (cond) Interes asegurable
+ *  10. (cond) Nota personal del agente
+ *  11. Firma humana ("Cualquier duda, hablemos. — JC")
+ *  12. Nota Uber al puro final (disclaimer legal)
+ *  13. Footer con marca SDI + datos del agente
+ *
+ * Email-friendly: tablas anidadas + inline styles. Outlook-safe con
+ * fallback de fuentes (Space Grotesk → Helvetica → Arial).
+ *
  * @param {object} params - parametros del correo
  * @param {string} params.nombre         - nombre del cliente para el saludo (también va a explicador como `c`)
  * @param {string} params.vehiculo       - descripcion del vehiculo (también va a explicador como `v`)
@@ -36,9 +55,9 @@
  * @param {string} params.sustRepos      - texto exacto de "Sustitucion de repuestos" del PDF
  * @param {string} params.interes        - clave del dropdown (propietario, cero-km, traspaso, compra) o ''
  * @param {string} params.notaAdicional  - texto opcional del agente (linebreaks se preservan)
- * @param {string} [params.plate]        - placa del vehículo (para explicador)
+ * @param {string} [params.plate]        - placa del vehículo (para explicador y tarjeta)
  * @param {string|number} [params.year]  - año del vehículo (para explicador)
- * @param {string|number} [params.valor] - valor asegurado (para explicador)
+ * @param {string|number} [params.valor] - valor asegurado (para tarjeta vehiculo y explicador)
  * @param {string} [params.vehicleType]  - tipo crudo del PDF; se mapea a 'g' (gasolina) por default
  * @returns {string} HTML completo del cuerpo del correo
  */
@@ -50,31 +69,51 @@ function buildEmail(params) {
   const sustText = _sustitucionText(p.sustRepos || '');
   const interesText = _interestText(p.interes || '');
   const notaTrim = (p.notaAdicional || '').trim();
+  const valorFmt = _formatValor(p.valor);
+  const plate    = (p.plate || '').trim();
 
-  // Bloque de Interes Asegurable (solo si hay valor)
+  // ============ BLOQUES CONDICIONALES ============
+
+  // Bloque "Interes Asegurable" (solo si el agente selecciono uno)
   const interesHtml = interesText ? `
-        <tr><td style="padding:0 40px 0;">
-          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#dbeafe;border-radius:6px;margin-top:20px;">
+        <tr><td style="padding:0 32px;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#dbeafe;border-radius:8px;border-left:4px solid #0369a1;margin-top:18px;">
             <tr><td style="padding:14px 18px;">
-              <p style="margin:0 0 6px;font-size:13px;font-weight:bold;color:#1e3a8a;">INTERES ASEGURABLE</p>
-              <p style="margin:0;font-size:14px;color:#1e40af;">${_escape(interesText)}</p>
+              <p style="margin:0 0 4px;font-size:11px;font-weight:bold;color:#0c4a6e;letter-spacing:0.06em;text-transform:uppercase;">Interes Asegurable</p>
+              <p style="margin:0;font-size:14px;color:#0c4a6e;">${_escape(interesText)}</p>
             </td></tr>
           </table>
         </td></tr>` : '';
 
-  // Bloque de Nota Personal (solo si hay valor)
-  // Preservamos saltos de linea convirtiendo \n a <br>
+  // Bloque "Nota personal del agente" (solo si el agente escribio algo)
   const notaHtml = notaTrim ? `
-        <tr><td style="padding:0 40px 0;">
-          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffedd5;border-left:4px solid #d97706;border-radius:6px;margin-top:20px;">
+        <tr><td style="padding:18px 32px 0;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fff7ed;border-left:4px solid #ea580c;border-radius:8px;">
             <tr><td style="padding:14px 18px;">
-              <p style="margin:0 0 6px;font-size:13px;font-weight:bold;color:#9a3412;">NOTA DE SU AGENTE</p>
-              <p style="margin:0;font-size:14px;color:#7c2d12;line-height:1.5;">${_escape(notaTrim).replace(/\n/g, '<br>')}</p>
+              <p style="margin:0 0 4px;font-size:11px;font-weight:bold;color:#9a3412;letter-spacing:0.06em;text-transform:uppercase;">Nota de tu agente</p>
+              <p style="margin:0;font-size:13px;color:#7c2d12;line-height:1.55;">${_escape(notaTrim).replace(/\n/g, '<br>')}</p>
             </td></tr>
           </table>
         </td></tr>` : '';
 
-  // URL del explicador con todos los datos personalizados (separado del HTML para legibilidad)
+  // Tarjeta del vehiculo: solo si hay datos para mostrar
+  const vehicleCardHtml = (vehiculo || plate || valorFmt) ? `
+        <tr><td style="padding:0 32px 4px;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0f9ff;border:1px solid #bae6fd;border-left:4px solid #0369a1;border-radius:10px;">
+            <tr>
+              <td style="padding:14px 16px;width:60px;vertical-align:middle;">
+                <table cellpadding="0" cellspacing="0" border="0"><tr><td style="background:#ffffff;border-radius:8px;width:48px;height:48px;text-align:center;font-size:24px;line-height:48px;">&#128663;</td></tr></table>
+              </td>
+              <td style="padding:14px 16px 14px 0;vertical-align:middle;">
+                <p style="margin:0;font-size:10px;color:#0369a1;letter-spacing:0.08em;text-transform:uppercase;font-weight:bold;">Tu vehiculo cotizado</p>
+                <p style="margin:3px 0 0;font-size:16px;font-weight:bold;color:#0c4a6e;font-family:'Space Grotesk',Helvetica,Arial,sans-serif;">${_escape(vehiculo || plate || 'Tu vehiculo')}${plate && vehiculo ? ' &middot; ' + _escape(plate) : ''}</p>
+                ${valorFmt ? `<p style="margin:2px 0 0;font-size:12px;color:#475569;">Valor asegurado: <b style="color:#0c4a6e;">&#8353;${_escape(valorFmt)}</b></p>` : ''}
+              </td>
+            </tr>
+          </table>
+        </td></tr>` : '';
+
+  // URL del explicador con todos los datos personalizados
   const guideUrl = _buildGuideUrl({
     clientName:    nombre,
     vehicle:       vehiculo,
@@ -86,170 +125,202 @@ function buildEmail(params) {
     prices:        prices
   });
 
+  // Familia de fuentes con fallback (Outlook ignora Google Fonts → cae a Helvetica)
+  const fontFam = "'Space Grotesk','Helvetica Neue',Helvetica,Arial,sans-serif";
+  const fontBody = "'Inter','Helvetica Neue',Helvetica,Arial,sans-serif";
+
   // ============ HTML COMPLETO ============
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cotizacion Automoviles INS</title>
+<title>Tu cotizacion esta lista &middot; Seguros Digitales SDI</title>
+<!--[if !mso]><!-->
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!--<![endif]-->
 </head>
-<body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,Helvetica,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f5f5;padding:20px 0;">
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:${fontBody};">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f5f5;padding:24px 0;">
   <tr>
     <td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:8px;overflow:hidden;max-width:600px;">
+      <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:12px;overflow:hidden;max-width:600px;box-shadow:0 4px 20px rgba(12,35,64,0.08);">
 
         <!-- 1. HEADER -->
-        <tr><td style="background:#0c2340;color:#ffffff;padding:28px 40px;text-align:center;">
-          <img src="${CFG.LOGO_URL}" alt="INS" height="52" style="display:block;margin:0 auto 14px;border:0;outline:none;text-decoration:none;max-height:52px;" />
-          <h1 style="margin:0;font-size:22px;letter-spacing:1px;font-weight:700;">COTIZACION AUTOMOVILES</h1>
-          <p style="margin:8px 0 0;font-size:13px;opacity:0.85;">Seguros del INS &middot; Su proteccion al volante</p>
-          <p style="margin:8px 0 0;font-size:12px;opacity:0.75;">Agente ${_escape(CFG.FROM_NAME)} &middot; Licencia SUGESE ${_escape(CFG.LICENSE)}</p>
+        <tr><td bgcolor="#0c2340" style="background:#0c2340;color:#ffffff;padding:28px 32px;text-align:center;">
+          <img src="${CFG.LOGO_URL}" alt="INS" height="46" style="display:block;margin:0 auto 12px;border:0;outline:none;text-decoration:none;height:46px;" />
+          <h1 style="margin:0;font-family:${fontFam};font-size:22px;font-weight:700;letter-spacing:-0.01em;">Tu cotizacion esta lista</h1>
+          <p style="margin:6px 0 0;font-size:12px;opacity:0.75;">Seguros del INS &middot; Tu proteccion al volante</p>
         </td></tr>
 
         <!-- 2. SALUDO -->
-        <tr><td style="padding:28px 40px 0;">
-          <p style="margin:0;font-size:12px;color:#6b7280;letter-spacing:1px;">ESTIMADO/A:</p>
-          <p style="margin:4px 0 16px;font-size:18px;font-weight:bold;color:#0c2340;">${_escape(nombre)}</p>
-          <p style="margin:0;font-size:12px;color:#6b7280;letter-spacing:1px;">VEHICULO:</p>
-          <p style="margin:4px 0 0;font-size:16px;color:#0c2340;">${_escape(vehiculo)}</p>
+        <tr><td style="padding:28px 32px 14px;">
+          <p style="margin:0;font-size:11px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;">Estimado/a</p>
+          <p style="margin:4px 0 16px;font-family:${fontFam};font-size:24px;font-weight:700;color:#0c4a6e;letter-spacing:-0.01em;">${_escape(nombre)},</p>
         </td></tr>
 
-        <!-- 3. INTRO -->
-        <tr><td style="padding:20px 40px;">
-          <p style="margin:0;font-size:14px;line-height:1.6;color:#374151;">
-            Le presentamos la cotizacion personalizada para el aseguramiento de su vehiculo
-            con el Instituto Nacional de Seguros. Hemos preparado una explicacion visual
-            detallada para que conozca cada beneficio incluido en su poliza.
+        <!-- 3. TARJETA VEHICULO -->
+        ${vehicleCardHtml}
+
+        <!-- 4. INTRO + CTA EXPLICADOR -->
+        <tr><td style="padding:22px 32px 0;">
+          <p style="margin:0 0 18px;font-size:14px;line-height:1.6;color:#475569;">
+            Te prepar&eacute; una <b style="color:#0c4a6e;">gu&iacute;a visual personalizada</b> con todos los detalles de tu cotizaci&oacute;n &mdash; qu&eacute; cubre cada letra, c&oacute;mo funciona el deducible, las opciones de pago y cu&aacute;ndo aplica cada beneficio.
           </p>
-        </td></tr>
-
-        <!-- 4. CTA EXPLICADOR -->
-        <tr><td style="padding:0 40px 8px;text-align:center;">
-          <a href="${guideUrl}" style="display:inline-block;background:#0369a1;color:#ffffff;padding:14px 28px;border-radius:6px;text-decoration:none;font-weight:bold;font-size:14px;letter-spacing:0.5px;">
-            VER EXPLICACION DE MI COTIZACION &rarr;
-          </a>
-        </td></tr>
-
-        <!-- 5. BENEFICIOS -->
-        <tr><td style="padding:24px 40px 0;">
-          <h2 style="margin:0 0 12px;font-size:15px;color:#0c2340;border-bottom:2px solid #0369a1;padding-bottom:8px;letter-spacing:0.5px;">
-            BENEFICIOS INCLUIDOS
-          </h2>
           <table width="100%" cellpadding="0" cellspacing="0" border="0">
-            <tr>
-              <td width="50%" style="padding:6px 8px 6px 0;font-size:13px;color:#374151;vertical-align:top;">
-                <span style="color:#16a34a;font-weight:bold;">&#10003;</span> Cobertura Total (A,B,C,D,F,H)
-              </td>
-              <td width="50%" style="padding:6px 0 6px 8px;font-size:13px;color:#374151;vertical-align:top;">
-                <span style="color:#16a34a;font-weight:bold;">&#10003;</span> Indemnizacion del Deducible (IDD)
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:6px 8px 6px 0;font-size:13px;color:#374151;vertical-align:top;">
-                <span style="color:#16a34a;font-weight:bold;">&#10003;</span> Asistencia 24/7 en carretera
-              </td>
-              <td style="padding:6px 0 6px 8px;font-size:13px;color:#374151;vertical-align:top;">
-                <span style="color:#16a34a;font-weight:bold;">&#10003;</span> 10% de descuento en pago anual
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:6px 8px 6px 0;font-size:13px;color:#374151;vertical-align:top;">
-                <span style="color:#16a34a;font-weight:bold;">&#10003;</span> Contratacion 100% en linea
-              </td>
-              <td style="padding:6px 0 6px 8px;font-size:13px;color:#374151;vertical-align:top;">
-                <span style="color:#16a34a;font-weight:bold;">&#10003;</span> Exencion de Deducible (Cobertura C)
-              </td>
-            </tr>
-          </table>
-        </td></tr>
-${interesHtml}
-        <!-- 7. PRECIOS -->
-        <tr><td style="padding:24px 40px 0;">
-          <h2 style="margin:0 0 12px;font-size:15px;color:#0c2340;border-bottom:2px solid #0369a1;padding-bottom:8px;letter-spacing:0.5px;">
-            FORMAS DE PAGO
-          </h2>
-          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e5e7eb;border-radius:6px;border-collapse:separate;">
-            <tr style="background:#f9fafb;">
-              <td style="padding:10px 16px;font-size:11px;color:#6b7280;font-weight:bold;letter-spacing:1px;border-bottom:1px solid #e5e7eb;">FRECUENCIA</td>
-              <td style="padding:10px 16px;font-size:11px;color:#6b7280;font-weight:bold;letter-spacing:1px;text-align:right;border-bottom:1px solid #e5e7eb;">MONTO</td>
-            </tr>
-            <tr>
-              <td style="padding:14px 16px;font-size:14px;color:#374151;border-bottom:1px solid #e5e7eb;">Trimestral</td>
-              <td style="padding:14px 16px;font-size:14px;color:#0c2340;font-weight:bold;text-align:right;border-bottom:1px solid #e5e7eb;">&#8353; ${_escape(prices.trimestral || '')}</td>
-            </tr>
-            <tr>
-              <td style="padding:14px 16px;font-size:14px;color:#374151;border-bottom:1px solid #e5e7eb;">Semestral</td>
-              <td style="padding:14px 16px;font-size:14px;color:#0c2340;font-weight:bold;text-align:right;border-bottom:1px solid #e5e7eb;">&#8353; ${_escape(prices.semestral || '')}</td>
-            </tr>
-            <tr style="background:#dcfce7;">
-              <td style="padding:14px 16px;font-size:14px;color:#166534;font-weight:bold;">
-                Anual
-                <span style="background:#16a34a;color:#fff;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:bold;margin-left:6px;letter-spacing:0.5px;">-10%</span>
-              </td>
-              <td style="padding:14px 16px;font-size:15px;color:#166534;font-weight:bold;text-align:right;">&#8353; ${_escape(prices.anual || '')}</td>
-            </tr>
-          </table>
-        </td></tr>
-
-        <!-- 8. SUSTITUCION DE REPUESTOS -->
-        <tr><td style="padding:20px 40px 0;">
-          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#eff6ff;border-left:4px solid #0369a1;border-radius:6px;">
-            <tr><td style="padding:14px 18px;">
-              <p style="margin:0 0 6px;font-size:13px;font-weight:bold;color:#0c2340;letter-spacing:0.5px;">SUSTITUCION DE REPUESTOS</p>
-              <p style="margin:0;font-size:13px;color:#1e40af;line-height:1.5;">${_escape(sustText)}</p>
-            </td></tr>
-          </table>
-        </td></tr>
-${notaHtml}
-        <!-- 10. CTA AGENDAR -->
-        <tr><td style="padding:28px 40px 8px;text-align:center;">
-          <a href="${CFG.AGENDA_URL}" style="display:inline-block;background:#16a34a;color:#ffffff;padding:16px 36px;border-radius:6px;text-decoration:none;font-weight:bold;font-size:15px;letter-spacing:0.5px;">
-            &#161;Agendar mi cita ahora! &rarr;
-          </a>
-        </td></tr>
-
-        <!-- 11. URGENCIA + SOCIAL PROOF (espacio generoso para que el boton respire) -->
-        <tr><td style="padding:36px 40px 32px;text-align:center;">
-          <p style="margin:0 0 14px;font-size:14px;font-weight:bold;color:#0c2340;line-height:1.5;">
-            Esta cotizaci&oacute;n est&aacute; disponible por los pr&oacute;ximos 15 d&iacute;as.<br/>
-            &iexcl;No deje pasar esta oportunidad de proteger su veh&iacute;culo!
-          </p>
-          <p style="margin:0 0 16px;font-size:13px;color:#0369a1;font-weight:600;letter-spacing:0.3px;">
-            Es f&aacute;cil, es r&aacute;pido, es seguro.
-          </p>
-          <p style="margin:0;font-size:12px;color:#6b7280;line-height:1.5;">
-            <span style="color:#f59e0b;font-size:14px;letter-spacing:2px;">&#9733;&#9733;&#9733;&#9733;&#9733;</span><br/>
-            Miles de conductores ya est&aacute;n protegidos con nuestro proceso digital
-          </p>
-        </td></tr>
-
-        <!-- 12. NOTAS IMPORTANTES -->
-        <tr><td style="padding:20px 40px 24px;">
-          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fef3c7;border-radius:6px;">
-            <tr><td style="padding:14px 18px;">
-              <p style="margin:0 0 8px;font-size:12px;font-weight:bold;color:#78350f;letter-spacing:0.5px;">NOTAS IMPORTANTES</p>
-              <ul style="margin:0;padding-left:18px;font-size:12px;color:#78350f;line-height:1.6;">
-                <li>Este seguro NO cubre actividades de UBER o similares.</li>
-                <li>El valor asegurado debe corresponder al valor de mercado del vehiculo. En caso de diferencia, podria aplicarse el principio de proporcion.</li>
-                <li>La sustitucion de repuestos depende de la disponibilidad y antiguedad del vehiculo segun la modalidad contratada.</li>
-              </ul>
+            <tr><td align="center">
+              <a href="${guideUrl}" style="display:inline-block;background:#0369a1;color:#ffffff;text-decoration:none;border-radius:10px;padding:14px 28px;font-family:${fontFam};font-weight:700;font-size:15px;">Ver mi cotizaci&oacute;n explicada &rarr;</a>
+              <p style="margin:8px 0 0;font-size:11px;color:#64748b;font-style:italic;">~3 minutos de lectura &middot; dise&ntilde;ada solo para vos</p>
             </td></tr>
           </table>
         </td></tr>
 
-        <!-- 13. FOOTER -->
-        <tr><td style="background:#0c2340;color:#ffffff;padding:24px 40px;text-align:center;">
-          <p style="margin:0;font-size:14px;font-weight:600;color:#cbd5e1;">${_escape(CFG.FROM_NAME)}</p>
-          <p style="margin:4px 0 0;font-size:11px;color:#64748b;">Agente de Seguros INS &middot; Licencia SUGESE ${_escape(CFG.LICENSE)}</p>
-          <p style="margin:12px 0 4px;font-size:12px;color:#64748b;">Tel: <span style="color:#cbd5e1;">${_escape(CFG.PHONE)}</span></p>
-          <p style="margin:6px 0 2px;font-size:14px;">
-            <a href="mailto:${_escape(CFG.FROM_EMAIL)}" style="color:#7dd3fc;text-decoration:underline;font-weight:bold;">${_escape(CFG.FROM_EMAIL)}</a>
+        <!-- 5. BENEFICIOS OUTCOME (Full → Cero deducible → Asistencia) -->
+        <tr><td style="padding:26px 32px 0;">
+          <h2 style="margin:0 0 14px;font-family:${fontFam};font-size:14px;font-weight:700;color:#0c4a6e;text-transform:uppercase;letter-spacing:0.05em;border-bottom:2px solid #0369a1;padding-bottom:8px;">3 beneficios clave de tu cobertura</h2>
+
+          <!-- Benefit 1: Full Cobertura -->
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8fafc;border:1px solid #e0e7ef;border-radius:10px;margin-bottom:8px;">
+            <tr>
+              <td width="48" valign="top" style="padding:14px 0 14px 16px;">
+                <table cellpadding="0" cellspacing="0" border="0"><tr><td style="background:#0369a1;color:#ffffff;width:36px;height:36px;border-radius:50%;text-align:center;font-size:18px;font-weight:bold;line-height:36px;">+</td></tr></table>
+              </td>
+              <td valign="top" style="padding:14px 16px 14px 12px;">
+                <p style="margin:0 0 2px;font-family:${fontFam};font-weight:700;color:#0c4a6e;font-size:14px;">Full Cobertura</p>
+                <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Da&ntilde;os a personas, propiedad, colisi&oacute;n, robo, gastos m&eacute;dicos y riesgos naturales &mdash; todas las letras del INS protegi&eacute;ndote.</p>
+              </td>
+            </tr>
+          </table>
+
+          <!-- Benefit 2: Cero deducible -->
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8fafc;border:1px solid #e0e7ef;border-radius:10px;margin-bottom:8px;">
+            <tr>
+              <td width="48" valign="top" style="padding:14px 0 14px 16px;">
+                <table cellpadding="0" cellspacing="0" border="0"><tr><td style="background:#10b981;color:#ffffff;width:36px;height:36px;border-radius:50%;text-align:center;font-size:18px;font-weight:bold;line-height:36px;">&#10003;</td></tr></table>
+              </td>
+              <td valign="top" style="padding:14px 16px 14px 12px;">
+                <p style="margin:0 0 2px;font-family:${fontFam};font-weight:700;color:#0c4a6e;font-size:14px;">Cero deducible en tus choques</p>
+                <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Con la cobertura IDD, el INS te reintegra el deducible hasta 2 veces al a&ntilde;o. No sac&aacute;s un col&oacute;n.</p>
+              </td>
+            </tr>
+          </table>
+
+          <!-- Benefit 3: Asistencia -->
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8fafc;border:1px solid #e0e7ef;border-radius:10px;">
+            <tr>
+              <td width="48" valign="top" style="padding:14px 0 14px 16px;">
+                <table cellpadding="0" cellspacing="0" border="0"><tr><td style="background:#f59e0b;color:#ffffff;width:36px;height:36px;border-radius:50%;text-align:center;font-size:18px;font-weight:bold;line-height:36px;">&#9733;</td></tr></table>
+              </td>
+              <td valign="top" style="padding:14px 16px 14px 12px;">
+                <p style="margin:0 0 2px;font-family:${fontFam};font-weight:700;color:#0c4a6e;font-size:14px;">Asistencia 24/7 en carretera</p>
+                <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Gr&uacute;a, cerrajero, paso de corriente, combustible, llanta &mdash; desde cualquier lugar, a cualquier hora.</p>
+              </td>
+            </tr>
+          </table>
+        </td></tr>
+
+        <!-- 6. PRECIOS — anclaje invertido (Anual destacado al centro) -->
+        <tr><td style="padding:26px 32px 0;">
+          <h2 style="margin:0 0 6px;font-family:${fontFam};font-size:14px;font-weight:700;color:#0c4a6e;text-transform:uppercase;letter-spacing:0.05em;border-bottom:2px solid #0369a1;padding-bottom:8px;">Tus 3 opciones de pago</h2>
+          <p style="margin:10px 0 14px;font-size:12px;color:#64748b;font-style:italic;text-align:center;">Eleg&iacute; la que mejor se ajuste a tu bolsillo</p>
+
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;border-spacing:6px 0;">
+            <tr>
+              <!-- Trimestral -->
+              <td width="33%" align="center" style="background:#ffffff;border:1px solid #e0e7ef;border-radius:10px;padding:14px 8px;vertical-align:middle;">
+                <p style="margin:0;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;font-weight:bold;">Trimestral</p>
+                <p style="margin:6px 0 2px;font-family:${fontFam};font-size:17px;font-weight:800;color:#0c4a6e;">&#8353;${_escape(prices.trimestral || '—')}</p>
+                <p style="margin:0;font-size:10px;color:#64748b;">cada 3 meses</p>
+              </td>
+              <!-- Anual (destacado) -->
+              <td width="34%" align="center" bgcolor="#10b981" style="background:#10b981;color:#ffffff;border-radius:10px;padding:16px 8px;vertical-align:middle;position:relative;">
+                <p style="margin:0 0 4px;background:#fbbf24;color:#422006;font-size:9px;font-weight:800;padding:3px 8px;border-radius:999px;display:inline-block;text-transform:uppercase;letter-spacing:0.05em;">&#9733; Recomendado &middot; -10%</p>
+                <p style="margin:6px 0 0;font-size:10px;color:#ffffff;text-transform:uppercase;letter-spacing:0.08em;font-weight:bold;">Anual</p>
+                <p style="margin:6px 0 2px;font-family:${fontFam};font-size:21px;font-weight:800;color:#ffffff;">&#8353;${_escape(prices.anual || '—')}</p>
+                <p style="margin:0;font-size:10px;color:#ffffff;opacity:0.9;">1 sola vez</p>
+              </td>
+              <!-- Semestral -->
+              <td width="33%" align="center" style="background:#ffffff;border:1px solid #e0e7ef;border-radius:10px;padding:14px 8px;vertical-align:middle;">
+                <p style="margin:0;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;font-weight:bold;">Semestral</p>
+                <p style="margin:6px 0 2px;font-family:${fontFam};font-size:17px;font-weight:800;color:#0c4a6e;">&#8353;${_escape(prices.semestral || '—')}</p>
+                <p style="margin:0;font-size:10px;color:#64748b;">cada 6 meses</p>
+              </td>
+            </tr>
+          </table>
+        </td></tr>
+
+        ${interesHtml}
+
+        <!-- 7. SUSTITUCION DE REPUESTOS -->
+        <tr><td style="padding:22px 32px 0;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0f9ff;border-left:4px solid #0369a1;border-radius:8px;">
+            <tr><td style="padding:14px 16px;">
+              <p style="margin:0 0 4px;font-size:11px;font-weight:bold;color:#0c4a6e;letter-spacing:0.06em;text-transform:uppercase;">Sustituci&oacute;n de repuestos</p>
+              <p style="margin:0;font-size:13px;color:#0c4a6e;line-height:1.55;">${_escape(sustText)}</p>
+            </td></tr>
+          </table>
+        </td></tr>
+
+        <!-- 8. CTA AGENDAR (camino limpio sin barreras) -->
+        <tr><td style="padding:30px 32px 0;text-align:center;">
+          <a href="${CFG.AGENDA_URL}" style="display:inline-block;background:#10b981;color:#ffffff;text-decoration:none;border-radius:10px;padding:16px 32px;font-family:${fontFam};font-weight:700;font-size:16px;">&#128197; Agendar mi cita ahora &rarr;</a>
+          <p style="margin:14px 0 0;font-size:12px;color:#475569;font-weight:500;"><b style="color:#0c4a6e;">Cotizaci&oacute;n v&aacute;lida 15 d&iacute;as</b> &middot; Es f&aacute;cil, es r&aacute;pido, es seguro</p>
+        </td></tr>
+
+        <!-- 9. PRUEBA SOCIAL (momentum tras CTA) -->
+        <tr><td style="padding:24px 32px 0;text-align:center;">
+          <p style="margin:0 0 4px;color:#f59e0b;font-size:18px;letter-spacing:4px;">&#9733;&#9733;&#9733;&#9733;&#9733;</p>
+          <p style="margin:0;font-size:12px;color:#64748b;font-style:italic;">Miles de conductores ya est&aacute;n protegidos con nuestro proceso 100% digital</p>
+        </td></tr>
+
+        ${notaHtml}
+
+        <!-- 10. FIRMA HUMANA -->
+        <tr><td style="padding:28px 32px 0;text-align:center;border-top:1px solid #e0e7ef;margin-top:28px;">
+          <p style="margin:24px 0 6px;font-family:${fontFam};font-style:italic;color:#475569;font-size:14px;">"Cualquier duda que tengas, hablemos. Estoy para vos."</p>
+          <p style="margin:0;font-family:${fontFam};font-weight:700;color:#0c4a6e;font-size:14px;">&mdash; ${_escape(CFG.FROM_NAME)}</p>
+          <p style="margin:2px 0 0;font-size:11px;color:#64748b;">Tu agente &middot; Lic. SUGESE ${_escape(CFG.LICENSE)}</p>
+        </td></tr>
+
+        <!-- 11. NOTA UBER (al puro final, disclaimer legal) -->
+        <tr><td style="padding:22px 32px 0;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fffbeb;border:1px solid #fcd34d;border-left:4px solid #f59e0b;border-radius:8px;">
+            <tr>
+              <td width="32" valign="top" style="padding:12px 0 12px 14px;color:#f59e0b;font-size:16px;line-height:1.2;">&#9888;</td>
+              <td valign="top" style="padding:12px 14px 12px 4px;">
+                <p style="margin:0 0 2px;font-size:10px;font-weight:bold;color:#92400e;letter-spacing:0.08em;text-transform:uppercase;">Importante</p>
+                <p style="margin:0;font-size:12px;color:#78350f;line-height:1.55;">Esta p&oacute;liza <b style="color:#422006;">NO cubre</b> actividades de UBER, DiDi, Indriver o similares.</p>
+              </td>
+            </tr>
+          </table>
+        </td></tr>
+
+        <!-- 12. FOOTER con marca SDI -->
+        <tr><td bgcolor="#0c2340" style="background:#0c2340;color:#cbd5e1;padding:28px 32px 24px;text-align:center;margin-top:24px;">
+          <!-- SDI logo (recreado en HTML para compatibilidad email) -->
+          <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 12px;">
+            <tr>
+              <td valign="middle" style="font-family:${fontFam};font-weight:500;font-size:32px;letter-spacing:-1px;color:#ffffff;line-height:1;">SDI</td>
+              <td valign="middle" style="padding-left:10px;">
+                <table cellpadding="0" cellspacing="0" border="0">
+                  <tr><td bgcolor="#ffffff" style="background:#ffffff;height:4px;width:22px;line-height:4px;font-size:0;">&nbsp;</td></tr>
+                  <tr><td style="height:3px;line-height:3px;font-size:0;">&nbsp;</td></tr>
+                  <tr><td bgcolor="#ffffff" style="background:#ffffff;height:4px;width:22px;line-height:4px;font-size:0;">&nbsp;</td></tr>
+                  <tr><td style="height:3px;line-height:3px;font-size:0;">&nbsp;</td></tr>
+                  <tr><td bgcolor="#ffffff" style="background:#ffffff;height:4px;width:22px;line-height:4px;font-size:0;">&nbsp;</td></tr>
+                  <tr><td style="height:3px;line-height:3px;font-size:0;">&nbsp;</td></tr>
+                  <tr><td bgcolor="#ffffff" style="background:#ffffff;height:4px;width:22px;line-height:4px;font-size:0;">&nbsp;</td></tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+          <p style="margin:0;font-size:12px;color:#cbd5e1;">Esta cotizaci&oacute;n pertenece a <b style="color:#ffffff;">Seguros Digitales SDI&reg;</b></p>
+          <p style="margin:8px 0 4px;font-size:12px;">
+            <a href="mailto:${_escape(CFG.FROM_EMAIL)}" style="color:#7dd3fc;text-decoration:none;font-weight:600;">${_escape(CFG.FROM_EMAIL)}</a>
+            ${CFG.WEBSITE ? ` &middot; <a href="https://${_escape(CFG.WEBSITE)}" style="color:#7dd3fc;text-decoration:none;font-weight:600;">${_escape(CFG.WEBSITE)}</a>` : ''}
           </p>
-          ${CFG.WEBSITE ? `<p style="margin:4px 0 0;font-size:14px;">
-            <a href="https://${_escape(CFG.WEBSITE)}" style="color:#7dd3fc;text-decoration:underline;font-weight:bold;">${_escape(CFG.WEBSITE)}</a>
-          </p>` : ''}
+          <p style="margin:6px 0 0;font-size:11px;color:#64748b;">Tel: ${_escape(CFG.PHONE)} &middot; Lic. SUGESE ${_escape(CFG.LICENSE)}</p>
+          <p style="margin:10px 0 0;font-size:10px;color:#64748b;">&copy; 2026 Propiedad Intelectual de ${_escape(CFG.FROM_NAME)}</p>
         </td></tr>
 
       </table>
@@ -350,6 +421,21 @@ function _detectVehicleType(rawType) {
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   if (norm.includes('electric') || norm.includes('ev')) return 'e';
   return 'g';
+}
+
+/**
+ * Formatea el valor asegurado del PDF para mostrarlo en la tarjeta del
+ * correo. Strip del ".00" final pero conserva las comas como separador de
+ * miles.
+ *   "10,000,000.00" → "10,000,000"
+ *   "570,891.00"    → "570,891"
+ *   undefined/null  → ""
+ * @param {string|number} val
+ * @returns {string}
+ */
+function _formatValor(val) {
+  if (val === undefined || val === null) return '';
+  return String(val).replace(/\.00$/, '');
 }
 
 /**
