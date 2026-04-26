@@ -1822,7 +1822,12 @@ const observer = new IntersectionObserver((entries) => {
       }
     }
   });
-}, { threshold: 0.3 });
+}, {
+  // threshold bajo para que las secciones largas (s4) hagan fade-in apenas
+  // entran al viewport en mobile, sin esperar a estar 30% visibles.
+  threshold: 0.01,
+  rootMargin: '0px 0px -10% 0px'
+});
 sections.forEach(s => observer.observe(s));
 
 function updateActiveStates() {
