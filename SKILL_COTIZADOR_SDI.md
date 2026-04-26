@@ -22,6 +22,52 @@ RFC 2047. Probado en produccion con PDF real BRK454 y cotizacion THG170.
 
 ## Decisiones recientes
 
+### 25 abril 2026 (tarde-noche) — Plantilla de correo v2 modernizada
+
+**Reescritura completa** del HTML del correo de cotizacion (`js/email-template.js` `buildEmail()`).
+Estructura nueva basada en **AIDA + tecnicas de neuromarketing digital**, manteniendo
+compatibilidad email (tablas anidadas + inline styles + fallback de fuentes).
+
+**Estructura nueva (13 bloques en orden persuasivo):**
+1. Header navy con logo INS + "Tu cotizacion esta lista" (humano, no "COTIZACION AUTOMOVILES" en mayusculas)
+2. Saludo personalizado + tarjeta del vehiculo (anclaje emocional con icon + descripcion + placa + valor)
+3. Intro corto + CTA primario al explicador ("Ver mi cotizacion explicada")
+4. **3 outcome benefits cards** (Full Cobertura → Cero deducible IDD → Asistencia 24/7) — reemplaza la lista de 6 items tecnicos A/B/C/D/F/H
+5. **Tabla de precios con anclaje invertido**: Anual destacado al centro (gradient emerald + badge dorado -10%), Trim/Sem en cards laterales (decoy effect)
+6. (cond) Interes asegurable
+7. Sustitucion de repuestos
+8. **CTA principal "Agendar mi cita ahora"** — camino limpio sin barreras intermedias
+9. Prueba social (★★★★★) movida DESPUES del CTA (momentum tras click)
+10. (cond) Nota personal del agente
+11. Firma humana ("Cualquier duda que tengas, hablemos. — JC")
+12. Nota Uber al puro final, simplificada ("Esta poliza NO cubre actividades de UBER, DiDi, Indriver o similares")
+13. Footer con marca SDI (logo recreado en HTML+tablas para compatibilidad email — Gmail bloquea SVG)
+
+**Quitado:**
+- Lista de 6 beneficios tecnicos (A/B/C/D/F/H/IDD/asistencia).
+- Bloque "NOTAS IMPORTANTES" final (valor de mercado + sustitucion redundante con explicador).
+
+**Cambios tecnicos:**
+- Helper nuevo `_formatValor(val)` strip ".00" final.
+- Tipografia: Space Grotesk + Inter via Google Fonts (modern clients) con fallback Helvetica/Arial (Outlook).
+- Paleta: emerald-500 (#10b981) en CTA y outcome card, consistente con explicador v2.
+- Bloques condicionales preservados: `interesHtml`, `notaHtml`, `vehicleCardHtml` (la tarjeta del vehiculo solo aparece si hay `vehiculo || plate || valor`).
+- Logo SDI: recreado en HTML+tablas con barras blancas + wordmark (4 barras horizontales separadas por gaps), para compatibilidad email (SVG no se renderiza en Gmail).
+
+**Tamaño correo generado:** ~18 KB para una cotizacion completa con todos los bloques.
+
+**Bug fix integrado en explicador (`/explicacion/`):** subseccion eletricos (cuando `vt=e` por toggle del cotizador) cambio el copy:
+- ANTES: "Si tu vehiculo es electrico — o estas pensando en uno" + tag "★ Siempre visible · educativo"
+- AHORA: "Cobertura especial para tu vehiculo electrico" (asume que ES electrico) + sin tag.
+
+**Commits del checkpoint** (rango con `feat(email):`, `style(explicador):`):
+- `09bee5e` feat(email): plantilla v2 modernizada (neuromarketing + AIDA)
+- `20484a8` style(explicador): subseccion electricos asume vehiculo electrico
+
+**Custom domain confirmado activo:** `https://cotizador.appsegurosdigitales.com/` (subdominio del Portal SDI). Sirve la misma app que el dominio Netlify default. **Las URLs en `js/config.js` (`CFG.GUIDE_URL`, `CFG.LOGO_URL`) siguen apuntando al dominio Netlify** porque OAuth Google esta configurado para ese origen. Cambiar a custom domain requiere agregar el origen autorizado en Google Cloud Console — pendiente decision JC.
+
+---
+
 ### 25 abril 2026 — Explicador v2 personalizado
 
 **Reescrito completo:** `/explicacion/index.html` migrado de React+Babel CDN a vanilla HTML+CSS+JS single-file. Carga ~40x mas liviana (sin compilacion en cliente) — total ~150 KB vs ~6 MB de la version React+Babel+Tailwind. Alineado con el resto del cotizador (sin build step).
