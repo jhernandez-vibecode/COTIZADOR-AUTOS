@@ -105,5 +105,20 @@ test('sustReposToCode default a "n" si vacío', () => {
   assertEq(_sustReposToCode(null), 'n');
 });
 
+test('valor y precios con formato CR ("10,000,000.00") se normalizan a "10000000"', () => {
+  // Reproduce el formato real que devuelve pdf-extract.js
+  const url = _buildGuideUrl({
+    valor: '10,000,000.00',
+    prices: { anual: '570,891.00', semestral: '308,283.00', trimestral: '158,423.00' }
+  });
+  assertContains(url, 'va=10000000');
+  assertContains(url, 'pa=570891');
+  assertContains(url, 'ps=308283');
+  assertContains(url, 'pt=158423');
+  // Verifica que NO queden las comas escapadas (%2C) ni el .00
+  if (url.includes('%2C')) throw new Error('No deberian quedar comas escapadas en el URL');
+  if (url.includes('.00')) throw new Error('No deberian quedar decimales .00');
+});
+
 console.log(`\n${pass} pass, ${fail} fail`);
 process.exit(fail > 0 ? 1 : 0);

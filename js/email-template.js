@@ -406,17 +406,23 @@ function _buildGuideUrl(extras) {
       params.push(key + '=' + encodeURIComponent(String(val).trim()));
     }
   };
+  // Normaliza montos del PDF ("10,000,000.00") → "10000000" para que el
+  // explicador los pueda parsear con parseInt/Number sin romperse.
+  const num = function (val) {
+    if (val === undefined || val === null) return val;
+    return String(val).replace(/,/g, '').replace(/\.00$/, '');
+  };
   add('c',  x.clientName);
   add('v',  x.vehicle);
   add('p',  x.plate);
   add('y',  x.year);
   add('vt', x.vehicleType);
-  add('va', x.valor);
+  add('va', num(x.valor));
   add('sr', x.sustReposCode);
   if (x.prices) {
-    add('pa', x.prices.anual);
-    add('ps', x.prices.semestral);
-    add('pt', x.prices.trimestral);
+    add('pa', num(x.prices.anual));
+    add('ps', num(x.prices.semestral));
+    add('pt', num(x.prices.trimestral));
   }
 
   if (params.length === 0) return base;
