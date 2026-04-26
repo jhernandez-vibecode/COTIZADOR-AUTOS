@@ -209,15 +209,26 @@ body {
 .agent-chip-role { font-size: 10px; color: var(--muted); }
 
 .bubble {
-  background: #fff;
+  background: linear-gradient(180deg, #fff 0%, #f8fbff 100%);
   border: 1px solid var(--border);
   border-radius: 16px 16px 16px 4px;
-  padding: 22px 24px;
-  box-shadow: 0 6px 22px rgba(12, 35, 64, .07);
+  padding: 22px 26px 22px 30px;
+  box-shadow: 0 6px 22px rgba(12, 35, 64, .07), 0 1px 3px rgba(16, 185, 129, .08);
   font-size: 15px;
   color: #1e293b;
   margin-left: 22px;
   max-width: 92%;
+  position: relative;
+  overflow: hidden;
+}
+.bubble::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--azul), var(--green-fresh));
 }
 .bubble .greet {
   font-family: 'Space Grotesk', sans-serif;
@@ -229,8 +240,23 @@ body {
   margin-bottom: 12px;
 }
 .bubble .greet .name {
-  background: linear-gradient(180deg, transparent 60%, #fef08a 60%);
-  padding: 0 4px;
+  color: var(--green-deep);
+  font-style: italic;
+  font-weight: 800;
+  position: relative;
+  padding: 0 3px;
+  display: inline-block;
+}
+.bubble .greet .name::after {
+  content: '';
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  bottom: -1px;
+  height: 4px;
+  background: linear-gradient(90deg, var(--green-light), var(--green-fresh) 60%, var(--green-deep));
+  border-radius: 999px;
+  opacity: 0.55;
 }
 .bubble b { color: var(--azul-deep); }
 .bubble .roadmap {
