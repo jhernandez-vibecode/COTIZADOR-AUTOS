@@ -1122,7 +1122,7 @@ main { max-width: 880px; margin: 0 auto; padding: 0 24px 60px; }
   max-width: 540px;
   width: 100%;
   text-align: center;
-  padding: 50px 32px 40px;
+  padding: 48px 32px 38px;
   color: #fff;
 }
 .celeb-close {
@@ -1163,43 +1163,66 @@ main { max-width: 880px; margin: 0 auto; padding: 0 24px 60px; }
   100% { transform: translateY(400px) rotate(360deg); opacity: 0; }
 }
 
-.check-circle {
-  width: 88px; height: 88px;
-  background: linear-gradient(135deg, var(--green-fresh), var(--green-deep));
-  border-radius: 50%;
-  margin: 0 auto 22px;
-  display: grid; place-items: center;
-  box-shadow: 0 12px 40px rgba(16, 185, 129, .5),
-              0 0 0 12px rgba(16, 185, 129, .15),
-              0 0 0 24px rgba(16, 185, 129, .08);
-  animation: check-bounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+/* Anillo de progreso 1/2 */
+.celeb-ring-wrap {
+  position: relative;
+  width: 100px; height: 100px;
+  margin: 0 auto 20px;
+  animation: ring-appear 0.5s cubic-bezier(.34,1.56,.64,1);
 }
-@keyframes check-bounce {
+@keyframes ring-appear {
   0%   { transform: scale(0); opacity: 0; }
-  60%  { transform: scale(1.15); }
+  60%  { transform: scale(1.08); }
   100% { transform: scale(1); opacity: 1; }
 }
-.check-svg {
-  width: 44px; height: 44px;
-  stroke: #fff;
-  stroke-width: 4;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+.celeb-ring-svg {
+  width: 100px; height: 100px;
+  transform: rotate(-90deg);
+}
+.celeb-ring-bg {
   fill: none;
+  stroke: rgba(255,255,255,.1);
+  stroke-width: 6;
 }
-.check-svg path {
-  stroke-dasharray: 60;
-  stroke-dashoffset: 60;
-  animation: check-draw 0.4s 0.4s ease-out forwards;
+.celeb-ring-progress {
+  fill: none;
+  stroke: var(--green-fresh);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 238.76;
+  stroke-dashoffset: 238.76;
+  animation: ring-draw 1.2s 0.3s ease-out forwards;
 }
-@keyframes check-draw { to { stroke-dashoffset: 0; } }
+@keyframes ring-draw { to { stroke-dashoffset: 119.38; } }
+.celeb-ring-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.celeb-ring-pct {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+}
+.celeb-ring-lbl {
+  font-size: 9px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+}
 
 .celeb-title {
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 30px;
+  font-size: 28px;
   font-weight: 800;
   letter-spacing: -0.02em;
-  margin: 0 0 12px;
+  margin: 0 0 8px;
   animation: fade-up 0.5s 0.3s ease-out backwards;
 }
 .celeb-title .name {
@@ -1208,16 +1231,73 @@ main { max-width: 880px; margin: 0 auto; padding: 0 24px 60px; }
 }
 .celeb-sub {
   font-family: 'Inter', sans-serif;
-  font-size: 15px;
-  color: #cbd5e1;
-  max-width: 420px;
-  margin: 0 auto 22px;
-  animation: fade-up 0.5s 0.5s ease-out backwards;
+  font-size: 14px;
+  color: #94a3b8;
+  max-width: 400px;
+  margin: 0 auto 18px;
+  animation: fade-up 0.5s 0.45s ease-out backwards;
 }
-.celeb-sub b { color: var(--green-light); font-weight: 600; }
 
+/* Lista de dos pasos */
+.celeb-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 auto 20px;
+  max-width: 340px;
+  text-align: left;
+  animation: fade-up 0.5s 0.55s ease-out backwards;
+}
+.celeb-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+.celeb-step.done-step {
+  background: rgba(16,185,129,.1);
+  border: 1px solid rgba(16,185,129,.2);
+}
+.celeb-step.pending-step {
+  background: rgba(251,191,36,.08);
+  border: 1px solid rgba(251,191,36,.3);
+}
+.celeb-step-icon {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  display: grid; place-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.celeb-step-icon.ok   { background: var(--green-fresh); color: #fff; }
+.celeb-step-icon.pend {
+  background: var(--gold-mid);
+  color: #422006;
+  animation: pulse-pend 1.8s ease-in-out infinite;
+}
+@keyframes pulse-pend {
+  0%,100% { box-shadow: 0 0 0 0 rgba(251,191,36,.5); }
+  50%      { box-shadow: 0 0 0 7px rgba(251,191,36,0); }
+}
+.celeb-step-text { flex: 1; }
+.celeb-step-text b { display: block; font-weight: 600; color: #e2e8f0; margin-bottom: 2px; }
+.celeb-step-text span { font-size: 11px; color: #64748b; }
+.celeb-step-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.celeb-step-badge.ok   { background: rgba(16,185,129,.15); color: #34d399; }
+.celeb-step-badge.pend { background: rgba(251,191,36,.15); color: #fbbf24; }
+
+/* CTA dorado */
 .celeb-cta-link {
-  background: linear-gradient(135deg, var(--green-fresh), var(--green-deep));
+  background: linear-gradient(135deg, #f59e0b, #d97706);
   color: #fff;
   border-radius: 999px;
   padding: 14px 28px;
@@ -1228,27 +1308,31 @@ main { max-width: 880px; margin: 0 auto; padding: 0 24px 60px; }
   font-size: 15px;
   font-weight: 700;
   text-decoration: none;
-  box-shadow: 0 6px 20px rgba(16, 185, 129, .4);
+  box-shadow: 0 6px 22px rgba(245,158,11,.45);
   animation: fade-up 0.5s 0.7s ease-out backwards;
   transition: transform .2s ease-out, box-shadow .2s ease-out;
 }
 .celeb-cta-link:hover,
 .celeb-cta-link:active {
   transform: translateY(-2px);
-  box-shadow: 0 10px 28px rgba(16, 185, 129, .5);
+  box-shadow: 0 10px 30px rgba(245,158,11,.55);
 }
-.celeb-cta-link .arrow {
-  transition: transform .2s ease-out;
-}
+.celeb-cta-link .arrow { transition: transform .2s ease-out; }
 .celeb-cta-link:hover .arrow { transform: translateX(4px); }
+.celeb-cta-hint {
+  font-size: 11px;
+  color: #475569;
+  margin-top: 8px;
+  animation: fade-up 0.5s 0.85s ease-out backwards;
+}
 
 .celeb-signature {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  margin-top: 26px;
-  padding-top: 22px;
+  margin-top: 24px;
+  padding-top: 20px;
   border-top: 1px solid rgba(255,255,255,.1);
   animation: fade-up 0.5s 0.9s ease-out backwards;
 }
@@ -1751,25 +1835,52 @@ main { max-width: 880px; margin: 0 auto; padding: 0 24px 60px; }
     <div class="confetti c9"></div>
     <div class="confetti c10"></div>
 
-    <div class="check-circle">
-      <svg class="check-svg" viewBox="0 0 24 24">
-        <path d="M5 12l5 5L20 7"/>
+    <!-- Anillo de progreso 1/2 -->
+    <div class="celeb-ring-wrap">
+      <svg class="celeb-ring-svg" viewBox="0 0 88 88">
+        <circle class="celeb-ring-bg" cx="44" cy="44" r="38"/>
+        <circle class="celeb-ring-progress" cx="44" cy="44" r="38"/>
       </svg>
+      <div class="celeb-ring-inner">
+        <div class="celeb-ring-pct">1/2</div>
+        <div class="celeb-ring-lbl">pasos</div>
+      </div>
     </div>
 
-    <h2 class="celeb-title">¡Excelente decisión,<br/><span class="name">Silvia Mariel</span>! 🎉</h2>
-    <p class="celeb-sub">Acabas de dar el primer paso para <b>proteger tu Sedan 2019</b> con una de las mejores coberturas del mercado.</p>
+    <h2 class="celeb-title">¡Muy bien,<br/><span class="name">Jonathan</span>! 🎉</h2>
+    <p class="celeb-sub">Completaste el paso 1 de 2. Tu cita con Juan Carlos aún está pendiente.</p>
+
+    <div class="celeb-steps">
+      <div class="celeb-step done-step">
+        <div class="celeb-step-icon ok">✓</div>
+        <div class="celeb-step-text">
+          <b>Revisaste tu cotización</b>
+          <span id="celebVehicle">tu vehículo</span>
+        </div>
+        <div class="celeb-step-badge ok">Listo</div>
+      </div>
+      <div class="celeb-step pending-step">
+        <div class="celeb-step-icon pend">📅</div>
+        <div class="celeb-step-text">
+          <b>Agenda tu cita</b>
+          <span>Confirma con Juan Carlos</span>
+        </div>
+        <div class="celeb-step-badge pend">Pendiente</div>
+      </div>
+    </div>
 
     <a class="celeb-cta-link" id="celebGoForm" href="https://forms.gle/tqSaZBDcZfNgNktC7" target="_blank" rel="noopener">
-      <span>Continuar a mi agenda</span>
+      <span>📅</span>
+      <span>Completar — Agendar mi cita</span>
       <span class="arrow">→</span>
     </a>
+    <p class="celeb-cta-hint">Solo toma 1 minuto · Recibirás confirmación por correo</p>
 
     <div class="celeb-signature">
       <div class="celeb-avatar">JC</div>
       <div class="celeb-sig-text">
-        <b>Juan Carlos te acompaña</b><br/>
-        desde este momento hasta la activación de tu póliza.
+        <b>Tu agente Juan Carlos Hernandez te acompaña</b><br/>
+        desde este momento hasta la activación de tu póliza y el seguimiento continuo de tu seguro.
       </div>
     </div>
   </div>
@@ -1843,14 +1954,14 @@ function applyPersonalization() {
   if (closingSig) {
     closingSig.innerHTML = `— ${data.n}<span class="lic">Tu agente · Lic. SUGESE ${data.l}</span>`;
   }
-  // Celebración — título
+  // Celebración — título y pasos
   const celebTitle = document.querySelector('.celeb-title');
   if (celebTitle) {
-    celebTitle.innerHTML = `¡Excelente decisión,<br/><span class="name">${data.c || 'Cliente'}</span>! 🎉`;
+    celebTitle.innerHTML = `¡Muy bien,<br/><span class="name">${data.c || 'Cliente'}</span>! 🎉`;
   }
-  const celebSub = document.querySelector('.celeb-sub');
-  if (celebSub && data.v) {
-    celebSub.innerHTML = `Acabas de dar el primer paso para <b>proteger tu ${data.v}</b> con una de las mejores coberturas del mercado.`;
+  const celebVehicle = document.getElementById('celebVehicle');
+  if (celebVehicle && data.v) {
+    celebVehicle.textContent = data.v;
   }
 
   // Sección 1 — montos D, F, H usan valor asegurado
