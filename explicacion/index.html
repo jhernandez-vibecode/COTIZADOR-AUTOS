@@ -1894,6 +1894,7 @@ const data = {
   n:  _params.get('n')  || 'Juan Carlos Hernandez Vargas',
   l:  _params.get('l')  || '08-1318',
   w:  _params.get('w')  || 'www.segurosdelins.com',
+  a:  _params.get('a')  || 'https://forms.gle/tqSaZBDcZfNgNktC7',
   // Cliente
   c:  _params.get('c')  || '',
   // Vehículo
@@ -1963,6 +1964,9 @@ function applyPersonalization() {
   if (celebVehicle && data.v) {
     celebVehicle.textContent = data.v;
   }
+  // Celebración — link de agendar (cada agente tiene su propio Google Form)
+  const celebForm = document.getElementById('celebGoForm');
+  if (celebForm && data.a) celebForm.href = data.a;
 
   // Sección 1 — montos D, F, H usan valor asegurado
   if (data.va) {

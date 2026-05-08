@@ -481,9 +481,10 @@ function _buildGuideUrl(extras) {
   const params = [];
 
   // Agente (backward compat)
-  if (CFG.FROM_NAME) params.push('n=' + encodeURIComponent(CFG.FROM_NAME));
-  if (CFG.LICENSE)   params.push('l=' + encodeURIComponent(CFG.LICENSE));
-  if (CFG.WEBSITE)   params.push('w=' + encodeURIComponent(CFG.WEBSITE));
+  if (CFG.FROM_NAME)  params.push('n=' + encodeURIComponent(CFG.FROM_NAME));
+  if (CFG.LICENSE)    params.push('l=' + encodeURIComponent(CFG.LICENSE));
+  if (CFG.WEBSITE)    params.push('w=' + encodeURIComponent(CFG.WEBSITE));
+  if (CFG.AGENDA_URL) params.push('a=' + encodeURIComponent(CFG.AGENDA_URL));
 
   // Cliente + cotización (v2)
   const x = extras || {};
