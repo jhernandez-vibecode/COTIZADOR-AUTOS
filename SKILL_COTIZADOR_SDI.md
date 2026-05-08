@@ -11,16 +11,38 @@ description: >
   cualquier codigo.
 ---
 
-# Cotizador SDI - Checkpoint 23 abril 2026
+# Cotizador SDI - Checkpoint 8 mayo 2026
 
 ## Estado actual
-APP COMPLETA Y FUNCIONAL EN PRODUCCION. 20 commits desde init.
+APP COMPLETA Y FUNCIONAL EN PRODUCCION. 60 commits desde init.
 Multi-agente operativo via localStorage. Gmail Y Outlook soportados
 (selector de proveedor en modal ⚙). Correo con logo INS y headers
 RFC 2047. Probado en produccion con PDF real BRK454 y cotizacion THG170.
 **Calculadora de cancelacion anticipada** disponible en `/cancelacion/`.
 
 ## Decisiones recientes
+
+### 8 mayo 2026 — Fix multi-agente: agendaUrl en explicador
+
+**Reportado por JC:** el hermano (segundo agente) probo end-to-end por primera vez. Configuro su perfil con su propio `agendaUrl` en localStorage y mando una cotizacion. El correo llego con su link correctamente, pero al hacer click en "VER EXPLICACION" y llegar al boton "Agendar mi cita" del explicador, llevaba al Google Form de JC.
+
+**Root cause:** `_buildGuideUrl()` en `email-template.js` pasaba al explicador 11 params (n, l, w + cliente/cotizacion) pero **no incluia `agendaUrl`**. El explicador (`/explicacion/index.html`) tenia el href hardcoded a `https://forms.gle/tqSaZBDcZfNgNktC7` (link de JC) en `<a id="celebGoForm">`. Como el cliente abre el explicador en su propio navegador (sin localStorage del agente), no habia forma de saber el link correcto sin pasarlo via query string.
+
+**Fix:** agregar el agendaUrl como 12vo query param `a`:
+- `js/email-template.js:487` — `if (CFG.AGENDA_URL) params.push('a=' + encodeURIComponent(CFG.AGENDA_URL));`
+- `explicacion/index.html:1897` — agregar `a: _params.get('a') || 'https://forms.gle/tqSaZBDcZfNgNktC7'` al objeto `data` (fallback al link de JC para correos viejos sin el param)
+- `explicacion/index.html:1966` — dentro de `applyPersonalization()`: `const celebForm = document.getElementById('celebGoForm'); if (celebForm && data.a) celebForm.href = data.a;`
+
+**Verificado en preview:**
+- Con `?a=https://forms.gle/HERMANO_TEST_LINK` → href del boton queda con ese link
+- Sin param `a` → fallback al hardcoded de JC (correos enviados antes del fix siguen funcionando)
+- `_buildGuideUrl()` con `CFG.AGENDA_URL` modificado genera URL con `&a=<encoded>` correctamente
+
+**Commit:** `777697d` fix(multiagente): aplicar agendaUrl del agente al boton del explicador
+
+**Implicacion:** los correos enviados ANTES de este fix no tienen el param `a`, asi que el explicador caera al fallback (link de JC) si esos clientes hacen click en "Agendar mi cita". Si el hermano necesita que un cliente especifico llegue al link correcto, debe reenviar la cotizacion despues del deploy.
+
+---
 
 ### 25 abril 2026 (tarde-noche) — Plantilla de correo v2 modernizada
 
@@ -72,7 +94,7 @@ compatibilidad email (tablas anidadas + inline styles + fallback de fuentes).
 
 **Reescrito completo:** `/explicacion/index.html` migrado de React+Babel CDN a vanilla HTML+CSS+JS single-file. Carga ~40x mas liviana (sin compilacion en cliente) — total ~150 KB vs ~6 MB de la version React+Babel+Tailwind. Alineado con el resto del cotizador (sin build step).
 
-**Personalizacion por cliente via 11 URL params** (n, l, w, c, v, p, y, vt, va, sr, pa, ps, pt):
+**Personalizacion por cliente via 12 URL params** (n, l, w, a, c, v, p, y, vt, va, sr, pa, ps, pt):
 - Greeting: `¡Hola, {nombre}!` con highlight amarillo en el nombre real del cliente
 - Vehiculo + placa en el hero (chip del agente + burbuja) y en el header de la seccion 4
 - Plan asistencia auto-seleccionado por edad del vehiculo (Plus 0-6 años / Basico 7-15)
