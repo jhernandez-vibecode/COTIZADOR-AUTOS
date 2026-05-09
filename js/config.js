@@ -6,7 +6,7 @@
  */
 const CFG = {
   // Identidad del remitente
-  CLIENT_ID:   '446215450096-6edmqnq4u9dg8hr9nd620mgcl6rv182m.apps.googleusercontent.com',
+  CLIENT_ID:   '255791314248-apgnrs0tiii72ogau5dpsjm2eie6d2hu.apps.googleusercontent.com',
   FROM_NAME:   'Juan Carlos Hernandez Vargas',
   FROM_EMAIL:  'jhernandez@segurosdelins.com',
 
