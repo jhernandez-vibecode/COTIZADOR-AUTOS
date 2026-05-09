@@ -343,15 +343,17 @@ Tailwind CDN     → https://cdn.tailwindcss.com
 Google Fonts     → Sora (display + cuerpo)
 ```
 
-## OAuth Google (proyecto compartido con SASINS)
-- **Client ID:** `446215450096-6edmqnq4u9dg8hr9nd620mgcl6rv182m.apps.googleusercontent.com`
+## OAuth Google (proyecto independiente — migrado 8 may 2026)
+- **Client ID:** `255791314248-apgnrs0tiii72ogau5dpsjm2eie6d2hu.apps.googleusercontent.com`
 - **Nombre Google Cloud:** "Cotizador Autos SDI"
-- **Proyecto:** Sistema-Seguros Vencimientos
-- **Origin autorizado:** `https://cotizador-segurosdigitalesins-sdi.netlify.app`
+- **Proyecto:** Cotizador Autos SDI (independiente, **NO comparte con SASINS**)
+- **Tipo de público:** Externo (permite correos fuera de segurosdelins.com)
+- **Origins autorizados:** `https://cotizador-segurosdigitalesins-sdi.netlify.app` y `https://cotizador.appsegurosdigitales.com`
 - **Scope:** `https://www.googleapis.com/auth/gmail.send`
-- **Pantalla consentimiento:** modo Testing → invitar agentes nuevos
-  agregando su correo Gmail como Test User en
-  https://console.cloud.google.com/apis/credentials/consent
+- **Modo:** Testing (max 100 Test Users, warning "App no verificada" al autorizar — normal)
+- **Test Users (8 may 2026):** jhernandez@segurosdelins.com · chernandez@seguros-ins.com · tramites@segurosdelins.com
+- **Para agregar agente nuevo:** Google Cloud Console → proyecto "Cotizador Autos SDI" → Google Auth Platform → Público → Add users
+- **Client ID anterior (deprecado):** `446215450096-6edmqnq4u9dg8hr9nd620mgcl6rv182m` (proyecto Sistema-Seguros-Vencimientos)
 
 ## OAuth Microsoft (Azure)
 - **Application (client) ID:** `70998ed5-2c92-4aba-b7e7-fb53b083f472`
@@ -702,21 +704,15 @@ Content-Transfer-Encoding: base64
 - S.provider     ← p.provider || 'gmail'
 
 ### Para invitar a un nuevo agente (Gmail)
-1. Agregar su correo como Test User en
-   https://console.cloud.google.com/apis/credentials/consent
+1. Ir a Google Cloud Console → proyecto **"Cotizador Autos SDI"** → Google Auth Platform → **Público** → **Add users** → agregar el correo
 2. El agente abre la URL Netlify → modal de bienvenida → llenar perfil → seleccionar Gmail → guardar
-
-### Para un agente con Outlook
-1. El agente abre la URL Netlify → modal de bienvenida
-2. Llena su nombre, correo Outlook, telefono, licencia
-3. Selecciona "📨 Outlook / Microsoft 365"
-4. Guarda → ya puede enviar desde su cuenta Microsoft (popup la primera vez)
+3. Al primer envio: popup Google → "App no verificada" → Configuracion avanzada → "Ir a Cotizador Autos SDI (no seguro)" → Continuar → Autorizar
 
 ## CONFIG (config.js)
 ```javascript
 const CFG = {
   // Gmail
-  CLIENT_ID:      '446215450096-6edmqnq4u9dg8hr9nd620mgcl6rv182m.apps.googleusercontent.com',
+  CLIENT_ID:      '255791314248-apgnrs0tiii72ogau5dpsjm2eie6d2hu.apps.googleusercontent.com',
   GMAIL_SCOPE:    'https://www.googleapis.com/auth/gmail.send',
   GMAIL_SEND_URL: 'https://gmail.googleapis.com/gmail/v1/users/me/messages/send',
 
@@ -827,12 +823,13 @@ a0a800e  feat(app): orquestacion completa end-to-end              ⭐ FINAL
 ```
 
 ## Pendientes
-1. **Probar Outlook end-to-end:** hermano de Juan Carlos configura perfil con su correo
-   Microsoft, selecciona "Outlook", envia primera cotizacion → verificar que llega con PDF.
-2. **Configurar SPF/DKIM en segurosdelins.com** (pendiente): si Juan Carlos comparte
+1. **Configurar SPF/DKIM en segurosdelins.com** (pendiente): si Juan Carlos comparte
    donde esta hosteado el dominio, configurar para mejorar entregabilidad Gmail.
-3. **Considerar publicar la app** en Google Cloud (sale del modo Testing) si el numero
+2. **Considerar publicar la app** en Google Cloud (sale del modo Testing) si el numero
    de agentes crece a 5+ — elimina limite de 100 Test Users y el "App no verificada".
+3. **Cleanup Outlook** (opcional): el hermano migro a Gmail, `outlook-auth.js` y
+   `outlook-sender.js` ya no se usan. Se pueden eliminar junto al selector Gmail/Outlook
+   del modal ⚙ para simplificar el codigo.
 
 ## Contexto del agente
 - Juan Carlos Hernandez Vargas, agente INS, licencia SUGESE 08-1318
