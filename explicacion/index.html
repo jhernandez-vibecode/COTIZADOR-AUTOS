@@ -1863,7 +1863,7 @@ main { max-width: 880px; margin: 0 auto; padding: 0 24px 60px; }
         <div class="celeb-step-icon pend">📅</div>
         <div class="celeb-step-text">
           <b>Agenda tu cita</b>
-          <span>Confirma con Juan Carlos</span>
+          <span id="celebStepConfirm">Confirma con Juan Carlos</span>
         </div>
         <div class="celeb-step-badge pend">Pendiente</div>
       </div>
@@ -1879,7 +1879,7 @@ main { max-width: 880px; margin: 0 auto; padding: 0 24px 60px; }
     <div class="celeb-signature">
       <div class="celeb-avatar">JC</div>
       <div class="celeb-sig-text">
-        <b>Tu agente Juan Carlos Hernandez te acompaña</b><br/>
+        <b id="celebSigName">Tu agente Juan Carlos Hernandez te acompaña</b><br/>
         desde este momento hasta la activación de tu póliza y el seguimiento continuo de tu seguro.
       </div>
     </div>
@@ -1967,6 +1967,11 @@ function applyPersonalization() {
   // Celebración — link de agendar (cada agente tiene su propio Google Form)
   const celebForm = document.getElementById('celebGoForm');
   if (celebForm && data.a) celebForm.href = data.a;
+  // Celebración — paso "Confirma con X" y firma "Tu agente X te acompaña"
+  const celebStepConfirm = document.getElementById('celebStepConfirm');
+  if (celebStepConfirm) celebStepConfirm.textContent = `Confirma con ${data.n}`;
+  const celebSigName = document.getElementById('celebSigName');
+  if (celebSigName) celebSigName.textContent = `Tu agente ${data.n} te acompaña`;
 
   // Sección 1 — montos D, F, H usan valor asegurado
   if (data.va) {
