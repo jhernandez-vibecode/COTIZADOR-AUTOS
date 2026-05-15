@@ -237,7 +237,9 @@
     function firstName(full) {
       if (!full) return '';
       const parts = full.trim().split(/\s+/);
-      return parts.length >= 3 ? parts[2] : parts[0];
+      // En este form el nombre lo digita el agente en orden normal (NOMBRE APE APE),
+      // a diferencia del PDF INS que viene "APE APE NOMBRE". Tomamos parts[0].
+      return parts[0];
     }
     function planAsistencia(year) {
       if (!year) return { plan: 'Plan Básico', rango: '7-15 años', tipo: 'basico' };
