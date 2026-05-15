@@ -1,19 +1,17 @@
 /**
  * Construye la URL del /detalle/?... a partir de los datos del formulario.
- * Sigue el patron de _buildGuideUrl() del email-template.js pero con
- * mas parametros y normalizacion especifica de WhatsApp.
  *
  * @param {object} d - datos del formulario
  * @param {string} d.base - URL base, ej: "https://cotizador-segurosdigitalesins-sdi.netlify.app/detalle/"
  * @param {object} d.agent  - { name, license, website, whatsapp, email }
  * @param {object} d.client - { name, email }
  * @param {object} d.vehicle - { description, plate, year, valor, electric }
- * @param {object} d.policy  - { from, to, paymentForm, lastPremium } - ISO dates, paymentForm in a/s/t/m
- * @param {string[]} d.coverages - ej: ['A','C','N','D','F','B','H','GM','IDD','REP']
- * @param {object} d.customAmounts - { A?: number, C?: number, B?: number }
+ * @param {object} d.policy  - { from, to, paymentForm, lastPremium }
+ * @param {string[]} d.coverages - ej: ['A','B','C','D','F','G','H','IDD','M','N','REP']
+ * @param {object} d.customAmounts - { aP?, aE?, C?, B? } - aP/aE para A (persona/evento), C y B uno cada uno
  * @param {?number} d.iddAmount - 300000 | 400000 | 500000 | null
  * @param {?string} d.repPlan - 'P'|'G'|'N'|'A' | null
- * @param {string} d.deductible - 'nec'|'f400'|'f500'|'o150'|'o500'
+ * @param {string[]} d.deductibles - subset de ['f300','f400','f500','o150','o500','nec']
  * @returns {string} URL completa del detalle
  */
 function buildDetalleUrl(d) {
@@ -61,17 +59,20 @@ function buildDetalleUrl(d) {
 
   // Montos custom - solo si fueron editados (distintos del default)
   if (d.customAmounts) {
-    if (d.customAmounts.A) add('a300', d.customAmounts.A);
-    if (d.customAmounts.C) add('c100', d.customAmounts.C);
-    if (d.customAmounts.B) add('b15',  d.customAmounts.B);
+    if (d.customAmounts.aP) add('aP', d.customAmounts.aP);
+    if (d.customAmounts.aE) add('aE', d.customAmounts.aE);
+    if (d.customAmounts.C)  add('c100', d.customAmounts.C);
+    if (d.customAmounts.B)  add('b15',  d.customAmounts.B);
   }
 
   // Sub-opciones
   add('idd', d.iddAmount);
   add('rep', d.repPlan);
 
-  // Deducible
-  add('ded', d.deductible);
+  // Deducibles (array joined con _)
+  if (d.deductibles && d.deductibles.length) {
+    add('ded', d.deductibles.join('_'));
+  }
 
   if (params.length === 0) return base;
   const sep = base.indexOf('?') === -1 ? '?' : '&';
@@ -85,7 +86,6 @@ if (typeof module !== 'undefined' && module.exports) {
 if (typeof window !== 'undefined') {
   window.buildDetalleUrl = buildDetalleUrl;
 }
-// Node sandbox vm context
 if (typeof globalThis !== 'undefined') {
   globalThis.buildDetalleUrl = buildDetalleUrl;
 }

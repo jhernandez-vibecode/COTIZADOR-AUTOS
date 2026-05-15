@@ -75,13 +75,14 @@
       grid-column: span 2;
       background: #fffbeb; border-left-color: var(--gold-dark);
     }
-    .cob-head { display: flex; justify-content: space-between; align-items: baseline; }
+    .cob-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
     .cob-title { font-weight: 700; font-size: 14px; color: var(--blue); }
     .cob-card.green .cob-title  { color: var(--green-text); }
     .cob-card.red .cob-title    { color: var(--red); }
     .cob-card.purple .cob-title { color: var(--purple); }
     .cob-card.gold .cob-title   { color: var(--gold-dark); }
-    .cob-amount { font-weight: 700; color: var(--navy); }
+    .cob-amount { font-weight: 700; color: var(--navy); white-space: nowrap; text-align: right; font-size: 12px; }
+    .cob-amount small { display: block; font-weight: 500; color: var(--muted); font-size: 10px; }
     .cob-desc { color: var(--text); margin: 6px 0 0; line-height: 1.4; }
 
     .svc-grid {
@@ -104,6 +105,9 @@
     .idd-arrow { font-size: 24px; color: var(--muted); }
     .idd-meta { margin-top: 10px; font-size: 11px; color: var(--muted); }
 
+    .ded-list {
+      display: grid; gap: 8px;
+    }
     .ded-card {
       background: #fffbeb; border-left: 3px solid var(--gold-dark);
       border-radius: 8px; padding: 14px;
@@ -165,6 +169,26 @@
     function get(k, def) { const v = P.get(k); return (v === null || v === '') ? (def === undefined ? '' : def) : v; }
     function getInt(k, def) { const v = parseInt(P.get(k), 10); return isNaN(v) ? (def || 0) : v; }
 
+    // Backward compat: cobs viejas con "GM" se expanden a G y M
+    function parseCobs() {
+      const raw = get('cobs');
+      if (!raw) return [];
+      const arr = raw.split('_');
+      const out = [];
+      arr.forEach(function (c) {
+        if (c === 'GM') { out.push('G'); out.push('M'); }
+        else out.push(c);
+      });
+      return out;
+    }
+
+    // Backward compat: ded viejo (string sin '_') se trata como array de uno
+    function parseDed() {
+      const raw = get('ded');
+      if (!raw) return [];
+      return raw.split('_').filter(Boolean);
+    }
+
     const data = {
       agent: {
         name:     get('n'),
@@ -187,15 +211,16 @@
         paymentForm: get('fp'),
         lastPremium: getInt('pp')
       },
-      coverages: get('cobs') ? get('cobs').split('_') : [],
+      coverages: parseCobs(),
       customAmounts: {
-        A: getInt('a300', 300000000),
-        C: getInt('c100', 100000000),
-        B: getInt('b15',  15000000)
+        aP: getInt('aP', 100000000),  // A por persona
+        aE: getInt('aE', 300000000),  // A por evento
+        C:  getInt('c100', 100000000),
+        B:  getInt('b15',  15000000)
       },
       iddAmount: getInt('idd', 400000),
       repPlan:   get('rep'),
-      deductible: get('ded', 'nec')
+      deductibles: parseDed()
     };
 
     // === Si no hay params, mostrar mensaje informativo ===
@@ -236,10 +261,8 @@
     }
     function firstName(full) {
       if (!full) return '';
-      const parts = full.trim().split(/\s+/);
-      // En este form el nombre lo digita el agente en orden normal (NOMBRE APE APE),
-      // a diferencia del PDF INS que viene "APE APE NOMBRE". Tomamos parts[0].
-      return parts[0];
+      // El form digita el nombre en orden normal (NOMBRE APE APE), tomamos parts[0].
+      return full.trim().split(/\s+/)[0];
     }
     function planAsistencia(year) {
       if (!year) return { plan: 'Plan Básico', rango: '7-15 años', tipo: 'basico' };
@@ -251,11 +274,12 @@
     }
     function dedTexto(code) {
       return {
-        nec:  { lbl: 'N en C',                                desc: 'Si daño a tercero menor a ₡750.000 → solo pagás ₡150.000. Si mayor → sin deducible. Para D/F/H aplica el deducible regular.' },
+        f300: { lbl: 'Fijo ₡300.000',                         desc: 'Aplica a colisión, robo y riesgos adicionales (D, F, H).' },
         f400: { lbl: 'Fijo ₡400.000',                         desc: 'Aplica a colisión, robo y riesgos adicionales (D, F, H).' },
         f500: { lbl: 'Fijo ₡500.000',                         desc: 'Aplica a colisión, robo y riesgos adicionales (D, F, H).' },
-        o150: { lbl: 'Ordinario 20% del daño · mín ₡150.000', desc: 'Aplica a colisión, robo y riesgos adicionales (D, F, H). Pagás 20% del costo del daño con un mínimo de ₡150.000.' },
-        o500: { lbl: 'Ordinario 20% del daño · mín ₡500.000', desc: 'Aplica a colisión, robo y riesgos adicionales (D, F, H). Pagás 20% del costo del daño con un mínimo de ₡500.000.' }
+        o150: { lbl: 'Ordinario 20% del daño · mín ₡150.000', desc: 'Pagás 20% del costo del daño con un mínimo de ₡150.000.' },
+        o500: { lbl: 'Ordinario 20% del daño · mín ₡500.000', desc: 'Pagás 20% del costo del daño con un mínimo de ₡500.000.' },
+        nec:  { lbl: 'N en C',                                desc: 'Si daño a tercero menor a ₡750.000 → solo pagás ₡150.000. Si mayor → sin deducible. Aplica solo a la cobertura C.' }
       }[code] || { lbl: code, desc: '' };
     }
     function repTexto(code) {
@@ -309,10 +333,23 @@
         '</div>';
     }
 
+    function renderCoberturaA() {
+      // Cobertura A tiene 2 montos: por persona + por evento
+      const persona = data.customAmounts.aP;
+      const evento  = data.customAmounts.aE;
+      return '' +
+        '<div class="cob-card">' +
+          '<div class="cob-head">' +
+            '<div class="cob-title">A · Daños a personas</div>' +
+            '<div class="cob-amount">' + fmtMoneyShort(persona) + '<small>por persona</small>' + fmtMoneyShort(evento) + '<small>por evento</small></div>' +
+          '</div>' +
+          '<p class="cob-desc">Responsabilidad civil si causás un accidente con lesiones o muerte de terceros. <em>· sin deducible</em></p>' +
+        '</div>';
+    }
+
     function renderCoberturas() {
       if (!data.coverages.length) return '';
       const coverDefs = {
-        A: { color: '',       title: 'A · Daños a personas',           desc: 'Responsabilidad civil si causás un accidente con lesiones o muerte de terceros.', amount: data.customAmounts.A, suffix: '· sin deducible' },
         C: { color: '',       title: 'C · Daños a propiedad',          desc: 'Daños a otros vehículos, postes, muros, casas o cualquier propiedad ajena.',       amount: data.customAmounts.C, suffix: '' },
         D: { color: 'green',  title: 'D · Colisión y vuelco',          desc: 'Pérdidas directas, súbitas y accidentales de tu vehículo por choque o vuelco.',     amount: data.vehicle.valor,   suffix: '' },
         F: { color: 'green',  title: 'F · Robo y/o hurto',             desc: 'Pérdidas accidentales por robo o hurto total o parcial del vehículo.',             amount: data.vehicle.valor,   suffix: '' },
@@ -320,7 +357,9 @@
         H: { color: 'purple', title: 'H · Riesgos adicionales',        desc: 'Naturaleza, vandalismo, incendio, animales y otros riesgos al vehículo.',          amount: data.vehicle.valor,   suffix: '' }
       };
 
-      const order = ['A', 'C', 'D', 'F', 'B', 'H'];
+      const aCard = data.coverages.includes('A') ? renderCoberturaA() : '';
+
+      const order = ['C', 'D', 'F', 'B', 'H'];
       const cards = order.filter(function (k) { return data.coverages.includes(k); }).map(function (k) {
         const c = coverDefs[k];
         return '' +
@@ -329,8 +368,7 @@
               '<div class="cob-title">' + escHtml(c.title) + '</div>' +
               '<div class="cob-amount">' + fmtMoneyShort(c.amount) + '</div>' +
             '</div>' +
-            '<p class="cob-desc">' + escHtml(c.desc) + (c.suffix ? ' <em>' + escHtml(c.suffix) + '</em>' : '') + '</p>' +
-          '</div>';
+            '<p class="cob-desc">' + escHtml(c.desc) + (c.suffix ? ' <em>' + escHtml(c.suffix) + '</em>' : '') + '</p>';
       }).join('');
 
       const nCard = data.coverages.includes('N') ? '' +
@@ -343,12 +381,14 @@
         '<div class="section">' +
           '<div class="num">📋 SECCIÓN 1</div>' +
           '<h2>Coberturas que tenés contratadas</h2>' +
-          '<div class="cob-grid">' + cards + nCard + '</div>' +
+          '<div class="cob-grid">' + aCard + cards + nCard + '</div>' +
         '</div>';
     }
 
     function renderAsistencia() {
-      if (!data.coverages.includes('GM')) return '';
+      const tieneG = data.coverages.includes('G');
+      const tieneM = data.coverages.includes('M');
+      if (!tieneG && !tieneM) return '';
       const ai = planAsistencia(data.vehicle.year);
       if (!ai.plan) {
         return '' +
@@ -358,8 +398,8 @@
             '<div class="svc-grid" style="grid-template-columns:1fr;"><div style="padding:14px;color:var(--text);font-size:13px;">' + escHtml(ai.mensaje) + '</div></div>' +
           '</div>';
       }
-      // Servicios y cantidades según el plan
-      const svcs = ai.tipo === 'plus' ? [
+      // Servicios y cantidades según el plan (M = mecánica/vial)
+      const svcsM = ai.tipo === 'plus' ? [
         { ic: '🚛', nm: 'Remolque por avería',          qy: '8× · $200' },
         { ic: '🚗', nm: 'Remolque por accidente',        qy: '10× · $200' },
         { ic: '🔑', nm: 'Cerrajería',                    qy: '6× · $150' },
@@ -377,14 +417,26 @@
         { ic: '🚧', nm: 'Mini-rescate (atoramiento)',    qy: '3× · $100' }
       ];
 
+      const cobLabel = tieneG && tieneM ? 'Coberturas G y M' : (tieneG ? 'Cobertura G (asistencia legal)' : 'Cobertura M (asistencia mecánica/vial)');
+      const blockM = tieneM ? '' +
+        '<div class="svc-grid">' +
+          svcsM.map(function (s) { return '<div class="svc-row"><span class="ic">' + s.ic + '</span><div class="nm">' + s.nm + '</div><div class="qy">' + s.qy + '</div></div>'; }).join('') +
+        '</div>' : '';
+
+      const blockG = tieneG ? '' +
+        '<div style="background:white;border-radius:8px;padding:14px;margin-top:' + (tieneM ? '10px' : '0') + ';">' +
+          '<div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--navy);">' +
+            '<span style="font-size:22px;">⚖</span>' +
+            '<div><b>Asistencia legal</b> — defensa jurídica y trámites legales relacionados a accidentes de tránsito.</div>' +
+          '</div>' +
+        '</div>' : '';
+
       return '' +
         '<div class="section">' +
           '<div class="num">🛠 SECCIÓN 2</div>' +
           '<h2>Tu asistencia 24/7 en carretera</h2>' +
-          '<h2 class="sub">Cobertura G y M — ' + ai.plan + ' (' + ai.rango + ')</h2>' +
-          '<div class="svc-grid">' +
-            svcs.map(function (s) { return '<div class="svc-row"><span class="ic">' + s.ic + '</span><div class="nm">' + s.nm + '</div><div class="qy">' + s.qy + '</div></div>'; }).join('') +
-          '</div>' +
+          '<h2 class="sub">' + cobLabel + ' — ' + ai.plan + ' (' + ai.rango + ')</h2>' +
+          blockM + blockG +
         '</div>';
     }
 
@@ -407,15 +459,20 @@
     }
 
     function renderDeducible() {
-      const d = dedTexto(data.deductible);
+      if (!data.deductibles.length) return '';
+      const cards = data.deductibles.map(function (code) {
+        const d = dedTexto(code);
+        return '<div class="ded-card"><div class="lbl">' + escHtml(d.lbl) + '</div><div class="desc">' + escHtml(d.desc) + '</div></div>';
+      }).join('');
+      const subtitle = data.deductibles.length > 1
+        ? '<h2 class="sub">Tu póliza combina ' + data.deductibles.length + ' deducibles según la cobertura.</h2>'
+        : '';
       return '' +
         '<div class="section">' +
           '<div class="num">⚙ SECCIÓN 4</div>' +
-          '<h2>Tu deducible (en coberturas D, F, H)</h2>' +
-          '<div class="ded-card">' +
-            '<div class="lbl">' + escHtml(d.lbl) + '</div>' +
-            '<div class="desc">' + escHtml(d.desc) + '</div>' +
-          '</div>' +
+          '<h2>Tu deducible</h2>' +
+          subtitle +
+          '<div class="ded-list">' + cards + '</div>' +
         '</div>';
     }
 

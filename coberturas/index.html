@@ -8,6 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Google Identity Services (autenticación Gmail) -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     * { box-sizing: border-box; }
     body { font-family: 'Sora', sans-serif; background: #f8fafc; color: #0b1d3a; margin: 0; }
@@ -29,13 +31,28 @@
     .cob-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 14px; }
     .cob-grid label { display: flex; align-items: center; gap: 8px; padding: 6px; cursor: pointer; font-weight: 500; color: #0b1d3a; margin-bottom: 0; }
     .cob-grid input[type=checkbox] { width: 16px; height: 16px; margin: 0; }
-    .sub-opt { margin-top: 12px; padding: 12px; background: #fffbeb; border-left: 3px solid #f59e0b; border-radius: 4px; display: none; }
+    .sub-opt { margin-top: 12px; padding: 14px; background: #fffbeb; border-left: 3px solid #f59e0b; border-radius: 4px; display: none; }
     .sub-opt.visible { display: block; }
-    .sub-opt label { display: flex; align-items: center; gap: 6px; font-size: 13px; margin-bottom: 4px; cursor: pointer; }
-    .sub-opt input[type=number] { max-width: 220px; }
+    .sub-title { font-weight: 700; font-size: 13px; margin-bottom: 8px; color: #0b1d3a; display: block; }
+    .opt-row { display: flex; flex-wrap: wrap; gap: 8px; }
+    .opt-row label {
+      display: inline-flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer;
+      padding: 6px 12px; border: 1px solid #fde68a; border-radius: 6px; background: white;
+      margin-bottom: 0; font-weight: 500; color: #0b1d3a;
+    }
+    .opt-row label:hover { background: #fef3c7; }
+    .opt-row input[type=radio] { width: 14px; height: 14px; margin: 0; }
+    .sub-opt .row-inline { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px; }
+    .sub-opt .row-inline label { display:block; font-size:11px; font-weight:600; color:#475569; margin-bottom:3px; }
+    .sub-opt .row-inline input[type=number],
+    .sub-opt .row-inline input[type=text] { max-width: 100%; }
     .ded-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .ded-grid label { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 8px; margin-bottom: 0; }
+    .ded-grid label {
+      padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500;
+      display: flex; align-items: center; gap: 8px; margin-bottom: 0;
+    }
     .ded-grid label.checked { border-color: #f59e0b; background: #fffbeb; }
+    .ded-grid input[type=checkbox] { width: 16px; height: 16px; margin: 0; }
     .actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 24px; }
     .btn { padding: 12px 20px; border: none; border-radius: 6px; font-family: inherit; font-weight: 700; font-size: 14px; cursor: pointer; }
     .btn-primary { background: #0b1d3a; color: white; }
@@ -96,7 +113,7 @@
         <div class="row">
           <div>
             <label class="req" for="v-valor">Valor asegurado (₡)</label>
-            <input id="v-valor" type="number" min="0" placeholder="10000000" required />
+            <input id="v-valor" type="text" inputmode="numeric" data-money placeholder="10.000.000" required />
             <div class="hint">⚠ Recordá mantener actualizado tu monto asegurado</div>
           </div>
           <div style="display:flex;align-items:flex-start;gap:8px;padding-top:24px;">
@@ -125,62 +142,78 @@
           </div>
           <div>
             <label class="req" for="v-pp">Última prima pagada (₡, c/IVA)</label>
-            <input id="v-pp" type="number" min="0" placeholder="158423" required />
+            <input id="v-pp" type="text" inputmode="numeric" data-money placeholder="158.423" required />
           </div>
         </div>
       </div>
 
       <div class="card">
         <h2>3 · Coberturas vigentes</h2>
-        <p style="font-size:13px;color:#64748b;margin:0 0 12px;">Marcá las que el cliente tiene contratadas. Algunas tienen sub-opciones que aparecen al marcar.</p>
+        <p style="font-size:13px;color:#64748b;margin:0 0 12px;">Marcá las que el cliente tiene contratadas (orden alfabético). Algunas tienen sub-opciones que aparecen al marcar.</p>
         <div class="cob-grid">
           <label><input type="checkbox" name="cob" value="A" /> <strong>A</strong> · Daños a personas</label>
+          <label><input type="checkbox" name="cob" value="B" /> <strong>B</strong> · Gastos médicos familiares</label>
           <label><input type="checkbox" name="cob" value="C" /> <strong>C</strong> · Daños a propiedad</label>
-          <label><input type="checkbox" name="cob" value="N" /> <strong>N</strong> · Exención del deducible (aplica a C)</label>
           <label><input type="checkbox" name="cob" value="D" /> <strong>D</strong> · Colisión y vuelco</label>
           <label><input type="checkbox" name="cob" value="F" /> <strong>F</strong> · Robo y/o hurto</label>
-          <label><input type="checkbox" name="cob" value="B" /> <strong>B</strong> · Gastos médicos familiares</label>
+          <label><input type="checkbox" name="cob" value="G" /> <strong>G</strong> · Asistencia legal</label>
           <label><input type="checkbox" name="cob" value="H" /> <strong>H</strong> · Riesgos adicionales</label>
-          <label><input type="checkbox" name="cob" value="GM" /> <strong>G/M</strong> · Asistencia 24/7 <span style="color:#94a3b8;font-size:11px;">(plan auto del año)</span></label>
           <label><input type="checkbox" name="cob" value="IDD" /> <strong>IDD</strong> · Reintegro del deducible</label>
+          <label><input type="checkbox" name="cob" value="M" /> <strong>M</strong> · Asistencia mecánica/vial</label>
+          <label><input type="checkbox" name="cob" value="N" /> <strong>N</strong> · Exención del deducible (aplica a C)</label>
           <label><input type="checkbox" name="cob" value="REP" /> <strong>REP</strong> · Sustitución de repuestos</label>
         </div>
 
         <div class="sub-opt" id="sub-A">
-          <label for="amt-A">Monto de A — Daños a personas (₡)</label>
-          <input id="amt-A" type="number" min="0" placeholder="300000000" value="300000000" />
+          <div class="sub-title">Cobertura A — Daños a personas (montos en ₡)</div>
+          <div class="row-inline">
+            <div>
+              <label for="amt-A-persona">Por persona</label>
+              <input id="amt-A-persona" type="text" inputmode="numeric" data-money placeholder="100.000.000" value="100.000.000" />
+            </div>
+            <div>
+              <label for="amt-A-evento">Por evento</label>
+              <input id="amt-A-evento" type="text" inputmode="numeric" data-money placeholder="300.000.000" value="300.000.000" />
+            </div>
+          </div>
         </div>
         <div class="sub-opt" id="sub-C">
-          <label for="amt-C">Monto de C — Daños a propiedad (₡)</label>
-          <input id="amt-C" type="number" min="0" placeholder="100000000" value="100000000" />
+          <div class="sub-title">Cobertura C — Daños a propiedad (₡)</div>
+          <input id="amt-C" type="text" inputmode="numeric" data-money placeholder="100.000.000" value="100.000.000" />
         </div>
         <div class="sub-opt" id="sub-B">
-          <label for="amt-B">Monto de B — Gastos médicos (₡)</label>
-          <input id="amt-B" type="number" min="0" placeholder="15000000" value="15000000" />
+          <div class="sub-title">Cobertura B — Gastos médicos (₡)</div>
+          <input id="amt-B" type="text" inputmode="numeric" data-money placeholder="15.000.000" value="15.000.000" />
         </div>
         <div class="sub-opt" id="sub-IDD">
-          <div style="font-weight:700;font-size:13px;margin-bottom:6px;">Monto del IDD:</div>
-          <label><input type="radio" name="idd" value="300000" /> ₡300.000</label>
-          <label><input type="radio" name="idd" value="400000" checked /> ₡400.000 (más común)</label>
-          <label><input type="radio" name="idd" value="500000" /> ₡500.000</label>
+          <div class="sub-title">Monto del IDD:</div>
+          <div class="opt-row">
+            <label><input type="radio" name="idd" value="300000" /><span>₡300.000</span></label>
+            <label><input type="radio" name="idd" value="400000" checked /><span>₡400.000 (más común)</span></label>
+            <label><input type="radio" name="idd" value="500000" /><span>₡500.000</span></label>
+          </div>
         </div>
         <div class="sub-opt" id="sub-REP">
-          <div style="font-weight:700;font-size:13px;margin-bottom:6px;">Plan de repuestos:</div>
-          <label><input type="radio" name="rep" value="P" /> Garantía Plus</label>
-          <label><input type="radio" name="rep" value="G" /> Garantía</label>
-          <label><input type="radio" name="rep" value="N" /> Nuevo</label>
-          <label><input type="radio" name="rep" value="A" /> Alternativo genérico (Usados)</label>
+          <div class="sub-title">Plan de repuestos:</div>
+          <div class="opt-row">
+            <label><input type="radio" name="rep" value="P" /><span>Garantía Plus</span></label>
+            <label><input type="radio" name="rep" value="G" /><span>Garantía</span></label>
+            <label><input type="radio" name="rep" value="N" /><span>Nuevo</span></label>
+            <label><input type="radio" name="rep" value="A" /><span>Alternativo genérico (Usados)</span></label>
+          </div>
         </div>
       </div>
 
       <div class="card">
         <h2>4 · Deducible</h2>
+        <p style="font-size:13px;color:#64748b;margin:0 0 12px;">Podés marcar varios. Lo más común es <b>N en C</b> combinado con un fijo (ej: <b>Fijo ₡400.000</b>).</p>
         <div class="ded-grid">
-          <label class="checked"><input type="radio" name="ded" value="nec" checked /> <strong>N en C</strong></label>
-          <label><input type="radio" name="ded" value="f400" /> Fijo <strong>₡400.000</strong></label>
-          <label><input type="radio" name="ded" value="f500" /> Fijo <strong>₡500.000</strong></label>
-          <label><input type="radio" name="ded" value="o150" /> Ordinario <strong>20%</strong> · mín ₡150.000</label>
-          <label><input type="radio" name="ded" value="o500" /> Ordinario <strong>20%</strong> · mín ₡500.000</label>
+          <label><input type="checkbox" name="ded" value="f300" /> Fijo <strong>₡300.000</strong></label>
+          <label><input type="checkbox" name="ded" value="f400" /> Fijo <strong>₡400.000</strong></label>
+          <label><input type="checkbox" name="ded" value="f500" /> Fijo <strong>₡500.000</strong></label>
+          <label><input type="checkbox" name="ded" value="o150" /> Ordinario <strong>20%</strong> · mín ₡150.000</label>
+          <label><input type="checkbox" name="ded" value="o500" /> Ordinario <strong>20%</strong> · mín ₡500.000</label>
+          <label><input type="checkbox" name="ded" value="nec" /> <strong>N en C</strong></label>
         </div>
       </div>
 
@@ -223,6 +256,10 @@
   <script src="../js/outlook-sender.js"></script>
 
   <script>
+    // === Helpers de formato ===
+    function fmtThousands(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+    function unmask(str) { return parseInt(String(str || '').replace(/\D/g, ''), 10) || 0; }
+
     // === Inicialización ===
     document.addEventListener('DOMContentLoaded', function () {
       // Cargar perfil del agente
@@ -230,6 +267,14 @@
         const p = loadProfile();
         if (typeof applyProfile === 'function' && p) applyProfile(p);
       }
+
+      // Wire máscara de miles a todos los inputs marcados con data-money
+      document.querySelectorAll('input[data-money]').forEach(function (inp) {
+        inp.addEventListener('input', function () {
+          const raw = inp.value.replace(/\D/g, '');
+          inp.value = raw ? fmtThousands(raw) : '';
+        });
+      });
 
       // Wire sub-opciones condicionales
       ['A', 'C', 'B', 'IDD', 'REP'].forEach(function (code) {
@@ -242,11 +287,10 @@
         }
       });
 
-      // Wire deducible — resaltar el seleccionado
-      document.querySelectorAll('.ded-grid input[name=ded]').forEach(function (r) {
-        r.addEventListener('change', function () {
-          document.querySelectorAll('.ded-grid label').forEach(function (l) { l.classList.remove('checked'); });
-          if (r.checked) r.parentElement.classList.add('checked');
+      // Wire deducible — resaltar el seleccionado (ahora multi-select)
+      document.querySelectorAll('.ded-grid input[name=ded]').forEach(function (cb) {
+        cb.addEventListener('change', function () {
+          cb.parentElement.classList.toggle('checked', cb.checked);
         });
       });
 
@@ -265,21 +309,23 @@
       const cobs = Array.from(document.querySelectorAll('input[name=cob]:checked')).map(function (i) { return i.value; });
       const customAmounts = {};
       if (cobs.includes('A')) {
-        const v = parseInt(document.getElementById('amt-A').value, 10);
-        if (v && v !== 300000000) customAmounts.A = v;
+        const persona = unmask(document.getElementById('amt-A-persona').value);
+        const evento  = unmask(document.getElementById('amt-A-evento').value);
+        if (persona && persona !== 100000000) customAmounts.aP = persona;
+        if (evento  && evento  !== 300000000) customAmounts.aE = evento;
       }
       if (cobs.includes('C')) {
-        const v = parseInt(document.getElementById('amt-C').value, 10);
+        const v = unmask(document.getElementById('amt-C').value);
         if (v && v !== 100000000) customAmounts.C = v;
       }
       if (cobs.includes('B')) {
-        const v = parseInt(document.getElementById('amt-B').value, 10);
+        const v = unmask(document.getElementById('amt-B').value);
         if (v && v !== 15000000) customAmounts.B = v;
       }
 
       const iddRadio = document.querySelector('input[name=idd]:checked');
       const repRadio = document.querySelector('input[name=rep]:checked');
-      const dedRadio = document.querySelector('input[name=ded]:checked');
+      const dedChecks = Array.from(document.querySelectorAll('input[name=ded]:checked')).map(function (i) { return i.value; });
 
       return {
         agent: {
@@ -297,20 +343,20 @@
           description: document.getElementById('v-desc').value.trim(),
           plate:       document.getElementById('v-plate').value.trim().toUpperCase(),
           year:        parseInt(document.getElementById('v-year').value, 10),
-          valor:       parseInt(document.getElementById('v-valor').value, 10),
+          valor:       unmask(document.getElementById('v-valor').value),
           electric:    document.getElementById('v-elec').checked
         },
         policy: {
           from:        document.getElementById('v-vd').value,
           to:          document.getElementById('v-vh').value,
           paymentForm: document.getElementById('v-fp').value,
-          lastPremium: parseInt(document.getElementById('v-pp').value, 10)
+          lastPremium: unmask(document.getElementById('v-pp').value)
         },
         coverages:     cobs,
         customAmounts: customAmounts,
         iddAmount:     cobs.includes('IDD') && iddRadio ? parseInt(iddRadio.value, 10) : null,
         repPlan:       cobs.includes('REP') && repRadio ? repRadio.value : null,
-        deductible:    dedRadio ? dedRadio.value : 'nec'
+        deductibles:   dedChecks
       };
     }
 
@@ -328,6 +374,7 @@
       if (!d.policy.paymentForm) errors.push('Falta forma de pago.');
       if (!d.policy.lastPremium || d.policy.lastPremium <= 0) errors.push('Última prima pagada inválida.');
       if (!d.coverages.length) errors.push('Marcá al menos una cobertura.');
+      if (!d.deductibles.length) errors.push('Marcá al menos un deducible.');
       return errors;
     }
 
@@ -372,7 +419,6 @@
     }
 
     // === MIME builder (HTML-only, sin adjunto PDF) ===
-    // Sigue el mismo patrón que cancelacion/index.html — usa helpers de mime-builder.js
     function buildMIMESimple(p) {
       const CRLF    = '\r\n';
       const sub64   = _encodeRFC2047(p.subject);
@@ -420,7 +466,6 @@
             to: data.client.email,
             subject: subject,
             html: html
-            // sin pdfBytes ni filename — solo HTML
           });
         } else {
           const raw = buildMIMESimple({
@@ -436,11 +481,8 @@
 
         alert('✅ Correo enviado a ' + data.client.email);
         document.getElementById('formCoberturas').reset();
-        // Resetear sub-opciones visibles
         document.querySelectorAll('.sub-opt').forEach(function (s) { s.classList.remove('visible'); });
         document.querySelectorAll('.ded-grid label').forEach(function (l) { l.classList.remove('checked'); });
-        document.querySelector('.ded-grid label:first-child').classList.add('checked');
-        document.querySelector('input[name=ded][value=nec]').checked = true;
       } catch (err) {
         console.error(err);
         alert('❌ Error al enviar: ' + (err.message || err));
