@@ -368,7 +368,8 @@
               '<div class="cob-title">' + escHtml(c.title) + '</div>' +
               '<div class="cob-amount">' + fmtMoneyShort(c.amount) + '</div>' +
             '</div>' +
-            '<p class="cob-desc">' + escHtml(c.desc) + (c.suffix ? ' <em>' + escHtml(c.suffix) + '</em>' : '') + '</p>';
+            '<p class="cob-desc">' + escHtml(c.desc) + (c.suffix ? ' <em>' + escHtml(c.suffix) + '</em>' : '') + '</p>' +
+          '</div>';
       }).join('');
 
       const nCard = data.coverages.includes('N') ? '' +
