@@ -119,12 +119,13 @@ function openProfileModal(firstTime) {
   const btnClose  = document.getElementById('btnProfileClose');
 
   // Pre-llenar con valores actuales de CFG (default o perfil cargado)
-  document.getElementById('p-name').value    = CFG.FROM_NAME  || '';
-  document.getElementById('p-email').value   = CFG.FROM_EMAIL || '';
-  document.getElementById('p-phone').value   = CFG.PHONE      || '';
-  document.getElementById('p-license').value = CFG.LICENSE    || '';
-  document.getElementById('p-website').value = CFG.WEBSITE    || '';
-  document.getElementById('p-agenda').value  = CFG.AGENDA_URL || '';
+  document.getElementById('p-name').value     = CFG.FROM_NAME  || '';
+  document.getElementById('p-email').value    = CFG.FROM_EMAIL || '';
+  document.getElementById('p-phone').value    = CFG.PHONE      || '';
+  document.getElementById('p-whatsapp').value = CFG.WHATSAPP   || '';
+  document.getElementById('p-license').value  = CFG.LICENSE    || '';
+  document.getElementById('p-website').value  = CFG.WEBSITE    || '';
+  document.getElementById('p-agenda').value   = CFG.AGENDA_URL || '';
 
   // Seleccionar el radio del proveedor actual
   const providerVal = S.provider || 'gmail';
@@ -171,6 +172,7 @@ function handleProfileSave() {
   const name      = document.getElementById('p-name').value.trim();
   const email     = document.getElementById('p-email').value.trim();
   const phone     = document.getElementById('p-phone').value.trim();
+  const whatsapp  = document.getElementById('p-whatsapp').value.trim();
   const license   = document.getElementById('p-license').value.trim();
   const website   = document.getElementById('p-website').value.trim();
   const agendaUrl = document.getElementById('p-agenda').value.trim();
@@ -228,6 +230,7 @@ function handleProfileSave() {
     name:      name,
     email:     email,
     phone:     phone,
+    whatsapp:  whatsapp,
     license:   license,
     website:   cleanWebsite,
     agendaUrl: cleanAgenda,

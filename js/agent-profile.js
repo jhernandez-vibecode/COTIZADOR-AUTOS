@@ -30,7 +30,7 @@ const PROFILE_KEY = 'cotizador_sdi_agent_v1';
 
 /**
  * Lee el perfil guardado en localStorage.
- * @returns {object|null} {name, email, phone, license, website, agendaUrl} o null si no hay
+ * @returns {object|null} {name, email, phone, whatsapp, license, website, agendaUrl} o null si no hay
  */
 function loadProfile() {
   try {
@@ -47,8 +47,9 @@ function loadProfile() {
 
 /**
  * Guarda el perfil en localStorage.
- * @param {object} p - {name, email, phone, license, website, agendaUrl}
+ * @param {object} p - {name, email, phone, whatsapp, license, website, agendaUrl}
  *                     website es opcional (string vacio si el agente no tiene web)
+ *                     whatsapp es opcional (string vacio si no se quiere mostrar boton)
  *                     agendaUrl es el link del formulario de cita (Google Forms)
  */
 function saveProfile(p) {
@@ -57,6 +58,7 @@ function saveProfile(p) {
       name:      (p.name      || '').trim(),
       email:     (p.email     || '').trim(),
       phone:     (p.phone     || '').trim(),
+      whatsapp:  (p.whatsapp  || '').trim(),
       license:   (p.license   || '').trim(),
       website:   (p.website   || '').trim(),
       agendaUrl: (p.agendaUrl || '').trim(),
@@ -72,14 +74,15 @@ function saveProfile(p) {
  * Aplica un perfil al CFG global, sobrescribiendo los datos del agente.
  * El resto del codigo (email-template, mime-builder) usa CFG.* directamente.
  * Si website o agendaUrl vienen vacios, se respeta el CFG default (no se borran).
- * @param {object} p - {name, email, phone, license, website, agendaUrl}
+ * @param {object} p - {name, email, phone, whatsapp, license, website, agendaUrl}
  */
 function applyProfile(p) {
   if (!p) return;
-  if (p.name)    CFG.FROM_NAME  = p.name;
-  if (p.email)   CFG.FROM_EMAIL = p.email;
-  if (p.phone)   CFG.PHONE      = p.phone;
-  if (p.license) CFG.LICENSE    = p.license;
+  if (p.name)     CFG.FROM_NAME  = p.name;
+  if (p.email)    CFG.FROM_EMAIL = p.email;
+  if (p.phone)    CFG.PHONE      = p.phone;
+  if (p.whatsapp) CFG.WHATSAPP   = p.whatsapp;
+  if (p.license)  CFG.LICENSE    = p.license;
   // website: asignamos siempre (puede ser '' para ocultar el bloque del footer)
   if (p.website !== undefined) CFG.WEBSITE = p.website;
   // agendaUrl: solo sobrescribir si el agente puso uno propio

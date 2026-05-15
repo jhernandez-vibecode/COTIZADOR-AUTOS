@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Detalle de coberturas vigentes — Cotizador SDI</title>
+  <link rel="icon" type="image/svg+xml" href="../img/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Sora', sans-serif; background: #f8fafc; color: #0b1d3a; margin: 0; }
+    .container { max-width: 900px; margin: 24px auto; padding: 0 20px; }
+    .header { background: #0b1d3a; color: white; padding: 18px 24px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .header h1 { margin: 0; font-size: 18px; font-weight: 700; }
+    .header a { color: white; text-decoration: none; font-size: 13px; opacity: 0.7; }
+    .header a:hover { opacity: 1; }
+    .card { background: white; border-radius: 8px; padding: 24px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .card h2 { color: #0b1d3a; margin: 0 0 16px; font-size: 17px; font-weight: 700; border-bottom: 2px solid #0b1d3a; padding-bottom: 8px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+    .row-3 { grid-template-columns: 2fr 1fr 1fr; }
+    .row-4 { grid-template-columns: repeat(4, 1fr); }
+    label { display: block; font-size: 12px; font-weight: 600; color: #475569; margin-bottom: 4px; }
+    input, select { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; font-size: 14px; }
+    input:focus, select:focus { outline: 2px solid #fbbf24; outline-offset: -1px; }
+    .req::after { content: ' *'; color: #dc2626; }
+    .hint { font-size: 11px; color: #94a3b8; font-style: italic; margin-top: 4px; }
+    .cob-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 14px; }
+    .cob-grid label { display: flex; align-items: center; gap: 8px; padding: 6px; cursor: pointer; font-weight: 500; color: #0b1d3a; margin-bottom: 0; }
+    .cob-grid input[type=checkbox] { width: 16px; height: 16px; margin: 0; }
+    .sub-opt { margin-top: 12px; padding: 12px; background: #fffbeb; border-left: 3px solid #f59e0b; border-radius: 4px; display: none; }
+    .sub-opt.visible { display: block; }
+    .sub-opt label { display: flex; align-items: center; gap: 6px; font-size: 13px; margin-bottom: 4px; cursor: pointer; }
+    .sub-opt input[type=number] { max-width: 220px; }
+    .ded-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .ded-grid label { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; cursor: pointer; font-weight: 500; display: flex; align-items: center; gap: 8px; margin-bottom: 0; }
+    .ded-grid label.checked { border-color: #f59e0b; background: #fffbeb; }
+    .actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 24px; }
+    .btn { padding: 12px 20px; border: none; border-radius: 6px; font-family: inherit; font-weight: 700; font-size: 14px; cursor: pointer; }
+    .btn-primary { background: #0b1d3a; color: white; }
+    .btn-secondary { background: #64748b; color: white; }
+    .btn:hover { opacity: 0.9; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .error { background: #fef2f2; border: 1px solid #fca5a5; color: #b91c1c; padding: 10px; border-radius: 6px; margin-bottom: 12px; font-size: 13px; }
+    .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 1000; }
+    .modal-bg.visible { display: flex; }
+    .modal { background: white; border-radius: 8px; max-width: 720px; width: 92%; max-height: 92vh; overflow: auto; }
+    .modal-head { padding: 16px 20px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
+    .modal-head h3 { margin: 0; font-size: 16px; }
+    .modal-body { padding: 20px; }
+    .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: #64748b; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+    <header class="header">
+      <h1>🛡 Detalle de coberturas vigentes</h1>
+      <a href="../">← Volver al cotizador</a>
+    </header>
+
+    <form id="formCoberturas">
+
+      <div class="card">
+        <h2>1 · Datos del cliente</h2>
+        <div class="row">
+          <div>
+            <label class="req" for="c-name">Nombre completo</label>
+            <input id="c-name" type="text" placeholder="Ej: María Rodríguez Solís" required />
+          </div>
+          <div>
+            <label class="req" for="c-email">Correo</label>
+            <input id="c-email" type="email" placeholder="cliente@correo.com" required />
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>2 · Vehículo y póliza</h2>
+        <div class="row row-3">
+          <div>
+            <label class="req" for="v-desc">Descripción del vehículo</label>
+            <input id="v-desc" type="text" placeholder="Toyota Yaris Sedan" required />
+          </div>
+          <div>
+            <label class="req" for="v-plate">Placa</label>
+            <input id="v-plate" type="text" placeholder="BRK454" required />
+          </div>
+          <div>
+            <label class="req" for="v-year">Año</label>
+            <input id="v-year" type="number" min="1990" max="2030" placeholder="2019" required />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label class="req" for="v-valor">Valor asegurado (₡)</label>
+            <input id="v-valor" type="number" min="0" placeholder="10000000" required />
+            <div class="hint">⚠ Recordá mantener actualizado tu monto asegurado</div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:8px;padding-top:24px;">
+            <input id="v-elec" type="checkbox" style="width:18px;height:18px;" />
+            <label for="v-elec" style="margin:0;font-weight:600;font-size:14px;">⚡ Vehículo eléctrico</label>
+          </div>
+        </div>
+        <div class="row row-4" style="margin-top:8px;">
+          <div>
+            <label class="req" for="v-vd">Vigencia desde</label>
+            <input id="v-vd" type="date" required />
+          </div>
+          <div>
+            <label class="req" for="v-vh">Vigencia hasta</label>
+            <input id="v-vh" type="date" required />
+          </div>
+          <div>
+            <label class="req" for="v-fp">Forma de pago</label>
+            <select id="v-fp" required>
+              <option value="">— Elegir —</option>
+              <option value="a">Anual</option>
+              <option value="s">Semestral</option>
+              <option value="t">Trimestral</option>
+              <option value="m">Mensual</option>
+            </select>
+          </div>
+          <div>
+            <label class="req" for="v-pp">Última prima pagada (₡, c/IVA)</label>
+            <input id="v-pp" type="number" min="0" placeholder="158423" required />
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>3 · Coberturas vigentes</h2>
+        <p style="font-size:13px;color:#64748b;margin:0 0 12px;">Marcá las que el cliente tiene contratadas. Algunas tienen sub-opciones que aparecen al marcar.</p>
+        <div class="cob-grid">
+          <label><input type="checkbox" name="cob" value="A" /> <strong>A</strong> · Daños a personas</label>
+          <label><input type="checkbox" name="cob" value="C" /> <strong>C</strong> · Daños a propiedad</label>
+          <label><input type="checkbox" name="cob" value="N" /> <strong>N</strong> · Exención del deducible (aplica a C)</label>
+          <label><input type="checkbox" name="cob" value="D" /> <strong>D</strong> · Colisión y vuelco</label>
+          <label><input type="checkbox" name="cob" value="F" /> <strong>F</strong> · Robo y/o hurto</label>
+          <label><input type="checkbox" name="cob" value="B" /> <strong>B</strong> · Gastos médicos familiares</label>
+          <label><input type="checkbox" name="cob" value="H" /> <strong>H</strong> · Riesgos adicionales</label>
+          <label><input type="checkbox" name="cob" value="GM" /> <strong>G/M</strong> · Asistencia 24/7 <span style="color:#94a3b8;font-size:11px;">(plan auto del año)</span></label>
+          <label><input type="checkbox" name="cob" value="IDD" /> <strong>IDD</strong> · Reintegro del deducible</label>
+          <label><input type="checkbox" name="cob" value="REP" /> <strong>REP</strong> · Sustitución de repuestos</label>
+        </div>
+
+        <div class="sub-opt" id="sub-A">
+          <label for="amt-A">Monto de A — Daños a personas (₡)</label>
+          <input id="amt-A" type="number" min="0" placeholder="300000000" value="300000000" />
+        </div>
+        <div class="sub-opt" id="sub-C">
+          <label for="amt-C">Monto de C — Daños a propiedad (₡)</label>
+          <input id="amt-C" type="number" min="0" placeholder="100000000" value="100000000" />
+        </div>
+        <div class="sub-opt" id="sub-B">
+          <label for="amt-B">Monto de B — Gastos médicos (₡)</label>
+          <input id="amt-B" type="number" min="0" placeholder="15000000" value="15000000" />
+        </div>
+        <div class="sub-opt" id="sub-IDD">
+          <div style="font-weight:700;font-size:13px;margin-bottom:6px;">Monto del IDD:</div>
+          <label><input type="radio" name="idd" value="300000" /> ₡300.000</label>
+          <label><input type="radio" name="idd" value="400000" checked /> ₡400.000 (más común)</label>
+          <label><input type="radio" name="idd" value="500000" /> ₡500.000</label>
+        </div>
+        <div class="sub-opt" id="sub-REP">
+          <div style="font-weight:700;font-size:13px;margin-bottom:6px;">Plan de repuestos:</div>
+          <label><input type="radio" name="rep" value="P" /> Garantía Plus</label>
+          <label><input type="radio" name="rep" value="G" /> Garantía</label>
+          <label><input type="radio" name="rep" value="N" /> Nuevo</label>
+          <label><input type="radio" name="rep" value="A" /> Alternativo genérico (Usados)</label>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>4 · Deducible</h2>
+        <div class="ded-grid">
+          <label class="checked"><input type="radio" name="ded" value="nec" checked /> <strong>N en C</strong></label>
+          <label><input type="radio" name="ded" value="f400" /> Fijo <strong>₡400.000</strong></label>
+          <label><input type="radio" name="ded" value="f500" /> Fijo <strong>₡500.000</strong></label>
+          <label><input type="radio" name="ded" value="o150" /> Ordinario <strong>20%</strong> · mín ₡150.000</label>
+          <label><input type="radio" name="ded" value="o500" /> Ordinario <strong>20%</strong> · mín ₡500.000</label>
+        </div>
+      </div>
+
+      <div id="error-box"></div>
+
+      <div class="actions">
+        <button type="button" id="btnPreview" class="btn btn-secondary">Vista previa del correo</button>
+        <button type="submit" id="btnSend" class="btn btn-primary">Enviar al cliente</button>
+      </div>
+
+    </form>
+
+  </div>
+
+  <!-- Modal de vista previa -->
+  <div class="modal-bg" id="previewModal">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>Vista previa del correo</h3>
+        <button type="button" class="modal-close" id="btnClosePreview">&times;</button>
+      </div>
+      <div class="modal-body">
+        <iframe id="previewFrame" style="width:100%;height:600px;border:1px solid #e5e7eb;border-radius:6px;"></iframe>
+        <div style="margin-top:12px;font-size:12px;color:#94a3b8;">
+          URL del detalle: <a id="previewUrl" target="_blank" style="word-break:break-all;color:#2563eb;"></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts en orden de dependencia -->
+  <script src="../js/config.js"></script>
+  <script src="../js/state.js"></script>
+  <script src="../js/agent-profile.js"></script>
+  <script src="../js/coverage-url.js"></script>
+  <script src="../js/email-template.js"></script>
+  <script src="../js/mime-builder.js"></script>
+  <script src="../js/gmail-auth.js"></script>
+  <script src="../js/outlook-auth.js"></script>
+  <script src="../js/outlook-sender.js"></script>
+
+  <script>
+    // === Inicialización ===
+    document.addEventListener('DOMContentLoaded', function () {
+      // Cargar perfil del agente
+      if (typeof loadProfile === 'function') {
+        const p = loadProfile();
+        if (typeof applyProfile === 'function' && p) applyProfile(p);
+      }
+
+      // Wire sub-opciones condicionales
+      ['A', 'C', 'B', 'IDD', 'REP'].forEach(function (code) {
+        const cb = document.querySelector('input[name=cob][value=' + code + ']');
+        const sub = document.getElementById('sub-' + code);
+        if (cb && sub) {
+          cb.addEventListener('change', function () {
+            sub.classList.toggle('visible', cb.checked);
+          });
+        }
+      });
+
+      // Wire deducible — resaltar el seleccionado
+      document.querySelectorAll('.ded-grid input[name=ded]').forEach(function (r) {
+        r.addEventListener('change', function () {
+          document.querySelectorAll('.ded-grid label').forEach(function (l) { l.classList.remove('checked'); });
+          if (r.checked) r.parentElement.classList.add('checked');
+        });
+      });
+
+      // Wire vista previa
+      document.getElementById('btnPreview').addEventListener('click', handlePreview);
+      document.getElementById('btnClosePreview').addEventListener('click', function () {
+        document.getElementById('previewModal').classList.remove('visible');
+      });
+
+      // Wire envío
+      document.getElementById('formCoberturas').addEventListener('submit', handleSubmit);
+    });
+
+    // === Recolectar datos del form ===
+    function collectFormData() {
+      const cobs = Array.from(document.querySelectorAll('input[name=cob]:checked')).map(function (i) { return i.value; });
+      const customAmounts = {};
+      if (cobs.includes('A')) {
+        const v = parseInt(document.getElementById('amt-A').value, 10);
+        if (v && v !== 300000000) customAmounts.A = v;
+      }
+      if (cobs.includes('C')) {
+        const v = parseInt(document.getElementById('amt-C').value, 10);
+        if (v && v !== 100000000) customAmounts.C = v;
+      }
+      if (cobs.includes('B')) {
+        const v = parseInt(document.getElementById('amt-B').value, 10);
+        if (v && v !== 15000000) customAmounts.B = v;
+      }
+
+      const iddRadio = document.querySelector('input[name=idd]:checked');
+      const repRadio = document.querySelector('input[name=rep]:checked');
+      const dedRadio = document.querySelector('input[name=ded]:checked');
+
+      return {
+        agent: {
+          name:     CFG.FROM_NAME  || '',
+          license:  CFG.LICENSE    || '',
+          website:  CFG.WEBSITE    || '',
+          whatsapp: CFG.WHATSAPP   || '',
+          email:    CFG.FROM_EMAIL || ''
+        },
+        client: {
+          name:  document.getElementById('c-name').value.trim(),
+          email: document.getElementById('c-email').value.trim()
+        },
+        vehicle: {
+          description: document.getElementById('v-desc').value.trim(),
+          plate:       document.getElementById('v-plate').value.trim().toUpperCase(),
+          year:        parseInt(document.getElementById('v-year').value, 10),
+          valor:       parseInt(document.getElementById('v-valor').value, 10),
+          electric:    document.getElementById('v-elec').checked
+        },
+        policy: {
+          from:        document.getElementById('v-vd').value,
+          to:          document.getElementById('v-vh').value,
+          paymentForm: document.getElementById('v-fp').value,
+          lastPremium: parseInt(document.getElementById('v-pp').value, 10)
+        },
+        coverages:     cobs,
+        customAmounts: customAmounts,
+        iddAmount:     cobs.includes('IDD') && iddRadio ? parseInt(iddRadio.value, 10) : null,
+        repPlan:       cobs.includes('REP') && repRadio ? repRadio.value : null,
+        deductible:    dedRadio ? dedRadio.value : 'nec'
+      };
+    }
+
+    // === Validación ===
+    function validate(d) {
+      const errors = [];
+      if (!d.client.name) errors.push('Falta el nombre del cliente.');
+      if (!d.client.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.client.email)) errors.push('Correo del cliente inválido.');
+      if (!d.vehicle.description) errors.push('Falta la descripción del vehículo.');
+      if (!d.vehicle.plate) errors.push('Falta la placa.');
+      if (!d.vehicle.year || d.vehicle.year < 1990 || d.vehicle.year > 2030) errors.push('Año del vehículo inválido.');
+      if (!d.vehicle.valor || d.vehicle.valor <= 0) errors.push('Valor asegurado inválido.');
+      if (!d.policy.from || !d.policy.to) errors.push('Faltan fechas de vigencia.');
+      if (d.policy.from && d.policy.to && d.policy.from >= d.policy.to) errors.push('Vigencia desde debe ser anterior a vigencia hasta.');
+      if (!d.policy.paymentForm) errors.push('Falta forma de pago.');
+      if (!d.policy.lastPremium || d.policy.lastPremium <= 0) errors.push('Última prima pagada inválida.');
+      if (!d.coverages.length) errors.push('Marcá al menos una cobertura.');
+      return errors;
+    }
+
+    function showErrors(errors) {
+      const box = document.getElementById('error-box');
+      if (!errors.length) { box.innerHTML = ''; return; }
+      box.innerHTML = '<div class="error"><strong>Revisá:</strong><ul style="margin:6px 0 0 20px;padding:0;">' +
+        errors.map(function (e) { return '<li>' + e + '</li>'; }).join('') + '</ul></div>';
+      box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // === Detalle URL base ===
+    function getDetalleBase() {
+      // En producción, usar el dominio actual. En desarrollo (file://), usar el de Netlify.
+      if (location.protocol === 'file:') {
+        return 'https://cotizador-segurosdigitalesins-sdi.netlify.app/detalle/';
+      }
+      return location.origin + '/detalle/';
+    }
+
+    // === Vista previa ===
+    function handlePreview() {
+      const data = collectFormData();
+      const errors = validate(data);
+      if (errors.length) { showErrors(errors); return; }
+      showErrors([]);
+
+      const detalleUrl = buildDetalleUrl(Object.assign({ base: getDetalleBase() }, data));
+      const html = buildCoverageEmail({
+        clientName: data.client.name,
+        vehicle:    data.vehicle.description,
+        plate:      data.vehicle.plate,
+        detalleUrl: detalleUrl
+      });
+
+      const iframe = document.getElementById('previewFrame');
+      iframe.srcdoc = html;
+      const link = document.getElementById('previewUrl');
+      link.textContent = detalleUrl;
+      link.href = detalleUrl;
+      document.getElementById('previewModal').classList.add('visible');
+    }
+
+    // === MIME builder (HTML-only, sin adjunto PDF) ===
+    // Sigue el mismo patrón que cancelacion/index.html — usa helpers de mime-builder.js
+    function buildMIMESimple(p) {
+      const CRLF    = '\r\n';
+      const sub64   = _encodeRFC2047(p.subject);
+      const fromEnc = _encodeFromHeader(p.from);
+      const msg =
+        'From: '    + fromEnc + CRLF +
+        'To: '      + p.to    + CRLF +
+        'Subject: ' + sub64   + CRLF +
+        'MIME-Version: 1.0' + CRLF +
+        'Content-Type: text/html; charset=UTF-8' + CRLF +
+        'Content-Transfer-Encoding: 7bit' + CRLF +
+        CRLF +
+        p.html;
+      return _base64UrlEncode(msg);
+    }
+
+    // === Envío real ===
+    async function handleSubmit(e) {
+      e.preventDefault();
+      const data = collectFormData();
+      const errors = validate(data);
+      if (errors.length) { showErrors(errors); return; }
+      showErrors([]);
+
+      const btn = document.getElementById('btnSend');
+      btn.disabled = true;
+      btn.textContent = 'Enviando…';
+
+      try {
+        const detalleUrl = buildDetalleUrl(Object.assign({ base: getDetalleBase() }, data));
+        const html = buildCoverageEmail({
+          clientName: data.client.name,
+          vehicle:    data.vehicle.description,
+          plate:      data.vehicle.plate,
+          detalleUrl: detalleUrl
+        });
+
+        const subject = 'Detalle de tus coberturas vigentes — ' + data.vehicle.description + ' (' + data.vehicle.plate + ')';
+        const fromHeader = (CFG.FROM_NAME ? '"' + CFG.FROM_NAME + '" <' + CFG.FROM_EMAIL + '>' : CFG.FROM_EMAIL);
+
+        const provider = (typeof S !== 'undefined' && S.provider) || 'gmail';
+
+        if (provider === 'outlook') {
+          await sendOutlookEmail({
+            to: data.client.email,
+            subject: subject,
+            html: html
+            // sin pdfBytes ni filename — solo HTML
+          });
+        } else {
+          const raw = buildMIMESimple({
+            to: data.client.email,
+            from: fromHeader,
+            subject: subject,
+            html: html
+          });
+          const token = await getToken();
+          if (typeof S !== 'undefined') S.accessToken = token;
+          await sendEmail(raw);
+        }
+
+        alert('✅ Correo enviado a ' + data.client.email);
+        document.getElementById('formCoberturas').reset();
+        // Resetear sub-opciones visibles
+        document.querySelectorAll('.sub-opt').forEach(function (s) { s.classList.remove('visible'); });
+        document.querySelectorAll('.ded-grid label').forEach(function (l) { l.classList.remove('checked'); });
+        document.querySelector('.ded-grid label:first-child').classList.add('checked');
+        document.querySelector('input[name=ded][value=nec]').checked = true;
+      } catch (err) {
+        console.error(err);
+        alert('❌ Error al enviar: ' + (err.message || err));
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Enviar al cliente';
+      }
+    }
+  </script>
+
+</body>
+</html>

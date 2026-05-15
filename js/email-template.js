@@ -516,3 +516,83 @@ function _buildGuideUrl(extras) {
   const sep = base.indexOf('?') === -1 ? '?' : '&';
   return base + sep + params.join('&');
 }
+
+/**
+ * Helper: escape para HTML.
+ */
+function _escHtml(s) {
+  if (s === undefined || s === null) return '';
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+/**
+ * Construye el HTML del correo "Detalle de coberturas vigentes".
+ * Mucho mas corto que buildEmail() - solo intro + boton al detalle.
+ *
+ * @param {object} p
+ * @param {string} p.clientName  - nombre completo del cliente
+ * @param {string} p.vehicle     - descripcion del vehiculo (ej: "Toyota Yaris Sedan")
+ * @param {string} p.plate       - placa
+ * @param {string} p.detalleUrl  - URL del detalle (de buildDetalleUrl)
+ * @returns {string} HTML del correo
+ */
+function buildCoverageEmail(p) {
+  const fromName = CFG.FROM_NAME || 'Juan Carlos Hernandez';
+  const license  = CFG.LICENSE   || '08-1318';
+  const phone    = CFG.PHONE     || '8822-1348';
+  const email    = CFG.FROM_EMAIL || 'jhernandez@segurosdelins.com';
+  const website  = CFG.WEBSITE   || 'segurosdelins.com';
+  const logoUrl  = CFG.LOGO_URL  || 'https://cotizador.appsegurosdigitales.com/img/ins-logo.png';
+
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Detalle de coberturas vigentes</title>
+</head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,Helvetica,sans-serif;color:#0b1d3a;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f5f5;padding:24px 0;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" border="0" style="background:white;border-radius:8px;overflow:hidden;">
+          <tr>
+            <td style="background:#0b1d3a;padding:24px;text-align:center;">
+              <img src="${logoUrl}" alt="INS" style="height:40px;display:inline-block;" />
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:32px 28px;">
+              <p style="margin:0 0 16px;font-size:16px;color:#0b1d3a;"><strong>Hola ${_escHtml(p.clientName)},</strong></p>
+              <p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#475569;">
+                Te comparto el resumen de las coberturas vigentes en tu poliza de seguro de auto del INS para tu <strong>${_escHtml(p.vehicle)} (${_escHtml(p.plate)})</strong>.
+              </p>
+              <p style="margin:0 0 24px;font-size:14px;line-height:1.6;color:#475569;">
+                Hace click en el boton para ver el detalle completo - coberturas, asistencia, deducible y datos de tu poliza.
+              </p>
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center" style="padding:8px 0 24px;">
+                    <a href="${p.detalleUrl}" style="display:inline-block;background:#0b1d3a;color:white;padding:14px 28px;border-radius:6px;font-weight:bold;text-decoration:none;font-size:15px;">VER DETALLE DE MIS COBERTURAS &rarr;</a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:24px 0 0;font-size:12px;color:#94a3b8;font-style:italic;text-align:center;line-height:1.5;">
+                Este es un breve resumen de tu cobertura. Para mas informacion consultar las condiciones generales de tu poliza.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background:#0b1d3a;padding:18px 24px;text-align:center;color:white;">
+              <div style="font-size:14px;font-weight:bold;color:white;">${_escHtml(fromName)}</div>
+              <div style="font-size:11px;color:#94a3b8;margin-top:2px;">Agente &middot; Lic. SUGESE ${_escHtml(license)} &middot; ${_escHtml(phone)}</div>
+              <div style="font-size:11px;color:#94a3b8;margin-top:8px;">${_escHtml(email)} &middot; ${_escHtml(website)}</div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}

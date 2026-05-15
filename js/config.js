@@ -18,6 +18,7 @@ const CFG = {
 
   // Pie del correo
   PHONE:       '8822-1348',
+  WHATSAPP:    '8822-1348',  // WhatsApp del agente, sin código país (se normaliza al usar)
   LICENSE:     '08-1318',
 
   // Gmail API
