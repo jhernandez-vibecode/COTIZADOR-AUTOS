@@ -822,6 +822,74 @@ a0a800e  feat(app): orquestacion completa end-to-end              ⭐ FINAL
 [checkpoint 23 abr 2026]
 ```
 
+## Checkpoint 14 mayo 2026 — Detalle de coberturas vigentes
+
+Nueva feature paralela al cotizador y a la calculadora de cancelacion: el agente
+puede generar y enviar al cliente un resumen visual personalizado de las
+coberturas vigentes de su poliza, espejo del explicador pero adaptado a "vigente"
+(no a "te ofrezco").
+
+### Componentes
+- **`/coberturas/index.html`** — formulario interno del agente (single-file, 455 lineas).
+  Llena datos del cliente, vehiculo, poliza, marca coberturas (10), elige sub-opciones
+  (IDD 300/400/500, REP Plus/Garantia/Nuevo/Alt), elige deducible (5 opciones), boton
+  vista previa + boton enviar al cliente (Gmail u Outlook segun perfil).
+- **`/detalle/index.html`** — pagina visual publica del cliente (single-file, 481 lineas).
+  Lee ~25 query params de URL, renderiza header con logo INS + saludo, banda con
+  vigencia/forma pago/prima/valor, secciones condicionales (coberturas, asistencia
+  con plan auto del año, IDD, deducible, repuestos, electrica), footer con boton
+  WhatsApp verde + branding SDI.
+- **`js/coverage-url.js`** — helper `buildDetalleUrl(formData)` que arma la URL
+  completa con WhatsApp normalizado a `506xxxxxxxx`. 14 tests Node.
+- **`js/email-template.js`** + nueva funcion `buildCoverageEmail()` — HTML corto
+  con header INS + intro + boton "VER DETALLE DE MIS COBERTURAS" + leyenda + footer
+  agente. Sin PDF adjunto. 10 tests Node.
+- **`js/agent-profile.js`** + **`js/app.js`** + **`index.html`** modificados para
+  agregar campo `whatsapp` al perfil del agente (modal ⚙).
+- **Boton 🛡 dorado** en header del cotizador, junto al 🧮 (cancelacion) y ⚙ (perfil).
+
+### URL params del /detalle/?...
+n, l, w, e, wa (agente) · c (cliente) · v, p, y, va, vt (vehiculo) ·
+vd, vh, fp, pp (poliza) · cobs (coberturas joined con _) ·
+a300, c100, b15 (montos custom solo si editados) · idd, rep (sub-opciones) ·
+ded (deducible).
+
+### Catalogo de coberturas (10)
+A · C · N · D · F · B · H · GM · IDD · REP
+
+### Deducibles (5)
+N en C · Fijo ₡400.000 · Fijo ₡500.000 · 20% min ₡150.000 · 20% min ₡500.000
+
+### Decisiones
+- Coberturas A, C, B con monto editable (default ₡300M / ₡100M / ₡15M)
+- Coberturas D, F, H usan el valor asegurado como tope
+- Asistencia G/M: plan Plus (0-6 años) / Basico (7-15) auto del año
+- WhatsApp endpoint: `web.whatsapp.com/send/?phone=506...` (NO `wa.me`, corrompe emojis)
+- Email sin PDF adjunto, solo HTML con link al detalle
+- Sin almacenamiento (cada envio es one-shot)
+- Patron espejo del explicador (paleta navy/gold, fuente Sora)
+
+### Tests Node
+- `tests/test-coverage-url.js` — 14/14 (URL builder con todos los casos)
+- `tests/test-coverage-email.js` — 10/10 (HTML + escape)
+
+### Spec + Plan
+- `docs/superpowers/specs/2026-05-14-detalle-coberturas-vigentes-design.md`
+- `docs/superpowers/plans/2026-05-14-detalle-coberturas-vigentes.md`
+
+### Commits (7) + tag rollback
+`pre-coberturas-vigentes-14may` apunta al HEAD pre-merge.
+
+```
+be38baf  feat(perfil): agregar campo WhatsApp al perfil del agente
+503fc27  feat(coberturas): helper buildDetalleUrl + tests Node (14/14)
+9f8946b  feat(coberturas): buildCoverageEmail con HTML corto + tests (10/10)
+448d32d  feat(coberturas): formulario del agente con validacion + vista previa + envio Gmail/Outlook
+3515472  feat(coberturas): pagina /detalle/ con todas las secciones condicionales
+be7a960  feat(cotizador): boton dorado para detalle de coberturas en header
+e031693  fix(detalle): firstName toma parts[0] (nombre del cliente en orden normal, no PDF INS)
+```
+
 ## Pendientes
 1. **Configurar SPF/DKIM en segurosdelins.com** (pendiente): si Juan Carlos comparte
    donde esta hosteado el dominio, configurar para mejorar entregabilidad Gmail.
