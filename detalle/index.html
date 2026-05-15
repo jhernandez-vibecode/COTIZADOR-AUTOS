@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title id="pageTitle">Detalle de tus coberturas vigentes — Seguros Digitales SDI</title>
+<title id="pageTitle">Detalle de tus coberturas vigentes — Seguros Digitales INS — SDI</title>
 <link rel="icon" type="image/svg+xml" href="../img/favicon.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -838,7 +838,7 @@ function dedTexto(code) {
 }
 function repTexto(code) {
   return {
-    P: { lbl: 'Garantía Plus',           desc: 'Repuestos originales nuevos del fabricante, instalados en agencia oficial o taller autorizado. La cobertura más completa.' },
+    P: { lbl: 'Garantía Plus',           desc: 'Repuestos originales nuevos del fabricante, instalados en agencia oficial o taller autorizado. La cobertura más completa — vigente hasta los 8 años de antigüedad del vehículo.' },
     G: { lbl: 'Garantía',                desc: 'Repuestos originales con garantía del fabricante, instalados en agencia oficial.' },
     N: { lbl: 'Nuevo',                   desc: 'Repuestos nuevos no necesariamente originales del fabricante.' },
     A: { lbl: 'Alternativo (genéricos)', desc: 'Repuestos alternativos de mercado (también llamados de uso). El INS calcula el costo según disponibilidad.' }
@@ -893,7 +893,7 @@ function renderHeader() {
         '<img class="ins-logo" src="../img/ins-logo.png" alt="INS" />' +
         '<div class="brand-text">' +
           '<span class="brand-title">Detalle de tus coberturas</span>' +
-          '<span class="brand-sub">Resumen vigente · Seguros Digitales SDI</span>' +
+          '<span class="brand-sub">Resumen vigente · Seguros Digitales INS — SDI</span>' +
         '</div>' +
       '</div>' +
       '<div class="header-right">' +
@@ -1335,11 +1335,11 @@ function renderClosing() {
 function renderFooter() {
   return '' +
     '<footer class="footer">' +
-      '<img class="sdi-logo" src="../img/sdi-logo.svg" alt="Seguros Digitales SDI" />' +
-      '<div class="bold">Esta aplicación pertenece a Seguros Digitales SDI®.</div>' +
+      '<img class="sdi-logo" src="../img/sdi-logo.svg" alt="Seguros Digitales INS — SDI" />' +
+      '<div class="bold">Esta aplicación pertenece a Seguros Digitales INS — SDI®.</div>' +
       (data.agent.website ? '<div>Visitá <a href="https://' + escHtml(data.agent.website) + '">' + escHtml(data.agent.website) + '</a></div>' : '') +
       '<div class="copyright">' +
-        '© ' + new Date().getFullYear() + ' Propiedad Intelectual de ' + escHtml(data.agent.name || 'Seguros Digitales SDI') + '. Todos los derechos reservados. Esta plataforma es una herramienta de uso exclusivo para los clientes vinculados a la Licencia SUGESE ' + escHtml(data.agent.license || '—') + '. Queda prohibida su reproducción o uso por terceros sin autorización expresa del titular.' +
+        '© ' + new Date().getFullYear() + ' Propiedad Intelectual de ' + escHtml(data.agent.name || 'Seguros Digitales INS — SDI') + '. Todos los derechos reservados. Esta plataforma es una herramienta de uso exclusivo para los clientes vinculados a la Licencia SUGESE ' + escHtml(data.agent.license || '—') + '. Queda prohibida su reproducción o uso por terceros sin autorización expresa del titular.' +
       '</div>' +
     '</footer>';
 }
