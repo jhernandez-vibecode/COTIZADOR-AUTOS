@@ -1,539 +1,1371 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title id="pageTitle">Detalle de coberturas vigentes</title>
-  <link rel="icon" type="image/svg+xml" href="../img/favicon.svg" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <style>
-    :root {
-      --navy: #0b1d3a;
-      --navy-2: #1e3a8a;
-      --gold: #fbbf24;
-      --gold-dark: #f59e0b;
-      --bg: #f8fafc;
-      --text: #475569;
-      --muted: #94a3b8;
-      --border: #e5e7eb;
-      --card-bg: #ffffff;
-      --green: #22c55e;
-      --green-text: #16a34a;
-      --red: #dc2626;
-      --blue: #2563eb;
-      --purple: #9333ea;
-    }
-    * { box-sizing: border-box; }
-    body { margin: 0; font-family: 'Sora', sans-serif; background: var(--bg); color: var(--text); }
-    .container { max-width: 800px; margin: 0 auto; }
-    .empty { padding: 60px 20px; text-align: center; }
-    .empty h2 { color: var(--navy); }
-    .empty p { color: var(--muted); }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="pageTitle">Detalle de tus coberturas vigentes — Seguros Digitales SDI</title>
+<link rel="icon" type="image/svg+xml" href="../img/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0c2340;
+  --azul: #0369a1;
+  --azul-deep: #0c4a6e;
+  --green-fresh: #10b981;
+  --green-light: #34d399;
+  --green-deep: #059669;
+  --green-text: #047857;
+  --green-bg: #d1fae5;
+  --gold-bg: #fef3c7;
+  --gold-mid: #fbbf24;
+  --gold-deep: #f59e0b;
+  --gold-text: #78350f;
+  --cyan-light: #67e8f9;
+  --cyan-mid: #06b6d4;
+  --cyan-deep: #0e7490;
+  --cyan-bg: #ecfeff;
+  --bg: #f8fafc;
+  --border: #e0e7ef;
+  --muted: #64748b;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg);
+  color: #1e293b;
+  line-height: 1.55;
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
 
-    .head {
-      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 100%);
-      color: white;
-      padding: 32px 24px;
-      text-align: center;
-    }
-    .head img.logo-ins { height: 48px; margin-bottom: 16px; display: inline-block; }
-    .head .tag { font-size: 11px; letter-spacing: 2px; opacity: 0.7; margin-bottom: 8px; }
-    .head h1 { color: white; margin: 0; font-size: 28px; font-weight: 700; }
-    .head .sub { opacity: 0.9; margin-top: 8px; font-size: 15px; }
-    .head .leyenda {
-      margin: 14px auto 0; max-width: 600px;
-      background: rgba(251, 191, 36, 0.15);
-      border: 1px solid var(--gold);
-      border-radius: 8px; padding: 10px 14px;
-      font-size: 12px; color: #fef3c7;
-    }
+/* ============ EMPTY STATE ============ */
+.empty { padding: 80px 20px; text-align: center; max-width: 600px; margin: 0 auto; }
+.empty h2 { color: var(--azul-deep); font-family: 'Space Grotesk', sans-serif; }
+.empty p { color: var(--muted); }
 
-    .banda {
-      background: white; padding: 18px 24px; border-bottom: 1px solid var(--border);
-    }
-    .banda-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; font-size: 12px; }
-    .banda-grid .k { color: var(--muted); }
-    .banda-grid .v { font-weight: 600; color: var(--navy); }
-    .banda-recordatorio { margin-top: 10px; font-size: 11px; color: var(--muted); text-align: center; font-style: italic; }
+/* ============ HEADER ============ */
+.app-header {
+  background: var(--navy);
+  color: #fff;
+  padding: 14px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.brand { display: flex; align-items: center; gap: 14px; }
+.ins-logo {
+  height: 44px;
+  width: auto;
+  display: block;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .25));
+}
+@media (max-width: 600px) { .ins-logo { height: 36px; } }
+.brand-text { display: flex; flex-direction: column; line-height: 1.15; }
+.brand-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+}
+.brand-sub { font-size: 11px; opacity: .65; margin-top: 2px; }
+.header-right { display: flex; align-items: center; gap: 10px; }
+.pill-vigente {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(13, 148, 136, .15);
+  color: #5eead4;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid rgba(13, 148, 136, .3);
+}
+.agent-info { text-align: right; font-size: 10px; opacity: .8; line-height: 1.3; }
+.agent-info b { color: #fff; opacity: 1; }
 
-    .section { padding: 24px; }
-    .section .num { font-size: 11px; letter-spacing: 2px; color: var(--text); margin-bottom: 8px; }
-    .section h2 { color: var(--navy); margin: 0 0 14px; font-size: 18px; }
-    .section h2.sub { font-size: 14px; font-weight: 600; color: var(--muted); margin-top: 4px; }
+/* ============ CINTA DORADA ============ */
+.gold-ribbon {
+  background: linear-gradient(90deg, var(--gold-bg) 0%, #fefce8 50%, var(--gold-bg) 100%);
+  border-bottom: 1px solid #fde68a;
+  padding: 9px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--gold-text);
+  text-align: center;
+}
+.gold-ribbon .star { color: #ca8a04; }
+.gold-ribbon b { color: #422006; font-weight: 700; }
 
-    .cob-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 12px; }
-    .cob-card {
-      padding: 14px; background: var(--card-bg); border-radius: 8px;
-      border-left: 3px solid var(--blue);
-    }
-    .cob-card.green  { border-left-color: var(--green-text); }
-    .cob-card.red    { border-left-color: var(--red); }
-    .cob-card.purple { border-left-color: var(--purple); }
-    .cob-card.gold   {
-      grid-column: span 2;
-      background: #fffbeb; border-left-color: var(--gold-dark);
-    }
-    .cob-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-    .cob-title { font-weight: 700; font-size: 14px; color: var(--blue); }
-    .cob-card.green .cob-title  { color: var(--green-text); }
-    .cob-card.red .cob-title    { color: var(--red); }
-    .cob-card.purple .cob-title { color: var(--purple); }
-    .cob-card.gold .cob-title   { color: var(--gold-dark); }
-    .cob-amount { font-weight: 700; color: var(--navy); white-space: nowrap; text-align: right; font-size: 12px; }
-    .cob-amount small { display: block; font-weight: 500; color: var(--muted); font-size: 10px; }
-    .cob-desc { color: var(--text); margin: 6px 0 0; line-height: 1.4; }
+/* ============ HERO ============ */
+.hero {
+  background: linear-gradient(180deg, #fff 0%, #f0f9ff 100%);
+  margin: 0 auto;
+  max-width: 880px;
+  padding: 36px 32px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.agent-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 5px 14px 5px 5px;
+  align-self: flex-start;
+  box-shadow: 0 2px 6px rgba(12, 35, 64, .06);
+}
+.avatar {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg, var(--azul), #0284c7);
+  color: #fff;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+}
+.agent-chip-info { display: flex; flex-direction: column; line-height: 1.15; }
+.agent-chip-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px; font-weight: 700;
+  color: var(--azul-deep);
+}
+.agent-chip-role { font-size: 10px; color: var(--muted); }
 
-    .svc-grid {
-      background: white; border-radius: 8px; padding: 14px;
-      display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
-    }
-    .svc-row { display: flex; align-items: center; gap: 10px; padding: 6px; }
-    .svc-row .ic { font-size: 22px; }
-    .svc-row .nm { flex: 1; font-size: 13px; color: var(--navy); }
-    .svc-row .qy { font-size: 11px; color: var(--text); }
+.bubble {
+  background: linear-gradient(180deg, #fff 0%, #f8fbff 100%);
+  border: 1px solid var(--border);
+  border-radius: 16px 16px 16px 4px;
+  padding: 22px 26px 22px 30px;
+  box-shadow: 0 6px 22px rgba(12, 35, 64, .07), 0 1px 3px rgba(16, 185, 129, .08);
+  font-size: 15px;
+  color: #1e293b;
+  margin-left: 22px;
+  max-width: 92%;
+  position: relative;
+  overflow: hidden;
+}
+.bubble::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--azul), var(--green-fresh));
+}
+.bubble .greet {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--azul-deep);
+  letter-spacing: -0.01em;
+  display: block;
+  margin-bottom: 12px;
+}
+.bubble .greet .name {
+  color: var(--green-deep);
+  font-weight: 800;
+}
+.bubble b { color: var(--azul-deep); }
+.bubble .leyenda {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: var(--gold-bg);
+  border-radius: 10px;
+  border-left: 3px solid var(--gold-deep);
+  font-size: 12px;
+  color: var(--gold-text);
+}
 
-    .idd-card {
-      background: white; border-radius: 8px; padding: 18px; text-align: center;
-    }
-    .idd-row { display: flex; align-items: center; gap: 18px; justify-content: center; }
-    .idd-col .lbl { font-size: 11px; color: var(--muted); }
-    .idd-col .val { font-size: 22px; font-weight: 700; }
-    .idd-col.from .val { color: var(--red); }
-    .idd-col.to .val   { color: var(--green-text); }
-    .idd-arrow { font-size: 24px; color: var(--muted); }
-    .idd-meta { margin-top: 10px; font-size: 11px; color: var(--muted); }
+/* ============ BANDA DE PÓLIZA ============ */
+.poliza-banda {
+  max-width: 880px;
+  margin: 18px auto 0;
+  padding: 0 32px;
+}
+.poliza-card {
+  background: linear-gradient(135deg, var(--navy) 0%, var(--azul-deep) 100%);
+  color: #fff;
+  border-radius: 14px;
+  padding: 22px 26px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  position: relative;
+  overflow: hidden;
+}
+.poliza-card::before {
+  content: '';
+  position: absolute;
+  right: -50px; top: -50px;
+  width: 180px; height: 180px;
+  background: radial-gradient(circle, rgba(16, 185, 129, .12), transparent 70%);
+  border-radius: 50%;
+}
+.poliza-cell { position: relative; }
+.poliza-cell .lbl { font-size: 10px; color: #93c5fd; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+.poliza-cell .val { font-family: 'Space Grotesk', sans-serif; font-size: 16px; font-weight: 700; color: #fff; margin-top: 4px; }
+.poliza-recordatorio { max-width: 880px; margin: 8px auto 0; padding: 0 32px; font-size: 11px; color: var(--muted); font-style: italic; text-align: center; }
+@media (max-width: 600px) {
+  .poliza-card { grid-template-columns: repeat(2, 1fr); padding: 18px 20px; }
+  .poliza-banda { padding: 0 20px; }
+}
 
-    .ded-list {
-      display: grid; gap: 8px;
-    }
-    .ded-card {
-      background: #fffbeb; border-left: 3px solid var(--gold-dark);
-      border-radius: 8px; padding: 14px;
-    }
-    .ded-card .lbl { font-weight: 700; color: var(--navy); }
-    .ded-card .desc { font-size: 12px; color: var(--text); margin-top: 4px; }
+/* ============ MAIN ============ */
+main { max-width: 880px; margin: 0 auto; padding: 0 24px 60px; }
 
-    .rep-card {
-      background: white; border-radius: 8px; padding: 14px;
-    }
-    .rep-card .lbl { font-weight: 700; color: var(--navy); font-size: 14px; }
-    .rep-card .desc { font-size: 12px; color: var(--text); margin-top: 6px; line-height: 1.5; }
+.section {
+  margin-top: 28px;
+  scroll-margin-top: 100px;
+}
 
-    .elec-card {
-      background: linear-gradient(135deg, #cffafe 0%, #a5f3fc 100%);
-      border-radius: 8px; padding: 18px;
-    }
-    .elec-card h3 { margin: 0 0 8px; color: #155e75; font-size: 16px; }
-    .elec-card .lead { color: #155e75; font-size: 13px; line-height: 1.5; margin: 0 0 10px; }
-    .elec-card .lead b { color: #164e63; }
-    .elec-card .bat-box { background: white; border-radius: 6px; padding: 12px; }
-    .elec-card .bat-label { font-size: 11px; color: #94a3b8; }
-    .elec-card .bat-amount { font-size: 22px; font-weight: 700; color: #155e75; }
+.section-header {
+  margin-bottom: 16px;
+}
+.section-num {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--azul);
+  background: #f0f9ff;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+.section-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--azul-deep);
+  margin: 8px 0 4px;
+  letter-spacing: -0.01em;
+}
+.section-sub {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0;
+}
 
-    footer.foot {
-      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 100%);
-      color: white; text-align: center; padding: 24px;
-    }
-    .foot .preg { font-size: 13px; opacity: 0.9; margin-bottom: 14px; }
-    .foot .name { font-size: 18px; font-weight: 700; }
-    .foot .meta { font-size: 12px; opacity: 0.7; }
-    .foot .ctas { margin-top: 16px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
-    .foot .btn { padding: 12px 18px; border-radius: 6px; font-size: 13px; font-weight: 700; text-decoration: none; }
-    .foot .btn-wa { background: var(--green); color: white; }
-    .foot .btn-web { background: transparent; color: white; border: 1px solid white; font-weight: 600; }
-    .foot .sdi-wrap {
-      margin-top: 24px; padding-top: 16px;
-      border-top: 1px solid rgba(255, 255, 255, 0.15);
-      display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 6px;
-    }
-    .foot .sdi-wrap svg { height: 48px; }
+/* ============ SECCIÓN 1 — COBERTURAS BENTO ============ */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+@media (max-width: 600px) { .bento-grid { grid-template-columns: 1fr; } }
+.bento-tile {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all .25s ease-out;
+}
+.bento-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(12, 35, 64, .08);
+  border-color: var(--azul);
+}
+.bento-tile .letter {
+  display: inline-grid;
+  place-items: center;
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  color: #fff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+.bento-tile.azul .letter { background: var(--azul); }
+.bento-tile.green .letter { background: var(--green-fresh); }
+.bento-tile.red .letter { background: #dc2626; }
+.bento-tile.purple .letter { background: #7c3aed; }
+.bento-tile.gold .letter { background: var(--gold-deep); }
+.bento-tile h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--azul-deep);
+  margin: 0 0 4px;
+}
+.bento-tile .desc {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.45;
+  margin-bottom: 8px;
+}
+.bento-tile .amount {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--azul-deep);
+}
+.bento-tile .amount-dual {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--azul-deep);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.bento-tile .amount-dual span small {
+  display: inline-block;
+  font-weight: 500;
+  color: var(--muted);
+  font-size: 10px;
+  margin-left: 6px;
+}
+.bento-tile .bento-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.bento-tile .bento-head .letter { margin-bottom: 0; }
+.bento-tile .chevron {
+  color: var(--muted);
+  font-size: 14px;
+  transition: transform .25s ease-out, color .25s ease-out;
+  user-select: none;
+}
+.bento-tile.expanded .chevron {
+  transform: rotate(180deg);
+  color: var(--azul);
+}
+.bento-tile .bento-detail {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 1px solid transparent;
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.55;
+  transition: max-height .35s ease-out, opacity .25s ease-out, margin-top .35s ease-out, padding-top .35s ease-out;
+}
+.bento-tile .bento-detail b { color: var(--azul-deep); }
+.bento-tile.expanded {
+  border-color: var(--azul);
+  box-shadow: 0 6px 22px rgba(3, 105, 161, .12);
+}
+.bento-tile.expanded .bento-detail {
+  max-height: 800px;
+  opacity: 1;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top-color: var(--border);
+}
+.bento-tile.gold {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border-color: var(--gold-mid);
+}
+.bento-tile.gold .amount { color: var(--gold-text); }
+.bento-tile:focus-visible {
+  outline: 2px solid var(--azul);
+  outline-offset: 2px;
+}
 
-    @media (max-width: 600px) {
-      .banda-grid { grid-template-columns: repeat(2, 1fr); }
-      .cob-grid, .svc-grid { grid-template-columns: 1fr; }
-      .cob-card.gold { grid-column: span 1; }
-    }
-  </style>
+/* ============ SECCIÓN 2 — ASISTENCIA ============ */
+.tip-banner {
+  background: linear-gradient(90deg, #f0fdfa 0%, #ecfdf5 100%);
+  border: 1px solid var(--green-light);
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.tip-banner .bulb {
+  background: var(--green-fresh);
+  color: #fff;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 16px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, .3);
+}
+.tip-banner .text { font-size: 13px; color: #065f46; line-height: 1.5; }
+.tip-banner b { color: var(--green-text); font-weight: 700; }
+.tip-banner .small { display: block; font-size: 11px; color: var(--green-text); margin-top: 4px; opacity: .9; }
+
+.svc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+}
+.svc-row {
+  display: flex; align-items: center; gap: 10px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+}
+.svc-row .icon {
+  width: 28px; height: 28px;
+  background: var(--gold-bg);
+  border-radius: 6px;
+  display: grid; place-items: center;
+  color: var(--gold-deep);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.svc-row .name { flex: 1; font-weight: 600; color: #1e293b; }
+.svc-row .qty { font-size: 10px; color: var(--muted); white-space: nowrap; }
+
+/* ============ SECCIÓN 3 — IDD ============ */
+.idd-card {
+  background: linear-gradient(135deg, var(--navy), var(--azul-deep));
+  color: #fff;
+  border-radius: 14px;
+  padding: 26px;
+  position: relative;
+  overflow: hidden;
+}
+.idd-card::before {
+  content: '';
+  position: absolute;
+  right: -50px; top: -50px;
+  width: 180px; height: 180px;
+  background: radial-gradient(circle, rgba(16, 185, 129, .15), transparent 70%);
+  border-radius: 50%;
+}
+.idd-top { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding-bottom: 16px; border-bottom: 1px dashed rgba(255,255,255,.15); position: relative; }
+.idd-label { font-size: 11px; color: #93c5fd; text-transform: uppercase; letter-spacing: 0.05em; }
+.idd-compare { display: flex; align-items: center; gap: 18px; margin-top: 10px; }
+.idd-col-from .small { font-size: 10px; opacity: .7; }
+.idd-col-from .from {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 28px; font-weight: 700;
+  color: #fca5a5;
+  text-decoration: line-through;
+}
+.idd-arrow { font-size: 22px; color: var(--gold-mid); }
+.idd-col-to .small { font-size: 10px; opacity: .7; }
+.idd-col-to .to {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 42px; font-weight: 800;
+  color: var(--green-light);
+  line-height: 1;
+}
+.idd-side { text-align: right; font-size: 10px; color: #93c5fd; line-height: 1.4; }
+
+.idd-rules {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  position: relative;
+}
+@media (max-width: 600px) { .idd-rules { grid-template-columns: 1fr; } }
+.idd-rule {
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 8px;
+  padding: 14px;
+  display: flex; gap: 10px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.idd-rule .icon {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+.idd-rule.ok .icon { background: var(--green-fresh); color: #fff; }
+.idd-rule.warn .icon { background: var(--gold-mid); color: #422006; }
+.idd-rule b { color: #fff; }
+.idd-rule .meta { font-size: 10px; color: #93c5fd; margin-top: 4px; }
+
+/* ============ SECCIÓN 4 — DEDUCIBLE ============ */
+.ded-list { display: grid; gap: 10px; }
+.ded-card {
+  background: #fff;
+  border: 1px solid var(--gold-mid);
+  border-left: 4px solid var(--gold-deep);
+  border-radius: 12px;
+  padding: 16px 18px;
+  position: relative;
+}
+.ded-card .ded-tag {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  background: var(--gold-bg);
+  color: var(--gold-text);
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+.ded-card .lbl {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--azul-deep);
+  margin-bottom: 6px;
+}
+.ded-card .desc { font-size: 13px; color: #475569; line-height: 1.5; }
+.ded-card.special {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+}
+.ded-tip {
+  background: #f0f9ff;
+  border-left: 3px solid var(--azul);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 12px;
+  color: var(--azul-deep);
+  margin-top: 10px;
+}
+
+/* ============ SECCIÓN 5 — REPUESTOS ============ */
+.rep-block {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.rep-header {
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  color: #fff;
+  padding: 22px 26px;
+  position: relative;
+  overflow: hidden;
+}
+.rep-header::before {
+  content: ''; position: absolute;
+  right: -40px; top: -40px;
+  width: 180px; height: 180px;
+  background: radial-gradient(circle, rgba(16, 185, 129, .15), transparent 70%);
+  border-radius: 50%;
+}
+.rep-header .num-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(16, 185, 129, .15);
+  color: var(--green-light);
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px; font-weight: 700;
+  border: 1px solid rgba(16, 185, 129, .3);
+  margin-bottom: 12px;
+  position: relative;
+}
+.rep-header h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 6px;
+  position: relative;
+}
+.rep-header .perso { font-size: 13px; color: #94a3b8; position: relative; }
+.rep-header .perso b { color: #fff; font-weight: 600; }
+.rep-body { padding: 22px 26px; }
+.rep-plan-card {
+  background: linear-gradient(90deg, #fffbeb 0%, #fef3c7 100%);
+  border: 2px solid var(--gold-mid);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.rep-plan-card .icon {
+  width: 44px; height: 44px;
+  border-radius: 10px;
+  background: var(--gold-deep);
+  color: #fff;
+  display: grid; place-items: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.rep-plan-card .info { flex: 1; }
+.rep-plan-card .info .lbl { font-size: 11px; color: var(--gold-text); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; }
+.rep-plan-card .info .name { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; color: var(--azul-deep); margin-top: 2px; }
+.rep-plan-card .info .desc { font-size: 12px; color: #475569; margin-top: 4px; }
+
+/* ============ ELÉCTRICOS ============ */
+.electric {
+  background: linear-gradient(180deg, #f0f9ff 0%, var(--cyan-bg) 100%);
+  border: 2px solid var(--cyan-light);
+  border-radius: 14px;
+  padding: 22px;
+  position: relative;
+  margin-top: 4px;
+}
+.electric::before {
+  content: '⚡';
+  position: absolute;
+  top: -16px; left: 22px;
+  background: linear-gradient(135deg, var(--cyan-mid), #0891b2);
+  color: #fff;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 16px;
+  box-shadow: 0 4px 14px rgba(6, 182, 212, .4);
+}
+.electric h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  color: var(--cyan-deep);
+  font-size: 18px;
+  margin: 8px 0 8px;
+}
+.electric .lead { color: #155e75; font-size: 13px; margin-bottom: 14px; }
+.electric .lead b { color: #164e63; }
+.battery-card {
+  background: #fff;
+  border: 1px solid var(--cyan-light);
+  border-radius: 10px;
+  padding: 16px;
+}
+.battery-card .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--cyan-deep); font-weight: 700; }
+.battery-card .key { font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 800; color: #155e75; margin: 4px 0 6px; }
+.battery-card .desc { font-size: 13px; color: #155e75; }
+.battery-card .desc b { color: #164e63; }
+
+/* ============ CIERRE + CTA ============ */
+.closing {
+  background: linear-gradient(180deg, #f0f9ff, #fff);
+  border-radius: 16px;
+  padding: 36px 28px;
+  text-align: center;
+  border: 1px solid var(--border);
+  margin-top: 28px;
+}
+.closing .msg {
+  font-size: 15px;
+  color: #475569;
+  max-width: 540px;
+  margin: 0 auto;
+}
+.closing .signature {
+  font-family: 'Space Grotesk', sans-serif;
+  font-style: italic;
+  color: var(--azul-deep);
+  font-size: 16px;
+  margin-top: 14px;
+}
+.closing .signature .lic {
+  font-size: 12px;
+  font-style: normal;
+  color: var(--muted);
+  display: block;
+  margin-top: 4px;
+}
+.cta-wa {
+  background: linear-gradient(135deg, #25D366, #128C7E);
+  color: #fff;
+  padding: 16px 32px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  margin-top: 18px;
+  box-shadow: 0 6px 20px rgba(37, 211, 102, .35);
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform .2s, box-shadow .2s;
+}
+.cta-wa:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(37, 211, 102, .45);
+}
+.cta-secondary {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--azul);
+  text-decoration: none;
+  font-weight: 600;
+}
+.cta-secondary:hover { text-decoration: underline; }
+
+/* ============ FOOTER ============ */
+.footer {
+  background: var(--navy);
+  color: #cbd5e1;
+  padding: 32px 24px;
+  text-align: center;
+  margin-top: 40px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.footer .sdi-logo {
+  display: block;
+  height: 56px;
+  width: auto;
+  margin: 0 auto 16px;
+  opacity: 0.92;
+}
+@media (max-width: 600px) {
+  .footer .sdi-logo { height: 44px; margin-bottom: 12px; }
+}
+.footer .bold { color: #fff; font-weight: 700; }
+.footer a { color: #93c5fd; text-decoration: none; }
+.footer .copyright {
+  border-top: 1px solid rgba(255,255,255,.1);
+  padding-top: 16px;
+  margin-top: 14px;
+  font-size: 11px;
+  color: #94a3b8;
+  max-width: 720px;
+  margin-left: auto; margin-right: auto;
+}
+</style>
 </head>
 <body>
 
-  <div class="container" id="root">
-    <!-- Renderizado por JS según URL params -->
-  </div>
+<div id="root"></div>
 
-  <script>
-    // === Lectura y normalización de params ===
-    const P = new URLSearchParams(location.search);
-    function get(k, def) { const v = P.get(k); return (v === null || v === '') ? (def === undefined ? '' : def) : v; }
-    function getInt(k, def) { const v = parseInt(P.get(k), 10); return isNaN(v) ? (def || 0) : v; }
+<script>
+// ============ URL PARAMS ============
+const _params = new URLSearchParams(location.search);
+function get(k, def) { const v = _params.get(k); return (v === null || v === '') ? (def === undefined ? '' : def) : v; }
+function getInt(k, def) { const v = parseInt(_params.get(k), 10); return isNaN(v) ? (def || 0) : v; }
 
-    // Backward compat: cobs viejas con "GM" se expanden a G y M
-    function parseCobs() {
-      const raw = get('cobs');
-      if (!raw) return [];
-      const arr = raw.split('_');
-      const out = [];
-      arr.forEach(function (c) {
-        if (c === 'GM') { out.push('G'); out.push('M'); }
-        else out.push(c);
-      });
-      return out;
-    }
+// Backward compat: cobs viejas con "GM" se expanden a G y M
+function parseCobs() {
+  const raw = get('cobs');
+  if (!raw) return [];
+  const out = [];
+  raw.split('_').forEach(function (c) {
+    if (c === 'GM') { out.push('G'); out.push('M'); }
+    else if (c) out.push(c);
+  });
+  return out;
+}
+function parseDed() {
+  const raw = get('ded');
+  if (!raw) return [];
+  return raw.split('_').filter(Boolean);
+}
 
-    // Backward compat: ded viejo (string sin '_') se trata como array de uno
-    function parseDed() {
-      const raw = get('ded');
-      if (!raw) return [];
-      return raw.split('_').filter(Boolean);
-    }
+const data = {
+  agent: {
+    name:     get('n'),
+    license:  get('l'),
+    website:  get('w'),
+    whatsapp: get('wa'),
+    email:    get('e')
+  },
+  client: { name: get('c') },
+  vehicle: {
+    description: get('v'),
+    plate:       get('p'),
+    year:        getInt('y'),
+    valor:       getInt('va'),
+    electric:    get('vt') === 'e'
+  },
+  policy: {
+    from:        get('vd'),
+    to:          get('vh'),
+    paymentForm: get('fp'),
+    lastPremium: getInt('pp')
+  },
+  coverages: parseCobs(),
+  customAmounts: {
+    aP: getInt('aP', 100000000),
+    aE: getInt('aE', 300000000),
+    C:  getInt('c100', 100000000),
+    B:  getInt('b15',  15000000)
+  },
+  iddAmount: getInt('idd', 400000),
+  repPlan:   get('rep'),
+  deductibles: parseDed()
+};
 
-    const data = {
-      agent: {
-        name:     get('n'),
-        license:  get('l'),
-        website:  get('w'),
-        whatsapp: get('wa'),
-        email:    get('e')
-      },
-      client: { name: get('c') },
-      vehicle: {
-        description: get('v'),
-        plate:       get('p'),
-        year:        getInt('y'),
-        valor:       getInt('va'),
-        electric:    get('vt') === 'e'
-      },
-      policy: {
-        from:        get('vd'),
-        to:          get('vh'),
-        paymentForm: get('fp'),
-        lastPremium: getInt('pp')
-      },
-      coverages: parseCobs(),
-      customAmounts: {
-        aP: getInt('aP', 100000000),  // A por persona
-        aE: getInt('aE', 300000000),  // A por evento
-        C:  getInt('c100', 100000000),
-        B:  getInt('b15',  15000000)
-      },
-      iddAmount: getInt('idd', 400000),
-      repPlan:   get('rep'),
-      deductibles: parseDed()
-    };
+// ============ HELPERS ============
+function fmt(n) { if (!n || isNaN(n)) return ''; return '₡' + Number(n).toLocaleString('es-CR'); }
+function fmtFecha(iso) {
+  if (!iso) return '';
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
+  if (!m) return iso;
+  const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  return parseInt(m[3], 10) + ' ' + meses[parseInt(m[2], 10) - 1] + ' ' + m[1];
+}
+function fmtFp(c) { return { a: 'Anual', s: 'Semestral', t: 'Trimestral', m: 'Mensual' }[c] || c; }
+function escHtml(s) {
+  if (s === undefined || s === null) return '';
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function firstName(full) { if (!full) return ''; return full.trim().split(/\s+/)[0]; }
+function initials(name) { if (!name) return 'SD'; return name.trim().split(/\s+/).filter(Boolean).map(function(w){return w[0];}).slice(0,2).join('').toUpperCase(); }
+function planAsistencia(year) {
+  if (!year) return { plan: 'Plan Básico', rango: '7-15 años', tipo: 'basico', edad: null };
+  const ahora = new Date().getFullYear();
+  const edad = ahora - year;
+  if (edad <= 6)  return { plan: 'Plan Plus',   rango: '0-6 años',   tipo: 'plus',    edad: edad };
+  if (edad <= 15) return { plan: 'Plan Básico', rango: '7-15 años',  tipo: 'basico',  edad: edad };
+  return { plan: null, mensaje: 'Por la antigüedad de tu vehículo, no aplica el plan estándar de asistencia 24/7. Consultá los detalles con tu agente.', edad: edad };
+}
+function dedTexto(code) {
+  return {
+    f300: { tag: 'F300', lbl: 'Fijo ₡300.000',                         desc: 'Pagás un monto fijo de ₡300.000 cada vez que se aplica el deducible. Aplica a colisión, robo y riesgos adicionales (D, F, H).' },
+    f400: { tag: 'F400', lbl: 'Fijo ₡400.000',                         desc: 'Pagás un monto fijo de ₡400.000 cada vez que se aplica el deducible. Aplica a colisión, robo y riesgos adicionales (D, F, H).' },
+    f500: { tag: 'F500', lbl: 'Fijo ₡500.000',                         desc: 'Pagás un monto fijo de ₡500.000 cada vez que se aplica el deducible. Aplica a colisión, robo y riesgos adicionales (D, F, H).' },
+    o150: { tag: 'O20',  lbl: 'Ordinario · 20% del daño con mínimo ₡150.000',  desc: 'Pagás el 20% del costo del daño, con un mínimo de ₡150.000. Aplica a colisión, robo y riesgos adicionales.' },
+    o500: { tag: 'O20',  lbl: 'Ordinario · 20% del daño con mínimo ₡500.000',  desc: 'Pagás el 20% del costo del daño, con un mínimo de ₡500.000. Aplica a colisión, robo y riesgos adicionales.' },
+    nec:  { tag: 'NenC', lbl: 'N en C — Exención del deducible porcentual',    desc: 'Aplica solo a la cobertura C (Daños a propiedad). Si el daño al tercero es menor a ₡750.000, solo pagás un mínimo de ₡150.000. Si el daño es mayor a ₡750.000, no pagás un colón.', special: true }
+  }[code] || { tag: code.toUpperCase(), lbl: code, desc: '' };
+}
+function repTexto(code) {
+  return {
+    P: { lbl: 'Garantía Plus',           desc: 'Repuestos originales nuevos del fabricante, instalados en agencia oficial o taller autorizado. La cobertura más completa.' },
+    G: { lbl: 'Garantía',                desc: 'Repuestos originales con garantía del fabricante, instalados en agencia oficial.' },
+    N: { lbl: 'Nuevo',                   desc: 'Repuestos nuevos no necesariamente originales del fabricante.' },
+    A: { lbl: 'Alternativo (genéricos)', desc: 'Repuestos alternativos de mercado (también llamados de uso). El INS calcula el costo según disponibilidad.' }
+  }[code] || { lbl: 'No especificado', desc: '' };
+}
+function whatsappUrl(wa, clientName, agentName) {
+  if (!wa) return null;
+  const phone = String(wa).replace(/\D/g, '');
+  const fullPhone = phone.startsWith('506') ? phone : '506' + phone;
+  const text = encodeURIComponent('Hola ' + (agentName || '') + ', soy ' + (clientName || '') + '. Vi el detalle de mis coberturas y tengo una consulta.');
+  return 'https://web.whatsapp.com/send/?phone=' + fullPhone + '&text=' + text;
+}
 
-    // === Si no hay params, mostrar mensaje informativo ===
-    if (!data.client.name && !data.coverages.length) {
-      document.getElementById('root').innerHTML =
-        '<div class="empty">' +
-          '<h2>📋 Esta página debe abrirse desde el link enviado por tu agente.</h2>' +
-          '<p>Si recibiste un correo con detalle de tus coberturas, hacé click en el botón del correo.</p>' +
-        '</div>';
-    } else {
-      render();
-    }
+// ============ EMPTY STATE ============
+if (!data.client.name && !data.coverages.length) {
+  document.getElementById('root').innerHTML =
+    '<div class="empty">' +
+      '<h2>📋 Esta página debe abrirse desde el link enviado por tu agente.</h2>' +
+      '<p>Si recibiste un correo con detalle de tus coberturas, hacé click en el botón del correo.</p>' +
+    '</div>';
+} else {
+  render();
+}
 
-    // === Helpers de formato ===
-    function fmtMoney(n) {
-      if (!n || isNaN(n)) return '';
-      return '₡' + n.toLocaleString('es-CR');
-    }
-    function fmtMoneyShort(n) {
-      if (!n || isNaN(n)) return '';
-      if (n >= 1000000) return '₡' + (n / 1000000).toFixed(0) + 'M';
-      if (n >= 1000)    return '₡' + (n / 1000).toFixed(0) + 'K';
-      return '₡' + n;
-    }
-    function fmtFecha(iso) {
-      if (!iso) return '';
-      const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
-      if (!m) return iso;
-      const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
-      return parseInt(m[3], 10) + ' ' + meses[parseInt(m[2], 10) - 1] + ' ' + m[1];
-    }
-    function fmtFp(code) {
-      return { a: 'Anual', s: 'Semestral', t: 'Trimestral', m: 'Mensual' }[code] || code;
-    }
-    function escHtml(s) {
-      if (s === undefined || s === null) return '';
-      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    }
-    function firstName(full) {
-      if (!full) return '';
-      // El form digita el nombre en orden normal (NOMBRE APE APE), tomamos parts[0].
-      return full.trim().split(/\s+/)[0];
-    }
-    function planAsistencia(year) {
-      if (!year) return { plan: 'Plan Básico', rango: '7-15 años', tipo: 'basico' };
-      const ahora = new Date().getFullYear();
-      const edad = ahora - year;
-      if (edad <= 6)  return { plan: 'Plan Plus',   rango: '0-6 años',   tipo: 'plus' };
-      if (edad <= 15) return { plan: 'Plan Básico', rango: '7-15 años',  tipo: 'basico' };
-      return { plan: null, mensaje: 'Tu vehículo no califica para asistencia 24/7 (más de 15 años).' };
-    }
-    function dedTexto(code) {
-      return {
-        f300: { lbl: 'Fijo ₡300.000',                         desc: 'Aplica a colisión, robo y riesgos adicionales (D, F, H).' },
-        f400: { lbl: 'Fijo ₡400.000',                         desc: 'Aplica a colisión, robo y riesgos adicionales (D, F, H).' },
-        f500: { lbl: 'Fijo ₡500.000',                         desc: 'Aplica a colisión, robo y riesgos adicionales (D, F, H).' },
-        o150: { lbl: 'Ordinario 20% del daño · mín ₡150.000', desc: 'Pagás 20% del costo del daño con un mínimo de ₡150.000.' },
-        o500: { lbl: 'Ordinario 20% del daño · mín ₡500.000', desc: 'Pagás 20% del costo del daño con un mínimo de ₡500.000.' },
-        nec:  { lbl: 'N en C',                                desc: 'Si daño a tercero menor a ₡750.000 → solo pagás ₡150.000. Si mayor → sin deducible. Aplica solo a la cobertura C.' }
-      }[code] || { lbl: code, desc: '' };
-    }
-    function repTexto(code) {
-      return {
-        P: { lbl: 'Garantía Plus',           desc: 'Repuestos originales nuevos del fabricante.' },
-        G: { lbl: 'Garantía',                desc: 'Repuestos originales con garantía del fabricante.' },
-        N: { lbl: 'Nuevo',                   desc: 'Repuestos nuevos no necesariamente originales.' },
-        A: { lbl: 'Alternativo (genéricos)', desc: 'Repuestos alternativos de mercado, también llamados de uso.' }
-      }[code] || { lbl: 'No especificado', desc: '' };
-    }
+// ============ RENDER ============
+function render() {
+  document.getElementById('pageTitle').textContent = 'Coberturas vigentes — ' + (data.client.name || '') + ' (' + (data.vehicle.plate || '') + ')';
+  let html = '';
+  html += renderHeader();
+  html += renderRibbon();
+  html += renderHero();
+  html += renderPolizaBanda();
+  html += '<main>';
+  html +=   renderCoberturas();
+  html +=   renderAsistencia();
+  html +=   renderIDD();
+  html +=   renderDeducible();
+  html +=   renderRepuestos();
+  html +=   renderElectric();
+  html +=   renderClosing();
+  html += '</main>';
+  html += renderFooter();
+  document.getElementById('root').innerHTML = html;
+  // Wire bento expand/collapse
+  wireBentos();
+}
 
-    function whatsappUrl(wa, clientName, agentName) {
-      if (!wa) return null;
-      const phone = String(wa).replace(/\D/g, '');
-      const fullPhone = phone.startsWith('506') ? phone : '506' + phone;
-      const text = encodeURIComponent('Hola ' + (agentName || '') + ', soy ' + (clientName || '') + '. Vi el detalle de mis coberturas y tengo una consulta.');
-      return 'https://web.whatsapp.com/send/?phone=' + fullPhone + '&text=' + text;
-    }
+function renderHeader() {
+  return '' +
+    '<header class="app-header">' +
+      '<div class="brand">' +
+        '<img class="ins-logo" src="../img/ins-logo.png" alt="INS" />' +
+        '<div class="brand-text">' +
+          '<span class="brand-title">Detalle de tus coberturas</span>' +
+          '<span class="brand-sub">Resumen vigente · Seguros Digitales SDI</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="header-right">' +
+        '<span class="pill-vigente">✓ Póliza vigente</span>' +
+        (data.agent.name ? '<div class="agent-info">Agente: <b>' + escHtml(data.agent.name) + '</b><br/>Lic. SUGESE ' + escHtml(data.agent.license) + '</div>' : '') +
+      '</div>' +
+    '</header>';
+}
 
-    // === Render principal ===
-    function render() {
-      document.getElementById('pageTitle').textContent = 'Coberturas vigentes — ' + (data.client.name || '') + ' (' + (data.vehicle.plate || '') + ')';
-      const root = document.getElementById('root');
-      root.innerHTML = renderHead() + renderBanda() + renderCoberturas() + renderAsistencia() + renderIDD() + renderDeducible() + renderRepuestos() + renderElectric() + renderFooter();
-    }
+function renderRibbon() {
+  if (!data.agent.name) return '';
+  return '' +
+    '<div class="gold-ribbon">' +
+      '<span class="star">✦</span>' +
+      '<span>Una herramienta diseñada por <b>' + escHtml(data.agent.name) + '</b> para acompañar a sus clientes en cada paso de su seguro</span>' +
+    '</div>';
+}
 
-    function renderHead() {
-      const greeting = firstName(data.client.name) || data.client.name;
-      const vehLine = (data.vehicle.description || '') + (data.vehicle.year ? ' ' + data.vehicle.year : '') + (data.vehicle.plate ? ' (' + data.vehicle.plate + ')' : '');
-      return '' +
-        '<div class="head">' +
-          '<img class="logo-ins" src="../img/ins-logo.png" alt="INS" />' +
-          '<div class="tag">DETALLE DE COBERTURAS VIGENTES</div>' +
-          '<h1>Hola, ' + escHtml(greeting) + '</h1>' +
-          (vehLine.trim() ? '<p class="sub">Resumen de las coberturas con las que cuenta tu ' + escHtml(vehLine) + '.</p>' : '') +
-          '<div class="leyenda">ℹ Este es un breve resumen de tu cobertura. Para más información consultar las condiciones generales.</div>' +
-        '</div>';
-    }
+function renderHero() {
+  const greeting = firstName(data.client.name) || data.client.name || 'Cliente';
+  const vehLine = (data.vehicle.description || 'tu vehículo') + (data.vehicle.year ? ' ' + data.vehicle.year : '') + (data.vehicle.plate ? ', placa ' + data.vehicle.plate : '');
+  return '' +
+    '<div class="hero">' +
+      '<div class="agent-chip">' +
+        '<div class="avatar">' + escHtml(initials(data.agent.name)) + '</div>' +
+        '<div class="agent-chip-info">' +
+          '<span class="agent-chip-name">' + escHtml(data.agent.name || 'Tu agente SDI') + '</span>' +
+          '<span class="agent-chip-role">Tu agente · Te acompaña paso a paso</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="bubble">' +
+        '<span class="greet">¡Hola, <span class="name">' + escHtml(greeting) + '</span>! 👋</span>' +
+        'Te preparé este <b>resumen visual</b> de las coberturas vigentes en tu póliza para ' +
+        '<b>' + escHtml(vehLine) + '</b>. Tocá cada tarjeta para ver el detalle.' +
+        '<div class="leyenda">ℹ Este es un breve resumen de tu cobertura. Para más información detallada, consultá las condiciones generales de tu póliza.</div>' +
+      '</div>' +
+    '</div>';
+}
 
-    function renderBanda() {
-      const valor = data.vehicle.valor;
-      return '' +
-        '<div class="banda">' +
-          '<div class="banda-grid">' +
-            '<div><div class="k">VIGENCIA DESDE</div><div class="v">' + escHtml(fmtFecha(data.policy.from)) + '</div></div>' +
-            '<div><div class="k">VIGENCIA HASTA</div><div class="v">' + escHtml(fmtFecha(data.policy.to)) + '</div></div>' +
-            '<div><div class="k">FORMA DE PAGO</div><div class="v">' + escHtml(fmtFp(data.policy.paymentForm)) + '</div></div>' +
-            '<div><div class="k">ÚLT. PRIMA PAGADA</div><div class="v">' + escHtml(fmtMoney(data.policy.lastPremium)) + ' c/IVA</div></div>' +
-          '</div>' +
-          (valor ? '<div class="banda-recordatorio">Recordá mantener actualizado tu monto asegurado actual: ' + fmtMoney(valor) + '</div>' : '') +
-        '</div>';
-    }
+function renderPolizaBanda() {
+  const valor = data.vehicle.valor;
+  return '' +
+    '<div class="poliza-banda">' +
+      '<div class="poliza-card">' +
+        '<div class="poliza-cell"><div class="lbl">Vigencia desde</div><div class="val">' + escHtml(fmtFecha(data.policy.from) || '—') + '</div></div>' +
+        '<div class="poliza-cell"><div class="lbl">Vigencia hasta</div><div class="val">' + escHtml(fmtFecha(data.policy.to) || '—') + '</div></div>' +
+        '<div class="poliza-cell"><div class="lbl">Forma de pago</div><div class="val">' + escHtml(fmtFp(data.policy.paymentForm) || '—') + '</div></div>' +
+        '<div class="poliza-cell"><div class="lbl">Última prima pagada</div><div class="val">' + escHtml(fmt(data.policy.lastPremium) || '—') + ' <span style="font-size:10px;font-weight:500;opacity:.7;">c/IVA</span></div></div>' +
+      '</div>' +
+      (valor ? '<div class="poliza-recordatorio">⚠ Recordá mantener actualizado tu monto asegurado actual: <b>' + fmt(valor) + '</b></div>' : '') +
+    '</div>';
+}
 
-    function renderCoberturaA() {
-      // Cobertura A tiene 2 montos: por persona + por evento
-      const persona = data.customAmounts.aP;
-      const evento  = data.customAmounts.aE;
-      return '' +
-        '<div class="cob-card">' +
-          '<div class="cob-head">' +
-            '<div class="cob-title">A · Daños a personas</div>' +
-            '<div class="cob-amount">' + fmtMoneyShort(persona) + '<small>por persona</small>' + fmtMoneyShort(evento) + '<small>por evento</small></div>' +
-          '</div>' +
-          '<p class="cob-desc">Responsabilidad civil si causás un accidente con lesiones o muerte de terceros. <em>· sin deducible</em></p>' +
-        '</div>';
-    }
+function renderCoberturas() {
+  if (!data.coverages.length) return '';
+  const tiles = [];
 
-    function renderCoberturas() {
-      if (!data.coverages.length) return '';
-      const coverDefs = {
-        C: { color: '',       title: 'C · Daños a propiedad',          desc: 'Daños a otros vehículos, postes, muros, casas o cualquier propiedad ajena.',       amount: data.customAmounts.C, suffix: '' },
-        D: { color: 'green',  title: 'D · Colisión y vuelco',          desc: 'Pérdidas directas, súbitas y accidentales de tu vehículo por choque o vuelco.',     amount: data.vehicle.valor,   suffix: '' },
-        F: { color: 'green',  title: 'F · Robo y/o hurto',             desc: 'Pérdidas accidentales por robo o hurto total o parcial del vehículo.',             amount: data.vehicle.valor,   suffix: '' },
-        B: { color: 'red',    title: 'B · Gastos médicos familiares',  desc: 'Atención médica para vos y tu familia si resultan lesionados en un accidente.',    amount: data.customAmounts.B, suffix: '· sin deducible' },
-        H: { color: 'purple', title: 'H · Riesgos adicionales',        desc: 'Naturaleza, vandalismo, incendio, animales y otros riesgos al vehículo.',          amount: data.vehicle.valor,   suffix: '' }
-      };
+  // A — Daños a personas (con 2 montos: persona + evento)
+  if (data.coverages.includes('A')) {
+    tiles.push(
+      '<div class="bento-tile azul" role="button" tabindex="0" aria-expanded="false">' +
+        '<div class="bento-head">' +
+          '<span class="letter">A</span>' +
+          '<span class="chevron" aria-hidden="true">▾</span>' +
+        '</div>' +
+        '<h3>Daños a personas</h3>' +
+        '<p class="desc">Responsabilidad civil si causás un accidente con lesiones o muerte de terceros.</p>' +
+        '<div class="amount-dual">' +
+          '<span>' + fmt(data.customAmounts.aP) + '<small>por persona</small></span>' +
+          '<span>' + fmt(data.customAmounts.aE) + '<small>por evento</small></span>' +
+        '</div>' +
+        '<div class="bento-detail">' +
+          'Si causás un accidente y otras personas resultan <b>lesionadas o fallecidas</b>, esta cobertura paga la responsabilidad civil hasta los montos contratados. Cubre además un <b>25% extra por daño moral probado</b> y los <b>honorarios y servicios médicos no amparados por el SOA</b> (Seguro Obligatorio Automotor).<br/><br/>' +
+          '<b>Sin deducible</b> — vos no ponés un colón.' +
+        '</div>' +
+      '</div>');
+  }
 
-      const aCard = data.coverages.includes('A') ? renderCoberturaA() : '';
+  // C — Daños a propiedad
+  if (data.coverages.includes('C')) {
+    tiles.push(
+      '<div class="bento-tile azul" role="button" tabindex="0" aria-expanded="false">' +
+        '<div class="bento-head">' +
+          '<span class="letter">C</span>' +
+          '<span class="chevron" aria-hidden="true">▾</span>' +
+        '</div>' +
+        '<h3>Daños a propiedad</h3>' +
+        '<p class="desc">Daños a otros vehículos, postes, muros, casas o cualquier propiedad ajena.</p>' +
+        '<div class="amount">' + fmt(data.customAmounts.C) + '</div>' +
+        '<div class="bento-detail">' +
+          'Si con tu vehículo dañás <b>propiedad ajena</b> (otro carro, postes, muros, casas, comercios), esta cobertura paga por esos daños hasta el monto contratado.<br/><br/>' +
+          (data.coverages.includes('N')
+            ? '<b>Cómo funciona el deducible gracias a la cobertura N en C:</b><br/>• Si el daño al tercero es <b>menor a ₡750.000</b>, vos pagás solo un deducible mínimo de <b>₡150.000</b> y el INS cubre la diferencia.<br/>• Si el daño al tercero es <b>mayor a ₡750.000</b>, la cobertura paga el <b>100% sin deducible</b> para vos.'
+            : 'Aplica el deducible regular de tu póliza.') +
+        '</div>' +
+      '</div>');
+  }
 
-      const order = ['C', 'D', 'F', 'B', 'H'];
-      const cards = order.filter(function (k) { return data.coverages.includes(k); }).map(function (k) {
-        const c = coverDefs[k];
-        return '' +
-          '<div class="cob-card ' + c.color + '">' +
-            '<div class="cob-head">' +
-              '<div class="cob-title">' + escHtml(c.title) + '</div>' +
-              '<div class="cob-amount">' + fmtMoneyShort(c.amount) + '</div>' +
-            '</div>' +
-            '<p class="cob-desc">' + escHtml(c.desc) + (c.suffix ? ' <em>' + escHtml(c.suffix) + '</em>' : '') + '</p>' +
-          '</div>';
-      }).join('');
+  // D — Colisión y vuelco
+  if (data.coverages.includes('D')) {
+    tiles.push(
+      '<div class="bento-tile green" role="button" tabindex="0" aria-expanded="false">' +
+        '<div class="bento-head">' +
+          '<span class="letter">D</span>' +
+          '<span class="chevron" aria-hidden="true">▾</span>' +
+        '</div>' +
+        '<h3>Colisión y vuelco</h3>' +
+        '<p class="desc">Pérdidas directas, súbitas y accidentales de tu vehículo por choque o vuelco.</p>' +
+        '<div class="amount">' + fmt(data.vehicle.valor) + '</div>' +
+        '<div class="bento-detail">' +
+          'Cubre las pérdidas directas, súbitas y accidentales que sufra tu vehículo a causa de <b>colisión o vuelco</b>, así como la <b>rotura o desprendimiento con daño de los cristales</b> de forma accidental y materialmente comprobable.<br/><br/>' +
+          'Hasta el valor asegurado. Aplica deducible' + (data.coverages.includes('IDD') ? ' — pero recordá que con la <b>cobertura IDD</b> ese deducible te lo reintegramos en hasta 2 eventos al año.' : '.') +
+        '</div>' +
+      '</div>');
+  }
 
-      const nCard = data.coverages.includes('N') ? '' +
-        '<div class="cob-card gold">' +
-          '<div class="cob-title">N · Exención del deducible (aplica a C)</div>' +
-          '<p class="cob-desc">Si daño a tercero menor a ₡750.000 → solo pagás ₡150.000. Si mayor → sin deducible.</p>' +
-        '</div>' : '';
+  // F — Robo y/o hurto
+  if (data.coverages.includes('F')) {
+    tiles.push(
+      '<div class="bento-tile green" role="button" tabindex="0" aria-expanded="false">' +
+        '<div class="bento-head">' +
+          '<span class="letter">F</span>' +
+          '<span class="chevron" aria-hidden="true">▾</span>' +
+        '</div>' +
+        '<h3>Robo y/o hurto</h3>' +
+        '<p class="desc">Pérdidas accidentales por robo o hurto total o parcial del vehículo.</p>' +
+        '<div class="amount">' + fmt(data.vehicle.valor) + '</div>' +
+        '<div class="bento-detail">' +
+          'Cubre las pérdidas directas, súbitas y accidentales por <b>robo o hurto total o parcial del vehículo</b>, los daños que resulten de la <b>tentativa</b> de producir esos delitos, el robo o hurto del <b>equipo especial asegurado</b>, y el <b>uso indebido, hurto de uso o retención indebida</b>.<br/><br/>' +
+          'Hasta el valor asegurado. Aplica deducible' + (data.coverages.includes('IDD') ? ' — y la cobertura IDD te puede reintegrar ese deducible.' : '.') +
+        '</div>' +
+      '</div>');
+  }
 
-      return '' +
-        '<div class="section">' +
-          '<div class="num">📋 SECCIÓN 1</div>' +
-          '<h2>Coberturas que tenés contratadas</h2>' +
-          '<div class="cob-grid">' + aCard + cards + nCard + '</div>' +
-        '</div>';
-    }
+  // B — Gastos médicos familiares
+  if (data.coverages.includes('B')) {
+    tiles.push(
+      '<div class="bento-tile red" role="button" tabindex="0" aria-expanded="false">' +
+        '<div class="bento-head">' +
+          '<span class="letter">B</span>' +
+          '<span class="chevron" aria-hidden="true">▾</span>' +
+        '</div>' +
+        '<h3>Gastos médicos familiares</h3>' +
+        '<p class="desc">Atención médica para vos y tu familia si resultan lesionados en un accidente.</p>' +
+        '<div class="amount">' + fmt(data.customAmounts.B) + '</div>' +
+        '<div class="bento-detail">' +
+          'Si tenés un accidente de tránsito en territorio costarricense, esta cobertura paga los <b>gastos médicos</b> tuyos, de tu cónyuge o de cualquier familiar hasta tercer grado de consanguinidad o afinidad que viajara <b>dentro de la cabina del vehículo</b>.<br/><br/>' +
+          'La atención se brinda al <b>100% en el Hospital del Trauma del INS</b> (o en las instalaciones médicas que el INS señale). Opera en exceso del Seguro Obligatorio Automotor. <b>No aplica deducible.</b>' +
+        '</div>' +
+      '</div>');
+  }
 
-    function renderAsistencia() {
-      const tieneG = data.coverages.includes('G');
-      const tieneM = data.coverages.includes('M');
-      if (!tieneG && !tieneM) return '';
-      const ai = planAsistencia(data.vehicle.year);
-      if (!ai.plan) {
-        return '' +
-          '<div class="section">' +
-            '<div class="num">🛠 SECCIÓN 2</div>' +
-            '<h2>Tu asistencia 24/7</h2>' +
-            '<div class="svc-grid" style="grid-template-columns:1fr;"><div style="padding:14px;color:var(--text);font-size:13px;">' + escHtml(ai.mensaje) + '</div></div>' +
-          '</div>';
-      }
-      // Servicios y cantidades según el plan (M = mecánica/vial)
-      const svcsM = ai.tipo === 'plus' ? [
-        { ic: '🚛', nm: 'Remolque por avería',          qy: '8× · $200' },
-        { ic: '🚗', nm: 'Remolque por accidente',        qy: '10× · $200' },
-        { ic: '🔑', nm: 'Cerrajería',                    qy: '6× · $150' },
-        { ic: '⛽', nm: 'Envío de combustible',          qy: '6× · costo' },
-        { ic: '🛞', nm: 'Cambio de llanta',              qy: '6× · $125' },
-        { ic: '🔋', nm: 'Paso de corriente',             qy: '5× · $125' },
-        { ic: '🚧', nm: 'Mini-rescate (atoramiento)',    qy: '5× · $125' }
-      ] : [
-        { ic: '🚛', nm: 'Remolque por avería',          qy: '6× · $175' },
-        { ic: '🚗', nm: 'Remolque por accidente',        qy: '7× · $175' },
-        { ic: '🔑', nm: 'Cerrajería',                    qy: '4× · $125' },
-        { ic: '⛽', nm: 'Envío de combustible',          qy: '4× · costo' },
-        { ic: '🛞', nm: 'Cambio de llanta',              qy: '4× · $100' },
-        { ic: '🔋', nm: 'Paso de corriente',             qy: '3× · $100' },
-        { ic: '🚧', nm: 'Mini-rescate (atoramiento)',    qy: '3× · $100' }
-      ];
+  // H — Riesgos adicionales
+  if (data.coverages.includes('H')) {
+    tiles.push(
+      '<div class="bento-tile purple" role="button" tabindex="0" aria-expanded="false">' +
+        '<div class="bento-head">' +
+          '<span class="letter">H</span>' +
+          '<span class="chevron" aria-hidden="true">▾</span>' +
+        '</div>' +
+        '<h3>Riesgos adicionales</h3>' +
+        '<p class="desc">Naturaleza, vandalismo, incendio, animales y otros riesgos al vehículo.</p>' +
+        '<div class="amount">' + fmt(data.vehicle.valor) + '</div>' +
+        '<div class="bento-detail">' +
+          'Cubre los daños al vehículo a consecuencia de:<br/>' +
+          '• <b>Inundación</b> (desbordamientos de ríos, lagos, alcantarillado público).<br/>' +
+          '• <b>Ciclón, huracán, tornado, tormenta</b> (declarados formalmente por las autoridades).<br/>' +
+          '• <b>Temblor, terremoto, deslizamiento, hundimiento o derrumbe</b>.<br/>' +
+          '• <b>Explosión externa</b>.<br/>' +
+          '• <b>Vandalismo</b>: rayonazos, raspones, líquidos corrosivos, manchas de pintura, golpes, lanzamiento de piedras, proyectiles o balas.<br/>' +
+          '• Daños durante <b>transporte terrestre o acuático</b> y maniobras de carga/descarga.<br/>' +
+          '• <b>Caída de aeronaves</b> o sus partes.<br/>' +
+          '• <b>Rayo o incendio</b> por cualquier causa.<br/>' +
+          '• Levantamiento accidental de la <b>tapa del motor</b>.<br/>' +
+          '• Daños provocados por <b>animales</b> (sean o no del Asegurado).<br/><br/>' +
+          'Hasta el valor asegurado. Aplica deducible.' +
+        '</div>' +
+      '</div>');
+  }
 
-      const cobLabel = tieneG && tieneM ? 'Coberturas G y M' : (tieneG ? 'Cobertura G (asistencia legal)' : 'Cobertura M (asistencia mecánica/vial)');
-      const blockM = tieneM ? '' +
-        '<div class="svc-grid">' +
-          svcsM.map(function (s) { return '<div class="svc-row"><span class="ic">' + s.ic + '</span><div class="nm">' + s.nm + '</div><div class="qy">' + s.qy + '</div></div>'; }).join('') +
-        '</div>' : '';
+  // N — Exención del deducible (banner especial dorado, sin monto)
+  if (data.coverages.includes('N')) {
+    tiles.push(
+      '<div class="bento-tile gold" role="button" tabindex="0" aria-expanded="false" style="grid-column:span 2;">' +
+        '<div class="bento-head">' +
+          '<span class="letter">N</span>' +
+          '<span class="chevron" aria-hidden="true">▾</span>' +
+        '</div>' +
+        '<h3 style="color:' + getComputedStyle(document.documentElement).getPropertyValue('--gold-text') + ';">Exención del deducible (aplica a C)</h3>' +
+        '<p class="desc">Si daño a tercero menor a ₡750.000 → solo pagás ₡150.000. Si mayor → sin deducible.</p>' +
+        '<div class="amount">★ Beneficio incluido</div>' +
+        '<div class="bento-detail">' +
+          'La cobertura <b>N</b> modifica cómo funciona el deducible en la cobertura C (Daños a propiedad de terceros):<br/><br/>' +
+          '• Si el daño al tercero es <b>menor a ₡750.000</b>, solo pagás un mínimo de <b>₡150.000</b> y el INS cubre la diferencia.<br/>' +
+          '• Si el daño al tercero es <b>mayor a ₡750.000</b>, no pagás un colón — el INS cubre todo.<br/><br/>' +
+          'Esta cobertura es muy frecuente en pólizas de auto INS porque es la forma más cómoda de protegerte ante daños a terceros.' +
+        '</div>' +
+      '</div>');
+  }
 
-      const blockG = tieneG ? '' +
-        '<div style="background:white;border-radius:8px;padding:14px;margin-top:' + (tieneM ? '10px' : '0') + ';">' +
-          '<div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--navy);">' +
-            '<span style="font-size:22px;">⚖</span>' +
-            '<div><b>Asistencia legal</b> — defensa jurídica y trámites legales relacionados a accidentes de tránsito.</div>' +
-          '</div>' +
-        '</div>' : '';
+  return '' +
+    '<section class="section" id="s1">' +
+      '<div class="section-header">' +
+        '<span class="section-num">📋 Sección 1 · Tu recorrido</span>' +
+        '<h2 class="section-title">Las coberturas que tenés contratadas</h2>' +
+        '<p class="section-sub">Tocá cada tarjeta para ver el detalle de cada cobertura.</p>' +
+      '</div>' +
+      '<div class="bento-grid">' + tiles.join('') + '</div>' +
+    '</section>';
+}
 
-      return '' +
-        '<div class="section">' +
-          '<div class="num">🛠 SECCIÓN 2</div>' +
-          '<h2>Tu asistencia 24/7 en carretera</h2>' +
-          '<h2 class="sub">' + cobLabel + ' — ' + ai.plan + ' (' + ai.rango + ')</h2>' +
-          blockM + blockG +
-        '</div>';
-    }
+function renderAsistencia() {
+  const tieneG = data.coverages.includes('G');
+  const tieneM = data.coverages.includes('M');
+  if (!tieneG && !tieneM) return '';
+  const ai = planAsistencia(data.vehicle.year);
 
-    function renderIDD() {
-      if (!data.coverages.includes('IDD')) return '';
-      const ded = data.iddAmount;
-      return '' +
-        '<div class="section">' +
-          '<div class="num">🛡 SECCIÓN 3</div>' +
-          '<h2>IDD — Tu protección al deducible</h2>' +
-          '<div class="idd-card">' +
-            '<div class="idd-row">' +
-              '<div class="idd-col from"><div class="lbl">SIN IDD</div><div class="val">' + fmtMoney(ded) + '</div></div>' +
+  let titulo = 'Tu asistencia 24/7 en carretera';
+  let subtitulo;
+  if (tieneG && tieneM) subtitulo = 'Coberturas G y M — siempre que necesites ayuda en la calle, te respaldamos.';
+  else if (tieneG)      subtitulo = 'Cobertura G — siempre que necesites ayuda en la calle, te respaldamos.';
+  else                  subtitulo = 'Cobertura M — siempre que necesites ayuda en la calle, te respaldamos.';
+
+  if (!ai.plan) {
+    return '' +
+      '<section class="section" id="s2">' +
+        '<div class="section-header">' +
+          '<span class="section-num">🛠 Sección 2 · Tu recorrido</span>' +
+          '<h2 class="section-title">' + titulo + '</h2>' +
+          '<p class="section-sub">' + subtitulo + '</p>' +
+        '</div>' +
+        '<div class="tip-banner">' +
+          '<div class="bulb">!</div>' +
+          '<div class="text">' + escHtml(ai.mensaje) + '</div>' +
+        '</div>' +
+      '</section>';
+  }
+
+  const svcs = ai.tipo === 'plus' ? [
+    { ic: '🚛', nm: 'Remolque por avería',          qy: '8× · $200' },
+    { ic: '🚗', nm: 'Remolque por accidente',        qy: '10× · $200' },
+    { ic: '🔑', nm: 'Cerrajería',                    qy: '6× · $150' },
+    { ic: '⛽', nm: 'Envío de combustible',          qy: '6× · costo' },
+    { ic: '🛞', nm: 'Cambio de llanta',              qy: '6× · $125' },
+    { ic: '🔋', nm: 'Paso de corriente',             qy: '5× · $125' },
+    { ic: '🚧', nm: 'Mini-rescate (atoramiento)',    qy: '5× · $125' }
+  ] : [
+    { ic: '🚛', nm: 'Remolque por avería',          qy: '6× · $175' },
+    { ic: '🚗', nm: 'Remolque por accidente',        qy: '7× · $175' },
+    { ic: '🔑', nm: 'Cerrajería',                    qy: '4× · $125' },
+    { ic: '⛽', nm: 'Envío de combustible',          qy: '4× · costo' },
+    { ic: '🛞', nm: 'Cambio de llanta',              qy: '4× · $100' },
+    { ic: '🔋', nm: 'Paso de corriente',             qy: '3× · $100' },
+    { ic: '🚧', nm: 'Mini-rescate (atoramiento)',    qy: '3× · $100' }
+  ];
+
+  const vehTexto = (data.vehicle.description || 'tu vehículo') + (ai.edad ? ' (' + ai.edad + ' años)' : '');
+
+  return '' +
+    '<section class="section" id="s2">' +
+      '<div class="section-header">' +
+        '<span class="section-num">🛠 Sección 2 · Tu recorrido</span>' +
+        '<h2 class="section-title">' + titulo + '</h2>' +
+        '<p class="section-sub">' + subtitulo + '</p>' +
+      '</div>' +
+      '<div class="tip-banner">' +
+        '<div class="bulb">💡</div>' +
+        '<div class="text">' +
+          '<b>Buena noticia:</b> tenés asistencia 24/7 incluida.' +
+          '<span class="small">El alcance del plan se ajusta a la antigüedad de tu vehículo. Para ' + escHtml(vehTexto) + ' te corresponde el <b>' + ai.plan + '</b>.</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="svc-grid">' +
+        svcs.map(function (s) { return '<div class="svc-row"><div class="icon">' + s.ic + '</div><div class="name">' + s.nm + '</div><div class="qty">' + s.qy + '</div></div>'; }).join('') +
+      '</div>' +
+    '</section>';
+}
+
+function renderIDD() {
+  if (!data.coverages.includes('IDD')) return '';
+  const ded = data.iddAmount;
+  return '' +
+    '<section class="section" id="s3">' +
+      '<div class="section-header">' +
+        '<span class="section-num">🛡 Sección 3 · Tu recorrido</span>' +
+        '<h2 class="section-title">Tu protección al deducible (IDD)</h2>' +
+        '<p class="section-sub">El deducible es lo que normalmente debés pagar de tu bolsillo. Con la IDD, ese monto baja a cero cuando aplica.</p>' +
+      '</div>' +
+      '<div class="idd-card">' +
+        '<div class="idd-top">' +
+          '<div>' +
+            '<div class="idd-label">Tu deducible en cualquier choque</div>' +
+            '<div class="idd-compare">' +
+              '<div class="idd-col-from">' +
+                '<div class="small">Sin IDD</div>' +
+                '<div class="from">' + fmt(ded) + '</div>' +
+              '</div>' +
               '<div class="idd-arrow">→</div>' +
-              '<div class="idd-col to"><div class="lbl">CON IDD</div><div class="val">₡0</div></div>' +
-            '</div>' +
-            '<div class="idd-meta">Hasta 2 eventos al año cuando el daño supera tu deducible (' + fmtMoney(ded) + ')</div>' +
-          '</div>' +
-        '</div>';
-    }
-
-    function renderDeducible() {
-      if (!data.deductibles.length) return '';
-      const cards = data.deductibles.map(function (code) {
-        const d = dedTexto(code);
-        return '<div class="ded-card"><div class="lbl">' + escHtml(d.lbl) + '</div><div class="desc">' + escHtml(d.desc) + '</div></div>';
-      }).join('');
-      const subtitle = data.deductibles.length > 1
-        ? '<h2 class="sub">Tu póliza combina ' + data.deductibles.length + ' deducibles según la cobertura.</h2>'
-        : '';
-      return '' +
-        '<div class="section">' +
-          '<div class="num">⚙ SECCIÓN 4</div>' +
-          '<h2>Tu deducible</h2>' +
-          subtitle +
-          '<div class="ded-list">' + cards + '</div>' +
-        '</div>';
-    }
-
-    function renderRepuestos() {
-      if (!data.coverages.includes('REP')) return '';
-      const r = repTexto(data.repPlan);
-      return '' +
-        '<div class="section">' +
-          '<div class="num">🔧 SECCIÓN 5</div>' +
-          '<h2>Tu plan de sustitución de repuestos</h2>' +
-          '<div class="rep-card">' +
-            '<div class="lbl">Plan: ' + escHtml(r.lbl) + '</div>' +
-            '<div class="desc">' + escHtml(r.desc) + '</div>' +
-          '</div>' +
-        '</div>';
-    }
-
-    function renderElectric() {
-      if (!data.vehicle.electric) return '';
-      const valor = data.vehicle.valor || 0;
-      const batMax = Math.round(valor * 0.4);
-      return '' +
-        '<div class="section">' +
-          '<div class="num">⚡ COBERTURA ESPECIAL ELÉCTRICOS</div>' +
-          '<h2>Tu cobertura de batería</h2>' +
-          '<div class="elec-card">' +
-            '<p class="lead">Las baterías son el componente <b>más caro</b> de un vehículo eléctrico. El INS tiene una <b>cobertura especial</b> para protegerte ante un siniestro que afecte la batería.</p>' +
-            '<div class="bat-box">' +
-              '<div class="bat-label">Cobertura especial de batería (40% del valor asegurado)</div>' +
-              '<div class="bat-amount">' + fmtMoney(batMax) + '</div>' +
+              '<div class="idd-col-to">' +
+                '<div class="small">Con IDD</div>' +
+                '<div class="to">₡0</div>' +
+              '</div>' +
             '</div>' +
           '</div>' +
-        '</div>';
-    }
-
-    function renderFooter() {
-      const waUrl = whatsappUrl(data.agent.whatsapp, data.client.name, firstName(data.agent.name));
-      const waBtn = waUrl ? '<a class="btn btn-wa" href="' + waUrl + '" target="_blank">Hablemos por WhatsApp</a>' : '';
-      const webBtn = data.agent.website ? '<a class="btn btn-web" href="https://' + escHtml(data.agent.website) + '" target="_blank">' + escHtml(data.agent.website) + '</a>' : '';
-      return '' +
-        '<footer class="foot">' +
-          '<div class="preg">¿Preguntas? Estoy a la orden.</div>' +
-          '<div class="name">' + escHtml(data.agent.name || 'Tu agente SDI') + '</div>' +
-          '<div class="meta">Agente · Lic. SUGESE ' + escHtml(data.agent.license) + ' · ' + escHtml(data.agent.whatsapp || data.agent.email) + '</div>' +
-          '<div class="ctas">' + waBtn + webBtn + '</div>' +
-          '<div class="sdi-wrap">' +
-            '<svg viewBox="0 0 320 140" aria-label="Seguros Digitales SDI">' +
-              '<text x="10" y="78" font-family="Sora, Inter, sans-serif" font-weight="500" font-size="82" letter-spacing="-2.5" fill="#FFFFFF">SDI</text>' +
-              '<g transform="translate(185, 22)">' +
-                '<rect x="0" y="0" width="30" height="6" rx="1.5" fill="#FFFFFF"/>' +
-                '<rect x="0" y="10" width="30" height="6" rx="1.5" fill="#FFFFFF"/>' +
-                '<rect x="0" y="20" width="30" height="6" rx="1.5" fill="#FFFFFF"/>' +
-                '<rect x="0" y="30" width="30" height="6" rx="1.5" fill="#FFFFFF"/>' +
-              '</g>' +
-              '<text x="160" y="120" text-anchor="middle" font-family="Inter, sans-serif" font-weight="500" font-size="14" letter-spacing="3.5" fill="#FFFFFF">SEGUROS DIGITALES</text>' +
-            '</svg>' +
+          '<div class="idd-side">' +
+            '★ Beneficio<br/>de tu cobertura<br/>IDD' +
           '</div>' +
-        '</footer>';
+        '</div>' +
+        '<div class="idd-rules">' +
+          '<div class="idd-rule ok">' +
+            '<div class="icon">✓</div>' +
+            '<div>' +
+              '<b>Daño mayor a ' + fmt(ded) + '</b><br/>' +
+              'La IDD se activa: vos no pagás el deducible, te lo reintegramos.' +
+              '<div class="meta">Hasta 2 choques al año</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="idd-rule warn">' +
+            '<div class="icon">!</div>' +
+            '<div>' +
+              '<b>Daño menor a ' + fmt(ded) + '</b><br/>' +
+              'Corre por cuenta del <b style="color:var(--gold-mid);">asegurado</b>. La IDD se activa solo cuando el daño supera el deducible.' +
+              '<div class="meta">Reparaciones pequeñas</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</section>';
+}
+
+function renderDeducible() {
+  if (!data.deductibles.length) return '';
+  const cards = data.deductibles.map(function (code) {
+    const d = dedTexto(code);
+    return '' +
+      '<div class="ded-card' + (d.special ? ' special' : '') + '">' +
+        '<span class="ded-tag">' + escHtml(d.tag) + '</span>' +
+        '<div class="lbl">' + escHtml(d.lbl) + '</div>' +
+        '<div class="desc">' + escHtml(d.desc) + '</div>' +
+      '</div>';
+  }).join('');
+
+  const subtitle = data.deductibles.length > 1
+    ? 'Tu póliza combina ' + data.deductibles.length + ' deducibles según la cobertura. Cada uno se aplica en una situación distinta.'
+    : 'Así funciona tu deducible.';
+
+  const tip = data.deductibles.length > 1
+    ? '<div class="ded-tip">💡 La combinación más frecuente en INS Auto es <b>N en C + un deducible fijo</b>. Te da protección máxima ante daños a terceros y un monto previsible para los demás eventos.</div>'
+    : '';
+
+  return '' +
+    '<section class="section" id="s4">' +
+      '<div class="section-header">' +
+        '<span class="section-num">⚙ Sección 4 · Tu recorrido</span>' +
+        '<h2 class="section-title">Tu deducible</h2>' +
+        '<p class="section-sub">' + subtitle + '</p>' +
+      '</div>' +
+      '<div class="ded-list">' + cards + '</div>' +
+      tip +
+    '</section>';
+}
+
+function renderRepuestos() {
+  if (!data.coverages.includes('REP')) return '';
+  const r = repTexto(data.repPlan);
+  return '' +
+    '<section class="section" id="s5">' +
+      '<div class="section-header">' +
+        '<span class="section-num">📦 Sección 5 · Tu recorrido</span>' +
+        '<h2 class="section-title">Tu plan de sustitución de repuestos</h2>' +
+        '<p class="section-sub">Tu póliza incluye la cobertura de sustitución de repuestos. Acá está el detalle del plan que tenés.</p>' +
+      '</div>' +
+      '<div class="rep-block">' +
+        '<div class="rep-header">' +
+          '<div class="num-badge">📦 Tu plan</div>' +
+          '<h3>' + escHtml(r.lbl) + '</h3>' +
+          '<div class="perso">Para tu <b>' + escHtml((data.vehicle.description || 'vehículo') + (data.vehicle.plate ? ', placa ' + data.vehicle.plate : '')) + '</b>.</div>' +
+        '</div>' +
+        '<div class="rep-body">' +
+          '<div class="rep-plan-card">' +
+            '<div class="icon">★</div>' +
+            '<div class="info">' +
+              '<div class="lbl">Plan vigente</div>' +
+              '<div class="name">' + escHtml(r.lbl) + '</div>' +
+              '<div class="desc">' + escHtml(r.desc) + '</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</section>';
+}
+
+function renderElectric() {
+  if (!data.vehicle.electric) return '';
+  const valor = data.vehicle.valor || 0;
+  const batMax = Math.round(valor * 0.4);
+  return '' +
+    '<section class="section" id="se">' +
+      '<div class="section-header">' +
+        '<span class="section-num">⚡ Sección extra · Vehículo eléctrico</span>' +
+        '<h2 class="section-title">Cobertura especial para tu vehículo eléctrico</h2>' +
+        '<p class="section-sub">Las baterías son el componente más caro de un vehículo eléctrico. El INS las cubre con un esquema especial.</p>' +
+      '</div>' +
+      '<div class="electric">' +
+        '<h3>Tu cobertura de batería</h3>' +
+        '<p class="lead">Las baterías son el componente <b>más caro</b> de un vehículo eléctrico. El INS tiene una <b>cobertura especial</b> diseñada para protegerte ante un siniestro que afecte la batería de tu carro.</p>' +
+        '<div class="battery-card">' +
+          '<div class="label">Cobertura especial de batería</div>' +
+          '<div class="key">' + (valor ? fmt(batMax) : '40%') + '</div>' +
+          '<div class="desc">' +
+            'Si el siniestro requiere <b>reemplazar completamente la batería</b>, el INS cubre hasta el <b>40% del valor asegurado</b>' +
+            (valor ? ' (en tu caso, ' + fmt(batMax) + ' sobre ' + fmt(valor) + ').' : '.') +
+            ' Sobre ese monto se aplica un <b>porcentaje según la antigüedad del vehículo</b> (100% en los primeros 24 meses, 80% entre 25 y 48 meses, 60% entre 49 y 72 meses, 50% entre 73 y 96 meses).' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</section>';
+}
+
+function renderClosing() {
+  const greeting = firstName(data.client.name) || data.client.name || 'Cliente';
+  const waUrl = whatsappUrl(data.agent.whatsapp, data.client.name, firstName(data.agent.name));
+  const waBtn = waUrl
+    ? '<a class="cta-wa" href="' + waUrl + '" target="_blank" rel="noopener"><span>💬</span><span>Hablemos por WhatsApp</span></a>'
+    : '';
+  const webBtn = data.agent.website ? '<br/><a class="cta-secondary" href="https://' + escHtml(data.agent.website) + '" target="_blank">Visitar ' + escHtml(data.agent.website) + '</a>' : '';
+  return '' +
+    '<div class="closing">' +
+      '<p class="msg">' + escHtml(greeting) + ', espero que este resumen te haya ayudado a tener claras las coberturas vigentes en tu póliza. Si tenés cualquier duda, hablemos.</p>' +
+      '<div class="signature">' +
+        '— ' + escHtml(data.agent.name || 'Tu agente SDI') +
+        '<span class="lic">Tu agente · Lic. SUGESE ' + escHtml(data.agent.license || '—') + '</span>' +
+      '</div>' +
+      waBtn +
+      webBtn +
+    '</div>';
+}
+
+function renderFooter() {
+  return '' +
+    '<footer class="footer">' +
+      '<img class="sdi-logo" src="../img/sdi-logo.svg" alt="Seguros Digitales SDI" />' +
+      '<div class="bold">Esta aplicación pertenece a Seguros Digitales SDI®.</div>' +
+      (data.agent.website ? '<div>Visitá <a href="https://' + escHtml(data.agent.website) + '">' + escHtml(data.agent.website) + '</a></div>' : '') +
+      '<div class="copyright">' +
+        '© ' + new Date().getFullYear() + ' Propiedad Intelectual de ' + escHtml(data.agent.name || 'Seguros Digitales SDI') + '. Todos los derechos reservados. Esta plataforma es una herramienta de uso exclusivo para los clientes vinculados a la Licencia SUGESE ' + escHtml(data.agent.license || '—') + '. Queda prohibida su reproducción o uso por terceros sin autorización expresa del titular.' +
+      '</div>' +
+    '</footer>';
+}
+
+// ============ BENTO INTERACTIVITY ============
+function wireBentos() {
+  const bentoTiles = document.querySelectorAll('.bento-tile');
+  function toggleBento(tile) {
+    const wasOpen = tile.classList.contains('expanded');
+    bentoTiles.forEach(function (t) {
+      t.classList.remove('expanded');
+      t.setAttribute('aria-expanded', 'false');
+    });
+    if (!wasOpen) {
+      tile.classList.add('expanded');
+      tile.setAttribute('aria-expanded', 'true');
     }
-  </script>
+  }
+  bentoTiles.forEach(function (tile) {
+    tile.addEventListener('click', function () { toggleBento(tile); });
+    tile.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleBento(tile); }
+    });
+  });
+}
+</script>
 
 </body>
 </html>
