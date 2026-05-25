@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Marcas con deducible diferenciado · Cotizador SDI</title>
+<link rel="icon" type="image/svg+xml" href="../img/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0b1d3a;
+  --azul: #0369a1;
+  --azul-deep: #0c4a6e;
+  --gold-bg: #fef3c7;
+  --gold-mid: #fbbf24;
+  --gold-deep: #f59e0b;
+  --gold-text: #78350f;
+  --green-deep: #059669;
+  --rose-mid: #f43f5e;
+  --rose-deep: #9f1239;
+  --rose-bg: #fff1f2;
+  --violet-mid: #8b5cf6;
+  --violet-deep: #5b21b6;
+  --violet-bg: #f5f3ff;
+  --cyan-deep: #0e7490;
+  --cyan-bg: #ecfeff;
+  --bg: #f8fafc;
+  --border: #e0e7ef;
+  --muted: #64748b;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg);
+  color: #1e293b;
+  line-height: 1.5;
+}
+
+/* HEADER */
+.app-header {
+  background: var(--navy);
+  color: #fff;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand-logo {
+  background: #fff;
+  color: var(--navy);
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 800;
+  font-size: 13px;
+}
+.brand-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+}
+.brand-sub { font-size: 11px; opacity: .65; margin-top: 1px; }
+.back-link {
+  color: #fff;
+  text-decoration: none;
+  font-size: 12px;
+  padding: 7px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,.2);
+  transition: background .15s;
+}
+.back-link:hover { background: rgba(255,255,255,.08); }
+
+/* CINTA DORADA */
+.ribbon {
+  background: linear-gradient(90deg, var(--gold-bg) 0%, #fefce8 50%, var(--gold-bg) 100%);
+  border-bottom: 1px solid #fde68a;
+  padding: 10px 24px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--gold-text);
+}
+.ribbon b { color: #422006; }
+
+/* CONTAINER */
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 28px 24px 60px;
+}
+
+h1 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 26px;
+  color: var(--navy);
+  margin: 0 0 6px;
+  letter-spacing: -0.01em;
+}
+.subtitle {
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 22px;
+}
+
+/* CARDS DE REGLAS (resumen arriba) */
+.rules-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 26px;
+}
+@media (max-width: 720px) { .rules-grid { grid-template-columns: 1fr; } }
+.rule-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 18px;
+}
+.rule-card.asia { border-left: 4px solid var(--rose-mid); }
+.rule-card.gama { border-left: 4px solid var(--violet-mid); }
+.rule-card .rule-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.rule-card.asia .rule-title { color: var(--rose-deep); }
+.rule-card.gama .rule-title { color: var(--violet-deep); }
+.rule-card .rule-sub { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+.rule-card .rule-text { font-size: 13px; color: #334155; line-height: 1.55; }
+.rule-card .rule-text b { color: var(--navy); }
+
+/* FILTROS */
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.filters .search {
+  flex: 1;
+  min-width: 200px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 14px;
+}
+.filters .search:focus { outline: 2px solid var(--azul); outline-offset: -1px; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip {
+  cursor: pointer;
+  padding: 6px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  background: #f8fafc;
+  color: #475569;
+  user-select: none;
+  transition: all .15s;
+}
+.chip:hover { background: #f1f5f9; }
+.chip.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+.chip.aplica.active { background: var(--rose-mid); border-color: var(--rose-mid); }
+.chip.no-aplica.active { background: #64748b; border-color: #64748b; }
+
+.result-count {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0 0 8px 4px;
+}
+
+/* TABLA */
+.tbl-wrap {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(12,35,64,.04);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+thead th {
+  background: var(--navy);
+  color: #fff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  padding: 11px 14px;
+  text-align: left;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+tbody td {
+  padding: 10px 14px;
+  border-top: 1px solid var(--border);
+  vertical-align: middle;
+}
+tbody tr:hover { background: #fafbfc; }
+tbody tr.hidden { display: none; }
+.marca { font-weight: 600; color: var(--navy); font-family: 'Space Grotesk', sans-serif; }
+.comb {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.comb.gasolina { background: #fee2e2; color: #991b1b; }
+.comb.diesel   { background: #fef3c7; color: #78350f; }
+.comb.electrico { background: var(--cyan-bg); color: var(--cyan-deep); }
+.comb.hibrido  { background: #ecfdf5; color: var(--green-deep); }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.badge.si { background: var(--rose-bg); color: var(--rose-deep); border: 1px solid #fda4af; }
+.badge.no { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+.ded-text { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: #334155; }
+
+.empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* FOOTER FUENTES */
+.sources {
+  margin-top: 30px;
+  padding: 16px 18px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.sources b { color: var(--navy); font-family: 'Space Grotesk', sans-serif; }
+.sources ul { margin: 6px 0 0; padding-left: 20px; }
+.sources li { margin-bottom: 2px; }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="brand">
+    <div class="brand-logo">SDI</div>
+    <div>
+      <div class="brand-title">Marcas con deducible diferenciado</div>
+      <div class="brand-sub">Referencia INS · Cotizador SDI</div>
+    </div>
+  </div>
+  <a class="back-link" href="../">← Volver al cotizador</a>
+</header>
+
+<div class="ribbon">
+  ⭐ Fuente oficial &mdash; <b>Circulares INS 0186-2025 y 0324-2025</b>
+</div>
+
+<main class="container">
+
+  <h1>Marcas con deducible diferenciado</h1>
+  <p class="subtitle">Consulta rápida para verificar si una marca aplica al recargo INS por origen o por alta siniestralidad. Datos literales del archivo oficial del INS.</p>
+
+  <!-- 2 REGLAS RESUMEN -->
+  <div class="rules-grid">
+    <div class="rule-card asia">
+      <div class="rule-title">🌏 Regla por marca / origen</div>
+      <div class="rule-sub">Aplica según la tabla de abajo</div>
+      <div class="rule-text">Deducible <b>único 20% del daño, mínimo ₡500.000 / $830</b> en cobertura de daño directo. La presencia de una marca en la tabla determina si activás el toggle <b>🌏 origen asiático</b> en el cotizador.</div>
+    </div>
+    <div class="rule-card gama">
+      <div class="rule-title">💎 Regla por alta gama</div>
+      <div class="rule-sub">Independiente de la marca</div>
+      <div class="rule-text">Aplica cuando la <b>suma asegurada ≥ ₡50.000.000</b>. Deducible <b>escalonado: 10% mín ₡500k</b> en pérdidas ≤ ₡6M, <b>20%</b> en pérdidas mayores. Activá el toggle <b>💎 alta gama</b> según la suma, no según la marca.</div>
+    </div>
+  </div>
+
+  <!-- FILTROS -->
+  <div class="filters">
+    <input type="text" class="search" id="search" placeholder="🔍 Buscar marca (ej. BYD, Mercedes, MG)" autocomplete="off">
+    <div class="chips" id="chips">
+      <span class="chip active" data-filter="all">Todas</span>
+      <span class="chip aplica" data-filter="si">Recargo aplica</span>
+      <span class="chip no-aplica" data-filter="no">No aplica</span>
+    </div>
+  </div>
+
+  <p class="result-count" id="resultCount"></p>
+
+  <!-- TABLA -->
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Marca</th>
+          <th>Combustible</th>
+          <th>¿Recargo?</th>
+          <th>Deducible aplicable</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="empty" id="empty" style="display:none;">Sin resultados con los filtros activos.</div>
+  </div>
+
+  <!-- FUENTES -->
+  <div class="sources">
+    <b>📋 Fuentes</b>
+    <ul>
+      <li><b>Circular INS 0186-2025</b> — Actualizaciones al Seguro Voluntario de Automóviles (deducible alta gama escalonado, suma asegurada mínima ₡50M).</li>
+      <li><b>Circular INS 0324-2025</b> — Recargo en daño directo para marcas chinas y de alta siniestralidad (20% mín ₡500.000).</li>
+      <li><b>Listado oficial INS</b> — Documento entregado por el INS con las marcas afectadas y su tipo de combustible (32 entradas).</li>
+    </ul>
+  </div>
+
+</main>
+
+<script>
+// Datos literales del Excel oficial del INS (32 filas)
+const DATA = [
+  { marca: 'MERCEDES BENZ',     comb: 'Eléctrico', recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'MERCEDES BENZ',     comb: 'Híbrido',   recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'GEELY',             comb: 'Eléctrico', recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'GEELY',             comb: 'Híbrido',   recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'GEELY',             comb: 'Gasolina',  recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'GEELY',             comb: 'Diésel',    recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'BYD',               comb: 'Gasolina',  recargo: 'No Aplica', ded: '20% mín ₡500.000' },
+  { marca: 'BYD',               comb: 'Eléctrico', recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'BYD',               comb: 'Híbrido',   recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'LEXUS',             comb: 'Diésel',    recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'LEXUS',             comb: 'Gasolina',  recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'RENAULT',           comb: 'Gasolina',  recargo: 'No Aplica', ded: '20% mín ₡500.000' },
+  { marca: 'RENAULT',           comb: 'Eléctrico', recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'RENAULT',           comb: 'Híbrido',   recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'PEUGEOT',           comb: 'Gasolina',  recargo: 'No Aplica', ded: '20% mín ₡500.000' },
+  { marca: 'PEUGEOT',           comb: 'Eléctrico', recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'PEUGEOT',           comb: 'Híbrido',   recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'MAXUS',             comb: 'Eléctrico', recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'MAXUS',             comb: 'Híbrido',   recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'FIAT',              comb: 'Eléctrico', recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'FIAT',              comb: 'Híbrido',   recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'FOTON',             comb: 'Eléctrico', recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'FOTON',             comb: 'Híbrido',   recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'MINI COOPER',       comb: 'Eléctrico', recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'MINI COOPER',       comb: 'Híbrido',   recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'MINI',              comb: 'Eléctrico', recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'MINI',              comb: 'Híbrido',   recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'MASERATTI',         comb: 'Eléctrico', recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'MASERATTI',         comb: 'Híbrido',   recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'MASERATTI',         comb: 'Gasolina',  recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'MASERATTI',         comb: 'Diésel',    recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'SOUEAST',           comb: 'Eléctrico', recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'SOUEAST',           comb: 'Híbrido',   recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'BAIC',              comb: 'Gasolina',  recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'BAIC',              comb: 'Diésel',    recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'KAIYI',             comb: 'Gasolina',  recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'KAIYI',             comb: 'Diésel',    recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'ZNA',               comb: 'Gasolina',  recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'ZNA',               comb: 'Diésel',    recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'CHERRY',            comb: 'Gasolina',  recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'CHERRY',            comb: 'Diésel',    recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'NETA',              comb: 'Eléctrico', recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'NETA',              comb: 'Híbrido',   recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'DONG-FENG',         comb: 'Gasolina',  recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'DONG-FENG',         comb: 'Diésel',    recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'DFSK',              comb: 'Gasolina',  recargo: 'Aplica',    ded: '20% mín ₡500.000' },
+  { marca: 'JAC',               comb: 'Eléctrico', recargo: 'No Aplica', ded: '20% mín ₡500.000' },
+  { marca: 'JAC',               comb: 'Híbrido',   recargo: 'No Aplica', ded: '20% mín ₡500.000' },
+  { marca: 'MG',                comb: 'Gasolina',  recargo: 'No Aplica', ded: '20% mín ₡500.000' },
+  { marca: 'MG',                comb: 'Diésel',    recargo: 'No Aplica', ded: '20% mín ₡500.000' },
+  { marca: 'FUSO (Mitsubishi)', comb: 'Gasolina',  recargo: 'No Aplica', ded: '20% mín ₡500.000' },
+  { marca: 'FUSO (Mitsubishi)', comb: 'Diésel',    recargo: 'No Aplica', ded: '20% mín ₡500.000' },
+  { marca: 'ZXAUTO',            comb: 'Gasolina',  recargo: 'No Aplica', ded: '20% mín ₡500.000' },
+  { marca: 'ZXAUTO',            comb: 'Diésel',    recargo: 'No Aplica', ded: '20% mín ₡500.000' },
+  { marca: 'CHANGAN',           comb: 'Diésel',    recargo: 'No Aplica', ded: '20% mín ₡500.000' },
+  { marca: 'CHANGAN',           comb: 'Gasolina',  recargo: 'No Aplica', ded: '20% mín ₡500.000' }
+];
+
+// Normaliza texto para búsqueda (sin acentos, minúsculas)
+function norm(s) {
+  return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
+function combClass(c) {
+  return norm(c).replace(/é/g, 'e').replace(/í/g, 'i');
+}
+
+function renderRows() {
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = DATA.map(function (r) {
+    const aplica = r.recargo === 'Aplica';
+    return '<tr data-marca="' + norm(r.marca) + '" data-recargo="' + (aplica ? 'si' : 'no') + '">' +
+      '<td class="marca">' + r.marca + '</td>' +
+      '<td><span class="comb ' + combClass(r.comb) + '">' + r.comb + '</span></td>' +
+      '<td>' + (aplica
+        ? '<span class="badge si">✓ Sí aplica</span>'
+        : '<span class="badge no">— No aplica</span>') + '</td>' +
+      '<td class="ded-text">' + r.ded + '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+// Filtros (búsqueda + chips)
+const search = document.getElementById('search');
+const chips = document.querySelectorAll('.chip');
+const empty = document.getElementById('empty');
+const resultCount = document.getElementById('resultCount');
+let activeFilter = 'all';
+
+function applyFilters() {
+  const q = norm(search.value.trim());
+  const rows = document.querySelectorAll('#tbody tr');
+  let visible = 0;
+  rows.forEach(function (tr) {
+    const marca = tr.getAttribute('data-marca');
+    const rec = tr.getAttribute('data-recargo');
+    const matchSearch = !q || marca.includes(q);
+    const matchFilter = activeFilter === 'all' || rec === activeFilter;
+    const show = matchSearch && matchFilter;
+    tr.classList.toggle('hidden', !show);
+    if (show) visible++;
+  });
+  empty.style.display = visible === 0 ? '' : 'none';
+  resultCount.textContent = visible + ' de ' + DATA.length + ' entradas';
+}
+
+chips.forEach(function (c) {
+  c.addEventListener('click', function () {
+    chips.forEach(function (x) { x.classList.remove('active'); });
+    c.classList.add('active');
+    activeFilter = c.getAttribute('data-filter');
+    applyFilters();
+  });
+});
+search.addEventListener('input', applyFilters);
+
+renderRows();
+applyFilters();
+</script>
+
+</body>
+</html>
