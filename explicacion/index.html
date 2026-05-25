@@ -26,6 +26,14 @@
   --cyan-mid: #06b6d4;
   --cyan-deep: #0e7490;
   --cyan-bg: #ecfeff;
+  --rose-bg: #fff1f2;
+  --rose-mid: #f43f5e;
+  --rose-deep: #9f1239;
+  --rose-text: #881337;
+  --violet-bg: #f5f3ff;
+  --violet-mid: #8b5cf6;
+  --violet-deep: #5b21b6;
+  --violet-text: #4c1d95;
   --bg: #f8fafc;
   --border: #e0e7ef;
   --muted: #64748b;
@@ -1354,6 +1362,245 @@ main { max-width: 880px; margin: 0 auto; padding: 0 24px 60px; }
   from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* ============ SECCIÓN EXTRA · ORIGEN ASIÁTICO ============ */
+.card-asia {
+  background: linear-gradient(180deg, #fef2f2 0%, var(--rose-bg) 100%);
+  border: 2px solid #fda4af;
+  border-radius: 14px;
+  padding: 22px;
+  margin-top: 4px;
+}
+.card-asia h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  color: var(--rose-deep);
+  font-size: 19px;
+  margin: 0 0 8px;
+}
+.card-asia > p {
+  margin: 0 0 14px;
+  font-size: 13.5px;
+  color: var(--rose-text);
+}
+.card-asia .ded-card {
+  background: #fff;
+  border: 1px solid #fda4af;
+  border-radius: 10px;
+  padding: 16px;
+}
+.card-asia .ded-card .lbl {
+  font-size: 11px;
+  color: var(--rose-deep);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.card-asia .ded-card .val {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--rose-deep);
+  margin-top: 4px;
+}
+.card-asia .ded-card .min {
+  font-size: 12.5px;
+  color: var(--rose-text);
+  margin-top: 6px;
+}
+
+/* ============ SECCIÓN EXTRA · ALTA GAMA ============ */
+.card-gama {
+  background: linear-gradient(180deg, #faf5ff 0%, var(--violet-bg) 100%);
+  border: 2px solid #c4b5fd;
+  border-radius: 14px;
+  padding: 22px;
+  margin-top: 4px;
+  position: relative;
+}
+.card-gama::before {
+  content: "💎";
+  position: absolute;
+  top: -12px; right: 22px;
+  background: var(--violet-mid); color: #fff;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 14px;
+  box-shadow: 0 4px 14px rgba(139, 92, 246, .4);
+}
+.card-gama h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  color: var(--violet-deep);
+  font-size: 19px;
+  margin: 0 0 8px;
+}
+.card-gama > p {
+  margin: 0 0 14px;
+  font-size: 13.5px;
+  color: var(--violet-text);
+}
+.card-gama .min-asegurado {
+  background: #fff;
+  border: 1px solid #c4b5fd;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.card-gama .min-asegurado .ico { font-size: 22px; }
+.card-gama .min-asegurado .txt-lbl {
+  font-size: 10px;
+  color: var(--violet-deep);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.card-gama .min-asegurado .txt-val {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--violet-deep);
+}
+.card-gama .tier-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 4px;
+}
+.card-gama .tier {
+  background: #fff;
+  border: 1px solid #c4b5fd;
+  border-radius: 10px;
+  padding: 14px;
+}
+.card-gama .tier .rng {
+  font-size: 10.5px;
+  color: var(--violet-deep);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.card-gama .tier .pct {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--violet-deep);
+  margin: 2px 0;
+  line-height: 1;
+}
+.card-gama .tier .min-line {
+  font-size: 11.5px;
+  color: var(--violet-text);
+  margin-top: 4px;
+}
+
+/* ============ BLOQUE IDD compartido ============ */
+.card-asia .idd-box,
+.card-gama .idd-box {
+  margin-top: 14px;
+  background: #fff;
+  border: 1px solid #fda4af;
+  border-left: 4px solid var(--rose-mid);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.card-gama .idd-box.gama {
+  border-color: #c4b5fd;
+  border-left-color: var(--violet-mid);
+}
+.idd-box .idd-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.idd-box .idd-ico {
+  font-size: 22px;
+  background: var(--rose-bg);
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  flex-shrink: 0;
+}
+.idd-box.gama .idd-ico { background: var(--violet-bg); }
+.idd-box .idd-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 14.5px;
+  color: var(--rose-deep);
+}
+.idd-box.gama .idd-title { color: var(--violet-deep); }
+.idd-box .idd-sub { font-size: 11.5px; color: var(--muted); }
+.idd-box .idd-text {
+  font-size: 13px;
+  color: #334155;
+  margin: 6px 0 12px;
+  line-height: 1.55;
+}
+.idd-box .ej-label {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-style: italic;
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+.idd-box .ej-table {
+  display: grid;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  font-size: 11.5px;
+  background: #fafafa;
+}
+.idd-box .ej-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1.4fr 1fr 1fr;
+  border-bottom: 1px solid #e2e8f0;
+}
+.idd-box .ej-row:last-child { border-bottom: none; }
+.idd-box .ej-row > div {
+  padding: 8px 10px;
+  border-right: 1px solid #e2e8f0;
+}
+.idd-box .ej-row > div:last-child { border-right: none; }
+.idd-box .ej-row > div small {
+  display: block;
+  font-size: 9.5px;
+  color: var(--muted);
+  margin-top: 1px;
+}
+.idd-box .ej-head {
+  background: #f1f5f9;
+  font-weight: 700;
+  color: var(--navy);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.idd-box .ej-row .zero { color: var(--green-deep); font-weight: 700; }
+.idd-box .ej-row .pay { color: var(--rose-mid); font-weight: 700; }
+.idd-box.gama .ej-row .pay { color: var(--violet-deep); }
+.idd-box .warn-line {
+  margin-top: 6px;
+  padding: 9px 11px;
+  background: var(--gold-bg);
+  border: 1px solid #fde68a;
+  border-radius: 6px;
+  font-size: 11.5px;
+  color: var(--gold-text);
+  line-height: 1.5;
+}
+.idd-box .warn-line b { color: #422006; }
+
+@media (max-width: 600px) {
+  .card-gama .tier-grid { grid-template-columns: 1fr; }
+  .idd-box .ej-row { grid-template-columns: 1fr 1fr; }
+  .idd-box .ej-head { display: none; }
+  .idd-box .ej-row > div { padding: 6px 8px; }
+}
 </style>
 </head>
 <body>
@@ -1636,6 +1883,156 @@ main { max-width: 880px; margin: 0 auto; padding: 0 24px 60px; }
     </nav>
   </section>
 
+  <!-- ============ SECCIÓN 3 · ORIGEN ASIÁTICO (sustituye s3 si og=1) ============ -->
+  <section class="section" id="s3a" style="display:none;">
+    <div class="section-header">
+      <span class="section-num" style="background:var(--rose-bg);color:var(--rose-deep);">🛡 Sección 3 · Deducible diferenciado</span>
+      <h2 class="section-title">Tu deducible — vehículo de origen asiático</h2>
+      <p class="section-sub">El INS aplica un esquema de deducible adaptado a las marcas con un perfil de siniestralidad distinto al promedio del mercado.</p>
+    </div>
+
+    <div class="card-asia">
+      <h3>Deducible aplicable en daño directo</h3>
+      <p>Para la cobertura de <b>daño directo</b>, en caso de un siniestro cubierto vos asumís el porcentaje siguiente del valor del daño:</p>
+      <div class="ded-card">
+        <div class="lbl">Deducible único</div>
+        <div class="val">20% del valor del daño</div>
+        <div class="min">Con un mínimo de <b>₡500.000</b> o <b>US$830</b> según la moneda de la póliza.</div>
+      </div>
+
+      <div class="idd-box">
+        <div class="idd-head">
+          <span class="idd-ico">🛡</span>
+          <div>
+            <div class="idd-title">¿Tu póliza incluye la IDD por ₡500.000?</div>
+            <div class="idd-sub">Indemnización del Deducible — reembolsa el deducible hasta ese monto</div>
+          </div>
+        </div>
+        <p class="idd-text">La IDD2 te <b>reintegra hasta ₡500.000</b> del deducible en cada evento cubierto. Sin embargo, como el deducible mínimo de tu vehículo es <b>20% del daño</b>, en daños grandes el deducible supera los ₡500.000 y la diferencia queda <b>a tu cargo</b>.</p>
+
+        <div class="ej-label">📋 Ejemplos ilustrativos (cifras hipotéticas para entender el cálculo):</div>
+        <div class="ej-table">
+          <div class="ej-row ej-head">
+            <div>Valor del daño</div>
+            <div>Deducible (20% mín ₡500k)</div>
+            <div>IDD2 reembolsa</div>
+            <div>Tú pagás</div>
+          </div>
+          <div class="ej-row">
+            <div>₡1.000.000</div>
+            <div>₡500.000 <small>(aplica mínimo)</small></div>
+            <div>₡500.000</div>
+            <div class="zero">₡0</div>
+          </div>
+          <div class="ej-row">
+            <div>₡4.000.000</div>
+            <div>₡800.000 <small>(20%)</small></div>
+            <div>₡500.000</div>
+            <div class="pay">₡300.000</div>
+          </div>
+          <div class="ej-row">
+            <div>₡10.000.000</div>
+            <div>₡2.000.000 <small>(20%)</small></div>
+            <div>₡500.000</div>
+            <div class="pay">₡1.500.000</div>
+          </div>
+        </div>
+
+        <div class="warn-line">
+          ⚠ <b>Importante:</b> daños cuyo deducible aplicable supere los ₡500.000 generan un diferencial a cargo del asegurado, aún teniendo contratada la IDD2.
+        </div>
+      </div>
+    </div>
+
+    <nav class="step-nav-btns">
+      <button class="step-btn prev" data-target="s2">← Asistencia</button>
+      <button class="step-btn next" data-target="s4">Siguiente: Repuestos →</button>
+    </nav>
+  </section>
+
+  <!-- ============ SECCIÓN 3 · ALTA GAMA (sustituye s3 si ag=1) ============ -->
+  <section class="section" id="s3b" style="display:none;">
+    <div class="section-header">
+      <span class="section-num" style="background:var(--violet-bg);color:var(--violet-deep);">🛡 Sección 3 · Vehículo de alta gama</span>
+      <h2 class="section-title">Tu deducible — vehículo de alta gama</h2>
+      <p class="section-sub">El INS aplica un esquema de aseguramiento adaptado al perfil de los vehículos de alta gama, con un deducible escalonado según el monto de la pérdida.</p>
+    </div>
+
+    <div class="card-gama">
+      <h3>Tu cobertura paso a paso</h3>
+      <p>La cobertura de <b>daño directo</b> aplica con dos reglas diferenciadas según el tamaño del siniestro:</p>
+
+      <div class="min-asegurado">
+        <span class="ico">📊</span>
+        <div>
+          <div class="txt-lbl">Suma asegurada mínima</div>
+          <div class="txt-val">₡50.000.000 / US$90.909</div>
+        </div>
+      </div>
+
+      <div class="tier-grid">
+        <div class="tier">
+          <div class="rng">Si la pérdida ≤ ₡6.000.000</div>
+          <div class="pct">10%</div>
+          <div class="min-line">Con mínimo de <b>₡500.000 / US$830</b></div>
+        </div>
+        <div class="tier">
+          <div class="rng">Si la pérdida &gt; ₡6.000.000</div>
+          <div class="pct">20%</div>
+          <div class="min-line">Sin tope mínimo adicional</div>
+        </div>
+      </div>
+
+      <div class="idd-box gama">
+        <div class="idd-head">
+          <span class="idd-ico">🛡</span>
+          <div>
+            <div class="idd-title">¿Tu póliza incluye la IDD por ₡500.000?</div>
+            <div class="idd-sub">Indemnización del Deducible — reembolsa el deducible hasta ese monto</div>
+          </div>
+        </div>
+        <p class="idd-text">La IDD2 te <b>reintegra hasta ₡500.000</b> del deducible. En pérdidas pequeñas la IDD absorbe todo el deducible, pero en pérdidas mayores a ₡6.000.000 (cuando aplica el 20%) la diferencia queda <b>a tu cargo</b>.</p>
+
+        <div class="ej-label">📋 Ejemplos ilustrativos (cifras hipotéticas para entender el cálculo):</div>
+        <div class="ej-table">
+          <div class="ej-row ej-head">
+            <div>Valor del daño</div>
+            <div>Deducible</div>
+            <div>IDD2 reembolsa</div>
+            <div>Tú pagás</div>
+          </div>
+          <div class="ej-row">
+            <div>₡3.000.000 <small>(≤ ₡6M)</small></div>
+            <div>₡500.000 <small>(10% mín)</small></div>
+            <div>₡500.000</div>
+            <div class="zero">₡0</div>
+          </div>
+          <div class="ej-row">
+            <div>₡5.000.000 <small>(≤ ₡6M)</small></div>
+            <div>₡500.000 <small>(10%)</small></div>
+            <div>₡500.000</div>
+            <div class="zero">₡0</div>
+          </div>
+          <div class="ej-row">
+            <div>₡10.000.000 <small>(&gt; ₡6M)</small></div>
+            <div>₡2.000.000 <small>(20%)</small></div>
+            <div>₡500.000</div>
+            <div class="pay">₡1.500.000</div>
+          </div>
+        </div>
+
+        <div class="warn-line">
+          ⚠ <b>Importante:</b> en pérdidas mayores a ₡6.000.000 el deducible (20%) supera ampliamente los ₡500.000 de la IDD2 — el diferencial queda a cargo del asegurado.
+        </div>
+      </div>
+    </div>
+
+    <nav class="step-nav-btns">
+      <button class="step-btn prev" data-target="s2">← Asistencia</button>
+      <button class="step-btn next" data-target="s4">Siguiente: Repuestos →</button>
+    </nav>
+  </section>
+
   <!-- ============ SECCIÓN 4 — REPUESTOS ============ -->
   <section class="section" id="s4">
     <div class="section-header">
@@ -1902,6 +2299,8 @@ const data = {
   p:  _params.get('p')  || '',
   y:  parseInt(_params.get('y'), 10) || null,
   vt: _params.get('vt') || 'g',
+  og: _params.get('og') === '1',
+  ag: _params.get('ag') === '1',
   // Cotización
   va: parseInt(_params.get('va'), 10) || null,
   sr: _params.get('sr') || null,
@@ -2023,6 +2422,20 @@ function applyPersonalization() {
   const electricSection = document.querySelector('.electric');
   if (electricSection && data.vt !== 'e') {
     electricSection.style.display = 'none';
+  }
+
+  // Condiciones especiales · sustituyen la Sección 3 (deducible estándar)
+  // cuando el agente marca uno de los dos toggles en el cotizador.
+  const s3       = document.getElementById('s3');
+  const s3a      = document.getElementById('s3a');
+  const s3b      = document.getElementById('s3b');
+  const dotS3    = document.querySelector('.sticky-dot[data-target="s3"]');
+  if (data.og || data.ag) {
+    if (s3) s3.style.display = 'none';
+    if (data.og && s3a) s3a.style.display = '';
+    if (data.ag && s3b) s3b.style.display = '';
+    // Re-apuntar el dot del paso 3 hacia la primera sección sustituta
+    if (dotS3) dotS3.setAttribute('data-target', data.og ? 's3a' : 's3b');
   }
 
   // Sección 5 — 3 precios reales

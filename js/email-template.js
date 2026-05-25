@@ -120,6 +120,8 @@ function buildEmail(params) {
     plate:         p.plate,
     year:          p.year,
     vehicleType:   _detectVehicleType(p.vehicleType),
+    origenAsia:    !!p.origenAsia,
+    altaGama:      !!p.altaGama,
     valor:         p.valor,
     sustReposCode: _sustReposToCode(p.sustRepos),
     prices:        prices
@@ -471,6 +473,8 @@ function _escape(s) {
  * @param {string} [extras.plate]         - placa
  * @param {string|number} [extras.year]   - año del vehículo
  * @param {string} [extras.vehicleType]   - 'g' (gasolina) | 'e' (eléctrico)
+ * @param {boolean} [extras.origenAsia]   - true si el agente marcó "origen asiático"
+ * @param {boolean} [extras.altaGama]     - true si el agente marcó "alta gama"
  * @param {string|number} [extras.valor]  - valor asegurado en colones
  * @param {string} [extras.sustReposCode] - 'p' (Plus) | 'g' (Garantía) | '0' (nuevo) | 'n' (ninguno)
  * @param {object} [extras.prices]        - { anual, semestral, trimestral } strings ya extraídos del PDF
@@ -504,6 +508,8 @@ function _buildGuideUrl(extras) {
   add('p',  x.plate);
   add('y',  x.year);
   add('vt', x.vehicleType);
+  if (x.origenAsia) params.push('og=1');
+  if (x.altaGama)   params.push('ag=1');
   add('va', num(x.valor));
   add('sr', x.sustReposCode);
   if (x.prices) {
