@@ -131,6 +131,36 @@ function buildEmail(params) {
   const fontFam = "'Space Grotesk','Helvetica Neue',Helvetica,Arial,sans-serif";
   const fontBody = "'Inter','Helvetica Neue',Helvetica,Arial,sans-serif";
 
+  // Benefit 2 (deducible) - dinamico segun los toggles del agente.
+  // Si el vehiculo es de origen asiatico o alta gama el deducible NO es cero,
+  // por lo que el mensaje "cero deducible / no sacas un colon" induciria a error.
+  const benefit2 = (function () {
+    const og = !!p.origenAsia;
+    const ag = !!p.altaGama;
+    if (ag && og) {
+      return {
+        title: 'Deducible diferenciado',
+        text:  'Tu veh&iacute;culo aplica las condiciones especiales de alta gama. La IDD2 reintegra hasta &#8353;500.000 del deducible &mdash; en p&eacute;rdidas grandes el diferencial corre por cuenta del asegurado.'
+      };
+    }
+    if (ag) {
+      return {
+        title: 'Deducible escalonado &mdash; alta gama',
+        text:  'Tu veh&iacute;culo aplica deducible del 10% (m&iacute;n &#8353;500.000) en p&eacute;rdidas hasta &#8353;6M y del 20% en p&eacute;rdidas mayores. La IDD2 reintegra hasta &#8353;500.000.'
+      };
+    }
+    if (og) {
+      return {
+        title: 'Deducible diferenciado',
+        text:  'Tu veh&iacute;culo aplica un deducible especial del 20% (m&iacute;n &#8353;500.000). La IDD2 reintegra hasta &#8353;500.000 &mdash; el diferencial sobre ese monto corre por tu cuenta.'
+      };
+    }
+    return {
+      title: 'Cero deducible en tus choques',
+      text:  'Con la cobertura IDD, el INS te reintegra el deducible hasta 2 veces al a&ntilde;o. No sac&aacute;s un col&oacute;n.'
+    };
+  })();
+
   // ============ HTML COMPLETO ============
   return `<!DOCTYPE html>
 <html lang="es">
@@ -201,8 +231,8 @@ function buildEmail(params) {
                 <table cellpadding="0" cellspacing="0" border="0"><tr><td style="background:#10b981;color:#ffffff;width:36px;height:36px;border-radius:50%;text-align:center;font-size:18px;font-weight:bold;line-height:36px;">&#10003;</td></tr></table>
               </td>
               <td valign="top" style="padding:14px 16px 14px 12px;">
-                <p style="margin:0 0 2px;font-family:${fontFam};font-weight:700;color:#0c4a6e;font-size:14px;">Cero deducible en tus choques</p>
-                <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Con la cobertura IDD, el INS te reintegra el deducible hasta 2 veces al a&ntilde;o. No sac&aacute;s un col&oacute;n.</p>
+                <p style="margin:0 0 2px;font-family:${fontFam};font-weight:700;color:#0c4a6e;font-size:14px;">${benefit2.title}</p>
+                <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">${benefit2.text}</p>
               </td>
             </tr>
           </table>
