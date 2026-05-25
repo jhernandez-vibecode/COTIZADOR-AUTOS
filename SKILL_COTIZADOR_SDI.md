@@ -11,16 +11,84 @@ description: >
   cualquier codigo.
 ---
 
-# Cotizador SDI - Checkpoint 8 mayo 2026
+# Cotizador SDI - Checkpoint 25 mayo 2026
 
 ## Estado actual
-APP COMPLETA Y FUNCIONAL EN PRODUCCION. 60 commits desde init.
+APP COMPLETA Y FUNCIONAL EN PRODUCCION. 64+ commits desde init.
 Multi-agente operativo via localStorage. Gmail Y Outlook soportados
 (selector de proveedor en modal ⚙). Correo con logo INS y headers
 RFC 2047. Probado en produccion con PDF real BRK454 y cotizacion THG170.
-**Calculadora de cancelacion anticipada** disponible en `/cancelacion/`.
+**Calculadora de cancelacion anticipada** en `/cancelacion/`.
+**Detalle de coberturas vigentes** en `/coberturas/` + `/detalle/`.
+**Marcas con deducible diferenciado (INS)** en `/marcas-recargo/`.
 
 ## Decisiones recientes
+
+### 25 mayo 2026 — Toggles 'origen asiatico' + 'alta gama' + correo dinamico + marcas-recargo
+
+**Pedido de JC:** agregar al cotizador 2 toggles espejo del actual ⚡ Electrico para reflejar los nuevos deducibles INS diferenciados por origen de marca (Circular 0324-2025) y por alta gama (Circular 0186-2025). El cliente debe ver las condiciones que le aplican sin lenguaje despectivo.
+
+**Decisiones de diseno (validadas en mockup local antes de codear):**
+- Toggles independientes (puede convivir el-asia, el-gama, asia-gama, los 3 juntos)
+- En el explicador las secciones de origen asiatico / alta gama **SUSTITUYEN** la Seccion 3 (deducible estandar ¢400k) — no se agregan despues. Si ninguno activo, s3 original se muestra normal.
+- Lenguaje cliente-friendly: "vehiculo de origen asiatico" (NUNCA "marca china")
+- Bloque IDD2 con tabla de ejemplos hipoteticos en ambas cards. JC siempre cotiza con IDD2 (paquete predefinido), por eso se muestra siempre.
+- NO mostrar lista de marcas al cliente (solo al agente via /marcas-recargo/)
+
+**Arquitectura (espejo del flag electric):**
+
+| Archivo | Cambio |
+|---|---|
+| `index.html:222-243` | +2 toggle-rows (🌏 f-asia + 💎 f-gama) en Vista 2 |
+| `js/app.js:80-82, 392-401, 412-414, 461-463, 535-541` | Listeners + helpers `_isAsiaChecked()` `_isGamaChecked()` + paso a `buildEmail()` + reset |
+| `js/email-template.js:117-126, 471-476, 506-509` | `_buildGuideUrl` serializa `og=1` y `ag=1` |
+| `js/email-template.js:130-163, 204-205` | **Punto 2 del correo dinamico** segun toggles (titulo + texto cambian, ya NO miente con "cero deducible") |
+| `explicacion/index.html` | +2 secciones (s3a + s3b) con CSS rose/violet, **sustituyen** s3 segun flags, dot del paso 3 se reapunta dinamicamente |
+| `marcas-recargo/index.html` | Subpagina nueva con tabla literal del Excel INS (55 entradas), busqueda + chips, fuentes citadas |
+| `index.html` header | Boton 📋 entre 🧮 y 🛡 → /marcas-recargo/ en pestana nueva |
+
+**Reglas INS aplicadas (verificar contra fuentes oficiales antes de modificar):**
+
+- **🌏 Origen asiatico (Circular 0324-2025):** deducible UNICO 20% del dano, min ¢500.000 / $830 en cobertura de dano directo. Aplica a marcas chinas + marcas de alta siniestralidad listadas en el Excel oficial INS.
+
+- **💎 Alta gama (Circular 0186-2025):** suma asegurada minima ¢50.000.000 / $90.909. Deducible escalonado: 10% min ¢500k en perdidas ≤ ¢6M, 20% en perdidas mayores.
+
+- **🛡 IDD2 (¢500.000):** reembolsa el deducible hasta ¢500k en cada evento cubierto. Para asiatico/alta gama, cuando el deducible aplicable supera los ¢500k (perdidas grandes) el diferencial corre por cuenta del asegurado. **Esto invalida el mensaje "Cero deducible · No sacas un colon"** del correo en estos casos.
+
+**Combinaciones validas:**
+- electrico + asiatico (ej. BYD electrico) → muestra ambas secciones
+- electrico + alta gama (ej. Lexus hibrido ≥ ¢50M) → ambas
+- asiatico + alta gama (ej. Mercedes chino ≥ ¢50M) → ambas s3a+s3b en lugar de s3
+- los 3 → bateria + s3a + s3b
+- ninguno → flujo estandar sin cambios
+
+**URL del explicador desde correo (params nuevos):**
+- `og=1` → vehiculo de origen asiatico
+- `ag=1` → vehiculo de alta gama
+- `vt=e` (preexistente) → vehiculo electrico/hibrido
+
+**Pagina /marcas-recargo/ (consulta del agente):**
+- 55 entradas literales del Excel oficial INS (marca + combustible + recargo + deducible)
+- 2 reglas resumen arriba (origen asiatico = tabla, alta gama = suma ≥ ¢50M independiente)
+- Filtros: busqueda por marca + chips (Todas / Recargo aplica / No aplica)
+- Fuentes citadas al pie: Circulares 0186-2025 y 0324-2025
+
+**Verificado en preview local:**
+- 4 escenarios del explicador (sin flags, og solo, ag solo, og+ag) → secciones correctas + dot reapuntado
+- 4 escenarios del correo (mismas combinaciones) → titulo + texto del benefit 2 correctos
+- /marcas-recargo/ → 55 filas, busqueda + filtros combinados funcionan, sin errores en consola
+
+**Commits del 25 may 2026:**
+- `ecc50c0` feat(cotizador): toggles 'origen asiatico' + 'alta gama' con deducibles INS diferenciados
+- `b5b3bf9` fix(correo): punto 2 de beneficios dinamico segun origen-asia / alta-gama
+- `4124583` feat(marcas-recargo): pagina de consulta con tabla literal del INS
+
+**Gotchas a recordar:**
+- JC cotiza SIEMPRE con IDD2 (paquete predefinido). Si en el futuro se agrega opcion de NO incluir IDD, el bloque IDD2 dentro de s3a/s3b debe volverse condicional.
+- El sticky-dot del paso 3 ("Deducible") se reapunta dinamicamente a `s3a` o `s3b` segun corresponda. Si en el futuro se reescribe la sticky nav, recordar este detalle.
+- Los toggles asiatico/alta gama son **manuales del agente** — NO autodetectar por marca. Asi una marca nueva que no este en el Excel se cubre igual activando el toggle.
+
+---
 
 ### 8 mayo 2026 — Fix multi-agente: agendaUrl en explicador
 
