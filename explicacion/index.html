@@ -2567,14 +2567,23 @@ function applyPersonalization() {
     }
   }
 
-  // Sección 4 — auto-resaltar fila según sr
+  // Sección 4 — mostrar solo la fila del cliente según sr
   if (data.sr) {
     const map = { '0': 0, 'g': 1, 'p': 2, 'n': 3 };
     const rows = document.querySelectorAll('#s4 .qrow');
-    if (rows.length === 4 && map[data.sr] !== undefined) {
-      // Quitar match de la fila default (Plus está hardcoded como match en el HTML)
-      rows.forEach(r => r.classList.remove('match'));
-      rows[map[data.sr]].classList.add('match');
+    const idx = map[data.sr];
+    if (rows.length === 4 && idx !== undefined) {
+      rows.forEach((r, i) => {
+        if (i !== idx) {
+          r.style.display = 'none';
+        } else {
+          r.classList.add('match');
+        }
+      });
+      const intro = document.querySelector('#s4 .s4-intro');
+      if (intro) intro.innerHTML = 'ⓘ Este es el plan de repuestos que cubre tu póliza según la antigüedad de tu vehículo y la cobertura que cotizaste.';
+      const lead = document.querySelector('#s4 .sub-card .lead');
+      if (lead) lead.textContent = 'Este es el nivel que aplica para tu póliza:';
     }
   }
   // Header sección 4: vehículo+placa
