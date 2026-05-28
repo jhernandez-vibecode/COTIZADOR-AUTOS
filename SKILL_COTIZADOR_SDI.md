@@ -11,18 +11,44 @@ description: >
   cualquier codigo.
 ---
 
-# Cotizador SDI - Checkpoint 25 mayo 2026
+# Cotizador SDI - Checkpoint 28 mayo 2026
 
 ## Estado actual
-APP COMPLETA Y FUNCIONAL EN PRODUCCION. 64+ commits desde init.
+APP COMPLETA Y FUNCIONAL EN PRODUCCION. 66+ commits desde init.
 Multi-agente operativo via localStorage. Gmail Y Outlook soportados
 (selector de proveedor en modal ⚙). Correo con logo INS y headers
 RFC 2047. Probado en produccion con PDF real BRK454 y cotizacion THG170.
 **Calculadora de cancelacion anticipada** en `/cancelacion/`.
 **Detalle de coberturas vigentes** en `/coberturas/` + `/detalle/`.
 **Marcas con deducible diferenciado (INS)** en `/marcas-recargo/`.
+**Skill especialista** creado: `especialista-cotizador-sdi` en skills de Claude Code.
 
 ## Decisiones recientes
+
+### 28 mayo 2026 — Seccion 4 explicador: solo fila del cliente + etiqueta correcta
+
+**Fix 1 — Mostrar solo la opcion que corresponde al cliente:**
+Antes: seccion 4 del explicador mostraba las 4 filas de calidad de repuesto con la del cliente resaltada. Generaba confusion al cliente al ver opciones que no le aplican.
+Ahora: el JS oculta las 3 filas que NO corresponden al `sr` param y solo muestra la fila del cliente con highlight dorado. Los textos intro y lead tambien se actualizan cuando `sr` viene en el URL.
+Fallback: si `sr` no viene (correos viejos sin el param), se siguen mostrando las 4 filas con Plus resaltado por defecto — backward compatible.
+
+**Fix 2 — Etiqueta de repuesto alternativo con nombre oficial INS:**
+El badge del nivel sin extension cambia de "Repuesto Generico" a **"Alternativo / Generico o usado"** — que es el termino exacto como aparece en las cotizaciones INS.
+
+**Archivos modificados:**
+- `explicacion/index.html:2570-2588` — bloque JS `if (data.sr)` oculta filas no-matching + actualiza texto intro/lead
+- `explicacion/index.html:2205` — badge del nivel n cambia a "Alternativo / Generico o usado"
+
+**Commits:**
+- `6a6502e` fix(explicador): seccion 4 muestra solo fila de repuesto del cliente
+- `446c116` fix(explicador): etiqueta repuesto alternativo con nombre oficial INS
+
+**Skill especialista creado:**
+- Archivo: `C:/Users/segur/.claude/skills/especialista-cotizador-sdi/SKILL.md`
+- Disponible como `/especialista-cotizador-sdi` en futuras sesiones
+- Contiene: arquitectura, archivos clave, orden JS, flags de vehiculo, tabla sr, gotchas, reglas de no cambiar
+
+---
 
 ### 25 mayo 2026 — Toggles 'origen asiatico' + 'alta gama' + correo dinamico + marcas-recargo
 
