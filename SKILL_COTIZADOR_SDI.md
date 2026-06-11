@@ -85,7 +85,7 @@ El badge del nivel sin extension cambia de "Repuesto Generico" a **"Alternativo 
 | `js/email-template.js:117-126, 471-476, 506-509` | `_buildGuideUrl` serializa `og=1` y `ag=1` |
 | `js/email-template.js:130-163, 204-205` | **Punto 2 del correo dinamico** segun toggles (titulo + texto cambian, ya NO miente con "cero deducible") |
 | `explicacion/index.html` | +2 secciones (s3a + s3b) con CSS rose/violet, **sustituyen** s3 segun flags, dot del paso 3 se reapunta dinamicamente |
-| `marcas-recargo/index.html` | Subpagina nueva con tabla literal del Excel INS (55 entradas), busqueda + chips, fuentes citadas |
+| `marcas-recargo/index.html` | Subpagina nueva con tabla literal del Excel INS (56 entradas), busqueda + chips, fuentes citadas |
 | `index.html` header | Boton 📋 entre 🧮 y 🛡 → /marcas-recargo/ en pestana nueva |
 
 **Reglas INS aplicadas (verificar contra fuentes oficiales antes de modificar):**
@@ -109,7 +109,7 @@ El badge del nivel sin extension cambia de "Repuesto Generico" a **"Alternativo 
 - `vt=e` (preexistente) → vehiculo electrico/hibrido
 
 **Pagina /marcas-recargo/ (consulta del agente):**
-- 55 entradas literales del Excel oficial INS (marca + combustible + recargo + deducible)
+- 56 entradas literales del Excel oficial INS (marca + combustible + recargo + deducible)
 - 2 reglas resumen arriba (origen asiatico = tabla, alta gama = suma ≥ ¢50M independiente)
 - Filtros: busqueda por marca + chips (Todas / Recargo aplica / No aplica)
 - Fuentes citadas al pie: Circulares 0186-2025 y 0324-2025
@@ -117,7 +117,7 @@ El badge del nivel sin extension cambia de "Repuesto Generico" a **"Alternativo 
 **Verificado en preview local:**
 - 4 escenarios del explicador (sin flags, og solo, ag solo, og+ag) → secciones correctas + dot reapuntado
 - 4 escenarios del correo (mismas combinaciones) → titulo + texto del benefit 2 correctos
-- /marcas-recargo/ → 55 filas, busqueda + filtros combinados funcionan, sin errores en consola
+- /marcas-recargo/ → 56 filas, busqueda + filtros combinados funcionan, sin errores en consola
 
 **Commits del 25 may 2026:**
 - `ecc50c0` feat(cotizador): toggles 'origen asiatico' + 'alta gama' con deducibles INS diferenciados
