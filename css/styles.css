@@ -35,10 +35,19 @@
 html, body { margin: 0; padding: 0; }
 
 body {
-  font-family: 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color: var(--gray-900);
   background: var(--gray-50);
   min-height: 100vh;
+}
+
+/* Titulares con la tipografia display estandar SDI */
+.brand-title,
+.card-title,
+.drop-zone-title,
+.success-title,
+.modal-title {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
 }
 
 /* ============ HEADER ============ */
@@ -64,8 +73,10 @@ body {
 .brand-logo {
   width: 36px; height: 36px;
   border-radius: 8px;
-  background: var(--blue);
+  background: #fff;
+  color: var(--navy);
   display: grid; place-items: center;
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
   font-weight: 700; font-size: 13px;
   letter-spacing: .5px;
 }
