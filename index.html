@@ -54,6 +54,7 @@
         <a href="cancelacion/" class="header-btn" title="Calculadora de cancelación" aria-label="Calculadora de cancelación" style="text-decoration:none;font-size:16px;">🧮</a>
         <a href="marcas-recargo/" target="_blank" rel="noopener" class="header-btn" title="Marcas con deducible diferenciado" aria-label="Marcas con deducible diferenciado" style="text-decoration:none;font-size:16px;">📋</a>
         <a href="coberturas/" class="header-btn" title="Detalle de coberturas vigentes" aria-label="Detalle de coberturas vigentes" style="text-decoration:none;font-size:16px;background:#fbbf24;color:#0b1d3a;font-weight:900;">🛡</a>
+        <button id="btnHistory" class="header-btn" title="Historial de cotizaciones enviadas" aria-label="Historial de cotizaciones enviadas">🕘</button>
         <button id="btnSettings" class="header-btn" title="Configuración del agente" aria-label="Configuración del agente">⚙</button>
       </div>
     </div>
@@ -115,6 +116,27 @@
       <div class="modal-footer">
         <button class="btn btn-secondary" id="btnProfileCancel">Cancelar</button>
         <button class="btn btn-primary" id="btnProfileSave">Guardar perfil</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== MODAL · HISTORIAL DE ENVÍOS ======================== -->
+  <div class="modal-backdrop" id="historyModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2 class="modal-title">Historial de cotizaciones enviadas</h2>
+        <button class="modal-close" id="btnHistoryClose" aria-label="Cerrar">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-hint">
+          Cotizaciones enviadas desde este navegador. La cotización del INS vale 15 días —
+          usá este historial para dar seguimiento. El PDF no se guarda; para reenviar, subilo de nuevo.
+        </p>
+        <div id="historyList"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="btnHistoryClear">Borrar historial</button>
+        <button class="btn btn-primary" id="btnHistoryExit">Salir</button>
       </div>
     </div>
   </div>
@@ -336,7 +358,11 @@
         <div class="success-icon">✓</div>
         <div class="success-title">¡Cotización enviada!</div>
         <div class="success-msg" id="successMsg">La cotización fue enviada exitosamente.</div>
-        <button class="btn btn-primary" id="btnReset">Enviar otra cotización</button>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
+          <a class="btn btn-send" id="btnWhatsApp" href="#" target="_blank" rel="noopener"
+             style="display:none;max-width:380px;text-decoration:none;">💬 Compartir guía por WhatsApp</a>
+          <button class="btn btn-primary" id="btnReset">Enviar otra cotización</button>
+        </div>
       </div>
     </section>
 
@@ -352,6 +378,7 @@
   <script src="js/config.js"></script>
   <script src="js/state.js"></script>
   <script src="js/agent-profile.js"></script>
+  <script src="js/history.js"></script>
   <script src="js/router.js"></script>
   <script src="js/pdf-extract.js"></script>
   <script src="js/pdf-modify.js"></script>

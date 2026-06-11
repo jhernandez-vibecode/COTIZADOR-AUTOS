@@ -96,6 +96,18 @@ document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('btnProfileCancel').addEventListener('click', closeProfileModal);
   document.getElementById('btnProfileSave').addEventListener('click', handleProfileSave);
 
+  // ============ MODAL DE HISTORIAL DE ENVIOS ============
+  document.getElementById('btnHistory').addEventListener('click', openHistoryModal);
+  document.getElementById('btnHistoryClose').addEventListener('click', closeHistoryModal);
+  document.getElementById('btnHistoryExit').addEventListener('click', closeHistoryModal);
+  document.getElementById('btnHistoryClear').addEventListener('click', function () {
+    if (confirm('¿Borrar todo el historial de cotizaciones enviadas?')) {
+      clearHistory();
+      renderHistory();
+      showToast('Historial borrado.', 'success');
+    }
+  });
+
   // ============ CARGAR PERFIL DEL AGENTE ============
   // Si hay perfil guardado en localStorage, lo aplicamos sobre CFG.
   // Si NO hay (primer uso en este navegador), abrimos el modal forzando configurar.
@@ -147,6 +159,68 @@ function openProfileModal(firstTime) {
 
 function closeProfileModal() {
   document.getElementById('profileModal').classList.remove('active');
+}
+
+// =====================================================================
+// HISTORIAL DE ENVIOS (modal 🕘)
+// =====================================================================
+
+function openHistoryModal() {
+  renderHistory();
+  document.getElementById('historyModal').classList.add('active');
+}
+
+function closeHistoryModal() {
+  document.getElementById('historyModal').classList.remove('active');
+}
+
+/**
+ * Pinta la lista del historial. La cotizacion INS vale 15 dias —
+ * cada fila muestra cuantos dias le quedan.
+ */
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  const entries = loadHistory();
+
+  if (!entries.length) {
+    list.innerHTML = '<div class="history-empty">Aún no has enviado cotizaciones desde este navegador.</div>';
+    return;
+  }
+
+  list.innerHTML = entries.map(function (e, i) {
+    const sent = new Date(e.date);
+    const daysLeft = 15 - Math.floor((Date.now() - sent.getTime()) / 86400000);
+    const badge = daysLeft > 0
+      ? '<span class="history-badge ok">Vigente · ' + daysLeft + 'd</span>'
+      : '<span class="history-badge off">Vencida</span>';
+    const fecha = sent.toLocaleDateString('es-CR', { day: '2-digit', month: 'short' });
+    return '<div class="history-item">' +
+      '<div class="history-main">' +
+        '<div class="history-title">' + _escapeHtml(e.client || '(sin nombre)') +
+          (e.plate ? ' · ' + _escapeHtml(e.plate) : '') + ' ' + badge + '</div>' +
+        '<div class="history-meta">' + fecha + ' · ' + _escapeHtml(e.email || '') +
+          (e.vehicle ? ' · ' + _escapeHtml(e.vehicle) : '') + '</div>' +
+      '</div>' +
+      '<div class="history-actions">' +
+        '<a class="history-btn" href="' + _escapeHtml(e.guideUrl || '#') + '" target="_blank" rel="noopener" title="Abrir la guía explicada">🔗</a>' +
+        '<button class="history-btn" data-copy="' + i + '" title="Copiar link de la guía">📄</button>' +
+        '<a class="history-btn" href="' + _escapeHtml(buildWaShareUrl(e)) + '" target="_blank" rel="noopener" title="Compartir por WhatsApp">💬</a>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  // Botones de copiar (delegado simple por data-copy)
+  list.querySelectorAll('button[data-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const e = entries[parseInt(btn.dataset.copy, 10)];
+      if (!e || !e.guideUrl) return;
+      navigator.clipboard.writeText(e.guideUrl).then(function () {
+        showToast('Link de la guía copiado.', 'success');
+      }, function () {
+        showToast('No se pudo copiar el link.', 'error');
+      });
+    });
+  });
 }
 
 /**
@@ -409,6 +483,27 @@ function _isGamaChecked() {
 }
 
 /**
+ * Mismos extras que buildEmail() usa internamente para armar el URL del
+ * explicador — para poder generar el MISMO link fuera del correo
+ * (historial + boton de WhatsApp de la vista 4).
+ */
+function _guideExtras() {
+  return {
+    clientName:    document.getElementById('m-name').value,
+    vehicle:       document.getElementById('m-vehicle').value,
+    plate:         S.data.plate,
+    year:          S.data.year,
+    vehicleType:   _detectVehicleType(_isElectricChecked() ? 'electric' : S.data.vehicleType),
+    origenAsia:    _isAsiaChecked(),
+    altaGama:      _isGamaChecked(),
+    valor:         S.data.valor,
+    sustReposCode: _sustReposToCode(S.data.sustRepos),
+    dedDFH:        S.data.dedDFH,
+    prices:        S.data.prices
+  };
+}
+
+/**
  * Regenera el HTML del correo y lo inyecta en el preview-box.
  * Usa un iframe con sandbox (sin scripts) para aislar el HTML del correo
  * del CSS y del contexto de la app.
@@ -496,6 +591,28 @@ async function handleSend() {
     });
     await sendEmail(raw);
 
+    // Registrar en el historial + habilitar compartir por WhatsApp.
+    // Nada de esto debe poder tumbar el flujo: el correo YA salió.
+    try {
+      const entry = {
+        date:     new Date().toISOString(),
+        client:   document.getElementById('m-name').value.trim(),
+        email:    toAddr,
+        plate:    S.data.plate,
+        vehicle:  document.getElementById('m-vehicle').value.trim(),
+        quote:    S.data.quoteNum,
+        guideUrl: _buildGuideUrl(_guideExtras())
+      };
+      saveHistoryEntry(entry);
+      const waBtn = document.getElementById('btnWhatsApp');
+      if (waBtn) {
+        waBtn.href = buildWaShareUrl(entry);
+        waBtn.style.display = '';
+      }
+    } catch (e) {
+      console.warn('[history] registro post-envio fallo:', e);
+    }
+
     document.getElementById('successMsg').textContent =
       'La cotizacion fue enviada a ' + toAddr;
     showView(4);
@@ -553,6 +670,8 @@ function resetAll() {
   if (gama) gama.checked = false;
   var gamaSuggest = document.getElementById('gamaSuggest');
   if (gamaSuggest) gamaSuggest.style.display = 'none';
+  var waBtn = document.getElementById('btnWhatsApp');
+  if (waBtn) { waBtn.style.display = 'none'; waBtn.href = '#'; }
   document.getElementById('preview').innerHTML =
     '<p style="color:#6b7280;text-align:center;margin-top:40px;">Llena los campos a la izquierda para ver la vista previa.</p>';
   document.getElementById('priceTable').innerHTML       = '';
