@@ -252,8 +252,6 @@
   <script src="../js/email-template.js"></script>
   <script src="../js/mime-builder.js"></script>
   <script src="../js/gmail-auth.js"></script>
-  <script src="../js/outlook-auth.js"></script>
-  <script src="../js/outlook-sender.js"></script>
 
   <script>
     // === Helpers de formato ===
@@ -459,25 +457,14 @@
         const subject = 'Detalle de tus coberturas vigentes — ' + data.vehicle.description + ' (' + data.vehicle.plate + ')';
         const fromHeader = (CFG.FROM_NAME ? '"' + CFG.FROM_NAME + '" <' + CFG.FROM_EMAIL + '>' : CFG.FROM_EMAIL);
 
-        const provider = (typeof S !== 'undefined' && S.provider) || 'gmail';
-
-        if (provider === 'outlook') {
-          await sendOutlookEmail({
-            to: data.client.email,
-            subject: subject,
-            html: html
-          });
-        } else {
-          const raw = buildMIMESimple({
-            to: data.client.email,
-            from: fromHeader,
-            subject: subject,
-            html: html
-          });
-          const token = await getToken();
-          if (typeof S !== 'undefined') S.accessToken = token;
-          await sendEmail(raw);
-        }
+        const raw = buildMIMESimple({
+          to: data.client.email,
+          from: fromHeader,
+          subject: subject,
+          html: html
+        });
+        await getToken();
+        await sendEmail(raw);
 
         alert('✅ Correo enviado a ' + data.client.email);
         document.getElementById('formCoberturas').reset();

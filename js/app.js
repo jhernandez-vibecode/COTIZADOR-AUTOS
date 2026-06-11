@@ -101,7 +101,6 @@ document.addEventListener('DOMContentLoaded', function () {
   const savedProfile = loadProfile();
   if (savedProfile) {
     applyProfile(savedProfile);
-    _updateSendButton();
   } else {
     openProfileModal(true);
   }
@@ -128,24 +127,6 @@ function openProfileModal(firstTime) {
   document.getElementById('p-license').value  = CFG.LICENSE    || '';
   document.getElementById('p-website').value  = CFG.WEBSITE    || '';
   document.getElementById('p-agenda').value   = CFG.AGENDA_URL || '';
-
-  // Seleccionar el radio del proveedor actual
-  const providerVal = S.provider || 'gmail';
-  const radioGmail   = document.getElementById('p-provider-gmail');
-  const radioOutlook = document.getElementById('p-provider-outlook');
-  if (radioGmail && radioOutlook) {
-    radioGmail.checked   = (providerVal === 'gmail');
-    radioOutlook.checked = (providerVal === 'outlook');
-    _updateEmailLabel(providerVal);
-  }
-
-  // Actualizar label del correo cuando cambia el radio
-  ['p-provider-gmail', 'p-provider-outlook'].forEach(function (id) {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener('change', function () {
-      _updateEmailLabel(this.value);
-    });
-  });
 
   if (firstTime) {
     hint.textContent = 'Bienvenido. Antes de empezar, configura tus datos como agente. Solo se guardan en este navegador.';
@@ -184,14 +165,9 @@ function handleProfileSave() {
     document.getElementById('p-name').focus();
     return;
   }
-  const selectedProvider = document.querySelector('input[name="p-provider"]:checked');
-  const provider = selectedProvider ? selectedProvider.value : 'gmail';
 
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    const hint = provider === 'outlook'
-      ? 'Ingresa un correo valido. Recuerda: debe ser el mismo de tu cuenta Microsoft / Outlook.'
-      : 'Ingresa un correo valido. Recuerda: debe ser el mismo de tu cuenta Gmail.';
-    alert(hint);
+    alert('Ingresa un correo valido. Recuerda: debe ser el mismo de tu cuenta Gmail.');
     document.getElementById('p-email').focus();
     return;
   }
@@ -235,8 +211,7 @@ function handleProfileSave() {
     whatsapp:  whatsapp,
     license:   license,
     website:   cleanWebsite,
-    agendaUrl: cleanAgenda,
-    provider:  provider
+    agendaUrl: cleanAgenda
   };
   try {
     saveProfile(profile);
@@ -246,7 +221,6 @@ function handleProfileSave() {
     return;
   }
 
-  _updateSendButton();
   closeProfileModal();
   // Si estamos en la vista 3 (redactar), regenerar la previa con los nuevos datos
   if (S.step === 3) updatePreview();
@@ -437,25 +411,17 @@ function updatePreview() {
 }
 
 /**
- * Maneja el click de "Autorizar y Enviar":
- * bifurca a Gmail o Outlook segun S.provider, obtiene token y envia.
+ * Maneja el click de "Autorizar Gmail y Enviar":
+ * obtiene el token de Google y envia el correo via Gmail API.
  */
 async function handleSend() {
   const btn = document.getElementById('btnSend');
   const originalText = btn.textContent;
   btn.disabled = true;
 
-  const isOutlook = (S.provider === 'outlook');
-
   try {
-    btn.textContent = isOutlook ? 'Autorizando con Microsoft...' : 'Autorizando con Google...';
-
-    if (isOutlook) {
-      await getOutlookToken();
-    } else {
-      await getToken();
-    }
-
+    btn.textContent = 'Autorizando con Google...';
+    await getToken();
     btn.textContent = 'Enviando correo...';
 
     const html = buildEmail({
@@ -477,25 +443,15 @@ async function handleSend() {
     const subject = document.getElementById('m-subject').value.trim();
     const fname   = _pdfFilename();
 
-    if (isOutlook) {
-      await sendOutlookEmail({
-        to:       toAddr,
-        subject:  subject,
-        html:     html,
-        pdfBytes: S.modPDF,
-        filename: fname
-      });
-    } else {
-      const raw = buildMIME({
-        to:       toAddr,
-        from:     '"' + CFG.FROM_NAME + '" <' + CFG.FROM_EMAIL + '>',
-        subject:  subject,
-        html:     html,
-        pdfBytes: S.modPDF,
-        filename: fname
-      });
-      await sendEmail(raw);
-    }
+    const raw = buildMIME({
+      to:       toAddr,
+      from:     '"' + CFG.FROM_NAME + '" <' + CFG.FROM_EMAIL + '>',
+      subject:  subject,
+      html:     html,
+      pdfBytes: S.modPDF,
+      filename: fname
+    });
+    await sendEmail(raw);
 
     document.getElementById('successMsg').textContent =
       'La cotizacion fue enviada a ' + toAddr;
@@ -677,26 +633,3 @@ function _tryInitTokenClient() {
   }
 }
 
-/**
- * Actualiza el texto del boton de envio segun el proveedor activo.
- * Se llama al cargar el perfil y al guardar cambios.
- */
-function _updateSendButton() {
-  const btn = document.getElementById('btnSend');
-  if (!btn) return;
-  btn.textContent = (S.provider === 'outlook')
-    ? 'Autorizar Outlook y Enviar'
-    : 'Autorizar Gmail y Enviar';
-}
-
-/**
- * Cambia el label del campo de correo en el modal segun el proveedor seleccionado.
- * @param {string} provider - 'gmail' | 'outlook'
- */
-function _updateEmailLabel(provider) {
-  const lbl = document.getElementById('p-email-label');
-  if (!lbl) return;
-  lbl.textContent = (provider === 'outlook')
-    ? 'Correo (debe coincidir con tu cuenta Microsoft / Outlook)'
-    : 'Correo (debe coincidir con tu cuenta Gmail)';
-}
