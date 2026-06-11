@@ -3,17 +3,32 @@ name: cotizador-sdi
 description: >
   Especialista en Cotizador SDI - App web vanilla JS que extrae datos
   de PDFs de cotizacion INS, los limpia, genera correo HTML personalizado
-  y lo envia via Gmail API o Outlook (Microsoft Graph). Multi-agente via
-  localStorage, sin backend. Stack 100% sin build (HTML + JS vanilla +
-  Tailwind CDN). Incluye calculadora de cancelacion anticipada con envio
-  de informe al cliente. Usar cuando Juan Carlos pida construir, modificar
-  o depurar cualquier modulo de esta app. Leer COMPLETO antes de escribir
-  cualquier codigo.
+  y lo envia SOLO via Gmail API. Multi-agente via localStorage, sin
+  backend. Stack 100% sin build (HTML + JS vanilla, sin Tailwind).
+  Incluye calculadora de cancelacion anticipada con envio de informe al
+  cliente, historial de envios y compartir por WhatsApp. Usar cuando Juan
+  Carlos pida construir, modificar o depurar cualquier modulo de esta app.
+  Leer COMPLETO antes de escribir cualquier codigo.
 ---
 
-# Cotizador SDI - Checkpoint 28 mayo 2026
+# Cotizador SDI - Checkpoint 11 junio 2026
 
-## Estado actual
+> ## ⚠ CAMBIO DE ESTADO — 11 jun 2026 (auditoría E2E + solo Gmail)
+> Lo de abajo es registro HISTORICO. El estado vigente:
+> - **Outlook ELIMINADO por completo.** Solo Gmail. NO existen `outlook-auth.js`,
+>   `outlook-sender.js`, MSAL, `S.provider`, `CFG.MSAL_*`/`OUTLOOK_*`, ni selector
+>   de proveedor. Las menciones a Outlook más abajo son del pasado — ignorarlas
+>   como funcionalidad actual.
+> - **Tailwind CDN eliminado** (no aportaba clases). **Sora → Space Grotesk + Inter.**
+> - **Vista 2 totalmente editable** + sync a S.data.
+> - **Nuevos módulos**: `js/toast.js` (notificaciones), `js/history.js` (historial
+>   de envíos + WhatsApp), `404.html`, `netlify.toml` (404 docs + headers seguridad).
+> - **XSS del explicador cerrado** (esc + safeHttpUrl). Param `dd` (deducible real).
+> - **Marcas**: 56 entradas, alias de búsqueda, hint del toggle 🌏 corregido.
+> - 8 commits aislados sobre tag `pre-e2e-11jun`, **sin push** (esperan autorización).
+> - Ver el SKILL user-level (`especialista-cotizador-autos-sdi`) para el detalle vigente.
+
+## Estado actual (histórico — pre 11 jun)
 APP COMPLETA Y FUNCIONAL EN PRODUCCION. 66+ commits desde init.
 Multi-agente operativo via localStorage. Gmail Y Outlook soportados
 (selector de proveedor en modal ⚙). Correo con logo INS y headers
