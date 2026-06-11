@@ -50,7 +50,30 @@
 - Tabla oficial (factor de tarifa a corto plazo sobre prima anual):
   `Hasta 1 mes 40% · Más de 1 a 2 meses 48% · 2-3 55% · 3-4 62% · 4-5 68% · 5-6 75% · 6-7 79% · 7-8 84% · 8-9 89% · 9-10 93% · 10-11 96% · 11-12 100%`
 - Devolución dentro de 10 días hábiles de la solicitud.
-- **Matiz no resuelto (el código actual NO se modifica):** la tabla dice "Hasta 1 mes" (inclusivo). En el día de aniversario mensual exacto el código manda el borde al tramo superior (devuelve un poco menos = conservador). Solo afecta el día exacto; el disclaimer dice que el INS confirma el monto. Pendiente de decisión de JC si se ajusta a la letra de la tabla.
+
+### BUG CORREGIDO 11 jun — el factor iba sobre la cuota, no sobre la prima anual
+
+La calculadora aplicaba el factor de la tabla a **la cuota del período** (lo que el
+cliente paga trimestral/semestral/mensual), pero la norma dice "Factor… **sobre prima
+anual**". Solo acertaba en pago Anual. En fraccionado prometía devoluciones erróneas
+(ej.: prima anual ₡570.891, trimestral con ₡428.166 pagados, cancela a 8 meses →
+el código decía devolver ₡15.700 cuando la norma da **₡0**).
+
+**Cálculo correcto (implementado):**
+- `prima_devengada (retiene INS) = factor_efectivo × PRIMA ANUAL`
+- `prima_no_devengada = prima_anual − prima_devengada`
+- `devolución_neta = max(0, total_pagado − prima_devengada)`
+- Escenario ≤5 días: devolución = total pagado (100%).
+
+El form ahora pide **prima anual** (base del factor) + **total pagado por el cliente**
+(para la devolución neta; se autocompleta = prima anual en pago anual). La forma de
+pago quedó solo como dato informativo. Verificado con 4 casos contra la norma.
+
+- **Matiz menor pendiente (NO modificado, conservador):** la tabla dice "Hasta 1 mes"
+  (inclusivo). En el día de aniversario mensual exacto el código manda el borde al
+  tramo superior (retiene un poco más = devuelve un poco menos). Solo afecta ese día
+  exacto; para cualquier otra fecha el índice es correcto. El disclaimer dice que el
+  INS confirma el monto. Pendiente de decisión de JC si se ajusta a la letra.
 
 ## Marcas con recargo (Marcas Alta Siniestralidad.pdf) — 58 entradas
 
@@ -59,16 +82,14 @@
 - Marcas que NO están en la fuente oficial (no agregar sin documento): GWM/HAVAL, JETOUR, OMODA/JAECOO, EXEED.
 - 26 marcas, recargo "Aplica" en marcas chinas/alta siniestralidad; "No Aplica" en SUZUKI, BYD gasolina, RENAULT/PEUGEOT gasolina, JAC, MG, FUSO, ZXAUTO, CHANGAN.
 
-## ⚠ CONFLICTO PENDIENTE — Alta gama (deducible)
+## Alta gama (deducible) — RESUELTO: rige Circular 0186-2025
 
-El cotizador y las circulares de JC **no coinciden**. NO cambiar hasta confirmar cuál circular está vigente.
+JC confirmó (11 jun 2026) que **la circular vigente es la 0186-2025**, no las 2024.
+Por lo tanto el contenido actual del explicador es **correcto** y NO se cambia:
 
-| | App actual (cita Circular 0186-2025) | Circular 0409-2024 (PDF de JC) |
-|---|---|---|
-| Umbral | ≥ ₡50.000.000 | ≥ ₡75.000.000 |
-| Deducible | escalonado 10% (mín ₡500k) ≤₡6M / 20% >₡6M | **20% fijo, mín ₡700.000** |
-| Cobertura N | — | **No se puede contratar** en Daño Directo |
-| IDD | — | Sin limitante, según Condiciones Generales |
+- Umbral alta gama: **≥ ₡50.000.000**.
+- Deducible escalonado: **10% (mín ₡500.000)** en pérdidas ≤ ₡6M · **20%** en pérdidas > ₡6M.
 
-- Circular 0395-2024 (anterior): ≥₡75M → 20% mín ₡150k; <₡75M → fijo ₡300k. Superada por 0409-2024.
-- **Necesario:** ¿está vigente la Circular 0186-2025 (la que cita la app) o la 0409-2024? Si rige 0409-2024, el explicador de alta gama (umbral ₡50M + escalonado) está materialmente desactualizado.
+Las circulares 0395-2024 y 0409-2024 (≥₡75M, 20% fijo mín ₡700k) quedaron
+**superadas** por la 0186-2025. Conservar solo como histórico. La 0324-2025
+(marcas asiáticas, 20% mín ₡500k) sigue vigente y coincide con la tabla de marcas.
