@@ -105,6 +105,19 @@ test('sustReposToCode default a "n" si vacío', () => {
   assertEq(_sustReposToCode(null), 'n');
 });
 
+test('dedDFH valido agrega dd= al URL', () => {
+  const url = _buildGuideUrl({ dedDFH: 300000 });
+  assertContains(url, 'dd=300000');
+});
+
+test('dedDFH null/0 NO agrega dd=', () => {
+  const a = _buildGuideUrl({ dedDFH: null });
+  const b = _buildGuideUrl({ dedDFH: 0 });
+  if (a.includes('dd=') || b.includes('dd=')) {
+    throw new Error('dd= no deberia aparecer sin dedDFH valido');
+  }
+});
+
 test('valor y precios con formato CR ("10,000,000.00") se normalizan a "10000000"', () => {
   // Reproduce el formato real que devuelve pdf-extract.js
   const url = _buildGuideUrl({

@@ -112,6 +112,11 @@ async function extractData(arrayBuffer) {
     }
   }
 
+  // Monto del deducible de D,F y H — personaliza la seccion 3 del explicador.
+  // Si el formato del PDF cambia y no se puede extraer, queda null y el
+  // explicador muestra su monto por defecto (comportamiento previo).
+  data.dedDFH = _parseDeducibleDFH(data.deductibles);
+
   // ===== Validacion final =====
   if (!data.quoteNum) {
     throw new Error('No se encontro el numero de cotizacion (formato ASINS-XXX-XXXXX).');
@@ -165,6 +170,27 @@ function _groupByY(items, tol) {
   }
   rows.forEach(r => r.items.sort((a, b) => a.x - b.x));
   return rows;
+}
+
+/**
+ * Extrae el monto (colones, entero) del deducible de las coberturas D, F y H
+ * a partir de las filas de deducibles del PDF (ej: "Cobertura D,F Y H: 400,000.00").
+ * Devuelve null si no se encuentra la fila o el monto no es plausible —
+ * el llamador debe tratar null como "usar el default".
+ * @param {string[]} deductibles - filas crudas que empiezan con "Cobertura "
+ * @returns {?number} monto en colones o null
+ */
+function _parseDeducibleDFH(deductibles) {
+  const row = (deductibles || []).find(function (t) {
+    return /^Cobertura\s+D\b/i.test(String(t));
+  });
+  if (!row) return null;
+  const m = String(row).match(/([\d]{1,3}(?:,\d{3})+(?:\.\d{2})?|\d{5,})/);
+  if (!m) return null;
+  const n = parseInt(m[1].replace(/,/g, '').replace(/\.\d+$/, ''), 10);
+  // Rango plausible de un deducible de autos INS: ₡50.000 – ₡5.000.000
+  if (isNaN(n) || n < 50000 || n > 5000000) return null;
+  return n;
 }
 
 /**

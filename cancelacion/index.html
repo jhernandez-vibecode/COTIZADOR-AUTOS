@@ -496,6 +496,7 @@ function calculate() {
   const elapsedMonths = monthsComplete(emission, cancel);
 
   let badgeHTML, detailsHTML, devuelta, retenida, scenarioName, scenarioKey, activeFactorIdx = -1;
+  let factorEft = null; // factor efectivo aplicado (null en escenario ≤5 días)
 
   // ─── Escenario 1: ≤ 5 días desde emisión → 100% devolución ───
   if (elapsedDays <= 5) {
@@ -516,7 +517,7 @@ function calculate() {
     activeFactorIdx  = idx;
     const inFirst6   = elapsedMonths < 6;
     const factorBase = TABLA[idx].factor;
-    const factorEft  = inFirst6 ? factorBase * 0.5 : factorBase;
+    factorEft   = inFirst6 ? factorBase * 0.5 : factorBase;
     retenida    = premium * factorEft;
     devuelta    = premium - retenida;
     scenarioKey = inFirst6 ? 's3a' : 's3b';
@@ -589,7 +590,7 @@ function calculate() {
 
   LAST_CALC = { name, email, policy, plate, emission, end, cancel,
                 premium, payment, note,
-                devuelta, retenida,
+                devuelta, retenida, factorEft,
                 elapsedDays, elapsedMonths, scenarioName };
 
   if (hasSendEmail) {
@@ -665,10 +666,10 @@ function buildCancelEmail(c) {
   const nombre    = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
   const fmtD      = d => d.toLocaleDateString('es-CR', { day: '2-digit', month: 'long', year: 'numeric' });
 
-  const factorRow = c.isAnnual && c.elapsedDays > 5
+  const factorRow = (c.factorEft !== null && c.elapsedDays > 5)
     ? `<tr>
         <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-size:13px;">Factor aplicado (Cláusula 33)</td>
-        <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;font-weight:700;font-size:13px;text-align:right;">${c.scenarioName}</td>
+        <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;font-weight:700;font-size:13px;text-align:right;">${(c.factorEft * 100).toFixed(1)}% de la prima pagada</td>
        </tr>`
     : '';
 
@@ -778,7 +779,7 @@ function buildCancelEmail(c) {
             <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;font-weight:600;font-size:13px;text-align:right;color:#374151;">${esc(c.scenarioName)}</td>
           </tr>
           <tr>
-            <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-size:13px;">Prima anual</td>
+            <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;color:#6b7280;font-size:13px;">Prima pagada (${esc(c.payment.toLowerCase())})</td>
             <td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;font-weight:700;font-size:13px;text-align:right;">${fmtEmail(c.premium)}</td>
           </tr>
           ${factorRow}
@@ -802,13 +803,13 @@ function buildCancelEmail(c) {
         <table width="100%" cellpadding="0" cellspacing="0" style="background:#0c2340;border-radius:10px;overflow:hidden;">
           <tr>
             <td style="padding:10px 16px;font-size:11px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.8px;text-transform:uppercase;">Tiempo transcurrido</td>
-            <td style="padding:10px 16px;font-size:11px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.8px;text-transform:uppercase;text-align:right;">% prima anual</td>
+            <td style="padding:10px 16px;font-size:11px;font-weight:700;color:rgba(255,255,255,.5);letter-spacing:.8px;text-transform:uppercase;text-align:right;">% de la prima</td>
           </tr>
           ${clausula33Table}
         </table>
         <p style="margin:8px 0 0;font-size:11px;color:#9ca3af;">
           * Si la cancelación ocurre dentro de los primeros 6 meses, el factor se aplica al 50%.
-          ${c.isAnnual && c.elapsedDays > 5 ? '<strong style="color:#374151;">La fila destacada en verde corresponde al período actual de la póliza.</strong>' : ''}
+          ${c.elapsedDays > 5 ? '<strong style="color:#374151;">La fila destacada en verde corresponde al período actual de la póliza.</strong>' : ''}
         </p>
       </div>
 

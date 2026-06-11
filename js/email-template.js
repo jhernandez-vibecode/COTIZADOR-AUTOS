@@ -124,6 +124,7 @@ function buildEmail(params) {
     altaGama:      !!p.altaGama,
     valor:         p.valor,
     sustReposCode: _sustReposToCode(p.sustRepos),
+    dedDFH:        p.dedDFH,
     prices:        prices
   });
 
@@ -542,6 +543,9 @@ function _buildGuideUrl(extras) {
   if (x.altaGama)   params.push('ag=1');
   add('va', num(x.valor));
   add('sr', x.sustReposCode);
+  // dd: deducible D,F,H real del PDF (entero en colones) — personaliza
+  // la seccion 3 estandar del explicador. Solo numeros positivos.
+  if (x.dedDFH && Number(x.dedDFH) > 0) add('dd', x.dedDFH);
   if (x.prices) {
     add('pa', num(x.prices.anual));
     add('ps', num(x.prices.semestral));

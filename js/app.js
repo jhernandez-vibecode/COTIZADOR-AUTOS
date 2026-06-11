@@ -398,7 +398,8 @@ function updatePreview() {
     valor:         S.data.valor,
     vehicleType:   _isElectricChecked() ? 'electric' : S.data.vehicleType,
     origenAsia:    _isAsiaChecked(),
-    altaGama:      _isGamaChecked()
+    altaGama:      _isGamaChecked(),
+    dedDFH:        S.data.dedDFH
   });
 
   const preview = document.getElementById('preview');
@@ -439,7 +440,8 @@ async function handleSend() {
       valor:         S.data.valor,
       vehicleType:   _isElectricChecked() ? 'electric' : S.data.vehicleType,
       origenAsia:    _isAsiaChecked(),
-      altaGama:      _isGamaChecked()
+      altaGama:      _isGamaChecked(),
+      dedDFH:        S.data.dedDFH
     });
 
     const toAddr  = document.getElementById('m-to').value.trim();

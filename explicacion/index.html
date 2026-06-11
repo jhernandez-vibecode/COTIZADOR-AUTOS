@@ -1948,7 +1948,7 @@ main { max-width: 880px; margin: 0 auto; padding: 0 24px 60px; }
           <div class="idd-compare">
             <div class="idd-col-from">
               <div class="small">Sin IDD</div>
-              <div class="from">₡400,000</div>
+              <div class="from dd-amt">₡400,000</div>
             </div>
             <div class="idd-arrow">→</div>
             <div class="idd-col-to">
@@ -1966,7 +1966,7 @@ main { max-width: 880px; margin: 0 auto; padding: 0 24px 60px; }
         <div class="idd-rule ok">
           <div class="icon">✓</div>
           <div>
-            <b>Daño mayor a ₡400.000</b><br/>
+            <b>Daño mayor a <span class="dd-amt">₡400.000</span></b><br/>
             La IDD se activa: tú no pagas el deducible, te lo reintegramos.
             <div class="meta">Hasta 2 choques al año</div>
           </div>
@@ -1974,7 +1974,7 @@ main { max-width: 880px; margin: 0 auto; padding: 0 24px 60px; }
         <div class="idd-rule warn">
           <div class="icon">!</div>
           <div>
-            <b>Daño menor a ₡400.000</b><br/>
+            <b>Daño menor a <span class="dd-amt">₡400.000</span></b><br/>
             Corre por cuenta del <b style="color:var(--gold-mid);">asegurado</b>. La IDD se activa solo cuando el daño supera el deducible.
             <div class="meta">Reparaciones pequeñas</div>
           </div>
@@ -2618,6 +2618,15 @@ function applyPersonalization() {
   const electricSection = document.querySelector('.electric');
   if (electricSection && data.vt !== 'e') {
     electricSection.style.display = 'none';
+  }
+
+  // Sección 3 estándar — deducible real del PDF (param dd).
+  // Si no viene (correos viejos o extracción fallida), queda el ₡400.000
+  // del HTML estático, comportamiento histórico.
+  const dd = parseInt(_params.get('dd'), 10);
+  if (dd && dd > 0) {
+    const ddFmt = fmt(dd);
+    document.querySelectorAll('#s3 .dd-amt').forEach(el => { el.textContent = ddFmt; });
   }
 
   // Condiciones especiales · sustituyen la Sección 3 (deducible estándar)

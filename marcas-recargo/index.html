@@ -338,14 +338,16 @@ tbody tr.hidden { display: none; }
     <ul>
       <li><b>Circular INS 0186-2025</b> — Actualizaciones al Seguro Voluntario de Automóviles (deducible alta gama escalonado, suma asegurada mínima ₡50M).</li>
       <li><b>Circular INS 0324-2025</b> — Recargo en daño directo para marcas chinas y de alta siniestralidad (20% mín ₡500.000).</li>
-      <li><b>Listado oficial INS</b> — Documento entregado por el INS con las marcas afectadas y su tipo de combustible (32 entradas).</li>
+      <li><b>Listado oficial INS</b> — Documento entregado por el INS con las marcas afectadas y su tipo de combustible (56 entradas marca × combustible).</li>
     </ul>
   </div>
 
 </main>
 
 <script>
-// Datos literales del Excel oficial del INS (32 filas)
+// Datos literales del Excel oficial del INS (56 filas marca × combustible).
+// NO corregir ortografía de marcas (MASERATTI, CHERRY...) — son literales
+// del documento oficial. Para búsqueda con grafía correcta, usar ALIAS.
 const DATA = [
   { marca: 'MERCEDES BENZ',     comb: 'Eléctrico', recargo: 'Aplica',    ded: '20% mín ₡500.000' },
   { marca: 'MERCEDES BENZ',     comb: 'Híbrido',   recargo: 'Aplica',    ded: '20% mín ₡500.000' },
@@ -405,6 +407,17 @@ const DATA = [
   { marca: 'CHANGAN',           comb: 'Gasolina',  recargo: 'No Aplica', ded: '20% mín ₡500.000' }
 ];
 
+// Alias de búsqueda: el Excel del INS trae grafías propias — esto permite
+// encontrar la marca buscando con la grafía comercial correcta.
+const ALIAS = {
+  'MASERATTI':         'maserati',
+  'CHERRY':            'chery',
+  'DONG-FENG':         'dongfeng dong feng',
+  'MERCEDES BENZ':     'mercedes-benz benz',
+  'FUSO (Mitsubishi)': 'fuso mitsubishi',
+  'ZXAUTO':            'zx auto zx-auto'
+};
+
 // Normaliza texto para búsqueda (sin acentos, minúsculas)
 function norm(s) {
   return s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -418,7 +431,8 @@ function renderRows() {
   const tbody = document.getElementById('tbody');
   tbody.innerHTML = DATA.map(function (r) {
     const aplica = r.recargo === 'Aplica';
-    return '<tr data-marca="' + norm(r.marca) + '" data-recargo="' + (aplica ? 'si' : 'no') + '">' +
+    const searchKey = norm(r.marca) + (ALIAS[r.marca] ? ' ' + ALIAS[r.marca] : '');
+    return '<tr data-marca="' + searchKey + '" data-recargo="' + (aplica ? 'si' : 'no') + '">' +
       '<td class="marca">' + r.marca + '</td>' +
       '<td><span class="comb ' + combClass(r.comb) + '">' + r.comb + '</span></td>' +
       '<td>' + (aplica
