@@ -66,14 +66,39 @@ function clearHistory() {
 /**
  * URL para compartir la guia explicada por WhatsApp.
  * SIEMPRE web.whatsapp.com/send/ — wa.me corrompe los emojis del mensaje.
- * Sin telefono: WhatsApp abre el selector de chat del agente.
+ * Si hay telefono (phoneOverride o entry.waCliente): abre el chat directo
+ * del cliente. Sin telefono: WhatsApp abre el selector de chat del agente.
  * @param {object} entry - entrada del historial
+ * @param {string} [phoneOverride] - WhatsApp del cliente; pisa entry.waCliente
  * @returns {string}
  */
-function buildWaShareUrl(entry) {
+function buildWaShareUrl(entry, phoneOverride) {
   const msg = 'Hola ' + (entry.client || '') + '! 👋 Te acabo de enviar por correo la cotización de tu '
     + (entry.vehicle || 'vehículo')
     + (entry.plate ? ' (placa ' + entry.plate + ')' : '')
     + '. Aquí tenés la guía explicada paso a paso: ' + entry.guideUrl;
-  return 'https://web.whatsapp.com/send/?text=' + encodeURIComponent(msg);
+  const raw = String(phoneOverride != null ? phoneOverride : (entry.waCliente || '')).replace(/\D/g, '');
+  let phone = '';
+  if (raw) phone = raw.startsWith('506') ? raw : '506' + raw;
+  return 'https://web.whatsapp.com/send/?'
+    + (phone ? 'phone=' + phone + '&' : '')
+    + 'text=' + encodeURIComponent(msg);
+}
+
+/**
+ * Guarda el WhatsApp del cliente en la entrada mas reciente del historial,
+ * para que el boton 💬 del modal 🕘 tambien abra el chat directo.
+ * Se llama una sola vez (al compartir), no en cada tecla.
+ * @param {string} waCliente - numero tal cual lo escribio el agente
+ */
+function setLatestHistoryWa(waCliente) {
+  try {
+    const arr = loadHistory();
+    if (arr.length && waCliente) {
+      arr[0].waCliente = waCliente;
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(arr));
+    }
+  } catch (e) {
+    console.warn('[history] no se pudo actualizar waCliente:', e);
+  }
 }

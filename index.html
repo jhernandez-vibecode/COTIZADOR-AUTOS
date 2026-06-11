@@ -356,9 +356,14 @@
         <div class="success-icon">✓</div>
         <div class="success-title">¡Cotización enviada!</div>
         <div class="success-msg" id="successMsg">La cotización fue enviada exitosamente.</div>
-        <div style="display:flex;flex-direction:column;align-items:center;gap:12px;">
-          <a class="btn btn-send" id="btnWhatsApp" href="#" target="_blank" rel="noopener"
-             style="display:none;max-width:380px;text-decoration:none;">💬 Compartir guía por WhatsApp</a>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:14px;">
+          <div id="waShareWrap" style="display:none;flex-direction:column;gap:8px;width:100%;max-width:380px;text-align:left;">
+            <label class="form-label" for="m-wa-cliente" style="margin-bottom:0;">WhatsApp del cliente <span style="font-weight:400;color:var(--gray-500);">(opcional)</span></label>
+            <input class="form-control" id="m-wa-cliente" type="tel" inputmode="numeric" placeholder="8888-8888" autocomplete="off" />
+            <span style="font-size:11px;color:var(--gray-500);line-height:1.4;">Si lo ponés, el botón abre el chat directo del cliente con la guía. Si lo dejás vacío, elegís el contacto dentro de WhatsApp.</span>
+            <a class="btn btn-send" id="btnWhatsApp" href="#" target="_blank" rel="noopener"
+               style="text-decoration:none;">💬 Compartir guía por WhatsApp</a>
+          </div>
           <button class="btn btn-primary" id="btnReset">Enviar otra cotización</button>
         </div>
       </div>

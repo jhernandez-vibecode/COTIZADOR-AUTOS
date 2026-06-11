@@ -82,10 +82,25 @@ document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('f-asia').addEventListener('change', schedulePreview);
   document.getElementById('f-gama').addEventListener('change', schedulePreview);
 
-  // ============ VISTA 4 · Reset ============
+  // ============ VISTA 4 · Reset + compartir WhatsApp ============
   document.getElementById('btnReset').addEventListener('click', function () {
     resetAll();
     showView(1);
+  });
+
+  // Al escribir el WhatsApp del cliente, regenerar el link del boton
+  // (directo al chat si hay numero; selector si queda vacio).
+  document.getElementById('m-wa-cliente').addEventListener('input', function () {
+    if (!S.lastEntry) return;
+    const waBtn = document.getElementById('btnWhatsApp');
+    if (waBtn) waBtn.href = buildWaShareUrl(S.lastEntry, this.value);
+  });
+
+  // Al compartir, persistir el numero en el historial para que el modal 🕘
+  // tambien abra el chat directo. Es sincrono: corre antes de abrir WhatsApp.
+  document.getElementById('btnWhatsApp').addEventListener('click', function () {
+    const wa = document.getElementById('m-wa-cliente').value.trim();
+    if (wa) setLatestHistoryWa(wa);
   });
 
   // ============ MODAL DE CONFIGURACION DEL AGENTE ============
@@ -615,11 +630,13 @@ async function handleSend() {
         guideUrl: _buildGuideUrl(_guideExtras())
       };
       saveHistoryEntry(entry);
-      const waBtn = document.getElementById('btnWhatsApp');
-      if (waBtn) {
-        waBtn.href = buildWaShareUrl(entry);
-        waBtn.style.display = '';
-      }
+      S.lastEntry = entry;
+      const waInput = document.getElementById('m-wa-cliente');
+      const waBtn   = document.getElementById('btnWhatsApp');
+      const waWrap  = document.getElementById('waShareWrap');
+      if (waInput) waInput.value = '';
+      if (waBtn)  waBtn.href = buildWaShareUrl(entry);
+      if (waWrap) waWrap.style.display = 'flex';
     } catch (e) {
       console.warn('[history] registro post-envio fallo:', e);
     }
@@ -681,8 +698,11 @@ function resetAll() {
   if (gama) gama.checked = false;
   var gamaSuggest = document.getElementById('gamaSuggest');
   if (gamaSuggest) gamaSuggest.style.display = 'none';
+  S.lastEntry = null;
+  var waWrap = document.getElementById('waShareWrap');
+  if (waWrap) waWrap.style.display = 'none';
   var waBtn = document.getElementById('btnWhatsApp');
-  if (waBtn) { waBtn.style.display = 'none'; waBtn.href = '#'; }
+  if (waBtn) waBtn.href = '#';
   document.getElementById('preview').innerHTML =
     '<p style="color:#6b7280;text-align:center;margin-top:40px;">Llena los campos a la izquierda para ver la vista previa.</p>';
   document.getElementById('priceTable').innerHTML       = '';
