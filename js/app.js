@@ -95,6 +95,14 @@ document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('btnProfileClose').addEventListener('click', closeProfileModal);
   document.getElementById('btnProfileCancel').addEventListener('click', closeProfileModal);
   document.getElementById('btnProfileSave').addEventListener('click', handleProfileSave);
+  // Borrar perfil: util en computadoras compartidas. Recarga para volver
+  // al estado de primera configuracion.
+  document.getElementById('btnProfileDelete').addEventListener('click', function () {
+    if (confirm('¿Borrar tus datos de agente de este navegador? Tendras que configurarlos de nuevo.')) {
+      clearProfile();
+      location.reload();
+    }
+  });
 
   // ============ MODAL DE HISTORIAL DE ENVIOS ============
   document.getElementById('btnHistory').addEventListener('click', openHistoryModal);
@@ -131,6 +139,9 @@ function openProfileModal(firstTime) {
   const hint  = document.getElementById('profileHint');
   const btnCancel = document.getElementById('btnProfileCancel');
   const btnClose  = document.getElementById('btnProfileClose');
+  const btnDelete = document.getElementById('btnProfileDelete');
+  // Sin perfil guardado no hay nada que borrar
+  if (btnDelete) btnDelete.style.display = firstTime ? 'none' : '';
 
   // Pre-llenar con valores actuales de CFG (default o perfil cargado)
   document.getElementById('p-name').value     = CFG.FROM_NAME  || '';
