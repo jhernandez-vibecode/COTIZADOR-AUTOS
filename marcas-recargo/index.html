@@ -338,17 +338,19 @@ tbody tr.hidden { display: none; }
     <ul>
       <li><b>Circular INS 0186-2025</b> — Actualizaciones al Seguro Voluntario de Automóviles (deducible alta gama escalonado, suma asegurada mínima ₡50M).</li>
       <li><b>Circular INS 0324-2025</b> — Recargo en daño directo para marcas chinas y de alta siniestralidad (20% mín ₡500.000).</li>
-      <li><b>Listado oficial INS</b> — Documento entregado por el INS con las marcas afectadas y su tipo de combustible (56 entradas marca × combustible).</li>
+      <li><b>Listado oficial INS</b> — Documento entregado por el INS con las marcas afectadas y su tipo de combustible (58 entradas marca × combustible).</li>
     </ul>
   </div>
 
 </main>
 
 <script>
-// Datos literales del Excel oficial del INS (56 filas marca × combustible).
+// Datos literales del Excel oficial del INS (58 filas marca × combustible).
 // NO corregir ortografía de marcas (MASERATTI, CHERRY...) — son literales
 // del documento oficial. Para búsqueda con grafía correcta, usar ALIAS.
 const DATA = [
+  { marca: 'SUZUKI',            comb: 'Eléctrico', recargo: 'No Aplica', ded: '20% mín ₡500.000' },
+  { marca: 'SUZUKI',            comb: 'Híbrido',   recargo: 'No Aplica', ded: '20% mín ₡500.000' },
   { marca: 'MERCEDES BENZ',     comb: 'Eléctrico', recargo: 'Aplica',    ded: '20% mín ₡500.000' },
   { marca: 'MERCEDES BENZ',     comb: 'Híbrido',   recargo: 'Aplica',    ded: '20% mín ₡500.000' },
   { marca: 'GEELY',             comb: 'Eléctrico', recargo: 'Aplica',    ded: '20% mín ₡500.000' },
