@@ -2480,11 +2480,27 @@ const data = {
 const fmt = (n) => '₡' + Number(n).toLocaleString('es-CR');
 const initials = (name) => name.split(/\s+/).filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase() || 'JC';
 
+// Escapa HTML para inserciones via innerHTML — los params del URL son
+// input no confiable (cualquiera puede armar un link con ?n=<script>...).
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+// El link de agenda viene del param `a` — solo se acepta http(s),
+// nunca javascript: u otros esquemas ejecutables.
+function safeHttpUrl(u) {
+  try {
+    const parsed = new URL(String(u), location.origin);
+    if (parsed.protocol === 'https:' || parsed.protocol === 'http:') return parsed.href;
+  } catch (e) {}
+  return null;
+}
+
 // ============ APLICAR PERSONALIZACIÓN AL DOM ============
 function applyPersonalization() {
   // Agente: header info
   const agentInfo = document.querySelector('.agent-info');
-  if (agentInfo) agentInfo.innerHTML = `Agente: <b>${data.n}</b><br/>Lic. SUGESE ${data.l}`;
+  if (agentInfo) agentInfo.innerHTML = `Agente: <b>${esc(data.n)}</b><br/>Lic. SUGESE ${esc(data.l)}`;
   // Avatar JC del header → iniciales
   document.querySelectorAll('.avatar, .celeb-avatar').forEach(el => el.textContent = initials(data.n));
   // Chip del agente
@@ -2495,11 +2511,11 @@ function applyPersonalization() {
   if (ribbon) ribbon.textContent = data.n;
   // Footer
   document.querySelectorAll('.footer .copyright').forEach(el => {
-    el.innerHTML = `© ${new Date().getFullYear()} Propiedad Intelectual de ${data.n}. Todos los derechos reservados. Esta plataforma es una herramienta de uso exclusivo para los clientes vinculados a la Licencia Sugese ${data.l}. Queda prohibida su reproducción o uso por terceros sin autorización expresa del titular.`;
+    el.innerHTML = `© ${new Date().getFullYear()} Propiedad Intelectual de ${esc(data.n)}. Todos los derechos reservados. Esta plataforma es una herramienta de uso exclusivo para los clientes vinculados a la Licencia Sugese ${esc(data.l)}. Queda prohibida su reproducción o uso por terceros sin autorización expresa del titular.`;
   });
   const webLink = document.querySelector('.footer a[href*="seguros"]');
   if (webLink) {
-    webLink.href = 'https://' + data.w;
+    webLink.href = 'https://' + String(data.w).replace(/^https?:\/\//i, '');
     webLink.textContent = data.w;
   }
 
@@ -2516,16 +2532,16 @@ function applyPersonalization() {
   // Cierre — saludo personalizado
   const closingMsg = document.querySelector('.closing .msg');
   if (closingMsg && data.c) {
-    closingMsg.innerHTML = `${data.c}, espero que esta guía te haya ayudado a entender tu cotización con claridad. Si tenés cualquier duda, hablemos.`;
+    closingMsg.innerHTML = `${esc(data.c)}, espero que esta guía te haya ayudado a entender tu cotización con claridad. Si tenés cualquier duda, hablemos.`;
   }
   const closingSig = document.querySelector('.closing .signature');
   if (closingSig) {
-    closingSig.innerHTML = `— ${data.n}<span class="lic">Tu agente · Lic. SUGESE ${data.l}</span>`;
+    closingSig.innerHTML = `— ${esc(data.n)}<span class="lic">Tu agente · Lic. SUGESE ${esc(data.l)}</span>`;
   }
   // Celebración — título y pasos
   const celebTitle = document.querySelector('.celeb-title');
   if (celebTitle) {
-    celebTitle.innerHTML = `¡Muy bien,<br/><span class="name">${data.c || 'Cliente'}</span>! 🎉`;
+    celebTitle.innerHTML = `¡Muy bien,<br/><span class="name">${esc(data.c || 'Cliente')}</span>! 🎉`;
   }
   const celebVehicle = document.getElementById('celebVehicle');
   if (celebVehicle && data.v) {
@@ -2533,7 +2549,10 @@ function applyPersonalization() {
   }
   // Celebración — link de agendar (cada agente tiene su propio Google Form)
   const celebForm = document.getElementById('celebGoForm');
-  if (celebForm && data.a) celebForm.href = data.a;
+  if (celebForm && data.a) {
+    const safeAgenda = safeHttpUrl(data.a);
+    if (safeAgenda) celebForm.href = safeAgenda;
+  }
   // Celebración — paso "Confirma con X" y firma "Tu agente X te acompaña"
   const celebStepConfirm = document.getElementById('celebStepConfirm');
   if (celebStepConfirm) celebStepConfirm.textContent = `Confirma con ${data.n}`;
@@ -2563,7 +2582,7 @@ function applyPersonalization() {
     // Personalizar el copy del banner
     const bannerSmall = document.querySelector('.tip-banner .small');
     if (bannerSmall) {
-      bannerSmall.innerHTML = `El alcance del plan se ajusta a la antigüedad de tu vehículo. Para tu ${data.v || 'vehículo'} (${edad} años) te toca el <b>Plan ${isPlus ? 'Plus' : 'Básico'}</b>.`;
+      bannerSmall.innerHTML = `El alcance del plan se ajusta a la antigüedad de tu vehículo. Para tu ${esc(data.v || 'vehículo')} (${edad} años) te toca el <b>Plan ${isPlus ? 'Plus' : 'Básico'}</b>.`;
     }
   }
 
@@ -2591,7 +2610,7 @@ function applyPersonalization() {
   if (s4perso && (data.v || data.p)) {
     const veh = data.v || 'tu vehículo';
     const plt = data.p ? `, placa ${data.p}` : '';
-    s4perso.innerHTML = `Para tu <b>${veh}${plt}</b>, esto es lo que el INS te garantiza.`;
+    s4perso.innerHTML = `Para tu <b>${esc(veh + plt)}</b>, esto es lo que el INS te garantiza.`;
   }
 
   // Sección eléctricos: solo visible si vt=e (vehículo eléctrico).

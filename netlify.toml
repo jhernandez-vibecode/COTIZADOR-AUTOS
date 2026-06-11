@@ -1,0 +1,45 @@
+# Cotizador SDI · Configuración Netlify
+# Sitio 100% estático — sin build, publish = raíz del repo.
+
+# ============ ARCHIVOS INTERNOS — NO SERVIR EN PRODUCCIÓN ============
+# Documentación interna, specs y tests viven en el repo pero no deben
+# ser accesibles desde el dominio público.
+
+[[redirects]]
+  from = "/SKILL_COTIZADOR_SDI.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/README.md"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/docs/*"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/tests/*"
+  to = "/404.html"
+  status = 404
+  force = true
+
+# ============ HEADERS DE SEGURIDAD ============
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    # CSP pendiente de validar en un deploy preview ANTES de activar:
+    # el flujo OAuth de Google (GIS) y los CDNs deben quedar autorizados.
+    # Propuesta (activar quitando el prefijo "# " de la línea siguiente
+    # y probando envío real de un correo):
+    # Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com https://accounts.google.com https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://gmail.googleapis.com https://accounts.google.com https://oauth2.googleapis.com https://cdnjs.cloudflare.com; frame-src https://accounts.google.com; worker-src blob: https://cdnjs.cloudflare.com; base-uri 'self'; form-action 'self'"

@@ -380,7 +380,8 @@ function _isGamaChecked() {
 
 /**
  * Regenera el HTML del correo y lo inyecta en el preview-box.
- * Usa un iframe sandboxed para aislar los estilos del correo del CSS de la app.
+ * Usa un iframe con sandbox (sin scripts) para aislar el HTML del correo
+ * del CSS y del contexto de la app.
  */
 function updatePreview() {
   if (!S.data) return;
@@ -406,6 +407,8 @@ function updatePreview() {
   iframe.style.width  = '100%';
   iframe.style.height = '100%';
   iframe.style.border = 'none';
+  // Sin allow-scripts: el correo es HTML estático, nada debe ejecutarse aquí.
+  iframe.setAttribute('sandbox', 'allow-same-origin allow-popups');
   iframe.srcdoc = html;
   preview.appendChild(iframe);
 }
