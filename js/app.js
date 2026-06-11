@@ -621,13 +621,14 @@ async function handleSend() {
     // Nada de esto debe poder tumbar el flujo: el correo YA salió.
     try {
       const entry = {
-        date:     new Date().toISOString(),
-        client:   document.getElementById('m-name').value.trim(),
-        email:    toAddr,
-        plate:    S.data.plate,
-        vehicle:  document.getElementById('m-vehicle').value.trim(),
-        quote:    S.data.quoteNum,
-        guideUrl: _buildGuideUrl(_guideExtras())
+        date:      new Date().toISOString(),
+        client:    document.getElementById('m-name').value.trim(),
+        agentName: CFG.FROM_NAME || '',
+        email:     toAddr,
+        plate:     S.data.plate,
+        vehicle:   document.getElementById('m-vehicle').value.trim(),
+        quote:     S.data.quoteNum,
+        guideUrl:  _buildGuideUrl(_guideExtras())
       };
       saveHistoryEntry(entry);
       S.lastEntry = entry;

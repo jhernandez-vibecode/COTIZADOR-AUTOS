@@ -73,10 +73,21 @@ function clearHistory() {
  * @returns {string}
  */
 function buildWaShareUrl(entry, phoneOverride) {
-  const msg = 'Hola ' + (entry.client || '') + '! 👋 Te acabo de enviar por correo la cotización de tu '
+  // Nombre del agente: de la entrada, o del CFG global (mismo navegador), o genérico.
+  const agente = entry.agentName || (typeof CFG !== 'undefined' && CFG.FROM_NAME) || '';
+  const intro  = agente
+    ? 'te escribe ' + agente + ', agente de seguros del INS. '
+    : 'te escribe tu agente de seguros del INS. ';
+  // El link va EMBEBIDO en la frase (texto antes y después). WhatsApp no
+  // permite enmascarar URLs en mensajes de texto, así que se muestra completa
+  // pero queda dentro del cuerpo, no suelta al final.
+  const msg = 'Hola ' + (entry.client || '') + ', ' + intro
+    + 'Te acabo de enviar por correo la cotización de tu '
     + (entry.vehicle || 'vehículo')
     + (entry.plate ? ' (placa ' + entry.plate + ')' : '')
-    + '. Aquí tenés la guía explicada paso a paso: ' + entry.guideUrl;
+    + '. Para que la veás con todo el detalle, te preparé una guía explicada paso a paso que podés abrir en este enlace: '
+    + entry.guideUrl
+    + ' — cualquier consulta, quedo a la orden.';
   const raw = String(phoneOverride != null ? phoneOverride : (entry.waCliente || '')).replace(/\D/g, '');
   let phone = '';
   if (raw) phone = raw.startsWith('506') ? raw : '506' + raw;

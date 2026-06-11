@@ -74,6 +74,25 @@ test('mensaje incluye cliente, vehiculo, placa y link (encodeado)', () => {
   assertContains(url, encodeURIComponent(entry.guideUrl));
 });
 
+test('saludo nuevo: "te escribe [agente], agente de seguros del INS"', () => {
+  const url = buildWaShareUrl({ ...entry, agentName: 'Juan Carlos Hernández' }, '88221348');
+  assertContains(url, encodeURIComponent('Hola Silvia, te escribe Juan Carlos Hernández, agente de seguros del INS.'));
+  assertContains(url, encodeURIComponent('Te acabo de enviar por correo la cotización'));
+});
+
+test('link va embebido en la frase (texto antes y despues)', () => {
+  const dec = decodeURIComponent(buildWaShareUrl(entry, '88221348'));
+  const i = dec.indexOf(entry.guideUrl);
+  if (i <= 0) throw new Error('el link debe tener texto antes');
+  const tail = dec.slice(i + entry.guideUrl.length);
+  if (!tail.includes('quedo a la orden')) throw new Error('el link debe tener texto después');
+});
+
+test('sin agentName ni CFG: cae a "tu agente de seguros del INS"', () => {
+  const url = buildWaShareUrl(entry, '88221348');
+  assertContains(url, encodeURIComponent('te escribe tu agente de seguros del INS.'));
+});
+
 test('setLatestHistoryWa guarda waCliente en la entrada mas reciente', () => {
   localStorage._d = {};
   saveHistoryEntry({ client: 'A', guideUrl: 'x' });
