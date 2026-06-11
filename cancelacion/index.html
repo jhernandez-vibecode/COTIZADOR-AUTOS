@@ -329,6 +329,7 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 
 <!-- ══════════════════════ MÓDULOS DEL COTIZADOR ══════════════════════ -->
+<script src="../js/toast.js"></script>
 <script src="../js/config.js"></script>
 <script src="../js/state.js"></script>
 <script src="../js/agent-profile.js"></script>
@@ -480,7 +481,15 @@ function calculate() {
   if (!emissionV)  missing.push('Fecha de emisión');
   if (!cancelV)    missing.push('Fecha de cancelación');
   if (premium <= 0) missing.push('Prima válida');
-  if (missing.length) { alert('Faltan campos:\n• ' + missing.join('\n• ')); return; }
+  if (missing.length) { showToast('Faltan campos: ' + missing.join(' · '), 'error'); return; }
+
+  // El correo es opcional, pero si viene debe tener formato valido
+  // (va directo al header To: del mensaje MIME).
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showToast('El correo del cliente no parece válido. Corregilo o dejalo vacío.', 'error');
+    document.getElementById('c-email').focus();
+    return;
+  }
 
   const emission = new Date(emissionV + 'T00:00:00');
   const cancel   = new Date(cancelV   + 'T00:00:00');
@@ -489,8 +498,8 @@ function calculate() {
   const end = new Date(emission);
   end.setFullYear(end.getFullYear() + 1);
 
-  if (cancel < emission) { alert('La fecha de cancelación no puede ser anterior a la fecha de emisión.'); return; }
-  if (cancel > end)      { alert('La fecha de cancelación excede la vigencia anual de la póliza.'); return; }
+  if (cancel < emission) { showToast('La fecha de cancelación no puede ser anterior a la fecha de emisión.', 'error'); return; }
+  if (cancel > end)      { showToast('La fecha de cancelación excede la vigencia anual de la póliza.', 'error'); return; }
 
   const elapsedDays   = daysBetween(emission, cancel);
   const elapsedMonths = monthsComplete(emission, cancel);

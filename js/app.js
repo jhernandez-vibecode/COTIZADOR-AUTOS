@@ -57,6 +57,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   document.getElementById('btnNext2').addEventListener('click', function () {
     if (validateView2()) {
+      _syncDataFromView2();
       populateView3();
       showView(3);
     }
@@ -161,28 +162,28 @@ function handleProfileSave() {
   const agendaUrl = document.getElementById('p-agenda').value.trim();
 
   if (!name || name.split(/\s+/).length < 2) {
-    alert('Ingresa tu nombre completo (al menos dos palabras).');
+    showToast('Ingresa tu nombre completo (al menos dos palabras).', 'error');
     document.getElementById('p-name').focus();
     return;
   }
 
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    alert('Ingresa un correo valido. Recuerda: debe ser el mismo de tu cuenta Gmail.');
+    showToast('Ingresa un correo valido. Recuerda: debe ser el mismo de tu cuenta Gmail.', 'error');
     document.getElementById('p-email').focus();
     return;
   }
   if (!phone) {
-    alert('Ingresa tu telefono.');
+    showToast('Ingresa tu telefono.', 'error');
     document.getElementById('p-phone').focus();
     return;
   }
   if (!license) {
-    alert('Ingresa tu numero de licencia SUGESE.');
+    showToast('Ingresa tu numero de licencia SUGESE.', 'error');
     document.getElementById('p-license').focus();
     return;
   }
   if (!agendaUrl) {
-    alert('Ingresa el link de tu formulario de cita. Puede ser un Google Forms, Calendly o similar.');
+    showToast('Ingresa el link de tu formulario de cita. Puede ser un Google Forms, Calendly o similar.', 'error');
     document.getElementById('p-agenda').focus();
     return;
   }
@@ -199,7 +200,7 @@ function handleProfileSave() {
 
   // Validar formato basico del link de agenda si se puso algo
   if (cleanAgenda && !/^https?:\/\/[^\s]+\.[^\s]+/.test(cleanAgenda)) {
-    alert('El link del formulario de cita no parece valido. Ejemplo: https://forms.gle/AbCdEf123');
+    showToast('El link del formulario de cita no parece valido. Ejemplo: https://forms.gle/AbCdEf123', 'error');
     document.getElementById('p-agenda').focus();
     return;
   }
@@ -217,10 +218,11 @@ function handleProfileSave() {
     saveProfile(profile);
     applyProfile(profile);
   } catch (e) {
-    alert(e.message);
+    showToast(e.message, 'error');
     return;
   }
 
+  showToast('Perfil guardado.', 'success');
   closeProfileModal();
   // Si estamos en la vista 3 (redactar), regenerar la previa con los nuevos datos
   if (S.step === 3) updatePreview();
@@ -236,7 +238,7 @@ function handleProfileSave() {
  */
 async function handleFileSelect(file) {
   if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
-    alert('Por favor selecciona un archivo PDF.');
+    showToast('Por favor selecciona un archivo PDF.', 'error');
     return;
   }
 
@@ -280,7 +282,7 @@ async function handleFileSelect(file) {
     wrap.classList.remove('active');
     bar.style.width = '0%';
     label.textContent = '';
-    alert('Error al procesar el PDF:\n\n' + e.message);
+    showToast('Error al procesar el PDF: ' + e.message, 'error');
     document.getElementById('fileInput').value = '';
   }
 }
@@ -305,6 +307,34 @@ function populateView2() {
 
   _renderPriceTable();
   _renderDeductibles();
+  _suggestGamaIfApplies();
+}
+
+/**
+ * Si el valor asegurado extraido del PDF es >= ₡50.000.000 (umbral de
+ * alta gama per Circular INS 0186-2025), muestra una sugerencia visual
+ * junto al toggle 💎. NO activa el toggle — la decision es del agente.
+ */
+function _suggestGamaIfApplies() {
+  const el = document.getElementById('gamaSuggest');
+  if (!el || !S.data) return;
+  const n = parseInt(String(S.data.valor || '').replace(/,/g, '').replace(/\.\d+$/, ''), 10);
+  el.style.display = (!isNaN(n) && n >= 50000000) ? '' : 'none';
+}
+
+/**
+ * Vuelca los campos editables de la vista 2 a S.data, para que el correo,
+ * el PDF filename y el explicador usen las correcciones del agente.
+ * El valor asegurado se guarda sin el simbolo ₡ que agrega populateView2.
+ */
+function _syncDataFromView2() {
+  if (!S.data) return;
+  S.data.clientName = document.getElementById('f-client').value.trim();
+  S.data.plate      = document.getElementById('f-plate').value.trim();
+  S.data.year       = document.getElementById('f-year').value.trim();
+  S.data.valor      = document.getElementById('f-valor').value.replace(/[₡]/g, '').trim();
+  S.data.formaAseg  = document.getElementById('f-forma').value.trim();
+  S.data.sustRepos  = document.getElementById('f-sust').value.trim();
 }
 
 /**
@@ -314,12 +344,12 @@ function populateView2() {
 function validateView2() {
   const email = document.getElementById('f-email').value.trim();
   if (!email) {
-    alert('El correo del cliente es requerido para enviar la cotizacion.');
+    showToast('El correo del cliente es requerido para enviar la cotizacion.', 'error');
     document.getElementById('f-email').focus();
     return false;
   }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    alert('El correo del cliente no parece valido. Verifica el formato (ejemplo: nombre@dominio.com).');
+    showToast('El correo del cliente no parece valido. Verifica el formato (ejemplo: nombre@dominio.com).', 'error');
     document.getElementById('f-email').focus();
     return false;
   }
@@ -419,6 +449,14 @@ function updatePreview() {
  * obtiene el token de Google y envia el correo via Gmail API.
  */
 async function handleSend() {
+  // Re-validar el destinatario: es editable en la vista 3
+  const toCheck = document.getElementById('m-to').value.trim();
+  if (!toCheck || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(toCheck)) {
+    showToast('El correo del destinatario no parece valido. Verificalo antes de enviar.', 'error');
+    document.getElementById('m-to').focus();
+    return;
+  }
+
   const btn = document.getElementById('btnSend');
   const originalText = btn.textContent;
   btn.disabled = true;
@@ -464,7 +502,7 @@ async function handleSend() {
 
   } catch (e) {
     console.error('Error al enviar:', e);
-    alert('Error al enviar el correo:\n\n' + e.message);
+    showToast('Error al enviar el correo: ' + e.message, 'error');
   } finally {
     btn.disabled = false;
     btn.textContent = originalText;
@@ -513,6 +551,8 @@ function resetAll() {
   if (asia) asia.checked = false;
   var gama = document.getElementById('f-gama');
   if (gama) gama.checked = false;
+  var gamaSuggest = document.getElementById('gamaSuggest');
+  if (gamaSuggest) gamaSuggest.style.display = 'none';
   document.getElementById('preview').innerHTML =
     '<p style="color:#6b7280;text-align:center;margin-top:40px;">Llena los campos a la izquierda para ver la vista previa.</p>';
   document.getElementById('priceTable').innerHTML       = '';

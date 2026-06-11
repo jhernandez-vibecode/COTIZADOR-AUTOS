@@ -245,6 +245,7 @@
   </div>
 
   <!-- Scripts en orden de dependencia -->
+  <script src="../js/toast.js"></script>
   <script src="../js/config.js"></script>
   <script src="../js/state.js"></script>
   <script src="../js/agent-profile.js"></script>
@@ -372,6 +373,7 @@
       if (!d.policy.paymentForm) errors.push('Falta forma de pago.');
       if (!d.policy.lastPremium || d.policy.lastPremium <= 0) errors.push('Última prima pagada inválida.');
       if (!d.coverages.length) errors.push('Marcá al menos una cobertura.');
+      if (d.coverages.includes('REP') && !d.repPlan) errors.push('Marcaste REP — elegí el plan de repuestos.');
       if (!d.deductibles.length) errors.push('Marcá al menos un deducible.');
       return errors;
     }
@@ -466,13 +468,13 @@
         await getToken();
         await sendEmail(raw);
 
-        alert('✅ Correo enviado a ' + data.client.email);
+        showToast('✅ Correo enviado a ' + data.client.email, 'success');
         document.getElementById('formCoberturas').reset();
         document.querySelectorAll('.sub-opt').forEach(function (s) { s.classList.remove('visible'); });
         document.querySelectorAll('.ded-grid label').forEach(function (l) { l.classList.remove('checked'); });
       } catch (err) {
         console.error(err);
-        alert('❌ Error al enviar: ' + (err.message || err));
+        showToast('Error al enviar: ' + (err.message || err), 'error');
       } finally {
         btn.disabled = false;
         btn.textContent = 'Enviar al cliente';

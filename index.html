@@ -147,6 +147,9 @@
         <!-- Columna izquierda: formulario -->
         <div class="card">
           <h2 class="card-title">2 · Datos de la cotización</h2>
+          <p style="margin:-8px 0 14px;font-size:12px;color:var(--gray-500);">
+            Revisá los datos extraídos del PDF y corregí lo que haga falta — todos los campos son editables.
+          </p>
 
           <div class="form-row">
             <label class="form-label">Nº Cotización</label>
@@ -155,7 +158,7 @@
 
           <div class="form-row">
             <label class="form-label">Nombre del cliente</label>
-            <input class="form-control" id="f-client" readonly />
+            <input class="form-control" id="f-client" />
           </div>
 
           <div class="form-row">
@@ -171,27 +174,27 @@
           <div class="grid-2" style="gap: 12px;">
             <div class="form-row">
               <label class="form-label">Placa</label>
-              <input class="form-control" id="f-plate" readonly />
+              <input class="form-control" id="f-plate" />
             </div>
             <div class="form-row">
               <label class="form-label">Año</label>
-              <input class="form-control" id="f-year" readonly />
+              <input class="form-control" id="f-year" />
             </div>
           </div>
 
           <div class="form-row">
             <label class="form-label">Valor Asegurado</label>
-            <input class="form-control" id="f-valor" readonly />
+            <input class="form-control" id="f-valor" />
           </div>
 
           <div class="form-row">
             <label class="form-label">Forma de Aseguramiento</label>
-            <input class="form-control" id="f-forma" readonly />
+            <input class="form-control" id="f-forma" />
           </div>
 
           <div class="form-row">
             <label class="form-label">Sustitución de Repuestos</label>
-            <input class="form-control" id="f-sust" readonly />
+            <input class="form-control" id="f-sust" />
           </div>
 
           <div class="toggle-row">
@@ -223,6 +226,7 @@
               <span class="toggle-icon">💎</span>
               <span>¿Vehículo de alta gama?</span>
               <span class="toggle-hint">Marcalo si la suma asegurada ≥ ₡50.000.000 (Mercedes Benz, Lexus, Maseratti, Mini, etc.). La guía mostrará el deducible escalonado 10% / 20%.</span>
+              <span class="toggle-suggest" id="gamaSuggest" style="display:none;">💎 El valor asegurado de este PDF es ≥ ₡50.000.000 — revisá si aplica alta gama.</span>
             </label>
             <label class="toggle-switch">
               <input type="checkbox" id="f-gama" />
@@ -344,6 +348,7 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
   <!-- ======================== CÓDIGO PROPIO (orden crítico) ======================== -->
+  <script src="js/toast.js"></script>
   <script src="js/config.js"></script>
   <script src="js/state.js"></script>
   <script src="js/agent-profile.js"></script>
