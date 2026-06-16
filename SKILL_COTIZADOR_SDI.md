@@ -13,6 +13,22 @@ description: >
 
 # Cotizador SDI - Checkpoint 11 junio 2026
 
+> ## ✅ NUEVO — 16 jun 2026: Pestaña 📊 Estadísticas (EN PROD, commit `e71f82d`)
+> Botón **📊** en el header → modal `statsModal`. **100% aditiva** (reutiliza el
+> historial `localStorage` `cotizador_sdi_history_v1`; no toca envío/correo/PDF).
+> - **KPIs:** Enviadas · Confirmadas · **Tasa de éxito** (= confirmadas/enviadas; "—" si 0).
+> - **Casilla `.stat-check`** por cotización → marca `confirmed` y refresca los KPIs al instante.
+> - **Por mes** (barras CSS puras, clic en un mes filtra) + filtro **⭐ Alto valor ≥₡10M**
+>   (`STATS_HIGH_THRESHOLD` en app.js). El valor se recupera del param `va=` del `guideUrl`
+>   para entradas previas a la feature → ⭐ y filtro funcionan con TODO el historial.
+> - **Seguimiento por fila:** 💬 WhatsApp (`buildWaFollowUpUrl`, mensaje distinto al de guía)
+>   + ✉️ correo (`buildFollowUpEmail` texto+colores SIN imágenes; `buildMIMESimple` MIME sin
+>   adjunto; mismo pipeline Gmail `getToken`→`sendEmail`).
+> - **history.js** suma: ids estables (`newHistoryId`/`ensureHistoryIds`), `confirmed`, `valor`,
+>   y funciones PURAS `computeHistoryStats`/`groupHistoryByMonth`/`historyEntryValue`/`setHistoryConfirmed`.
+> - **Decisión JC:** casilla simple sí/no (NO 3 estados) → la tasa cuenta recién-enviadas como
+>   no-confirmadas hasta marcarlas. Tests: `tests/test-history-stats.js` (21); suite total 80 verde.
+
 > ## ⚠ CAMBIO DE ESTADO — 11 jun 2026 (auditoría E2E + solo Gmail)
 > Lo de abajo es registro HISTORICO. El estado vigente:
 > - **Outlook ELIMINADO por completo.** Solo Gmail. NO existen `outlook-auth.js`,
