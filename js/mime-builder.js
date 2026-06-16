@@ -65,6 +65,35 @@ function buildMIME(args) {
   return _base64UrlEncode(message);
 }
 
+/**
+ * Construye un mensaje MIME SIMPLE (solo text/html, sin adjuntos) en base64url.
+ * Para correos sin PDF, como el de seguimiento de la pestaña de estadisticas.
+ * Reusa los mismos helpers de codificacion que buildMIME().
+ * @param {object} args
+ * @param {string} args.to      - destinatario
+ * @param {string} args.from    - "Nombre <correo@dominio>" del remitente
+ * @param {string} args.subject - asunto (puede tener acentos)
+ * @param {string} args.html    - cuerpo HTML del correo
+ * @returns {string} mensaje MIME codificado en base64url
+ */
+function buildMIMESimple(args) {
+  const CRLF = '\r\n';
+  const subject64 = _encodeRFC2047(args.subject);
+  const fromEnc   = _encodeFromHeader(args.from);
+
+  const message =
+    'From: '    + fromEnc      + CRLF +
+    'To: '      + args.to      + CRLF +
+    'Subject: ' + subject64    + CRLF +
+    'MIME-Version: 1.0'        + CRLF +
+    'Content-Type: text/html; charset=UTF-8' + CRLF +
+    'Content-Transfer-Encoding: 7bit'        + CRLF +
+    CRLF +
+    args.html                  + CRLF;
+
+  return _base64UrlEncode(message);
+}
+
 // =====================================================================
 // HELPERS INTERNOS
 // =====================================================================

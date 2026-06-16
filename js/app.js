@@ -131,6 +131,16 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
+  // ============ PESTAÑA DE ESTADÍSTICAS (📊) ============
+  document.getElementById('btnStats').addEventListener('click', openStatsModal);
+  document.getElementById('btnStatsClose').addEventListener('click', closeStatsModal);
+  document.getElementById('btnStatsExit').addEventListener('click', closeStatsModal);
+  // Delegacion: los contenedores siempre existen, los hijos se repintan.
+  document.getElementById('statsMonths').addEventListener('click', _onStatsMonthClick);
+  document.getElementById('statsFilters').addEventListener('click', _onStatsFilterClick);
+  document.getElementById('statsList').addEventListener('change', _onStatsListChange);
+  document.getElementById('statsList').addEventListener('click', _onStatsListClick);
+
   // ============ CARGAR PERFIL DEL AGENTE ============
   // Si hay perfil guardado en localStorage, lo aplicamos sobre CFG.
   // Si NO hay (primer uso en este navegador), abrimos el modal forzando configurar.
@@ -247,6 +257,219 @@ function renderHistory() {
       });
     });
   });
+}
+
+// =====================================================================
+// PESTAÑA DE ESTADISTICAS (modal 📊)
+// =====================================================================
+// La capa de datos (ids, confirmada, valor, metricas, agrupacion por mes)
+// vive en history.js. Aca solo va el render y los handlers de UI.
+
+const STATS_HIGH_THRESHOLD = 10000000; // ₡10M: umbral de "alto valor" para seguimiento
+
+var _statsMonth    = null;   // clave YYYY-MM activa, o null = todas
+var _statsHighOnly = false;  // true = solo cotizaciones ≥₡10M
+
+function openStatsModal() {
+  _statsMonth    = null;
+  _statsHighOnly = false;
+  renderStats();
+  document.getElementById('statsModal').classList.add('active');
+}
+
+function closeStatsModal() {
+  document.getElementById('statsModal').classList.remove('active');
+}
+
+/** Aplica los filtros activos (mes y/o alto valor) a un set de cotizaciones. */
+function _applyStatsFilters(entries) {
+  var arr = Array.isArray(entries) ? entries.slice() : [];
+  if (_statsMonth) {
+    arr = arr.filter(function (e) { return historyMonthKey(e) === _statsMonth; });
+  }
+  if (_statsHighOnly) {
+    arr = arr.filter(function (e) { return historyEntryValue(e) >= STATS_HIGH_THRESHOLD; });
+  }
+  return arr;
+}
+
+/** Repinta TODO (resumen + meses + filtros + lista) según el estado actual. */
+function renderStats() {
+  const entries  = ensureHistoryIds();          // garantiza ids (migra viejas)
+  const months   = groupHistoryByMonth(entries);
+  const filtered  = _applyStatsFilters(entries);
+
+  document.getElementById('statsKpis').innerHTML    = _statsKpisHtml(computeHistoryStats(filtered));
+  document.getElementById('statsMonths').innerHTML  = _statsMonthsHtml(months);
+  document.getElementById('statsFilters').innerHTML = _statsFiltersHtml();
+  document.getElementById('statsList').innerHTML    = _statsListHtml(filtered);
+}
+
+/** Repinta solo el resumen (tras marcar una casilla, sin perder el scroll de la lista). */
+function _refreshStatsSummary() {
+  const entries = loadHistory();
+  document.getElementById('statsKpis').innerHTML   = _statsKpisHtml(computeHistoryStats(_applyStatsFilters(entries)));
+  document.getElementById('statsMonths').innerHTML = _statsMonthsHtml(groupHistoryByMonth(entries));
+}
+
+// ---------- Formateadores ----------
+
+function _fmtRate(r) {
+  return (r == null) ? '—' : (String(r).replace('.', ',') + ' %');
+}
+
+/** 14500000 → "₡14,5M" · 22000000 → "₡22M" (es-CR, coma decimal). */
+function _fmtMillones(n) {
+  if (!n) return '';
+  const m = Math.round((n / 1e6) * 10) / 10;
+  return '₡' + String(m).replace('.', ',') + 'M';
+}
+
+// ---------- Plantillas HTML ----------
+
+function _statsKpisHtml(s) {
+  return ''
+    + '<div class="stats-kpi"><div class="stats-kpi-num">' + s.total + '</div><div class="stats-kpi-label">Enviadas</div></div>'
+    + '<div class="stats-kpi"><div class="stats-kpi-num">' + s.confirmed + '</div><div class="stats-kpi-label">Confirmadas</div></div>'
+    + '<div class="stats-kpi rate"><div class="stats-kpi-num">' + _fmtRate(s.rate) + '</div><div class="stats-kpi-label">Tasa de éxito</div></div>';
+}
+
+function _statsMonthsHtml(months) {
+  if (!months.length) {
+    return '<div class="history-empty">Aún no hay cotizaciones registradas.</div>';
+  }
+  const maxTotal = months.reduce(function (mx, m) { return Math.max(mx, m.stats.total); }, 0) || 1;
+  let html = months.map(function (m) {
+    const pct    = Math.round((m.stats.total / maxTotal) * 100);
+    const active = (_statsMonth === m.key) ? ' active' : '';
+    return '<div class="stats-month' + active + '" data-month-key="' + _escapeHtml(m.key) + '">'
+      + '<div class="stats-month-label">' + _escapeHtml(m.label) + '</div>'
+      + '<div class="stats-month-bar-wrap"><div class="stats-month-bar" style="width:' + pct + '%"></div></div>'
+      + '<div class="stats-month-meta">' + m.stats.total + ' cot &middot; <b>' + m.stats.confirmed + ' conf</b>'
+        + (m.stats.rate != null ? ' &middot; ' + _fmtRate(m.stats.rate) : '') + '</div>'
+      + '</div>';
+  }).join('');
+  if (_statsMonth) {
+    html += '<button class="stats-chip" data-month-clear="1" style="align-self:flex-start;margin-top:2px;">↺ Ver todos los meses</button>';
+  }
+  return html;
+}
+
+function _statsFiltersHtml() {
+  return ''
+    + '<button class="stats-chip' + (!_statsHighOnly ? ' active' : '') + '" data-filter="all">Todas</button>'
+    + '<button class="stats-chip' + (_statsHighOnly ? ' active' : '') + '" data-filter="high">⭐ Alto valor ≥₡10M</button>';
+}
+
+function _statsListHtml(entries) {
+  if (!entries.length) {
+    return '<div class="history-empty">No hay cotizaciones para este filtro.</div>';
+  }
+  return entries.map(function (e) {
+    const value    = historyEntryValue(e);
+    const high     = value >= STATS_HIGH_THRESHOLD;
+    const sent     = e.date ? new Date(e.date) : null;
+    const daysLeft = sent ? 15 - Math.floor((Date.now() - sent.getTime()) / 86400000) : -1;
+    const vig      = (daysLeft > 0)
+      ? '<span class="history-badge ok">Vigente &middot; ' + daysLeft + 'd</span>'
+      : '<span class="history-badge off">Vencida</span>';
+    const fecha    = sent ? sent.toLocaleDateString('es-CR', { day: '2-digit', month: 'short' }) : '';
+    const id       = _escapeHtml(e.id || '');
+    return '<div class="stat-item' + (high ? ' high' : '') + '">'
+      + '<input type="checkbox" class="stat-check" data-confirm="' + id + '"' + (e.confirmed ? ' checked' : '') + ' title="Marcar como confirmada" aria-label="Marcar como confirmada" />'
+      + '<div class="stat-main">'
+        + '<div class="stat-title' + (e.confirmed ? ' done' : '') + '">'
+          + (high ? '<span class="stat-star" title="Carro de alto valor (≥₡10M)">⭐</span>' : '')
+          + _escapeHtml(e.client || '(sin nombre)')
+          + (e.plate ? ' &middot; ' + _escapeHtml(e.plate) : '')
+          + (value ? ' <span class="stat-value">' + _fmtMillones(value) + '</span>' : '')
+          + ' ' + vig
+        + '</div>'
+        + '<div class="stat-meta">' + fecha
+          + (e.vehicle ? ' &middot; ' + _escapeHtml(e.vehicle) : '')
+          + (e.email ? ' &middot; ' + _escapeHtml(e.email) : '')
+        + '</div>'
+      + '</div>'
+      + '<div class="stat-actions">'
+        + '<a class="history-btn" href="' + _escapeHtml(buildWaFollowUpUrl(e)) + '" target="_blank" rel="noopener" title="WhatsApp de seguimiento">💬</a>'
+        + '<button class="history-btn" data-mail="' + id + '" title="Enviar correo de seguimiento">✉️</button>'
+      + '</div>'
+    + '</div>';
+  }).join('');
+}
+
+// ---------- Handlers (delegados) ----------
+
+function _onStatsMonthClick(e) {
+  if (e.target.closest('[data-month-clear]')) { _statsMonth = null; renderStats(); return; }
+  const el = e.target.closest('.stats-month');
+  if (!el) return;
+  const key = el.dataset.monthKey;
+  _statsMonth = (_statsMonth === key) ? null : key;
+  renderStats();
+}
+
+function _onStatsFilterClick(e) {
+  const chip = e.target.closest('.stats-chip');
+  if (!chip) return;
+  _statsHighOnly = (chip.dataset.filter === 'high');
+  renderStats();
+}
+
+function _onStatsListChange(e) {
+  const cb = e.target.closest('.stat-check');
+  if (!cb) return;
+  setHistoryConfirmed(cb.dataset.confirm, cb.checked);
+  const title = cb.parentElement.querySelector('.stat-title');
+  if (title) title.classList.toggle('done', cb.checked);
+  _refreshStatsSummary();
+}
+
+function _onStatsListClick(e) {
+  const btn = e.target.closest('[data-mail]');
+  if (!btn) return;
+  const entry = loadHistory().find(function (x) { return x && x.id === btn.dataset.mail; });
+  if (entry) sendFollowUpEmail(entry, btn);
+}
+
+/**
+ * Envia un correo de seguimiento (nota corta) por Gmail. Reusa el mismo motor
+ * de envio que la cotizacion: getToken → buildMIMESimple → sendEmail.
+ * Pide confirmacion porque dispara un envio real desde la cuenta del agente.
+ */
+async function sendFollowUpEmail(entry, btn) {
+  if (!entry || !entry.email) {
+    showToast('Esta cotización no tiene un correo guardado.', 'error');
+    return;
+  }
+  if (!confirm('¿Enviar correo de seguimiento a ' + (entry.client || 'el cliente') + ' (' + entry.email + ')?')) {
+    return;
+  }
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '…';
+  try {
+    await getToken();
+    const html = buildFollowUpEmail({
+      nombre:   entry.client,
+      vehiculo: entry.vehicle,
+      guideUrl: entry.guideUrl
+    });
+    const raw = buildMIMESimple({
+      to:      entry.email,
+      from:    '"' + CFG.FROM_NAME + '" <' + CFG.FROM_EMAIL + '>',
+      subject: 'Seguimiento a su cotización' + (entry.vehicle ? ' — ' + entry.vehicle : ''),
+      html:    html
+    });
+    await sendEmail(raw);
+    showToast('Correo de seguimiento enviado a ' + (entry.client || entry.email) + '.', 'success');
+  } catch (err) {
+    console.error('[seguimiento] error al enviar:', err);
+    showToast('No se pudo enviar el correo: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = original;
+  }
 }
 
 /**
@@ -621,6 +844,7 @@ async function handleSend() {
     // Nada de esto debe poder tumbar el flujo: el correo YA salió.
     try {
       const entry = {
+        id:        newHistoryId(),
         date:      new Date().toISOString(),
         client:    document.getElementById('m-name').value.trim(),
         agentName: CFG.FROM_NAME || '',
@@ -628,6 +852,8 @@ async function handleSend() {
         plate:     S.data.plate,
         vehicle:   document.getElementById('m-vehicle').value.trim(),
         quote:     S.data.quoteNum,
+        valor:     S.data.valor,      // valor asegurado → filtro de alto valor (≥₡10M)
+        confirmed: false,             // el agente lo marca en la pestaña 📊 al cerrar
         guideUrl:  _buildGuideUrl(_guideExtras())
       };
       saveHistoryEntry(entry);

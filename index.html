@@ -51,6 +51,7 @@
         <a href="cancelacion/" class="header-btn" title="Calculadora de cancelación" aria-label="Calculadora de cancelación" style="text-decoration:none;font-size:16px;">🧮</a>
         <a href="marcas-recargo/" target="_blank" rel="noopener" class="header-btn" title="Marcas con deducible diferenciado" aria-label="Marcas con deducible diferenciado" style="text-decoration:none;font-size:16px;">📋</a>
         <a href="coberturas/" class="header-btn" title="Detalle de coberturas vigentes" aria-label="Detalle de coberturas vigentes" style="text-decoration:none;font-size:16px;background:#fbbf24;color:#0b1d3a;font-weight:900;">🛡</a>
+        <button id="btnStats" class="header-btn" title="Estadísticas de cotizaciones" aria-label="Estadísticas de cotizaciones">📊</button>
         <button id="btnHistory" class="header-btn" title="Historial de cotizaciones enviadas" aria-label="Historial de cotizaciones enviadas">🕘</button>
         <button id="btnSettings" class="header-btn" title="Configuración del agente" aria-label="Configuración del agente">⚙</button>
       </div>
@@ -135,6 +136,39 @@
       <div class="modal-footer">
         <button class="btn btn-secondary" id="btnHistoryClear">Borrar historial</button>
         <button class="btn btn-primary" id="btnHistoryExit">Salir</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================== MODAL · ESTADÍSTICAS (📊) ======================== -->
+  <div class="modal-backdrop" id="statsModal">
+    <div class="modal-card stats-card">
+      <div class="modal-header">
+        <h2 class="modal-title">📊 Estadísticas de cotizaciones</h2>
+        <button class="modal-close" id="btnStatsClose" aria-label="Cerrar">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-hint">
+          Tasa de éxito según las cotizaciones enviadas desde este navegador.
+          Marcá la casilla cuando un cliente confirme. Datos privados, solo en este navegador.
+        </p>
+
+        <!-- Resumen (3 tarjetas) -->
+        <div class="stats-kpis" id="statsKpis"></div>
+
+        <!-- Desglose por mes -->
+        <div class="stats-section-title">Por mes <span class="stats-hint">— clic en un mes para filtrar</span></div>
+        <div class="stats-months" id="statsMonths"></div>
+
+        <!-- Filtros -->
+        <div class="stats-section-title">Cotizaciones</div>
+        <div class="stats-filters" id="statsFilters"></div>
+
+        <!-- Lista -->
+        <div id="statsList"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="btnStatsExit">Salir</button>
       </div>
     </div>
   </div>

@@ -636,3 +636,77 @@ function buildCoverageEmail(p) {
 </body>
 </html>`;
 }
+
+/**
+ * Construye el HTML del correo de SEGUIMIENTO (pestaña de estadisticas).
+ * Es una nota CORTA y calida — NO la cotizacion completa: saludo, "¿pudiste
+ * revisarla?", boton a la guia y firma. Texto + colores, SIN imagenes
+ * (Gmail bloquea SVG / base64 / imagenes de dominios nuevos), por eso el
+ * header de marca se recrea con texto, no con <img>.
+ *
+ * @param {object} p
+ * @param {string} p.nombre   - nombre del cliente para el saludo
+ * @param {string} p.vehiculo - descripcion del vehiculo
+ * @param {string} p.guideUrl - URL de la guia explicada (la misma del envio)
+ * @returns {string} HTML del correo
+ */
+function buildFollowUpEmail(p) {
+  const nombre   = _escHtml((p.nombre || '').trim());
+  const saludo   = nombre ? ('Hola ' + nombre + ',') : 'Hola,';
+  const vehiculo = _escHtml(p.vehiculo || 'su vehículo');
+  const guideUrl = p.guideUrl || (typeof CFG !== 'undefined' && CFG.GUIDE_URL) || '#';
+  const agente   = _escHtml(CFG.FROM_NAME || 'Juan Carlos Hernandez');
+  const lic      = _escHtml(CFG.LICENSE   || '08-1318');
+  const contacto = _escHtml(CFG.WHATSAPP  || CFG.PHONE || '8822-1348');
+  const web      = _escHtml(CFG.WEBSITE   || 'segurosdelins.com');
+  const fontFam  = "'Inter','Segoe UI',Arial,Helvetica,sans-serif";
+
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Seguimiento a su cotización</title>
+</head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:${fontFam};color:#0c2340;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f3f4f6;padding:24px 0;">
+    <tr>
+      <td align="center">
+        <table width="520" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 4px 14px rgba(12,35,64,.10);">
+          <tr>
+            <td style="background:#0c2340;padding:22px 28px;">
+              <div style="color:#ffffff;font-size:18px;font-weight:800;letter-spacing:.3px;">Seguros Digitales &middot; INS</div>
+              <div style="color:#9fb3c8;font-size:12px;margin-top:2px;">Seguimiento a su cotización</div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:28px;">
+              <p style="margin:0 0 14px;font-size:16px;font-weight:700;color:#0c2340;">${saludo}</p>
+              <p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#374151;">Hace unos días le envié por correo la cotización del seguro de su <strong>${vehiculo}</strong>. Quería saber si tuvo chance de revisarla.</p>
+              <p style="margin:0 0 22px;font-size:14px;line-height:1.6;color:#374151;">Para que la vea con todo el detalle &mdash; coberturas, asistencia y opciones de pago &mdash; le dejo de nuevo la guía explicada paso a paso:</p>
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center" style="padding:0 0 24px;">
+                    <a href="${guideUrl}" style="display:inline-block;background:#0369a1;color:#ffffff;text-decoration:none;border-radius:10px;padding:13px 26px;font-family:${fontFam};font-weight:700;font-size:14px;">Ver mi cotización explicada &rarr;</a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:0;font-size:14px;line-height:1.6;color:#374151;">Con mucho gusto le aclaro cualquier duda o le ayudo a avanzar con la póliza cuando lo desee. Quedo atento. 🙂</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 28px 26px;">
+              <div style="border-top:1px solid #e5e7eb;padding-top:16px;font-size:13px;color:#374151;line-height:1.6;">
+                <div style="font-weight:700;color:#0c2340;">${agente}</div>
+                <div>Agente de seguros del INS &middot; Licencia SUGESE ${lic}</div>
+                <div>WhatsApp / Tel: ${contacto} &middot; ${web}</div>
+              </div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}

@@ -557,6 +557,151 @@ textarea.form-control { resize: vertical; min-height: 70px; }
 }
 .history-btn:hover { background: var(--gray-100); }
 
+/* ============ ESTADÍSTICAS (pestaña 📊) ============ */
+.stats-card { max-width: 760px; }
+
+/* Resumen: 3 tarjetas */
+.stats-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 22px;
+}
+.stats-kpi {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  padding: 14px 8px;
+  text-align: center;
+}
+.stats-kpi.rate { background: var(--navy); border-color: var(--navy); }
+.stats-kpi-num {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--navy);
+  line-height: 1.1;
+}
+.stats-kpi.rate .stats-kpi-num { color: #fff; }
+.stats-kpi-label {
+  font-size: 10px;
+  color: var(--gray-500);
+  margin-top: 5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+}
+.stats-kpi.rate .stats-kpi-label { color: rgba(255, 255, 255, .75); }
+
+/* Títulos de sección */
+.stats-section-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--navy);
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  margin: 0 0 10px;
+}
+.stats-hint {
+  font-weight: 500;
+  color: var(--gray-500);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* Desglose por mes (barras CSS) */
+.stats-months { display: flex; flex-direction: column; gap: 6px; margin-bottom: 22px; }
+.stats-month {
+  display: grid;
+  grid-template-columns: 78px 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 9px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: var(--gray-50);
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.stats-month:hover { background: var(--gray-100); }
+.stats-month.active { border-color: var(--blue); background: #eff6ff; }
+.stats-month-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--navy);
+  text-transform: capitalize;
+}
+.stats-month-bar-wrap {
+  height: 14px;
+  background: var(--gray-200);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.stats-month-bar {
+  height: 100%;
+  min-width: 3px;
+  background: linear-gradient(90deg, var(--blue), var(--blue-light));
+  border-radius: 999px;
+}
+.stats-month-meta { font-size: 11px; color: var(--gray-500); white-space: nowrap; }
+.stats-month-meta b { color: var(--green-dark); }
+
+/* Filtros (chips) */
+.stats-filters { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.stats-chip {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--gray-300);
+  background: #fff;
+  color: var(--gray-700);
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.stats-chip:hover { border-color: var(--blue); }
+.stats-chip.active { background: var(--navy); border-color: var(--navy); color: #fff; }
+
+/* Filas de cotización con casilla */
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  background: #fff;
+}
+.stat-item.high { border-color: #fcd34d; background: #fffbeb; }
+.stat-check {
+  width: 20px; height: 20px;
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: var(--green);
+}
+.stat-main { min-width: 0; flex: 1; }
+.stat-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.stat-title.done { color: var(--green-dark); }
+.stat-star { font-size: 13px; }
+.stat-value { font-weight: 800; color: var(--amber); }
+.stat-meta {
+  font-size: 11px;
+  color: var(--gray-500);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.stat-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
 /* ============ TOGGLE SWITCH (vehiculo electrico) ============ */
 .toggle-row {
   display: flex;
