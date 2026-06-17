@@ -13,6 +13,21 @@ description: >
 
 # Cotizador SDI - Checkpoint 11 junio 2026
 
+> ## ✅ NUEVO — 16 jun 2026: Seguimiento semi-automático a 3 días (EN PROD, commit `2f6967f`)
+> Semi-automático SIN backend: se dispara al abrir la app.
+> - **Aviso al inicio** (`#avisoModal`, `maybeShowFollowUpAviso` vía setTimeout 400ms tras perfil)
+>   con cotizaciones +3d (sin confirmar, vigentes, sin `followUpAt`) → enviar el correo de
+>   seguimiento a todas (`sendAllFollowUps`, un getToken + reintento) o por fila.
+> - **Un solo seguimiento:** marca `followUpAt` (`setHistoryFollowUp`); luego `desestimada`.
+>   `historyFollowUpState` → 'seguir'|'seguido'|'desestimada'|null. Snooze por día (sessionStorage
+>   `cotizador_sdi_aviso_snooze`).
+> - **Plantilla** `buildFollowUpEmail`: lead "El aseguramiento es muy sencillo" + fotos/token/pago +
+>   botón Agendar (`CFG.AGENDA_URL`) + guía. `contacto`=`CFG.PHONE` primero. href saneados (`_safeUrl`).
+> - **Multi-agente:** todo por CFG/perfil; cada agente envía desde su Gmail. `_pendingFollowUps`
+>   usa `ensureHistoryIds()` (migra ids legacy). Guards `if(!id) return false` en set*/delete.
+> - **Revisión adversarial (11 fixes):** correos duplicados con historial legacy, fuga del WhatsApp
+>   de JC, reintento de token, saneo href, snooze, orden por urgencia. ~96 tests verde.
+
 > ## ✅ NUEVO — 16 jun 2026: Pestaña 📊 Estadísticas (EN PROD, commit `e71f82d`)
 > Botón **📊** en el header → modal `statsModal`. **100% aditiva** (reutiliza el
 > historial `localStorage` `cotizador_sdi_history_v1`; no toca envío/correo/PDF).
