@@ -22,6 +22,8 @@ description: >
 >   Concretada/Desechada por fila vía `_onAvisoCitasClick`) + ⏳ Para seguir (solo pendientes).
 > - Seguimiento automático SOLO para pendientes (se quitó la auto-"desestimada"). Fecha de cita con
 >   etiqueta "Cita:" + foco; `_onStatsListChange` restaura foco/scroll tras el re-render.
+> - **Orden de embudo** en la lista (`_estadoOrden` + sort estable, commit `87b0f66`): Agendadas
+>   (cita más próxima primero) → Pendientes → Concretadas → Desechadas.
 > - **Revisión adversarial: 10 hallazgos LOW corregidos** (citaFecha stale, foco/scroll, KPI Desechadas,
 >   código/CSS muerto). ~100 tests verde.
 
