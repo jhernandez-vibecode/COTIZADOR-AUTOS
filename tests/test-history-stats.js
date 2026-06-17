@@ -188,6 +188,57 @@ test('historyNeedsFollowUp: vencida (≥15d) → false', () => {
 test('historyNeedsFollowUp: 14d (aún vigente) sin confirmar → true', () => {
   eq(historyNeedsFollowUp({ date: '2026-06-02T12:00:00Z', confirmed: false }, NOW), true);
 });
+test('historyNeedsFollowUp: ya con followUpAt → false (un solo seguimiento)', () => {
+  eq(historyNeedsFollowUp({ date: '2026-06-12T12:00:00Z', confirmed: false, followUpAt: '2026-06-15T10:00:00Z' }, NOW), false);
+});
+
+test('historyFollowUpState: ciclo recién→seguir→seguido→desestimada', () => {
+  eq(historyFollowUpState({ date: '2026-06-14T12:00:00Z', confirmed: false }, NOW), null);                                          // 2d: recién
+  eq(historyFollowUpState({ date: '2026-06-12T12:00:00Z', confirmed: false }, NOW), 'seguir');                                      // 4d sin seguir
+  eq(historyFollowUpState({ date: '2026-06-12T12:00:00Z', confirmed: false, followUpAt: '2026-06-15T10:00:00Z' }, NOW), 'seguido'); // seguida, vigente
+  eq(historyFollowUpState({ date: '2026-05-25T12:00:00Z', confirmed: false, followUpAt: '2026-05-29T10:00:00Z' }, NOW), 'desestimada'); // seguida, vencida
+  eq(historyFollowUpState({ date: '2026-06-12T12:00:00Z', confirmed: true,  followUpAt: '2026-06-15T10:00:00Z' }, NOW), null);      // confirmada
+});
+
+test('setHistoryFollowUp marca followUpAt y persiste', () => {
+  localStorage._d = {};
+  saveHistoryEntry({ id: 'q1', client: 'A' });
+  eq(setHistoryFollowUp('q1', '2026-06-16T10:00:00Z'), true);
+  eq(loadHistory()[0].followUpAt, '2026-06-16T10:00:00Z');
+});
+test('setHistoryFollowUp con id inexistente → false', () => {
+  localStorage._d = {};
+  saveHistoryEntry({ id: 'q1', client: 'A' });
+  eq(setHistoryFollowUp('NOPE'), false);
+});
+
+test('setHistoryFollowUp con id falsy (undefined/"") → false sin tocar entradas legacy', () => {
+  localStorage._d = {};
+  saveHistoryEntry({ client: 'legacy-1' }); // sin id
+  saveHistoryEntry({ client: 'legacy-2' }); // sin id
+  eq(setHistoryFollowUp(undefined), false);
+  eq(setHistoryFollowUp(''), false);
+  if (loadHistory().some(function (e) { return e.followUpAt; })) throw new Error('marcó una entrada legacy por accidente');
+});
+
+test('ensureHistoryIds + setHistoryFollowUp: dos legacy → ids distintos, marca solo la correcta', () => {
+  localStorage._d = {};
+  saveHistoryEntry({ client: 'A' }); // legacy sin id
+  saveHistoryEntry({ client: 'B' }); // legacy sin id (unshift → [B, A])
+  const arr = ensureHistoryIds();
+  if (!arr[0].id || !arr[1].id || arr[0].id === arr[1].id) throw new Error('ids no asignados o no distintos');
+  setHistoryFollowUp(arr[0].id, '2026-06-16T10:00:00Z');
+  const marked = loadHistory().filter(function (e) { return e.followUpAt; });
+  eq(marked.length, 1);
+  eq(marked[0].id, arr[0].id);
+});
+
+test('setHistoryConfirmed con id falsy → false (mismo guard anti-legacy)', () => {
+  localStorage._d = {};
+  saveHistoryEntry({ client: 'legacy' });
+  eq(setHistoryConfirmed(undefined, true), false);
+  eq(setHistoryConfirmed('', true), false);
+});
 
 // ---------- buildWaFollowUpUrl ----------
 

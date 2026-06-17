@@ -639,10 +639,12 @@ function buildCoverageEmail(p) {
 
 /**
  * Construye el HTML del correo de SEGUIMIENTO (pestaña de estadisticas).
- * Es una nota CORTA y calida — NO la cotizacion completa: saludo, "¿pudiste
- * revisarla?", boton a la guia y firma. Texto + colores, SIN imagenes
- * (Gmail bloquea SVG / base64 / imagenes de dominios nuevos), por eso el
- * header de marca se recrea con texto, no con <img>.
+ * Es una nota CORTA y calida — NO la cotizacion completa: saludo, recordatorio
+ * de que el cliente solo aporta las fotos (resto 100% en linea), boton para
+ * AGENDAR la cita (CFG.AGENDA_URL, personalizado por agente) + enlace a la guia,
+ * y firma. Texto + colores, SIN imagenes (Gmail bloquea SVG / base64 / imagenes
+ * de dominios nuevos), por eso el header de marca se recrea con texto, no <img>.
+ * TODO sale del perfil del agente via CFG (nombre, licencia, WhatsApp, agenda).
  *
  * @param {object} p
  * @param {string} p.nombre   - nombre del cliente para el saludo
@@ -654,10 +656,17 @@ function buildFollowUpEmail(p) {
   const nombre   = _escHtml((p.nombre || '').trim());
   const saludo   = nombre ? ('Hola ' + nombre + ',') : 'Hola,';
   const vehiculo = _escHtml(p.vehiculo || 'su vehículo');
-  const guideUrl = p.guideUrl || (typeof CFG !== 'undefined' && CFG.GUIDE_URL) || '#';
+  const guideUrl  = p.guideUrl || (typeof CFG !== 'undefined' && CFG.GUIDE_URL) || '#';
+  const agendaUrl = (typeof CFG !== 'undefined' && CFG.AGENDA_URL) || guideUrl;
+  // Saneamos los href: solo http(s) y escapamos comillas (evita romper el atributo).
+  const _safeUrl   = function (u) { return /^https?:\/\//i.test(String(u)) ? _escHtml(String(u)) : '#'; };
+  const safeAgenda = _safeUrl(agendaUrl);
+  const safeGuide  = _safeUrl(guideUrl);
   const agente   = _escHtml(CFG.FROM_NAME || 'Juan Carlos Hernandez');
   const lic      = _escHtml(CFG.LICENSE   || '08-1318');
-  const contacto = _escHtml(CFG.WHATSAPP  || CFG.PHONE || '8822-1348');
+  // PHONE primero (campo obligatorio del perfil = siempre del agente). WHATSAPP es
+  // opcional; si se pusiera primero, un agente sin WhatsApp mostraría el de JC (default).
+  const contacto = _escHtml(CFG.PHONE  || CFG.WHATSAPP || '8822-1348');
   const web      = _escHtml(CFG.WEBSITE   || 'segurosdelins.com');
   const fontFam  = "'Inter','Segoe UI',Arial,Helvetica,sans-serif";
 
@@ -682,16 +691,30 @@ function buildFollowUpEmail(p) {
           <tr>
             <td style="padding:28px;">
               <p style="margin:0 0 14px;font-size:16px;font-weight:700;color:#0c2340;">${saludo}</p>
-              <p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#374151;">Hace unos días le envié por correo la cotización del seguro de su <strong>${vehiculo}</strong>. Quería saber si tuvo chance de revisarla.</p>
-              <p style="margin:0 0 22px;font-size:14px;line-height:1.6;color:#374151;">Para que la vea con todo el detalle &mdash; coberturas, asistencia y opciones de pago &mdash; le dejo de nuevo la guía explicada paso a paso:</p>
-              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+              <p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#374151;">Hace unos días le envié por correo la cotización del seguro de su <strong>${vehiculo}</strong> y quería saber si tuvo chance de revisarla.</p>
+
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 18px;">
                 <tr>
-                  <td align="center" style="padding:0 0 24px;">
-                    <a href="${guideUrl}" style="display:inline-block;background:#0369a1;color:#ffffff;text-decoration:none;border-radius:10px;padding:13px 26px;font-family:${fontFam};font-weight:700;font-size:14px;">Ver mi cotización explicada &rarr;</a>
+                  <td style="background:#e1f5ee;border:1px solid #9fe1cb;border-radius:10px;padding:14px 16px;font-size:13px;line-height:1.6;color:#0f6e56;">
+                    <strong>El aseguramiento es muy sencillo</strong> y 100% en línea: de su parte, las fotografías del vehículo, aceptar la póliza con un token y elegir su forma de pago. Nosotros nos encargamos del resto y lo acompañamos en cada paso.
                   </td>
                 </tr>
               </table>
-              <p style="margin:0;font-size:14px;line-height:1.6;color:#374151;">Con mucho gusto le aclaro cualquier duda o le ayudo a avanzar con la póliza cuando lo desee. Quedo atento. 🙂</p>
+
+              <p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#374151;">Cuando guste, agendamos su cita — toma pocos minutos:</p>
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center" style="padding:0 0 12px;">
+                    <a href="${safeAgenda}" style="display:inline-block;background:#0369a1;color:#ffffff;text-decoration:none;border-radius:10px;padding:14px 28px;font-family:${fontFam};font-weight:700;font-size:15px;">Agendar mi cita de aseguramiento &rarr;</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding:0 0 22px;">
+                    <a href="${safeGuide}" style="color:#0369a1;text-decoration:none;font-weight:700;font-size:13px;">Ver mi cotización explicada &rarr;</a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:0;font-size:14px;line-height:1.6;color:#374151;">Quedo atento para cualquier duda o para ayudarle a avanzar cuando lo desee.</p>
             </td>
           </tr>
           <tr>

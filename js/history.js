@@ -22,14 +22,18 @@
  *   - computeHistoryStats(arr)   -> { total, confirmed, rate }  (pura, testeable)
  *   - groupHistoryByMonth(arr)   -> [{ key, label, entries, stats }]  (pura)
  *   - historyDaysSince(e[,now])  -> number dias desde el envio (o null)
- *   - historyNeedsFollowUp(e)    -> bool  (>3d, sin confirmar, aun vigente)
+ *   - historyNeedsFollowUp(e)    -> bool  (>3d, sin confirmar, sin follow-up, vigente)
+ *   - setHistoryFollowUp(id[,iso])-> bool (marca que se envio el seguimiento)
+ *   - historyFollowUpState(e)    -> 'seguir'|'seguido'|'desestimada'|null
  *
  * Forma de entry:
  *   { id, date: ISO string, client, email, plate, vehicle, quote,
- *     valor, confirmed, guideUrl, waCliente }
+ *     valor, confirmed, followUpAt, guideUrl, waCliente }
  *   - valor      : valor asegurado del vehiculo (para filtro de alto valor).
  *                  Entradas viejas no lo traen: se recupera del param `va` del guideUrl.
  *   - confirmed  : true cuando el agente marca que el cliente compro la poliza.
+ *   - followUpAt : ISO de cuando se envio el (unico) correo de seguimiento.
+ *                  Una vez puesto, la cotizacion no vuelve a aparecer en el aviso.
  */
 
 const HISTORY_KEY = 'cotizador_sdi_history_v1';
@@ -207,6 +211,7 @@ function ensureHistoryIds() {
  * @returns {boolean} true si se encontro y guardo
  */
 function setHistoryConfirmed(id, confirmed) {
+  if (!id) return false;  // sin id, find(undefined) matchearía una entrada legacy equivocada
   try {
     const arr = loadHistory();
     const e = arr.find(function (x) { return x && x.id === id; });
@@ -228,6 +233,7 @@ function setHistoryConfirmed(id, confirmed) {
  * @returns {boolean} true si se encontró y eliminó
  */
 function deleteHistoryEntry(id) {
+  if (!id) return false;  // sin id, findIndex(undefined) borraría una entrada legacy equivocada
   try {
     const arr = loadHistory();
     const idx = arr.findIndex(function (x) { return x && x.id === id; });
@@ -237,6 +243,28 @@ function deleteHistoryEntry(id) {
     return true;
   } catch (e) {
     console.warn('[history] no se pudo eliminar la entrada:', e);
+    return false;
+  }
+}
+
+/**
+ * Marca que se envió el correo de seguimiento de una cotización (el único).
+ * A partir de aquí ya no aparece en el aviso de seguimientos pendientes.
+ * @param {string} id
+ * @param {string} [iso] - timestamp ISO; default ahora.
+ * @returns {boolean} true si se encontró y guardó
+ */
+function setHistoryFollowUp(id, iso) {
+  if (!id) return false;  // sin id, find(undefined) marcaría una entrada legacy equivocada
+  try {
+    const arr = loadHistory();
+    const e = arr.find(function (x) { return x && x.id === id; });
+    if (!e) return false;
+    e.followUpAt = iso || new Date().toISOString();
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(arr));
+    return true;
+  } catch (err) {
+    console.warn('[history] no se pudo marcar el seguimiento:', err);
     return false;
   }
 }
@@ -313,7 +341,27 @@ function historyDaysSince(e, nowMs) {
 function historyNeedsFollowUp(e, nowMs) {
   const d = historyDaysSince(e, nowMs);
   if (d == null) return false;
-  return d > 3 && d < 15 && !(e && e.confirmed);
+  return d > 3 && d < 15 && !(e && e.confirmed) && !(e && e.followUpAt);
+}
+
+/**
+ * Estado de seguimiento de una cotización (para la insignia en 📊):
+ *   'seguir'      → +3d, sin confirmar, aún vigente y SIN seguimiento previo.
+ *   'seguido'     → ya se envió el (único) seguimiento y sigue vigente, sin confirmar.
+ *   'desestimada' → se siguió pero venció sin confirmarse → fuera del flujo.
+ *   null          → recién enviada, confirmada, o sin fecha.
+ * @param {object} e
+ * @param {number} [nowMs]
+ * @returns {string|null}
+ */
+function historyFollowUpState(e, nowMs) {
+  if (!e || e.confirmed) return null;
+  if (historyNeedsFollowUp(e, nowMs)) return 'seguir';
+  if (e.followUpAt) {
+    const d = historyDaysSince(e, nowMs);
+    return (d != null && d >= 15) ? 'desestimada' : 'seguido';
+  }
+  return null;
 }
 
 /**

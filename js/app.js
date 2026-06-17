@@ -141,12 +141,25 @@ document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('statsList').addEventListener('change', _onStatsListChange);
   document.getElementById('statsList').addEventListener('click', _onStatsListClick);
 
+  // ============ AVISO DE SEGUIMIENTOS PENDIENTES (al inicio) ============
+  document.getElementById('btnAvisoSendAll').addEventListener('click', sendAllFollowUps);
+  document.getElementById('btnAvisoLater').addEventListener('click', snoozeAvisoToday);
+  document.getElementById('btnAvisoClose').addEventListener('click', snoozeAvisoToday);
+  document.getElementById('btnAvisoStats').addEventListener('click', function () {
+    closeAvisoModal();
+    openStatsModal();
+  });
+  document.getElementById('avisoList').addEventListener('click', _onAvisoListClick);
+
   // ============ CARGAR PERFIL DEL AGENTE ============
   // Si hay perfil guardado en localStorage, lo aplicamos sobre CFG.
   // Si NO hay (primer uso en este navegador), abrimos el modal forzando configurar.
   const savedProfile = loadProfile();
   if (savedProfile) {
     applyProfile(savedProfile);
+    // Aviso de seguimientos pendientes (3+ días sin respuesta). Solo con
+    // perfil configurado; pequeño delay para no chocar con el render inicial.
+    setTimeout(maybeShowFollowUpAviso, 400);
   } else {
     openProfileModal(true);
   }
@@ -378,8 +391,13 @@ function _statsListHtml(entries) {
     const vig      = (daysLeft > 0)
       ? '<span class="history-badge ok">Vigente &middot; ' + daysLeft + 'd</span>'
       : '<span class="history-badge off">Vencida</span>';
-    const fu       = historyNeedsFollowUp(e)
+    const fuState  = historyFollowUpState(e);
+    const fu       = fuState === 'seguir'
       ? ' <span class="history-badge fu" title="Sin confirmar, vigente y +3 días — conviene dar seguimiento">⏳ seguir</span>'
+      : fuState === 'seguido'
+      ? ' <span class="history-badge seguido" title="Ya se le envió el seguimiento — esperando respuesta">✓ seguido</span>'
+      : fuState === 'desestimada'
+      ? ' <span class="history-badge desest" title="Se siguió y venció sin concretar — no requiere acción suya">sin respuesta · cerrada</span>'
       : '';
     const sent     = e.date ? new Date(e.date) : null;
     const fecha    = sent ? sent.toLocaleDateString('es-CR', { day: '2-digit', month: 'short' }) : '';
@@ -457,43 +475,181 @@ function _onStatsListClick(e) {
 }
 
 /**
- * Envia un correo de seguimiento (nota corta) por Gmail. Reusa el mismo motor
- * de envio que la cotizacion: getToken → buildMIMESimple → sendEmail.
- * Pide confirmacion porque dispara un envio real desde la cuenta del agente.
+ * Construye y envía UN correo de seguimiento por Gmail y marca followUpAt.
+ * Requiere un token ya obtenido (getToken antes). Lanza si Gmail rechaza.
+ * Núcleo reutilizado por el ✉️ por fila y por el envío en lote del aviso.
+ * @param {object} entry
+ */
+async function _sendOneFollowUp(entry) {
+  // Fail-closed ante localStorage corrupto/editado a mano: no concatenar un
+  // correo inválido en el header To: (mismo regex que la validación de envío).
+  if (!entry || !entry.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(entry.email)) {
+    throw new Error('Correo del destinatario inválido: ' + ((entry && entry.email) || '(vacío)'));
+  }
+  const html = buildFollowUpEmail({
+    nombre:   entry.client,
+    vehiculo: entry.vehicle,
+    guideUrl: entry.guideUrl
+  });
+  const raw = buildMIMESimple({
+    to:      entry.email,
+    from:    '"' + CFG.FROM_NAME + '" <' + CFG.FROM_EMAIL + '>',
+    subject: 'Seguimiento a su cotización' + (entry.vehicle ? ' — ' + entry.vehicle : ''),
+    html:    html
+  });
+  await sendEmail(raw);
+  setHistoryFollowUp(entry.id, new Date().toISOString());
+}
+
+/**
+ * Envía el correo de seguimiento de UNA cotización (botón ✉️). Pide
+ * confirmación porque dispara un envío real desde la cuenta del agente.
+ * Al enviar marca followUpAt → no vuelve a aparecer en el aviso.
+ * @returns {Promise<boolean>} true si se envió
  */
 async function sendFollowUpEmail(entry, btn) {
   if (!entry || !entry.email) {
     showToast('Esta cotización no tiene un correo guardado.', 'error');
-    return;
+    return false;
   }
   if (!confirm('¿Enviar correo de seguimiento a ' + (entry.client || 'el cliente') + ' (' + entry.email + ')?')) {
-    return;
+    return false;
   }
   const original = btn.textContent;
   btn.disabled = true;
   btn.textContent = '…';
   try {
     await getToken();
-    const html = buildFollowUpEmail({
-      nombre:   entry.client,
-      vehiculo: entry.vehicle,
-      guideUrl: entry.guideUrl
-    });
-    const raw = buildMIMESimple({
-      to:      entry.email,
-      from:    '"' + CFG.FROM_NAME + '" <' + CFG.FROM_EMAIL + '>',
-      subject: 'Seguimiento a su cotización' + (entry.vehicle ? ' — ' + entry.vehicle : ''),
-      html:    html
-    });
-    await sendEmail(raw);
+    await _sendOneFollowUp(entry);
     showToast('Correo de seguimiento enviado a ' + (entry.client || entry.email) + '.', 'success');
+    if (document.getElementById('statsModal').classList.contains('active')) renderStats();
+    return true;
   } catch (err) {
     console.error('[seguimiento] error al enviar:', err);
     showToast('No se pudo enviar el correo: ' + err.message, 'error');
+    return false;
   } finally {
     btn.disabled = false;
     btn.textContent = original;
   }
+}
+
+// =====================================================================
+// AVISO DE SEGUIMIENTOS PENDIENTES (al abrir la app)
+// =====================================================================
+// Solo a los 3 días: cotizaciones +3d, sin confirmar, vigentes y SIN
+// seguimiento previo (un único seguimiento). Tras enviarlo, se desestiman.
+
+/**
+ * Cotizaciones que necesitan el (único) seguimiento ahora mismo.
+ * Usa ensureHistoryIds() (NO loadHistory) para migrar ids a entradas legacy:
+ * sin id, setHistoryFollowUp(undefined) marcaría la entrada equivocada y podría
+ * duplicar el correo. Ordena por antigüedad desc → la más próxima a vencer arriba.
+ */
+function _pendingFollowUps() {
+  return ensureHistoryIds()
+    .filter(function (e) { return historyNeedsFollowUp(e); })
+    .sort(function (a, b) { return (historyDaysSince(b) || 0) - (historyDaysSince(a) || 0); });
+}
+
+/** Al abrir la app: si hay pendientes (y hay perfil), muestra el aviso. */
+function maybeShowFollowUpAviso() {
+  // Si el agente lo pospuso hoy ("Ahora no" / cerrar), no insistir hasta mañana
+  // o hasta reabrir el navegador (sessionStorage).
+  try {
+    if (sessionStorage.getItem('cotizador_sdi_aviso_snooze') === new Date().toDateString()) return;
+  } catch (e) { /* sessionStorage no disponible: seguimos */ }
+  const pend = _pendingFollowUps();
+  if (!pend.length) return;
+  renderAviso(pend);
+  document.getElementById('avisoModal').classList.add('active');
+}
+
+function closeAvisoModal() {
+  document.getElementById('avisoModal').classList.remove('active');
+}
+
+/** Cierra el aviso y lo pospone por hoy (para no reaparecer en cada recarga). */
+function snoozeAvisoToday() {
+  try { sessionStorage.setItem('cotizador_sdi_aviso_snooze', new Date().toDateString()); } catch (e) {}
+  closeAvisoModal();
+}
+
+function _avisoListHtml(entries) {
+  return entries.map(function (e) {
+    const elapsed = historyDaysSince(e);
+    const ago = (elapsed == null) ? '' : 'hace ' + elapsed + ' d';
+    const id  = _escapeHtml(e.id || '');
+    return '<div class="aviso-item">'
+      + '<div class="aviso-main">'
+        + '<div class="aviso-name">' + _escapeHtml(e.client || '(sin nombre)') + '</div>'
+        + '<div class="aviso-meta">'
+          + (e.vehicle ? _escapeHtml(e.vehicle) : '')
+          + (e.plate ? ' &middot; ' + _escapeHtml(e.plate) : '')
+          + (ago ? ' &middot; ' + ago : '')
+        + '</div>'
+      + '</div>'
+      + '<button class="history-btn" data-aviso-mail="' + id + '" title="Enviar seguimiento a este">✉️</button>'
+    + '</div>';
+  }).join('');
+}
+
+function renderAviso(entries) {
+  const btnAll = document.getElementById('btnAvisoSendAll');
+  if (btnAll) btnAll.textContent = entries.length === 1
+    ? 'Enviar seguimiento'
+    : 'Enviar seguimiento a las ' + entries.length;
+  document.getElementById('avisoList').innerHTML = _avisoListHtml(entries);
+}
+
+/** Envía el seguimiento a TODAS las pendientes (un permiso de Gmail). */
+async function sendAllFollowUps() {
+  const pend = _pendingFollowUps();
+  if (!pend.length) { closeAvisoModal(); return; }
+  const btn = document.getElementById('btnAvisoSendAll');
+  const original = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Enviando…'; }
+  let ok = 0, fail = 0;
+  try {
+    await getToken();
+  } catch (e) {
+    showToast('No se pudo autorizar Gmail: ' + e.message, 'error');
+    if (btn) { btn.disabled = false; btn.textContent = original; }
+    return;
+  }
+  for (let i = 0; i < pend.length; i++) {
+    try {
+      await _sendOneFollowUp(pend[i]);
+      ok++;
+    } catch (e) {
+      // Token caducó/revocó a mitad del lote (sendEmail hizo clearToken). Reintentar UNA vez
+      // re-autorizando, para no tumbar las filas restantes por un solo 401.
+      if (typeof S !== 'undefined' && !S.accessToken) {
+        try { await getToken(); await _sendOneFollowUp(pend[i]); ok++; continue; }
+        catch (e2) { console.error('[aviso] reintento falló', pend[i] && pend[i].id, e2); }
+      }
+      console.error('[aviso] fallo envío', pend[i] && pend[i].id, e);
+      fail++;
+    }
+  }
+  if (btn) { btn.disabled = false; btn.textContent = original; }
+  closeAvisoModal();
+  showToast(ok + ' seguimiento' + (ok === 1 ? '' : 's') + ' enviado' + (ok === 1 ? '' : 's')
+    + (fail ? ' · ' + fail + ' no se pudieron enviar' : '') + '.', fail ? 'error' : 'success');
+  if (document.getElementById('statsModal').classList.contains('active')) renderStats();
+}
+
+/** ✉️ por fila dentro del aviso: envía uno y refresca la lista. */
+function _onAvisoListClick(e) {
+  const btn = e.target.closest('[data-aviso-mail]');
+  if (!btn) return;
+  const entry = loadHistory().find(function (x) { return x && x.id === btn.dataset.avisoMail; });
+  if (!entry) return;
+  sendFollowUpEmail(entry, btn).then(function () {
+    const pend = _pendingFollowUps();
+    if (!pend.length) closeAvisoModal();
+    else renderAviso(pend);
+  });
 }
 
 /**

@@ -80,7 +80,9 @@ function applyProfile(p) {
   if (p.name)     CFG.FROM_NAME  = p.name;
   if (p.email)    CFG.FROM_EMAIL = p.email;
   if (p.phone)    CFG.PHONE      = p.phone;
-  if (p.whatsapp) CFG.WHATSAPP   = p.whatsapp;
+  // Asignamos siempre (incl. ''): si el agente vacía su WhatsApp, debe limpiar
+  // el default de JC, no conservarlo. Mismo patrón que website abajo.
+  if (p.whatsapp !== undefined) CFG.WHATSAPP = p.whatsapp;
   if (p.license)  CFG.LICENSE    = p.license;
   // website: asignamos siempre (puede ser '' para ocultar el bloque del footer)
   if (p.website !== undefined) CFG.WEBSITE = p.website;
