@@ -557,6 +557,7 @@ textarea.form-control { resize: vertical; min-height: 70px; }
   transition: background .15s;
 }
 .history-btn:hover { background: var(--gray-100); }
+.history-btn.danger:hover { background: #fee2e2; border-color: #fca5a5; }
 
 /* ============ ESTADÍSTICAS (pestaña 📊) ============ */
 .stats-card { max-width: 760px; }

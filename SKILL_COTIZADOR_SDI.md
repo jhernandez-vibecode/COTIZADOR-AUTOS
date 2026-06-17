@@ -27,6 +27,8 @@ description: >
 > - **Contador + filtro ⏳ Para seguir:** cada fila muestra "hace N días"; insignia `⏳ seguir` +
 >   chip de filtro para enviadas hace +3 días, SIN confirmar y aún vigentes (≤15d) —
 >   `historyDaysSince`/`historyNeedsFollowUp`. Estado de chip = `_statsFilter` ('all'|'high'|'followup').
+> - **Eliminar registro:** botón 🗑 (`.history-btn.danger`) por fila → `deleteHistoryEntry(id)` con
+>   confirm. Para borrar pruebas/duplicados; PERMANENTE. Historial compartido → se va de 📊 y 🕘.
 > - **history.js** suma: ids estables (`newHistoryId`/`ensureHistoryIds`), `confirmed`, `valor`,
 >   y funciones PURAS `computeHistoryStats`/`groupHistoryByMonth`/`historyEntryValue`/`setHistoryConfirmed`.
 > - **Decisión JC:** casilla simple sí/no (NO 3 estados) → la tasa cuenta recién-enviadas como

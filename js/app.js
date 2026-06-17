@@ -403,6 +403,7 @@ function _statsListHtml(entries) {
       + '<div class="stat-actions">'
         + '<a class="history-btn" href="' + _escapeHtml(buildWaFollowUpUrl(e)) + '" target="_blank" rel="noopener" title="WhatsApp de seguimiento">💬</a>'
         + '<button class="history-btn" data-mail="' + id + '" title="Enviar correo de seguimiento">✉️</button>'
+        + '<button class="history-btn danger" data-del="' + id + '" title="Eliminar este registro">🗑</button>'
       + '</div>'
     + '</div>';
   }).join('');
@@ -436,6 +437,19 @@ function _onStatsListChange(e) {
 }
 
 function _onStatsListClick(e) {
+  // Eliminar registro (prueba/duplicado) — con confirmación, es permanente.
+  const del = e.target.closest('[data-del]');
+  if (del) {
+    const entry = loadHistory().find(function (x) { return x && x.id === del.dataset.del; });
+    const quien = (entry && entry.client) ? entry.client : 'este registro';
+    if (confirm('¿Eliminar el registro de ' + quien + '?\nEsta acción no se puede deshacer.')) {
+      deleteHistoryEntry(del.dataset.del);
+      showToast('Registro eliminado.', 'success');
+      renderStats();
+    }
+    return;
+  }
+  // Correo de seguimiento
   const btn = e.target.closest('[data-mail]');
   if (!btn) return;
   const entry = loadHistory().find(function (x) { return x && x.id === btn.dataset.mail; });

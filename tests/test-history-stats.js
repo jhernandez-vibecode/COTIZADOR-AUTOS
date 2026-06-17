@@ -139,6 +139,23 @@ test('setHistoryConfirmed con id inexistente → false', () => {
   eq(setHistoryConfirmed('NOPE', true), false);
 });
 
+test('deleteHistoryEntry elimina por id y persiste', () => {
+  localStorage._d = {};
+  saveHistoryEntry({ id: 'q2', client: 'B' });
+  saveHistoryEntry({ id: 'q1', client: 'A' }); // unshift → [q1, q2]
+  eq(deleteHistoryEntry('q1'), true);
+  const arr = loadHistory();
+  eq(arr.length, 1);
+  eq(arr[0].id, 'q2');
+});
+
+test('deleteHistoryEntry con id inexistente → false, no toca el resto', () => {
+  localStorage._d = {};
+  saveHistoryEntry({ id: 'q1', client: 'A' });
+  eq(deleteHistoryEntry('NOPE'), false);
+  eq(loadHistory().length, 1);
+});
+
 test('newHistoryId genera ids distintos', () => {
   if (newHistoryId() === newHistoryId()) throw new Error('ids duplicados');
 });

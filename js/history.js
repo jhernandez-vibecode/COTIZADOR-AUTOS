@@ -17,6 +17,7 @@
  *   - newHistoryId()             -> string id estable para una entrada
  *   - ensureHistoryIds()         -> Array<entry> (migra ids a entradas viejas)
  *   - setHistoryConfirmed(id,b)  -> bool  (marca/desmarca confirmada)
+ *   - deleteHistoryEntry(id)     -> bool  (elimina un registro por id)
  *   - historyEntryValue(entry)   -> number (valor asegurado, recuperable del link)
  *   - computeHistoryStats(arr)   -> { total, confirmed, rate }  (pura, testeable)
  *   - groupHistoryByMonth(arr)   -> [{ key, label, entries, stats }]  (pura)
@@ -215,6 +216,27 @@ function setHistoryConfirmed(id, confirmed) {
     return true;
   } catch (err) {
     console.warn('[history] no se pudo actualizar confirmada:', err);
+    return false;
+  }
+}
+
+/**
+ * Elimina una cotización del historial por su id estable. Útil para borrar
+ * registros de prueba / duplicados desde la pestaña 📊. Permanente (no hay
+ * papelera) — la UI pide confirmación antes de llamar.
+ * @param {string} id
+ * @returns {boolean} true si se encontró y eliminó
+ */
+function deleteHistoryEntry(id) {
+  try {
+    const arr = loadHistory();
+    const idx = arr.findIndex(function (x) { return x && x.id === id; });
+    if (idx === -1) return false;
+    arr.splice(idx, 1);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(arr));
+    return true;
+  } catch (e) {
+    console.warn('[history] no se pudo eliminar la entrada:', e);
     return false;
   }
 }
