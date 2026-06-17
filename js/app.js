@@ -296,6 +296,12 @@ function closeStatsModal() {
 }
 
 /** Aplica los filtros activos (mes y/o alto valor) a un set de cotizaciones. */
+/** Orden de embudo para la lista: agendadas primero, luego pendientes, cerradas al final. */
+function _estadoOrden(e) {
+  const st = historyEstado(e);
+  return st === 'agendada' ? 0 : st === 'pendiente' ? 1 : st === 'concretada' ? 2 : 3;
+}
+
 function _applyStatsFilters(entries) {
   var arr = Array.isArray(entries) ? entries.slice() : [];
   if (_statsMonth) {
@@ -306,6 +312,18 @@ function _applyStatsFilters(entries) {
   } else if (_statsFilter === 'followup') {
     arr = arr.filter(function (e) { return historyNeedsFollowUp(e); });
   }
+  // Orden de embudo: Agendada → Pendiente → Concretada → Desechada. Dentro de
+  // agendadas, la cita más próxima primero; en el resto se mantiene el orden
+  // existente (más reciente primero, por el sort estable de JS).
+  arr.sort(function (a, b) {
+    const oa = _estadoOrden(a), ob = _estadoOrden(b);
+    if (oa !== ob) return oa - ob;
+    if (oa === 0) {
+      const ca = String(a.citaFecha || '9999-99-99'), cb = String(b.citaFecha || '9999-99-99');
+      if (ca !== cb) return ca < cb ? -1 : 1;
+    }
+    return 0;
+  });
   return arr;
 }
 
