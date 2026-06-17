@@ -267,12 +267,12 @@ function renderHistory() {
 
 const STATS_HIGH_THRESHOLD = 10000000; // ₡10M: umbral de "alto valor" para seguimiento
 
-var _statsMonth    = null;   // clave YYYY-MM activa, o null = todas
-var _statsHighOnly = false;  // true = solo cotizaciones ≥₡10M
+var _statsMonth  = null;    // clave YYYY-MM activa, o null = todas
+var _statsFilter = 'all';   // 'all' | 'high' (≥₡10M) | 'followup' (>3d sin confirmar, vigente)
 
 function openStatsModal() {
-  _statsMonth    = null;
-  _statsHighOnly = false;
+  _statsMonth  = null;
+  _statsFilter = 'all';
   renderStats();
   document.getElementById('statsModal').classList.add('active');
 }
@@ -287,8 +287,10 @@ function _applyStatsFilters(entries) {
   if (_statsMonth) {
     arr = arr.filter(function (e) { return historyMonthKey(e) === _statsMonth; });
   }
-  if (_statsHighOnly) {
+  if (_statsFilter === 'high') {
     arr = arr.filter(function (e) { return historyEntryValue(e) >= STATS_HIGH_THRESHOLD; });
+  } else if (_statsFilter === 'followup') {
+    arr = arr.filter(function (e) { return historyNeedsFollowUp(e); });
   }
   return arr;
 }
@@ -356,9 +358,12 @@ function _statsMonthsHtml(months) {
 }
 
 function _statsFiltersHtml() {
-  return ''
-    + '<button class="stats-chip' + (!_statsHighOnly ? ' active' : '') + '" data-filter="all">Todas</button>'
-    + '<button class="stats-chip' + (_statsHighOnly ? ' active' : '') + '" data-filter="high">⭐ Alto valor ≥₡10M</button>';
+  function chip(val, label) {
+    return '<button class="stats-chip' + (_statsFilter === val ? ' active' : '') + '" data-filter="' + val + '">' + label + '</button>';
+  }
+  return chip('all', 'Todas')
+    + chip('high', '⭐ Alto valor ≥₡10M')
+    + chip('followup', '⏳ Para seguir (+3 d)');
 }
 
 function _statsListHtml(entries) {
@@ -368,12 +373,17 @@ function _statsListHtml(entries) {
   return entries.map(function (e) {
     const value    = historyEntryValue(e);
     const high     = value >= STATS_HIGH_THRESHOLD;
-    const sent     = e.date ? new Date(e.date) : null;
-    const daysLeft = sent ? 15 - Math.floor((Date.now() - sent.getTime()) / 86400000) : -1;
+    const elapsed  = historyDaysSince(e);
+    const daysLeft = (elapsed == null) ? -1 : 15 - elapsed;
     const vig      = (daysLeft > 0)
       ? '<span class="history-badge ok">Vigente &middot; ' + daysLeft + 'd</span>'
       : '<span class="history-badge off">Vencida</span>';
+    const fu       = historyNeedsFollowUp(e)
+      ? ' <span class="history-badge fu" title="Sin confirmar, vigente y +3 días — conviene dar seguimiento">⏳ seguir</span>'
+      : '';
+    const sent     = e.date ? new Date(e.date) : null;
     const fecha    = sent ? sent.toLocaleDateString('es-CR', { day: '2-digit', month: 'short' }) : '';
+    const ago      = (elapsed == null) ? '' : (elapsed === 0 ? 'hoy' : elapsed === 1 ? 'ayer' : 'hace ' + elapsed + ' d');
     const id       = _escapeHtml(e.id || '');
     return '<div class="stat-item' + (high ? ' high' : '') + '">'
       + '<input type="checkbox" class="stat-check" data-confirm="' + id + '"' + (e.confirmed ? ' checked' : '') + ' title="Marcar como confirmada" aria-label="Marcar como confirmada" />'
@@ -383,9 +393,9 @@ function _statsListHtml(entries) {
           + _escapeHtml(e.client || '(sin nombre)')
           + (e.plate ? ' &middot; ' + _escapeHtml(e.plate) : '')
           + (value ? ' <span class="stat-value">' + _fmtMillones(value) + '</span>' : '')
-          + ' ' + vig
+          + ' ' + vig + fu
         + '</div>'
-        + '<div class="stat-meta">' + fecha
+        + '<div class="stat-meta">' + (ago ? '<b class="stat-ago">' + ago + '</b>' : '') + (ago && fecha ? ' &middot; ' : '') + fecha
           + (e.vehicle ? ' &middot; ' + _escapeHtml(e.vehicle) : '')
           + (e.email ? ' &middot; ' + _escapeHtml(e.email) : '')
         + '</div>'
@@ -412,7 +422,7 @@ function _onStatsMonthClick(e) {
 function _onStatsFilterClick(e) {
   const chip = e.target.closest('.stats-chip');
   if (!chip) return;
-  _statsHighOnly = (chip.dataset.filter === 'high');
+  _statsFilter = chip.dataset.filter || 'all';
   renderStats();
 }
 

@@ -143,6 +143,35 @@ test('newHistoryId genera ids distintos', () => {
   if (newHistoryId() === newHistoryId()) throw new Error('ids duplicados');
 });
 
+// ---------- historyDaysSince + historyNeedsFollowUp ----------
+
+const NOW = new Date('2026-06-16T12:00:00Z').getTime();
+
+test('historyDaysSince cuenta días transcurridos (floor)', () => {
+  eq(historyDaysSince({ date: '2026-06-13T12:00:00Z' }, NOW), 3);
+  eq(historyDaysSince({ date: '2026-06-16T12:00:00Z' }, NOW), 0);
+  eq(historyDaysSince({ date: '2026-06-01T12:00:00Z' }, NOW), 15);
+});
+test('historyDaysSince sin fecha → null', () => {
+  eq(historyDaysSince({}, NOW), null);
+  eq(historyDaysSince(null, NOW), null);
+});
+test('historyNeedsFollowUp: 4d sin confirmar y vigente → true', () => {
+  eq(historyNeedsFollowUp({ date: '2026-06-12T12:00:00Z', confirmed: false }, NOW), true);
+});
+test('historyNeedsFollowUp: 3d exactos → false (debe ser MÁS de 3)', () => {
+  eq(historyNeedsFollowUp({ date: '2026-06-13T12:00:00Z', confirmed: false }, NOW), false);
+});
+test('historyNeedsFollowUp: confirmada → false aunque tenga +3d', () => {
+  eq(historyNeedsFollowUp({ date: '2026-06-10T12:00:00Z', confirmed: true }, NOW), false);
+});
+test('historyNeedsFollowUp: vencida (≥15d) → false', () => {
+  eq(historyNeedsFollowUp({ date: '2026-05-20T12:00:00Z', confirmed: false }, NOW), false);
+});
+test('historyNeedsFollowUp: 14d (aún vigente) sin confirmar → true', () => {
+  eq(historyNeedsFollowUp({ date: '2026-06-02T12:00:00Z', confirmed: false }, NOW), true);
+});
+
 // ---------- buildWaFollowUpUrl ----------
 
 const fu = { client: 'Silvia', vehicle: 'Sedan 2019', agentName: 'Juan Carlos' };

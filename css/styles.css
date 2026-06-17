@@ -543,6 +543,7 @@ textarea.form-control { resize: vertical; min-height: 70px; }
 }
 .history-badge.ok  { background: #dcfce7; color: #166534; }
 .history-badge.off { background: var(--gray-100); color: var(--gray-500); }
+.history-badge.fu  { background: #fef3c7; color: #92400e; }
 .history-actions { display: flex; gap: 6px; flex-shrink: 0; }
 .history-btn {
   width: 32px; height: 32px;
@@ -700,6 +701,7 @@ textarea.form-control { resize: vertical; min-height: 70px; }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.stat-ago { color: var(--gray-700); font-weight: 700; }
 .stat-actions { display: flex; gap: 6px; flex-shrink: 0; }
 
 /* ============ TOGGLE SWITCH (vehiculo electrico) ============ */

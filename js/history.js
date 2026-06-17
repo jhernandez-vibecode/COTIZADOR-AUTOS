@@ -20,6 +20,8 @@
  *   - historyEntryValue(entry)   -> number (valor asegurado, recuperable del link)
  *   - computeHistoryStats(arr)   -> { total, confirmed, rate }  (pura, testeable)
  *   - groupHistoryByMonth(arr)   -> [{ key, label, entries, stats }]  (pura)
+ *   - historyDaysSince(e[,now])  -> number dias desde el envio (o null)
+ *   - historyNeedsFollowUp(e)    -> bool  (>3d, sin confirmar, aun vigente)
  *
  * Forma de entry:
  *   { id, date: ISO string, client, email, plate, vehicle, quote,
@@ -263,6 +265,33 @@ function groupHistoryByMonth(entries) {
     }
     return { key: key, label: label, entries: map[key], stats: computeHistoryStats(map[key]) };
   });
+}
+
+/**
+ * Días transcurridos desde el envío de una cotización (entero, hacia abajo).
+ * @param {object} e
+ * @param {number} [nowMs] - timestamp de referencia (default Date.now()); para tests.
+ * @returns {number|null} null si la entrada no tiene fecha válida.
+ */
+function historyDaysSince(e, nowMs) {
+  const sent = (e && e.date) ? new Date(e.date) : null;
+  if (!sent || isNaN(sent.getTime())) return null;
+  const now = (nowMs != null) ? nowMs : Date.now();
+  return Math.floor((now - sent.getTime()) / 86400000);
+}
+
+/**
+ * ¿La cotización necesita seguimiento? = enviada hace MÁS de 3 días, SIN
+ * confirmar y todavía vigente (dentro de los 15 días que vale la cotización
+ * INS). Las recién enviadas (≤3d), las confirmadas y las vencidas quedan fuera.
+ * @param {object} e
+ * @param {number} [nowMs]
+ * @returns {boolean}
+ */
+function historyNeedsFollowUp(e, nowMs) {
+  const d = historyDaysSince(e, nowMs);
+  if (d == null) return false;
+  return d > 3 && d < 15 && !(e && e.confirmed);
 }
 
 /**
