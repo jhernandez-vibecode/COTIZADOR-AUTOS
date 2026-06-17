@@ -13,6 +13,18 @@ description: >
 
 # Cotizador SDI - Checkpoint 11 junio 2026
 
+> ## ✅ NUEVO — 17 jun 2026: Ciclo de estados de la cotización (EN PROD, commit `bf21fc2`)
+> Embudo **Pendiente → Agendada (con fecha de cita) → Concretada / Desechada**, con `<select>`
+> por fila (reemplaza la casilla "Confirmada"). `historyEstado` migra legacy confirmed→concretada;
+> `setHistoryEstado(id,estado[,cita])` sincroniza confirmed y limpia citaFecha al salir de agendada.
+> - **KPIs:** Enviadas · Agendadas · Concretadas · Desechadas · **Tasa de cierre** = concretadas/(concretadas+desechadas).
+> - **Aviso al inicio en 2 secciones** (`maybeShowAviso`): 📅 Citas de hoy (`historyCitaHoy`/`_citasHoy`;
+>   Concretada/Desechada por fila vía `_onAvisoCitasClick`) + ⏳ Para seguir (solo pendientes).
+> - Seguimiento automático SOLO para pendientes (se quitó la auto-"desestimada"). Fecha de cita con
+>   etiqueta "Cita:" + foco; `_onStatsListChange` restaura foco/scroll tras el re-render.
+> - **Revisión adversarial: 10 hallazgos LOW corregidos** (citaFecha stale, foco/scroll, KPI Desechadas,
+>   código/CSS muerto). ~100 tests verde.
+
 > ## ✅ NUEVO — 16 jun 2026: Seguimiento semi-automático a 3 días (EN PROD, commit `2f6967f`)
 > Semi-automático SIN backend: se dispara al abrir la app.
 > - **Aviso al inicio** (`#avisoModal`, `maybeShowFollowUpAviso` vía setTimeout 400ms tras perfil)
