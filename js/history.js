@@ -16,22 +16,28 @@
  *   - buildWaFollowUpUrl(entry)  -> string URL de WhatsApp de seguimiento
  *   - newHistoryId()             -> string id estable para una entrada
  *   - ensureHistoryIds()         -> Array<entry> (migra ids a entradas viejas)
- *   - setHistoryConfirmed(id,b)  -> bool  (marca/desmarca confirmada)
+ *   - historyEstado(e)           -> 'pendiente'|'agendada'|'concretada'|'desechada'
+ *   - setHistoryEstado(id,e[,cita])-> bool (cambia el estado del ciclo de vida)
+ *   - setHistoryConfirmed(id,b)  -> bool  (back-compat → concretada/pendiente)
+ *   - historyCitaHoy(e)          -> bool  (agendada con citaFecha = hoy)
  *   - deleteHistoryEntry(id)     -> bool  (elimina un registro por id)
  *   - historyEntryValue(entry)   -> number (valor asegurado, recuperable del link)
- *   - computeHistoryStats(arr)   -> { total, confirmed, rate }  (pura, testeable)
+ *   - computeHistoryStats(arr)   -> { total, agendada, concretada, desechada, rate }  (pura)
  *   - groupHistoryByMonth(arr)   -> [{ key, label, entries, stats }]  (pura)
  *   - historyDaysSince(e[,now])  -> number dias desde el envio (o null)
- *   - historyNeedsFollowUp(e)    -> bool  (>3d, sin confirmar, sin follow-up, vigente)
+ *   - historyNeedsFollowUp(e)    -> bool  (pendiente, >3d, sin follow-up, vigente)
  *   - setHistoryFollowUp(id[,iso])-> bool (marca que se envio el seguimiento)
- *   - historyFollowUpState(e)    -> 'seguir'|'seguido'|'desestimada'|null
+ *   - historyFollowUpState(e)    -> 'seguir'|'seguido'|null (solo pendientes)
  *
  * Forma de entry:
  *   { id, date: ISO string, client, email, plate, vehicle, quote,
- *     valor, confirmed, followUpAt, guideUrl, waCliente }
+ *     valor, estado, citaFecha, confirmed, followUpAt, guideUrl, waCliente }
  *   - valor      : valor asegurado del vehiculo (para filtro de alto valor).
  *                  Entradas viejas no lo traen: se recupera del param `va` del guideUrl.
- *   - confirmed  : true cuando el agente marca que el cliente compro la poliza.
+ *   - estado     : ciclo de vida 'pendiente'|'agendada'|'concretada'|'desechada'
+ *                  (default 'pendiente'). Entradas legacy con confirmed:true → 'concretada'.
+ *   - citaFecha  : YYYY-MM-DD de la cita (solo cuando estado === 'agendada').
+ *   - confirmed  : back-compat; se mantiene en sync (true sii estado === 'concretada').
  *   - followUpAt : ISO de cuando se envio el (unico) correo de seguimiento.
  *                  Una vez puesto, la cotizacion no vuelve a aparecer en el aviso.
  */
@@ -210,19 +216,37 @@ function ensureHistoryIds() {
  * @param {boolean} confirmed
  * @returns {boolean} true si se encontro y guardo
  */
-function setHistoryConfirmed(id, confirmed) {
+/**
+ * Cambia el estado del ciclo de vida de una cotización.
+ * @param {string} id
+ * @param {string} estado - 'pendiente' | 'agendada' | 'concretada' | 'desechada'
+ * @param {string} [citaFecha] - YYYY-MM-DD; solo se guarda cuando estado === 'agendada'.
+ * @returns {boolean} true si se encontró y guardó
+ */
+function setHistoryEstado(id, estado, citaFecha) {
   if (!id) return false;  // sin id, find(undefined) matchearía una entrada legacy equivocada
   try {
     const arr = loadHistory();
     const e = arr.find(function (x) { return x && x.id === id; });
     if (!e) return false;
-    e.confirmed = !!confirmed;
+    e.estado = estado;
+    e.confirmed = (estado === 'concretada');  // back-compat con lecturas viejas
+    if (estado === 'agendada') {
+      if (citaFecha) e.citaFecha = citaFecha;
+    } else {
+      delete e.citaFecha;  // al salir de 'agendada' no queda fecha de cita vieja latente
+    }
     localStorage.setItem(HISTORY_KEY, JSON.stringify(arr));
     return true;
   } catch (err) {
-    console.warn('[history] no se pudo actualizar confirmada:', err);
+    console.warn('[history] no se pudo actualizar el estado:', err);
     return false;
   }
+}
+
+/** Back-compat: marca concretada/pendiente. Para el resto usar setHistoryEstado. */
+function setHistoryConfirmed(id, confirmed) {
+  return setHistoryEstado(id, confirmed ? 'concretada' : 'pendiente');
 }
 
 /**
@@ -270,18 +294,39 @@ function setHistoryFollowUp(id, iso) {
 }
 
 /**
+ * Estado del ciclo de vida de una cotización: 'pendiente' | 'agendada' |
+ * 'concretada' | 'desechada'. Migración tolerante de entradas legacy: las que
+ * solo tienen confirmed:true se leen como 'concretada'; el resto, 'pendiente'.
+ * @param {object} e
+ * @returns {string}
+ */
+function historyEstado(e) {
+  if (!e) return 'pendiente';
+  if (e.estado) return e.estado;
+  return e.confirmed ? 'concretada' : 'pendiente';
+}
+
+/**
  * Metricas de un conjunto de cotizaciones. PURA: no toca localStorage —
  * recibe el array y devuelve los numeros (asi es testeable en Node).
  * @param {Array<object>} entries
- * @returns {{total:number, confirmed:number, rate:(number|null)}}
- *          rate: porcentaje con 1 decimal, o null si total===0 (para "—").
+ * @returns {{total, agendada, concretada, desechada, rate:(number|null)}}
+ *          rate = tasa de CIERRE: concretada / (concretada + desechada), con 1
+ *          decimal, o null si aún no hay resueltas (para mostrar "—"). Las
+ *          pendientes y agendadas NO cuentan (siguen en juego).
  */
 function computeHistoryStats(entries) {
   const list = Array.isArray(entries) ? entries : [];
-  const total = list.length;
-  const confirmed = list.filter(function (e) { return e && e.confirmed; }).length;
-  const rate = total > 0 ? Math.round((confirmed / total) * 1000) / 10 : null;
-  return { total: total, confirmed: confirmed, rate: rate };
+  let agendada = 0, concretada = 0, desechada = 0;
+  list.forEach(function (e) {
+    const st = historyEstado(e);
+    if (st === 'agendada') agendada++;
+    else if (st === 'concretada') concretada++;
+    else if (st === 'desechada') desechada++;
+  });
+  const den = concretada + desechada;
+  const rate = den > 0 ? Math.round((concretada / den) * 1000) / 10 : null;
+  return { total: list.length, agendada: agendada, concretada: concretada, desechada: desechada, rate: rate };
 }
 
 /**
@@ -339,29 +384,40 @@ function historyDaysSince(e, nowMs) {
  * @returns {boolean}
  */
 function historyNeedsFollowUp(e, nowMs) {
+  if (historyEstado(e) !== 'pendiente') return false;  // agendada/concretada/desechada salen del flujo
   const d = historyDaysSince(e, nowMs);
   if (d == null) return false;
-  return d > 3 && d < 15 && !(e && e.confirmed) && !(e && e.followUpAt);
+  return d > 3 && d < 15 && !(e && e.followUpAt);
 }
 
 /**
- * Estado de seguimiento de una cotización (para la insignia en 📊):
- *   'seguir'      → +3d, sin confirmar, aún vigente y SIN seguimiento previo.
- *   'seguido'     → ya se envió el (único) seguimiento y sigue vigente, sin confirmar.
- *   'desestimada' → se siguió pero venció sin confirmarse → fuera del flujo.
- *   null          → recién enviada, confirmada, o sin fecha.
+ * Estado de seguimiento de una cotización PENDIENTE (para la insignia en 📊):
+ *   'seguir'  → +3d, aún vigente y SIN seguimiento previo.
+ *   'seguido' → ya se envió el (único) seguimiento.
+ *   null      → no es pendiente, recién enviada, o sin fecha.
+ * (Las agendadas/concretadas/desechadas no tienen flujo de seguimiento.)
  * @param {object} e
  * @param {number} [nowMs]
  * @returns {string|null}
  */
 function historyFollowUpState(e, nowMs) {
-  if (!e || e.confirmed) return null;
+  if (historyEstado(e) !== 'pendiente') return null;
   if (historyNeedsFollowUp(e, nowMs)) return 'seguir';
-  if (e.followUpAt) {
-    const d = historyDaysSince(e, nowMs);
-    return (d != null && d >= 15) ? 'desestimada' : 'seguido';
-  }
+  if (e && e.followUpAt) return 'seguido';
   return null;
+}
+
+/**
+ * ¿La cotización tiene cita agendada para HOY? (estado 'agendada' + citaFecha = hoy local).
+ * @param {object} e
+ * @param {number} [nowMs] - referencia para "hoy" (default Date.now()); para tests.
+ * @returns {boolean}
+ */
+function historyCitaHoy(e, nowMs) {
+  if (!e || historyEstado(e) !== 'agendada' || !e.citaFecha) return false;
+  const now = (nowMs != null) ? new Date(nowMs) : new Date();
+  const hoy = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
+  return String(e.citaFecha).slice(0, 10) === hoy;
 }
 
 /**

@@ -177,16 +177,23 @@
   <div class="modal-backdrop" id="avisoModal">
     <div class="modal-card aviso-card">
       <div class="modal-header">
-        <h2 class="modal-title">⏳ Cotizaciones para seguir</h2>
+        <h2 class="modal-title">Para atender hoy</h2>
         <button class="modal-close" id="btnAvisoClose" aria-label="Cerrar">×</button>
       </div>
       <div class="modal-body">
-        <p class="modal-hint">
-          Estas cotizaciones llevan <strong>más de 3 días sin respuesta</strong> y siguen vigentes —
-          es el momento ideal para un único seguimiento. Se envía la plantilla desde tu Gmail y
-          no se repite.
-        </p>
-        <div id="avisoList"></div>
+        <div id="avisoCitasSection" style="display:none;">
+          <div class="aviso-sec-title">📅 Citas de hoy</div>
+          <p class="modal-hint" style="margin-bottom:12px;">Hoy tenés estas citas — marcá el resultado:</p>
+          <div id="avisoCitas"></div>
+        </div>
+        <div id="avisoSeguirSection" style="display:none;">
+          <div class="aviso-sec-title">⏳ Para seguir</div>
+          <p class="modal-hint" style="margin-bottom:12px;">
+            Llevan <strong>más de 3 días sin respuesta</strong> y siguen vigentes — momento ideal
+            para un único seguimiento. Se envía desde tu Gmail y no se repite.
+          </p>
+          <div id="avisoList"></div>
+        </div>
       </div>
       <div class="modal-footer aviso-footer">
         <button class="btn btn-secondary" id="btnAvisoStats">Ver en estadísticas</button>

@@ -31,33 +31,83 @@ function eq(a, b, msg) {
 function assertContains(h, n) { if (!h.includes(n)) throw new Error(`esperaba contener "${n}"`); }
 function assertNotContains(h, n) { if (h.includes(n)) throw new Error(`NO debería contener "${n}"`); }
 
+// "Hoy" fijo para todos los tests con fechas (determinístico).
+const NOW = new Date('2026-06-16T12:00:00Z').getTime();
+
 // ---------- computeHistoryStats ----------
 
-test('computeHistoryStats: lista vacía → rate null (para mostrar "—")', () => {
+test('computeHistoryStats: lista vacía → rate null', () => {
   const s = computeHistoryStats([]);
-  eq(s.total, 0, 'total'); eq(s.confirmed, 0, 'confirmed'); eq(s.rate, null, 'rate');
+  eq(s.total, 0, 'total'); eq(s.concretada, 0, 'concretada'); eq(s.agendada, 0, 'agendada');
+  eq(s.desechada, 0, 'desechada'); eq(s.rate, null, 'rate');
 });
 
-test('computeHistoryStats: 3 de 8 confirmadas → 37,5 %', () => {
-  const arr = [];
-  for (let i = 0; i < 8; i++) arr.push({ confirmed: i < 3 });
+test('computeHistoryStats: tasa de cierre = concretadas/(concretadas+desechadas); pendientes/agendadas NO cuentan', () => {
+  const arr = [
+    { estado: 'concretada' }, { estado: 'concretada' }, { estado: 'concretada' },
+    { estado: 'desechada' },
+    { estado: 'pendiente' }, { estado: 'agendada' }, { estado: 'pendiente' }
+  ];
   const s = computeHistoryStats(arr);
-  eq(s.total, 8, 'total'); eq(s.confirmed, 3, 'confirmed'); eq(s.rate, 37.5, 'rate');
+  eq(s.total, 7, 'total'); eq(s.concretada, 3, 'concretada'); eq(s.desechada, 1, 'desechada'); eq(s.agendada, 1, 'agendada');
+  eq(s.rate, 75, 'rate'); // 3 / (3 + 1) = 75
 });
 
-test('computeHistoryStats: todas confirmadas → 100', () => {
-  const s = computeHistoryStats([{ confirmed: true }, { confirmed: true }]);
-  eq(s.rate, 100, 'rate');
+test('computeHistoryStats: solo pendientes/agendadas (nada resuelto) → rate null', () => {
+  eq(computeHistoryStats([{ estado: 'pendiente' }, { estado: 'agendada' }]).rate, null);
 });
 
-test('computeHistoryStats: ninguna confirmada → 0 (no null)', () => {
-  const s = computeHistoryStats([{ confirmed: false }, {}]);
-  eq(s.rate, 0, 'rate');
+test('computeHistoryStats: legacy confirmed:true cuenta como concretada; confirmed:false = pendiente', () => {
+  const s = computeHistoryStats([{ confirmed: true }, { confirmed: false }, { estado: 'desechada' }]);
+  eq(s.concretada, 1, 'concretada'); eq(s.desechada, 1, 'desechada'); eq(s.rate, 50, 'rate');
 });
 
 test('computeHistoryStats no rompe con entradas null en el array', () => {
-  const s = computeHistoryStats([null, { confirmed: true }, undefined]);
-  eq(s.total, 3, 'total'); eq(s.confirmed, 1, 'confirmed');
+  const s = computeHistoryStats([null, { estado: 'concretada' }, undefined]);
+  eq(s.total, 3, 'total'); eq(s.concretada, 1, 'concretada');
+});
+
+// ---------- historyEstado / setHistoryEstado / historyCitaHoy ----------
+
+test('historyEstado: migración legacy y default', () => {
+  eq(historyEstado({ confirmed: true }), 'concretada');
+  eq(historyEstado({ confirmed: false }), 'pendiente');
+  eq(historyEstado({}), 'pendiente');
+  eq(historyEstado({ estado: 'agendada' }), 'agendada');
+  eq(historyEstado({ estado: 'desechada', confirmed: false }), 'desechada');
+  eq(historyEstado(null), 'pendiente');
+});
+
+test('setHistoryEstado: cambia estado, sincroniza confirmed y guarda citaFecha en agendada', () => {
+  localStorage._d = {};
+  saveHistoryEntry({ id: 'e1', client: 'A' });
+  eq(setHistoryEstado('e1', 'agendada', '2026-06-20'), true);
+  let e = loadHistory()[0];
+  eq(e.estado, 'agendada'); eq(e.citaFecha, '2026-06-20'); eq(e.confirmed, false);
+  setHistoryEstado('e1', 'concretada');
+  e = loadHistory()[0];
+  eq(e.estado, 'concretada'); eq(e.confirmed, true);
+});
+
+test('setHistoryEstado: al salir de agendada se limpia citaFecha (no queda fecha vieja)', () => {
+  localStorage._d = {};
+  saveHistoryEntry({ id: 'e1', client: 'A' });
+  setHistoryEstado('e1', 'agendada', '2026-06-20');
+  eq(loadHistory()[0].citaFecha, '2026-06-20');
+  setHistoryEstado('e1', 'desechada');
+  if (loadHistory()[0].citaFecha !== undefined) throw new Error('citaFecha debió limpiarse al salir de agendada');
+});
+
+test('setHistoryEstado con id falsy → false', () => {
+  eq(setHistoryEstado(undefined, 'concretada'), false);
+  eq(setHistoryEstado('', 'concretada'), false);
+});
+
+test('historyCitaHoy: agendada con cita = hoy → true; otra fecha o no-agendada → false', () => {
+  eq(historyCitaHoy({ estado: 'agendada', citaFecha: '2026-06-16' }, NOW), true);
+  eq(historyCitaHoy({ estado: 'agendada', citaFecha: '2026-06-20' }, NOW), false);
+  eq(historyCitaHoy({ estado: 'pendiente', citaFecha: '2026-06-16' }, NOW), false);
+  eq(historyCitaHoy({ estado: 'agendada' }, NOW), false); // sin citaFecha
 });
 
 // ---------- historyEntryValue ----------
@@ -103,7 +153,7 @@ test('groupHistoryByMonth: agrupa por mes y ordena del más reciente al más vie
   eq(g.length, 2, 'meses');
   eq(g[0].key, '2026-06', 'primer mes (más reciente)');
   eq(g[0].stats.total, 2, 'cotizaciones de junio');
-  eq(g[0].stats.confirmed, 1, 'confirmadas de junio');
+  eq(g[0].stats.concretada, 1, 'concretadas de junio');
   eq(g[1].key, '2026-04', 'segundo mes');
 });
 
@@ -162,8 +212,6 @@ test('newHistoryId genera ids distintos', () => {
 
 // ---------- historyDaysSince + historyNeedsFollowUp ----------
 
-const NOW = new Date('2026-06-16T12:00:00Z').getTime();
-
 test('historyDaysSince cuenta días transcurridos (floor)', () => {
   eq(historyDaysSince({ date: '2026-06-13T12:00:00Z' }, NOW), 3);
   eq(historyDaysSince({ date: '2026-06-16T12:00:00Z' }, NOW), 0);
@@ -192,12 +240,12 @@ test('historyNeedsFollowUp: ya con followUpAt → false (un solo seguimiento)', 
   eq(historyNeedsFollowUp({ date: '2026-06-12T12:00:00Z', confirmed: false, followUpAt: '2026-06-15T10:00:00Z' }, NOW), false);
 });
 
-test('historyFollowUpState: ciclo recién→seguir→seguido→desestimada', () => {
-  eq(historyFollowUpState({ date: '2026-06-14T12:00:00Z', confirmed: false }, NOW), null);                                          // 2d: recién
-  eq(historyFollowUpState({ date: '2026-06-12T12:00:00Z', confirmed: false }, NOW), 'seguir');                                      // 4d sin seguir
-  eq(historyFollowUpState({ date: '2026-06-12T12:00:00Z', confirmed: false, followUpAt: '2026-06-15T10:00:00Z' }, NOW), 'seguido'); // seguida, vigente
-  eq(historyFollowUpState({ date: '2026-05-25T12:00:00Z', confirmed: false, followUpAt: '2026-05-29T10:00:00Z' }, NOW), 'desestimada'); // seguida, vencida
-  eq(historyFollowUpState({ date: '2026-06-12T12:00:00Z', confirmed: true,  followUpAt: '2026-06-15T10:00:00Z' }, NOW), null);      // confirmada
+test('historyFollowUpState: solo pendientes (recién→seguir→seguido); otros estados → null', () => {
+  eq(historyFollowUpState({ date: '2026-06-14T12:00:00Z' }, NOW), null);                                         // 2d: recién
+  eq(historyFollowUpState({ date: '2026-06-12T12:00:00Z' }, NOW), 'seguir');                                      // 4d sin seguir
+  eq(historyFollowUpState({ date: '2026-06-12T12:00:00Z', followUpAt: '2026-06-15T10:00:00Z' }, NOW), 'seguido'); // seguida
+  eq(historyFollowUpState({ date: '2026-06-12T12:00:00Z', estado: 'agendada' }, NOW), null);                      // agendada: sin flujo
+  eq(historyFollowUpState({ date: '2026-06-12T12:00:00Z', estado: 'concretada' }, NOW), null);                    // concretada
 });
 
 test('setHistoryFollowUp marca followUpAt y persiste', () => {

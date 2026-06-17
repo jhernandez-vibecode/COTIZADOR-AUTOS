@@ -567,20 +567,20 @@ textarea.form-control { resize: vertical; min-height: 70px; }
 /* Resumen: 3 tarjetas */
 .stats-kpis {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+  gap: 8px;
   margin-bottom: 22px;
 }
 .stats-kpi {
   background: var(--gray-50);
   border: 1px solid var(--gray-200);
   border-radius: 10px;
-  padding: 14px 8px;
+  padding: 12px 5px;
   text-align: center;
 }
 .stats-kpi.rate { background: var(--navy); border-color: var(--navy); }
 .stats-kpi-num {
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 800;
   color: var(--navy);
   line-height: 1.1;
@@ -693,7 +693,6 @@ textarea.form-control { resize: vertical; min-height: 70px; }
   gap: 6px;
   flex-wrap: wrap;
 }
-.stat-title.done { color: var(--green-dark); }
 .stat-star { font-size: 13px; }
 .stat-value { font-weight: 800; color: var(--amber); }
 .stat-meta {
@@ -705,7 +704,38 @@ textarea.form-control { resize: vertical; min-height: 70px; }
   white-space: nowrap;
 }
 .stat-ago { color: var(--gray-700); font-weight: 700; }
-.stat-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.stat-actions { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; align-items: center; justify-content: flex-end; }
+
+/* Selector de estado del ciclo de vida + fecha de cita */
+.estado-select {
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 8px;
+  border: 0.5px solid var(--gray-300);
+  padding: 6px 8px;
+  cursor: pointer;
+  background: var(--gray-50);
+  color: var(--gray-700);
+}
+.estado-select.estado-agendada   { background: #dbeafe; border-color: #bfdbfe; color: #1e40af; }
+.estado-select.estado-concretada { background: #dcfce7; border-color: #bbf7d0; color: #166534; }
+.estado-select.estado-desechada  { background: var(--gray-100); border-color: var(--gray-200); color: var(--gray-500); }
+.cita-date {
+  font-size: 12px;
+  border-radius: 8px;
+  border: 0.5px solid #bfdbfe;
+  padding: 5px 7px;
+  color: #1e40af;
+  background: #eff6ff;
+}
+.cita-wrap { display: inline-flex; align-items: center; gap: 4px; }
+.cita-lbl { font-size: 11px; font-weight: 700; color: #1e40af; }
+/* Color de fila según estado */
+.stat-item.estado-agendada   { border-color: #bfdbfe; background: #eff6ff; }
+.stat-item.estado-concretada { border-color: #bbf7d0; background: #f0fdf4; }
+.stat-item.estado-desechada  { background: #fafafa; }
+.stat-item.estado-desechada .stat-title { color: var(--gray-500); }
+.history-badge.cita { background: #dbeafe; color: #1e40af; }
 
 /* ============ AVISO DE SEGUIMIENTOS (al inicio) ============ */
 .aviso-card { max-width: 460px; }
@@ -731,6 +761,21 @@ textarea.form-control { resize: vertical; min-height: 70px; }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.aviso-sec-title { font-size: 13px; font-weight: 700; color: var(--navy); margin: 2px 0 4px; }
+#avisoSeguirSection { margin-top: 18px; }
+.aviso-item.cita { border-color: #bfdbfe; background: #eff6ff; }
+.aviso-cita-btns { display: flex; gap: 6px; flex-shrink: 0; }
+.aviso-mini {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 11px;
+  border-radius: 8px;
+  border: 0.5px solid;
+  cursor: pointer;
+}
+.aviso-mini.ok { background: #dcfce7; border-color: #bbf7d0; color: #166534; }
+.aviso-mini.no { background: var(--gray-100); border-color: var(--gray-200); color: var(--gray-500); }
+.aviso-mini:hover { filter: brightness(0.97); }
 
 /* ============ TOGGLE SWITCH (vehiculo electrico) ============ */
 .toggle-row {
