@@ -25,8 +25,9 @@
  *   - computeHistoryStats(arr)   -> { total, agendada, concretada, desechada, rate }  (pura)
  *   - groupHistoryByMonth(arr)   -> [{ key, label, entries, stats }]  (pura)
  *   - historyDaysSince(e[,now])  -> number dias desde el envio (o null)
- *   - historyNeedsFollowUp(e)    -> bool  (pendiente, >3d, sin follow-up, vigente)
+ *   - historyNeedsFollowUp(e)    -> bool  (pendiente, >3d, sin follow-up, no descartado, vigente)
  *   - setHistoryFollowUp(id[,iso])-> bool (marca que se envio el seguimiento)
+ *   - dismissFollowUp(id)        -> bool  (descarta la sugerencia de seguimiento, sin enviar)
  *   - historyFollowUpState(e)    -> 'seguir'|'seguido'|null (solo pendientes)
  *
  * Forma de entry:
@@ -40,6 +41,8 @@
  *   - confirmed  : back-compat; se mantiene en sync (true sii estado === 'concretada').
  *   - followUpAt : ISO de cuando se envio el (unico) correo de seguimiento.
  *                  Una vez puesto, la cotizacion no vuelve a aparecer en el aviso.
+ *   - followUpDismissed : true si el agente descarto la sugerencia de seguimiento
+ *                  (no se envia nada; sale del aviso ⏳ y del badge "seguir").
  */
 
 const HISTORY_KEY = 'cotizador_sdi_history_v1';
@@ -250,6 +253,28 @@ function setHistoryConfirmed(id, confirmed) {
 }
 
 /**
+ * Descarta la SUGERENCIA de seguimiento de una cotización pendiente (el agente
+ * decide no darle seguimiento). No envía nada; solo la saca del aviso ⏳ y del
+ * badge "seguir". No cambia su estado (sigue 'pendiente').
+ * @param {string} id
+ * @returns {boolean} true si se encontró y guardó
+ */
+function dismissFollowUp(id) {
+  if (!id) return false;
+  try {
+    const arr = loadHistory();
+    const e = arr.find(function (x) { return x && x.id === id; });
+    if (!e) return false;
+    e.followUpDismissed = true;
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(arr));
+    return true;
+  } catch (err) {
+    console.warn('[history] no se pudo descartar el seguimiento:', err);
+    return false;
+  }
+}
+
+/**
  * Elimina una cotización del historial por su id estable. Útil para borrar
  * registros de prueba / duplicados desde la pestaña 📊. Permanente (no hay
  * papelera) — la UI pide confirmación antes de llamar.
@@ -311,12 +336,12 @@ function historyEstado(e) {
  * recibe el array y devuelve los numeros (asi es testeable en Node).
  * @param {Array<object>} entries
  * @returns {{total, agendada, concretada, desechada, rate:(number|null)}}
- *          rate = tasa de CIERRE: concretada / (concretada + desechada), con 1
- *          decimal, o null si aún no hay resueltas (para mostrar "—"). Las
- *          pendientes y agendadas NO cuentan (siguen en juego).
+ *          rate = CONVERSIÓN: concretada / total (enviadas), con 1 decimal, o
+ *          null solo si no hay cotizaciones (para mostrar "—").
  */
 function computeHistoryStats(entries) {
   const list = Array.isArray(entries) ? entries : [];
+  const total = list.length;
   let agendada = 0, concretada = 0, desechada = 0;
   list.forEach(function (e) {
     const st = historyEstado(e);
@@ -324,9 +349,8 @@ function computeHistoryStats(entries) {
     else if (st === 'concretada') concretada++;
     else if (st === 'desechada') desechada++;
   });
-  const den = concretada + desechada;
-  const rate = den > 0 ? Math.round((concretada / den) * 1000) / 10 : null;
-  return { total: list.length, agendada: agendada, concretada: concretada, desechada: desechada, rate: rate };
+  const rate = total > 0 ? Math.round((concretada / total) * 1000) / 10 : null;
+  return { total: total, agendada: agendada, concretada: concretada, desechada: desechada, rate: rate };
 }
 
 /**
@@ -385,6 +409,7 @@ function historyDaysSince(e, nowMs) {
  */
 function historyNeedsFollowUp(e, nowMs) {
   if (historyEstado(e) !== 'pendiente') return false;  // agendada/concretada/desechada salen del flujo
+  if (e && e.followUpDismissed) return false;           // el agente descartó la sugerencia
   const d = historyDaysSince(e, nowMs);
   if (d == null) return false;
   return d > 3 && d < 15 && !(e && e.followUpAt);

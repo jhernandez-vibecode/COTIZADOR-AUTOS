@@ -296,10 +296,10 @@ function closeStatsModal() {
 }
 
 /** Aplica los filtros activos (mes y/o alto valor) a un set de cotizaciones. */
-/** Orden de embudo para la lista: agendadas primero, luego pendientes, cerradas al final. */
+/** Orden de embudo para la lista: concretadas arriba, luego agendadas, pendientes, desechadas. */
 function _estadoOrden(e) {
   const st = historyEstado(e);
-  return st === 'agendada' ? 0 : st === 'pendiente' ? 1 : st === 'concretada' ? 2 : 3;
+  return st === 'concretada' ? 0 : st === 'agendada' ? 1 : st === 'pendiente' ? 2 : 3;
 }
 
 function _applyStatsFilters(entries) {
@@ -312,13 +312,13 @@ function _applyStatsFilters(entries) {
   } else if (_statsFilter === 'followup') {
     arr = arr.filter(function (e) { return historyNeedsFollowUp(e); });
   }
-  // Orden de embudo: Agendada → Pendiente → Concretada → Desechada. Dentro de
+  // Orden de embudo: Concretada → Agendada → Pendiente → Desechada. Dentro de
   // agendadas, la cita más próxima primero; en el resto se mantiene el orden
   // existente (más reciente primero, por el sort estable de JS).
   arr.sort(function (a, b) {
     const oa = _estadoOrden(a), ob = _estadoOrden(b);
     if (oa !== ob) return oa - ob;
-    if (oa === 0) {
+    if (oa === 1) {  // agendadas: por fecha de cita ascendente (la más próxima primero)
       const ca = String(a.citaFecha || '9999-99-99'), cb = String(b.citaFecha || '9999-99-99');
       if (ca !== cb) return ca < cb ? -1 : 1;
     }
@@ -368,7 +368,7 @@ function _statsKpisHtml(s) {
     + kpi(s.agendada, 'Agendadas')
     + kpi(s.concretada, 'Concretadas')
     + kpi(s.desechada, 'Desechadas')
-    + '<div class="stats-kpi rate"><div class="stats-kpi-num">' + _fmtRate(s.rate) + '</div><div class="stats-kpi-label">Tasa de cierre</div></div>';
+    + '<div class="stats-kpi rate"><div class="stats-kpi-num">' + _fmtRate(s.rate) + '</div><div class="stats-kpi-label">Conversión</div></div>';
 }
 
 function _statsMonthsHtml(months) {
@@ -664,7 +664,10 @@ function _avisoListHtml(entries) {
           + (ago ? ' &middot; ' + ago : '')
         + '</div>'
       + '</div>'
-      + '<button class="history-btn" data-aviso-mail="' + id + '" title="Enviar seguimiento a este">✉️</button>'
+      + '<div class="aviso-cita-btns">'
+        + '<button class="history-btn" data-aviso-mail="' + id + '" title="Enviar seguimiento a este">✉️</button>'
+        + '<button class="history-btn" data-seguir-no="' + id + '" title="No dar seguimiento (descartar sugerencia)">✕</button>'
+      + '</div>'
     + '</div>';
   }).join('');
 }
@@ -741,6 +744,15 @@ async function sendAllFollowUps() {
 
 /** ✉️ por fila dentro del aviso: envía uno y refresca la lista. */
 function _onAvisoListClick(e) {
+  // Descartar la sugerencia (no enviar nunca seguimiento a este)
+  const no = e.target.closest('[data-seguir-no]');
+  if (no) {
+    dismissFollowUp(no.dataset.seguirNo);
+    showToast('Sugerencia de seguimiento descartada.', 'success');
+    if (document.getElementById('statsModal').classList.contains('active')) renderStats();
+    _refreshAviso();
+    return;
+  }
   const btn = e.target.closest('[data-aviso-mail]');
   if (!btn) return;
   const entry = loadHistory().find(function (x) { return x && x.id === btn.dataset.avisoMail; });

@@ -42,7 +42,7 @@ test('computeHistoryStats: lista vacía → rate null', () => {
   eq(s.desechada, 0, 'desechada'); eq(s.rate, null, 'rate');
 });
 
-test('computeHistoryStats: tasa de cierre = concretadas/(concretadas+desechadas); pendientes/agendadas NO cuentan', () => {
+test('computeHistoryStats: conversión = concretadas/enviadas (sobre el total)', () => {
   const arr = [
     { estado: 'concretada' }, { estado: 'concretada' }, { estado: 'concretada' },
     { estado: 'desechada' },
@@ -50,16 +50,16 @@ test('computeHistoryStats: tasa de cierre = concretadas/(concretadas+desechadas)
   ];
   const s = computeHistoryStats(arr);
   eq(s.total, 7, 'total'); eq(s.concretada, 3, 'concretada'); eq(s.desechada, 1, 'desechada'); eq(s.agendada, 1, 'agendada');
-  eq(s.rate, 75, 'rate'); // 3 / (3 + 1) = 75
+  eq(s.rate, 42.9, 'rate'); // 3 / 7 = 42,9
 });
 
-test('computeHistoryStats: solo pendientes/agendadas (nada resuelto) → rate null', () => {
-  eq(computeHistoryStats([{ estado: 'pendiente' }, { estado: 'agendada' }]).rate, null);
+test('computeHistoryStats: sin concretadas (solo pendientes/agendadas) → 0% (no null)', () => {
+  eq(computeHistoryStats([{ estado: 'pendiente' }, { estado: 'agendada' }]).rate, 0);
 });
 
-test('computeHistoryStats: legacy confirmed:true cuenta como concretada; confirmed:false = pendiente', () => {
+test('computeHistoryStats: legacy confirmed:true cuenta como concretada; conversión sobre total', () => {
   const s = computeHistoryStats([{ confirmed: true }, { confirmed: false }, { estado: 'desechada' }]);
-  eq(s.concretada, 1, 'concretada'); eq(s.desechada, 1, 'desechada'); eq(s.rate, 50, 'rate');
+  eq(s.concretada, 1, 'concretada'); eq(s.desechada, 1, 'desechada'); eq(s.rate, 33.3, 'rate'); // 1 / 3
 });
 
 test('computeHistoryStats no rompe con entradas null en el array', () => {
@@ -238,6 +238,27 @@ test('historyNeedsFollowUp: 14d (aún vigente) sin confirmar → true', () => {
 });
 test('historyNeedsFollowUp: ya con followUpAt → false (un solo seguimiento)', () => {
   eq(historyNeedsFollowUp({ date: '2026-06-12T12:00:00Z', confirmed: false, followUpAt: '2026-06-15T10:00:00Z' }, NOW), false);
+});
+test('historyNeedsFollowUp: sugerencia descartada (followUpDismissed) → false', () => {
+  eq(historyNeedsFollowUp({ date: '2026-06-12T12:00:00Z', followUpDismissed: true }, NOW), false);
+});
+
+test('dismissFollowUp: saca de las sugerencias sin cambiar el estado (sigue pendiente)', () => {
+  localStorage._d = {};
+  saveHistoryEntry({ id: 's1', date: '2026-06-12T12:00:00Z', client: 'A' }); // pendiente, 4d
+  eq(historyNeedsFollowUp(loadHistory()[0], NOW), true);
+  eq(dismissFollowUp('s1'), true);
+  const e = loadHistory()[0];
+  eq(e.followUpDismissed, true);
+  eq(historyEstado(e), 'pendiente');
+  eq(historyNeedsFollowUp(e, NOW), false);
+  eq(historyFollowUpState(e, NOW), null);
+});
+test('dismissFollowUp con id falsy/inexistente → false', () => {
+  localStorage._d = {};
+  saveHistoryEntry({ id: 's1', client: 'A' });
+  eq(dismissFollowUp(undefined), false);
+  eq(dismissFollowUp('NOPE'), false);
 });
 
 test('historyFollowUpState: solo pendientes (recién→seguir→seguido); otros estados → null', () => {
