@@ -17,13 +17,15 @@ description: >
 > Embudo **Pendiente → Agendada (con fecha de cita) → Concretada / Desechada**, con `<select>`
 > por fila (reemplaza la casilla "Confirmada"). `historyEstado` migra legacy confirmed→concretada;
 > `setHistoryEstado(id,estado[,cita])` sincroniza confirmed y limpia citaFecha al salir de agendada.
-> - **KPIs:** Enviadas · Agendadas · Concretadas · Desechadas · **Tasa de cierre** = concretadas/(concretadas+desechadas).
+> - **KPIs:** Enviadas · Agendadas · Concretadas · Desechadas · **Conversión** = concretadas/enviadas (commit `785dc5e`; se probó "tasa de cierre" resueltas-only pero confundía con muchas pendientes).
 > - **Aviso al inicio en 2 secciones** (`maybeShowAviso`): 📅 Citas de hoy (`historyCitaHoy`/`_citasHoy`;
 >   Concretada/Desechada por fila vía `_onAvisoCitasClick`) + ⏳ Para seguir (solo pendientes).
 > - Seguimiento automático SOLO para pendientes (se quitó la auto-"desestimada"). Fecha de cita con
 >   etiqueta "Cita:" + foco; `_onStatsListChange` restaura foco/scroll tras el re-render.
-> - **Orden de embudo** en la lista (`_estadoOrden` + sort estable, commit `87b0f66`): Agendadas
->   (cita más próxima primero) → Pendientes → Concretadas → Desechadas.
+> - **Orden de embudo** en la lista (`_estadoOrden` + sort estable, commit `785dc5e`): **Concretadas →
+>   Agendadas** (cita más próxima primero) **→ Pendientes → Desechadas**.
+> - **Descartar sugerencia de seguimiento:** botón ✕ en el aviso "Para seguir" → `dismissFollowUp`
+>   (flag `followUpDismissed`): saca del aviso/badge sin enviar, sigue pendiente.
 > - **Revisión adversarial: 10 hallazgos LOW corregidos** (citaFecha stale, foco/scroll, KPI Desechadas,
 >   código/CSS muerto). ~100 tests verde.
 
