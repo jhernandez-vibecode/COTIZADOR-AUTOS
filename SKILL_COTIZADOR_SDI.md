@@ -13,6 +13,24 @@ description: >
 
 # Cotizador SDI - Checkpoint 11 junio 2026
 
+> ## ✅ NUEVO — jun 2026: Buscador por placa / cliente en la pestaña 📊 (EN PROD, commit `95d90db`)
+> Caso de uso de JC: cuando un cliente **confirma**, encontrar su cotización al instante para marcarla Concretada.
+> - **Input ESTÁTICO** `#statsSearch` en `index.html` (NO se genera dentro de `renderStats`/innerHTML) — esa es
+>   la decisión clave: si se repintara, el campo perdería el foco en cada tecla. + botón ✕ `#statsSearchClear`
+>   (también Escape) + contador `#statsSearchCount`. `openStatsModal` resetea el buscador y le da el foco.
+> - **Capa de datos pura (history.js):** `historyEntryPlate(e)` (placa; fallback al param `p=` del `guideUrl`
+>   para entradas legacy, igual que `historyEntryValue` con `va=`), `_normHistorySearch` (NFD + descarte de
+>   combinantes 0x300-0x36f por charCode — SIN literal Unicode, por la regla de Unicode invisible — + lowercase +
+>   quita `\s-._`), `historyMatchesSearch(e,q)` (placa OR cliente OR vehículo; query vacía → no filtra).
+> - **app.js:** estado `_statsSearch`; filtro añadido en `_applyStatsFilters` (mes → alto-valor/seguir →
+>   **búsqueda** → orden de embudo; AND con los demás); `renderStats` actualiza el contador; handlers
+>   `_onStatsSearch`/`_clearStatsSearch` (listener directo sobre el input, registrado una vez en el init).
+> - **CSS:** `.stats-search` calcado a `.form-control` (borde gris, foco azul `0 0 0 3px rgba(3,105,161,.15)`).
+> - **Verificación** (preview del entorno sirve snapshot congelado → NO sirve para ver ediciones, gotcha #16):
+>   `tests/test-history-search.js` (14 nuevas) + 45 de stats verde; `node --check` ambos JS; arnés DOM en
+>   navegador real confirmó filtrado + contador + **foco preservado** + limpiar. Tolerante: `BCS-123`≈`bcs123`,
+>   `hernandez`≈`Hernández`.
+
 > ## ✅ NUEVO — 17 jun 2026: Ciclo de estados de la cotización (EN PROD, commit `bf21fc2`)
 > Embudo **Pendiente → Agendada (con fecha de cita) → Concretada / Desechada**, con `<select>`
 > por fila (reemplaza la casilla "Confirmada"). `historyEstado` migra legacy confirmed→concretada;
