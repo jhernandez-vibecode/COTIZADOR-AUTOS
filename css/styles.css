@@ -665,6 +665,42 @@ textarea.form-control { resize: vertical; min-height: 70px; }
 .stats-chip:hover { border-color: var(--blue); }
 .stats-chip.active { background: var(--navy); border-color: var(--navy); color: #fff; }
 
+/* Buscador por placa / cliente */
+.stats-search-wrap { position: relative; margin-bottom: 10px; }
+.stats-search-icon {
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  font-size: 14px; pointer-events: none; opacity: .65;
+}
+.stats-search {
+  width: 100%;
+  padding: 10px 38px 10px 36px;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--gray-900);
+  background: #fff;
+  transition: border-color .15s, box-shadow .15s;
+}
+.stats-search:focus {
+  outline: none;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px rgba(3, 105, 161, .15);
+}
+.stats-search-clear {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  width: 24px; height: 24px; border: none; border-radius: 999px;
+  background: var(--gray-200); color: var(--gray-700);
+  font-size: 16px; line-height: 1; cursor: pointer;
+  display: grid; place-items: center;
+  transition: background .15s;
+}
+.stats-search-clear:hover { background: var(--gray-300); }
+.stats-search-count {
+  font-size: 12px; color: var(--gray-500); margin: -2px 0 12px;
+}
+.stats-search-count:empty { margin: 0; }
+
 /* Filas de cotización con casilla */
 .stat-item {
   display: flex;

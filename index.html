@@ -161,8 +161,14 @@
         <div class="stats-section-title">Por mes <span class="stats-hint">— clic en un mes para filtrar</span></div>
         <div class="stats-months" id="statsMonths"></div>
 
-        <!-- Filtros -->
+        <!-- Buscador + filtros -->
         <div class="stats-section-title">Cotizaciones</div>
+        <div class="stats-search-wrap">
+          <span class="stats-search-icon" aria-hidden="true">🔎</span>
+          <input type="text" id="statsSearch" class="stats-search" placeholder="Buscar por placa o cliente…" autocomplete="off" aria-label="Buscar cotización por placa o cliente">
+          <button type="button" id="statsSearchClear" class="stats-search-clear" aria-label="Limpiar búsqueda" title="Limpiar" hidden>×</button>
+        </div>
+        <div class="stats-search-count" id="statsSearchCount" aria-live="polite"></div>
         <div class="stats-filters" id="statsFilters"></div>
 
         <!-- Lista -->

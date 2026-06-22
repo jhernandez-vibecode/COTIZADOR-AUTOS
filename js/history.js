@@ -22,6 +22,8 @@
  *   - historyCitaHoy(e)          -> bool  (agendada con citaFecha = hoy)
  *   - deleteHistoryEntry(id)     -> bool  (elimina un registro por id)
  *   - historyEntryValue(entry)   -> number (valor asegurado, recuperable del link)
+ *   - historyEntryPlate(entry)   -> string (placa, recuperable del link)
+ *   - historyMatchesSearch(e,q)  -> bool   (coincide por placa / cliente / vehiculo)
  *   - computeHistoryStats(arr)   -> { total, agendada, concretada, desechada, rate }  (pura)
  *   - groupHistoryByMonth(arr)   -> [{ key, label, entries, stats }]  (pura)
  *   - historyDaysSince(e[,now])  -> number dias desde el envio (o null)
@@ -190,6 +192,63 @@ function historyEntryValue(e) {
     }
   }
   return 0;
+}
+
+/**
+ * Placa del vehiculo de una entrada.
+ *   1. Entradas nuevas: campo e.plate.
+ *   2. Entradas viejas sin e.plate: se recupera del parametro `p` del link de la
+ *      guia (e.guideUrl), igual que historyEntryValue hace con `va`.
+ * @param {object} e
+ * @returns {string} '' si no se puede determinar
+ */
+function historyEntryPlate(e) {
+  if (!e) return '';
+  if (e.plate !== undefined && e.plate !== null && String(e.plate).trim() !== '') {
+    return String(e.plate).trim();
+  }
+  if (e.guideUrl) {
+    const m = String(e.guideUrl).match(/[?&]p=([^&]+)/);
+    if (m) {
+      try { return decodeURIComponent(m[1]).trim(); } catch (_) { return String(m[1]).trim(); }
+    }
+  }
+  return '';
+}
+
+/**
+ * Normaliza un texto para busqueda tolerante: sin tildes, en minusculas y sin
+ * separadores (espacios, guiones, puntos, guion bajo). Asi "BCS-123" ≈ "bcs123"
+ * y "Hernández" ≈ "hernandez".
+ * @param {string} s
+ * @returns {string}
+ */
+function _normHistorySearch(s) {
+  const t = String(s == null ? '' : s).normalize('NFD');
+  let out = '';
+  for (let i = 0; i < t.length; i++) {
+    const code = t.charCodeAt(i);
+    if (code >= 0x0300 && code <= 0x036f) continue;  // descarta tildes combinantes (sin literal Unicode)
+    out += t.charAt(i);
+  }
+  return out.toLowerCase().replace(/[\s\-._]/g, '');
+}
+
+/**
+ * ¿La cotizacion coincide con el texto buscado? Busca por PLACA (lo principal)
+ * y tambien por nombre del cliente y vehiculo, de forma tolerante (sin tildes
+ * ni separadores). Query vacia → siempre coincide (no filtra).
+ * @param {object} e
+ * @param {string} query
+ * @returns {boolean}
+ */
+function historyMatchesSearch(e, query) {
+  const q = _normHistorySearch(query);
+  if (!q) return true;
+  if (!e) return false;
+  return _normHistorySearch(historyEntryPlate(e)).indexOf(q) !== -1
+      || _normHistorySearch(e.client).indexOf(q) !== -1
+      || _normHistorySearch(e.vehicle).indexOf(q) !== -1;
 }
 
 /**

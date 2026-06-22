@@ -140,6 +140,14 @@ document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('statsFilters').addEventListener('click', _onStatsFilterClick);
   document.getElementById('statsList').addEventListener('change', _onStatsListChange);
   document.getElementById('statsList').addEventListener('click', _onStatsListClick);
+  // Buscador por placa / cliente (input estático: el listener se registra una vez).
+  const _statsSearchInput = document.getElementById('statsSearch');
+  if (_statsSearchInput) {
+    _statsSearchInput.addEventListener('input', _onStatsSearch);
+    _statsSearchInput.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') _clearStatsSearch(); });
+  }
+  const _statsSearchClear = document.getElementById('statsSearchClear');
+  if (_statsSearchClear) _statsSearchClear.addEventListener('click', _clearStatsSearch);
 
   // ============ AVISO DE SEGUIMIENTOS PENDIENTES (al inicio) ============
   document.getElementById('btnAvisoSendAll').addEventListener('click', sendAllFollowUps);
@@ -283,12 +291,20 @@ const STATS_HIGH_THRESHOLD = 10000000; // ₡10M: umbral de "alto valor" para se
 
 var _statsMonth  = null;    // clave YYYY-MM activa, o null = todas
 var _statsFilter = 'all';   // 'all' | 'high' (≥₡10M) | 'followup' (>3d sin confirmar, vigente)
+var _statsSearch = '';      // texto de búsqueda por placa / cliente (vacío = sin filtro)
 
 function openStatsModal() {
   _statsMonth  = null;
   _statsFilter = 'all';
+  _statsSearch = '';
+  const inp = document.getElementById('statsSearch');
+  if (inp) inp.value = '';
+  const clr = document.getElementById('statsSearchClear');
+  if (clr) clr.hidden = true;
   renderStats();
   document.getElementById('statsModal').classList.add('active');
+  // Foco al buscador: el caso típico es abrir 📊 para encontrar una cotización ya.
+  if (inp) inp.focus();
 }
 
 function closeStatsModal() {
@@ -311,6 +327,10 @@ function _applyStatsFilters(entries) {
     arr = arr.filter(function (e) { return historyEntryValue(e) >= STATS_HIGH_THRESHOLD; });
   } else if (_statsFilter === 'followup') {
     arr = arr.filter(function (e) { return historyNeedsFollowUp(e); });
+  }
+  // Búsqueda por placa / cliente (se combina con los filtros anteriores).
+  if (_statsSearch) {
+    arr = arr.filter(function (e) { return historyMatchesSearch(e, _statsSearch); });
   }
   // Orden de embudo: Concretada → Agendada → Pendiente → Desechada. Dentro de
   // agendadas, la cita más próxima primero; en el resto se mantiene el orden
@@ -337,6 +357,15 @@ function renderStats() {
   document.getElementById('statsMonths').innerHTML  = _statsMonthsHtml(months);
   document.getElementById('statsFilters').innerHTML = _statsFiltersHtml();
   document.getElementById('statsList').innerHTML    = _statsListHtml(filtered);
+
+  // Contador de coincidencias (solo cuando hay búsqueda activa). El input es
+  // estático — renderStats NO lo toca, así no se pierde el foco al teclear.
+  const cnt = document.getElementById('statsSearchCount');
+  if (cnt) {
+    cnt.textContent = _statsSearch
+      ? (filtered.length + (filtered.length === 1 ? ' coincidencia' : ' coincidencias'))
+      : '';
+  }
 }
 
 // ---------- Formateadores ----------
@@ -479,6 +508,24 @@ function _onStatsFilterClick(e) {
   const chip = e.target.closest('.stats-chip');
   if (!chip) return;
   _statsFilter = chip.dataset.filter || 'all';
+  renderStats();
+}
+
+/** Búsqueda por placa / cliente — se dispara en cada tecla (input estático). */
+function _onStatsSearch(ev) {
+  _statsSearch = (ev.target.value || '').trim();
+  const clr = document.getElementById('statsSearchClear');
+  if (clr) clr.hidden = !_statsSearch;
+  renderStats();
+}
+
+/** Limpia el buscador (botón ✕ o tecla Escape) y devuelve el foco al input. */
+function _clearStatsSearch() {
+  _statsSearch = '';
+  const inp = document.getElementById('statsSearch');
+  if (inp) { inp.value = ''; inp.focus(); }
+  const clr = document.getElementById('statsSearchClear');
+  if (clr) clr.hidden = true;
   renderStats();
 }
 
