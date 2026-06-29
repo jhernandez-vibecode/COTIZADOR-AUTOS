@@ -1198,13 +1198,22 @@ async function handleSend() {
     const subject = document.getElementById('m-subject').value.trim();
     const fname   = _pdfFilename();
 
-    const raw = buildMIME({
+    // Adjuntos: el PDF de cotización (sin mensual) + documentos estándar
+    // (Deber de Información Autos). Best-effort: si un estándar falla, se avisa
+    // pero el correo igual sale con la cotización.
+    const attachments = [{ bytes: S.modPDF, filename: fname }];
+    try {
+      const std = await loadStdDocs(STD_DOCS.cotizacion);
+      for (let i = 0; i < std.docs.length; i++) attachments.push(std.docs[i]);
+      if (std.failed.length) showToast('No se pudo adjuntar: ' + std.failed.join(', '), 'error');
+    } catch (e) { console.error('[cotizacion] docs estándar', e); }
+
+    const raw = buildMIMEMulti({
       to:       toAddr,
       from:     '"' + CFG.FROM_NAME + '" <' + CFG.FROM_EMAIL + '>',
       subject:  subject,
       html:     html,
-      pdfBytes: S.modPDF,
-      filename: fname
+      attachments: attachments
     });
     await sendEmail(raw);
 

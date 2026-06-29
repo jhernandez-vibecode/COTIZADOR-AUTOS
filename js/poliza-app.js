@@ -211,12 +211,19 @@
     btn.textContent = 'Preparando adjuntos…';
 
     try {
-      // Lee los bytes de cada PDF
+      // Lee los bytes de cada PDF que subió el agente
       var attachments = [];
       for (var i = 0; i < state.files.length; i++) {
         var buf = await state.files[i].file.arrayBuffer();
         attachments.push({ bytes: new Uint8Array(buf), filename: state.files[i].name });
       }
+
+      // Documentos estándar de la póliza (empaquetados, actualizables vía standard-docs.js)
+      try {
+        var std = await loadStdDocs(STD_DOCS.poliza);
+        for (var k = 0; k < std.docs.length; k++) attachments.push(std.docs[k]);
+        if (std.failed.length) showToast('No se pudieron adjuntar: ' + std.failed.join(', '), 'error');
+      } catch (e) { console.error('[poliza] docs estándar', e); }
 
       var html = buildPolizaActivaEmail(currentEmailParams());
       var subject = $('m-subject').value.trim() || ('✅ Póliza Activa: ' + (state.data.poliza || ''));
