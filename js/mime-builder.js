@@ -66,6 +66,58 @@ function buildMIME(args) {
 }
 
 /**
+ * Construye un mensaje MIME multipart/mixed con VARIOS adjuntos PDF.
+ * Usado por el envío de pólizas activas (sub-página polizas-activas/), donde el
+ * agente adjunta los documentos oficiales del INS (tarjeta, condiciones, etc.).
+ * Reusa los mismos helpers de codificación que buildMIME().
+ * @param {object} args
+ * @param {string} args.to       - destinatario
+ * @param {string} args.from     - "Nombre <correo@dominio>" del remitente
+ * @param {string} args.subject  - asunto (puede tener acentos / no-ASCII)
+ * @param {string} args.html     - cuerpo HTML del correo
+ * @param {Array<{bytes:Uint8Array, filename:string}>} args.attachments - PDFs a adjuntar
+ * @returns {string} mensaje MIME completo codificado en base64url
+ */
+function buildMIMEMulti(args) {
+  const boundary = '__cotizador_sdi_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+  const subject64 = _encodeRFC2047(args.subject);
+  const fromEnc   = _encodeFromHeader(args.from);
+  const CRLF = '\r\n';
+
+  let message =
+    'From: '         + fromEnc                         + CRLF +
+    'To: '           + args.to                         + CRLF +
+    'Subject: '      + subject64                       + CRLF +
+    'MIME-Version: 1.0'                                + CRLF +
+    'Content-Type: multipart/mixed; boundary="' + boundary + '"' + CRLF +
+    CRLF +
+    '--' + boundary + CRLF +
+    'Content-Type: text/html; charset=UTF-8'           + CRLF +
+    'Content-Transfer-Encoding: 7bit'                  + CRLF +
+    CRLF +
+    args.html                                          + CRLF +
+    CRLF;
+
+  const list = args.attachments || [];
+  for (let i = 0; i < list.length; i++) {
+    const a = list[i];
+    const pdf64 = _wrapBase64(_uint8ToBase64(a.bytes), 76);
+    // Sanea el nombre del archivo para el header (sin comillas ni CRLF).
+    const fname = String(a.filename || ('adjunto-' + (i + 1) + '.pdf')).replace(/["\r\n]/g, '');
+    message +=
+      '--' + boundary + CRLF +
+      'Content-Type: application/pdf; name="' + fname + '"' + CRLF +
+      'Content-Disposition: attachment; filename="' + fname + '"' + CRLF +
+      'Content-Transfer-Encoding: base64'                + CRLF +
+      CRLF +
+      pdf64                                              + CRLF;
+  }
+  message += '--' + boundary + '--' + CRLF;
+
+  return _base64UrlEncode(message);
+}
+
+/**
  * Construye un mensaje MIME SIMPLE (solo text/html, sin adjuntos) en base64url.
  * Para correos sin PDF, como el de seguimiento de la pestaña de estadisticas.
  * Reusa los mismos helpers de codificacion que buildMIME().

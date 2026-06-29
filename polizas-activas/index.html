@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Envío de pólizas — Cotizador SDI</title>
+
+  <link rel="icon" type="image/svg+xml" href="../img/favicon.svg" />
+
+  <!-- Fuentes (mismas que la app) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Estilos compartidos del cotizador (look "Nativo") -->
+  <link rel="stylesheet" href="../css/styles.css" />
+
+  <style>
+    /* Extras específicos del módulo de envío de pólizas */
+    .doc-list { margin: 0; padding: 0; list-style: none; }
+    .doc-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border: 1px solid var(--gray-200, #e5e7eb);
+      border-radius: 8px; margin-bottom: 8px; background: #fff;
+    }
+    .doc-ico { font-size: 18px; line-height: 1; }
+    .doc-meta { flex: 1; min-width: 0; }
+    .doc-name { font-size: 13px; font-weight: 600; color: var(--navy, #0c2340); word-break: break-word; }
+    .doc-size { font-size: 11px; color: var(--gray-500, #64748b); }
+    .doc-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+    .doc-badge.up  { background: #dbeafe; color: #1e40af; }
+    .doc-badge.std { background: #dcfce7; color: #166534; }
+    .doc-remove { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 18px; line-height: 1; padding: 2px 6px; border-radius: 6px; }
+    .doc-remove:hover { background: #fee2e2; }
+    .doc-empty { font-size: 13px; color: var(--gray-500, #64748b); text-align: center; padding: 18px 0; }
+    .preview-frame { width: 100%; height: 640px; border: 1px solid var(--gray-200, #e5e7eb); border-radius: 8px; background: #f5f5f5; }
+    .back-link { color: #fff; text-decoration: none; font-size: 13px; opacity: .8; display: inline-flex; align-items: center; gap: 6px; }
+    .back-link:hover { opacity: 1; }
+    .pol-note { font-size: 12px; color: var(--gray-500, #64748b); margin: -6px 0 14px; }
+  </style>
+</head>
+<body>
+
+  <!-- ======================== HEADER ======================== -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-logo">SDI</div>
+        <div>
+          <div class="brand-title">Envío de pólizas</div>
+          <div class="brand-subtitle">Confirmación de póliza activa</div>
+        </div>
+      </div>
+
+      <nav class="step-nav" id="stepNav">
+        <div class="step active" data-step="1"><div class="step-dot">1</div><span>Cargar póliza</span></div>
+        <div class="step-sep"></div>
+        <div class="step" data-step="2"><div class="step-dot">2</div><span>Revisar datos</span></div>
+        <div class="step-sep"></div>
+        <div class="step" data-step="3"><div class="step-dot">3</div><span>Redactar correo</span></div>
+        <div class="step-sep"></div>
+        <div class="step" data-step="4"><div class="step-dot">4</div><span>Enviado</span></div>
+      </nav>
+
+      <div style="display:flex;align-items:center;gap:8px;">
+        <a href="../" class="back-link" title="Volver al cotizador">← Cotizador</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- ======================== VISTA 1 · CARGAR POLIZA ======================== -->
+    <section class="view active" id="view1">
+      <div class="card">
+        <h2 class="card-title">1 · Cargar documentos de la póliza</h2>
+        <p class="pol-note">Arrastrá los PDF oficiales del INS de esta póliza (Condiciones Particulares, Tarjeta, Comprobante de pago, etc.). Extraigo los datos de las Condiciones Particulares y adjunto todos al correo.</p>
+
+        <label class="drop-zone" id="dropZone" for="fileInput">
+          <div class="drop-zone-icon">📄</div>
+          <div class="drop-zone-title">Arrastrá los PDF o hacé clic para seleccionar</div>
+          <div class="drop-zone-hint">Podés cargar varios a la vez (Condiciones Particulares, Tarjeta, Comprobante…)</div>
+          <input type="file" id="fileInput" accept="application/pdf" multiple />
+        </label>
+
+        <div class="progress" id="progressWrap"><div class="progress-bar" id="progressBar"></div></div>
+        <div class="progress-label" id="progressLabel"></div>
+      </div>
+    </section>
+
+    <!-- ======================== VISTA 2 · REVISAR DATOS ======================== -->
+    <section class="view" id="view2">
+      <div class="grid-2">
+
+        <!-- Datos extraídos (editables) -->
+        <div class="card">
+          <h2 class="card-title">2 · Datos de la póliza</h2>
+          <p class="pol-note">Revisá lo que extraje del PDF y corregí lo que haga falta — todo es editable.</p>
+
+          <div class="form-row">
+            <label class="form-label">N° de póliza</label>
+            <input class="form-control" id="f-poliza" />
+          </div>
+          <div class="form-row">
+            <label class="form-label">Nombre del cliente</label>
+            <input class="form-control" id="f-cliente" />
+          </div>
+          <div class="grid-2" style="gap:12px;">
+            <div class="form-row">
+              <label class="form-label">Nombre para el saludo</label>
+              <input class="form-control" id="f-saludo" placeholder="Ej: Marco Andrés" />
+            </div>
+            <div class="form-row">
+              <label class="form-label required">Correo del cliente</label>
+              <input class="form-control" id="f-correo" type="email" placeholder="correo@ejemplo.com" />
+            </div>
+          </div>
+          <div class="form-row">
+            <label class="form-label">Vehículo</label>
+            <input class="form-control" id="f-vehiculo" placeholder="MARCA MODELO AÑO" />
+          </div>
+          <div class="grid-2" style="gap:12px;">
+            <div class="form-row">
+              <label class="form-label">Placa</label>
+              <input class="form-control" id="f-placa" />
+            </div>
+            <div class="form-row">
+              <label class="form-label">Año</label>
+              <input class="form-control" id="f-anio" />
+            </div>
+          </div>
+
+          <div class="btn-group">
+            <button class="btn btn-secondary" id="btnBack2">← Volver</button>
+            <button class="btn btn-primary" id="btnNext2">Continuar →</button>
+          </div>
+        </div>
+
+        <!-- Adjuntos -->
+        <div class="card">
+          <h2 class="card-title">Documentos a adjuntar</h2>
+          <p class="pol-note">Estos PDF se enviarán adjuntos al cliente. Podés agregar más o quitar alguno.</p>
+          <ul class="doc-list" id="docList"></ul>
+          <label class="btn btn-secondary" for="fileInput2" style="cursor:pointer;display:inline-block;margin-top:4px;">+ Agregar más PDF</label>
+          <input type="file" id="fileInput2" accept="application/pdf" multiple hidden />
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ======================== VISTA 3 · REDACTAR CORREO ======================== -->
+    <section class="view" id="view3">
+      <div class="grid-2">
+
+        <div class="card">
+          <h2 class="card-title">3 · Configurar correo</h2>
+
+          <div class="form-row">
+            <label class="form-label">Para</label>
+            <input class="form-control" id="m-to" type="email" />
+          </div>
+          <div class="form-row">
+            <label class="form-label">Asunto</label>
+            <input class="form-control" id="m-subject" />
+          </div>
+          <div class="form-row">
+            <label class="form-label">Nombre en el saludo</label>
+            <input class="form-control" id="m-saludo" />
+          </div>
+          <div class="form-row">
+            <label class="form-label">Nota personal (opcional)</label>
+            <textarea class="form-control" id="m-nota" rows="3" placeholder="Mensaje adicional para el cliente..."></textarea>
+          </div>
+          <div class="form-row">
+            <span class="pill">📎 <span id="m-count">0</span> documento(s) adjunto(s)</span>
+          </div>
+
+          <button class="btn btn-send" id="btnSend">Autorizar Gmail y Enviar</button>
+
+          <div class="btn-group">
+            <button class="btn btn-secondary" id="btnBack3">← Volver</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">Vista previa</h2>
+          <iframe id="preview" class="preview-frame" sandbox="allow-same-origin allow-popups"></iframe>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ======================== VISTA 4 · ÉXITO ======================== -->
+    <section class="view" id="view4">
+      <div class="card success-box">
+        <div class="success-icon">✓</div>
+        <div class="success-title">¡Póliza enviada!</div>
+        <div class="success-msg" id="successMsg">El correo de póliza activa fue enviado exitosamente.</div>
+        <button class="btn btn-primary" id="btnReset">Enviar otra póliza</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ======================== LIBRERÍAS EXTERNAS ======================== -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <!-- ======================== CÓDIGO PROPIO (orden crítico) ======================== -->
+  <script src="../js/toast.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/state.js"></script>
+  <script src="../js/agent-profile.js"></script>
+  <script src="../js/poliza-extract.js"></script>
+  <script src="../js/poliza-email.js"></script>
+  <script src="../js/mime-builder.js"></script>
+  <script src="../js/gmail-auth.js"></script>
+  <script src="../js/poliza-app.js"></script>
+
+  <script>
+    if (window.pdfjsLib) { pdfjsLib.GlobalWorkerOptions.workerSrc = CFG.PDFJS_WORKER; }
+  </script>
+
+</body>
+</html>

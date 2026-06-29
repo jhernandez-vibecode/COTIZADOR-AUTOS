@@ -198,6 +198,13 @@ function openProfileModal(firstTime) {
   document.getElementById('p-license').value  = CFG.LICENSE    || '';
   document.getElementById('p-website').value  = CFG.WEBSITE    || '';
   document.getElementById('p-agenda').value   = CFG.AGENDA_URL || '';
+  // Envío de pólizas activas (links del correo "Póliza Activa")
+  var pAssist = document.getElementById('p-assist');
+  var pXViaje = document.getElementById('p-xsell-viaje');
+  var pXEst   = document.getElementById('p-xsell-estudiantil');
+  if (pAssist) pAssist.value = CFG.ASSIST_URL            || '';
+  if (pXViaje) pXViaje.value = CFG.XSELL_VIAJE_URL       || '';
+  if (pXEst)   pXEst.value   = CFG.XSELL_ESTUDIANTIL_URL || '';
 
   if (firstTime) {
     hint.textContent = 'Bienvenido. Antes de empezar, configura tus datos como agente. Solo se guardan en este navegador.';
@@ -875,6 +882,17 @@ function handleProfileSave() {
     return;
   }
 
+  // Links de "Envío de pólizas activas" — normalizar (https:// si falta).
+  // Se permiten vacíos (el agente puede no querer mostrar un cross-sell).
+  const _normUrl = function (u) {
+    const v = (u || '').trim();
+    if (!v) return '';
+    return /^https?:\/\//i.test(v) ? v : 'https://' + v;
+  };
+  const assistUrl           = _normUrl(document.getElementById('p-assist') ? document.getElementById('p-assist').value : '');
+  const xsellViajeUrl       = _normUrl(document.getElementById('p-xsell-viaje') ? document.getElementById('p-xsell-viaje').value : '');
+  const xsellEstudiantilUrl = _normUrl(document.getElementById('p-xsell-estudiantil') ? document.getElementById('p-xsell-estudiantil').value : '');
+
   const profile = {
     name:      name,
     email:     email,
@@ -882,7 +900,10 @@ function handleProfileSave() {
     whatsapp:  whatsapp,
     license:   license,
     website:   cleanWebsite,
-    agendaUrl: cleanAgenda
+    agendaUrl: cleanAgenda,
+    assistUrl:           assistUrl,
+    xsellViajeUrl:       xsellViajeUrl,
+    xsellEstudiantilUrl: xsellEstudiantilUrl
   };
   try {
     saveProfile(profile);

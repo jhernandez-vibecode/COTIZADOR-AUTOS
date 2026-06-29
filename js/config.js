@@ -21,6 +21,13 @@ const CFG = {
   WHATSAPP:    '8822-1348',  // WhatsApp del agente, sin código país (se normaliza al usar)
   LICENSE:     '08-1318',
 
+  // Envío de pólizas activas (sub-página polizas-activas/) — personalizables por agente desde ⚙
+  // ASSIST_URL: Centro de Asistencia Digital (app de asistencia autos). Otros agentes le agregan su ?a=<id>.
+  // XSELL_*: links "Comprar" del cross-sell al final del correo. Si quedan vacíos, el botón cae al sitio web del agente.
+  ASSIST_URL:            'https://appasistenciaseguroautos.netlify.app/',
+  XSELL_VIAJE_URL:       'https://seguros-viajero.appsegurosdigitales.com/',
+  XSELL_ESTUDIANTIL_URL: '',
+
   // Gmail API
   GMAIL_SCOPE:    'https://www.googleapis.com/auth/gmail.send',
   GMAIL_SEND_URL: 'https://gmail.googleapis.com/gmail/v1/users/me/messages/send',
