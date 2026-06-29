@@ -1085,3 +1085,31 @@ e031693  fix(detalle): firstName toma parts[0] (nombre del cliente en orden norm
 - Stack: HTML/JS puro, Tailwind CDN, sin frameworks ni npm
 - Prefiere respuestas directas sin rodeos
 - Email: jhernandez@segurosdelins.com · Tel: 8822-1348
+
+---
+
+# Checkpoint 29 junio 2026 — Envío de pólizas activas + adjuntos estándar
+
+(Detalle completo y mantenido en el SKILL de usuario `especialista-cotizador-autos-sdi`.)
+
+## NUEVO módulo /polizas-activas/ (commit 79aec27)
+- Sub-página propia (look "Nativo", reusa css/styles.css). Botón **📨** en el header (reemplazó al amarillo 🛡).
+- Flujo 4 pasos: cargar PDF(s) de la póliza → revisar datos (editables) → redactar → enviar por Gmail con todos los PDF adjuntos.
+- `js/poliza-extract.js` (`PolizaParse`): extrae de las Condiciones Particulares INS (póliza#, titular, vehículo, placa, correo, forma de pago, vigencia). `titleCase` Unicode-safe (no usar `\b`). NO inventa acentos.
+- `js/poliza-email.js` (`buildPolizaActivaEmail`): correo "✅ Póliza Activa" — Centro de Asistencia Digital (+ tip PWA) + docs adjuntos + emergencias (800-800-8000/911/8001) + nota terceros + cross-sell Viaje/Estudiantil + firma. Personalizable por agente vía CFG.
+- `js/poliza-app.js`: orquesta. Reusa agent-profile/gmail-auth/mime-builder/state.
+- 3 campos nuevos en el perfil ⚙: `ASSIST_URL`, `XSELL_VIAJE_URL`, `XSELL_ESTUDIANTIL_URL`.
+- Tests: test-poliza-extract, test-poliza-email.
+
+## Documentos estándar auto-adjuntos (commit 3d3b585)
+- Carpeta `documentos-ins/` + `js/standard-docs.js` (`STD_DOCS {cotizacion, poliza}` + `loadStdDocs`).
+- Cotización adjunta el **Deber de Información Autos** (app.js: `buildMIME` → `buildMIMEMulti`).
+- Póliza adjunta 5 estándar (C.O. Multiasistencia, Pacto Amistoso, C.O. Accidente Menor/DAM, Cond. Generales SVA, Perfeccionamiento) + los del agente.
+- **Actualizar** = reemplazar el PDF en `documentos-ins/` (mismo nombre) + push. Test `test-standard-docs`.
+- Nota: `deber-de-informacion-autos.pdf` ≡ `perfeccionamiento-sva-v31.pdf` (mismo documento del INS).
+
+## ELIMINADO: módulo de coberturas vigentes
+- Borrado por completo: botón amarillo 🛡, `/coberturas/`, `/detalle/`, `js/coverage-url.js`, `buildCoverageEmail()`, `test-coverage-url`, `test-coverage-email`.
+
+## Nota de estado
+Outlook YA fue eliminado (11 jun) — ignorar el pendiente "Cleanup Outlook" de más arriba; la app es **SOLO Gmail**. `mime-builder.js` ahora expone `buildMIME` + `buildMIMEMulti` + `buildMIMESimple`.
