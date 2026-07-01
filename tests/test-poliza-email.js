@@ -8,6 +8,7 @@ global.CFG = {
   FROM_EMAIL: 'jhernandez@segurosdelins.com',
   LICENSE: '08-1318',
   PHONE: '8822-1348',
+  WHATSAPP: '8822-1348',
   WEBSITE: 'www.segurosdelins.com',
   LOGO_URL: 'https://cotizador.appsegurosdigitales.com/img/ins-logo.png',
   ASSIST_URL: 'https://appasistenciaseguroautos.netlify.app/?a=jc',
@@ -34,7 +35,12 @@ ok('poliza',            html.indexOf('0101AUT221211200') !== -1);
 ok('vehiculo',          html.indexOf('NISSAN FRONTIER 2023') !== -1);
 ok('placa',             html.indexOf('CL-612977') !== -1);
 ok('activa',            /ya se encuentra activa/i.test(html));
-ok('asistencia-link',   html.indexOf('https://appasistenciaseguroautos.netlify.app/?a=jc') !== -1);
+ok('asistencia-base',   html.indexOf('https://appasistenciaseguroautos.netlify.app/?a=jc') !== -1);
+ok('asistencia-agente', html.indexOf('n=Juan%20Carlos%20Hernandez%20Vargas') !== -1
+                        && html.indexOf('tel=8822-1348') !== -1
+                        && html.indexOf('wa=50688221348') !== -1
+                        && html.indexOf('em=jhernandez%40segurosdelins.com') !== -1
+                        && html.indexOf('lic=08-1318') !== -1);
 ok('pwa-tip',           /Añadir a pantalla de inicio/i.test(html));
 ok('emergencia-8000',   html.indexOf('800-800-8000') !== -1);
 ok('emergencia-911',    html.indexOf('911') !== -1);
@@ -53,6 +59,22 @@ ok('doctype',           /^<!DOCTYPE html>/.test(html));
 // XSS: un dato malicioso debe quedar escapado
 var evil = buildPolizaActivaEmail({ nombrePila: '<img src=x onerror=alert(1)>', poliza: 'X', vehiculo: 'V', placa: 'P' });
 ok('xss-escapado', evil.indexOf('<img src=x onerror') === -1 && evil.indexOf('&lt;img') !== -1);
+
+// Multi-agente: la guía de emergencia debe llevar los datos del agente ACTUAL,
+// no los del owner por default (así el cliente contacta a quien le envió la póliza).
+global.CFG.FROM_NAME  = 'Pedro Ramírez';
+global.CFG.PHONE      = '7000-0000';
+global.CFG.WHATSAPP   = '7000-0000';
+global.CFG.FROM_EMAIL = 'pedro@correo.com';
+global.CFG.LICENSE    = '09-9999';
+global.CFG.WEBSITE    = '';   // sin web propia
+global.CFG.ASSIST_URL = 'https://appasistenciaseguroautos.netlify.app/';   // base sin ?a=
+var html2 = buildPolizaActivaEmail({ nombrePila: 'Ana', poliza: 'P', vehiculo: 'V', placa: 'PL' });
+ok('multiagente-nombre', html2.indexOf('n=Pedro%20Ram%C3%ADrez') !== -1);
+ok('multiagente-tel',    html2.indexOf('tel=7000-0000') !== -1 && html2.indexOf('wa=50670000000') !== -1);
+ok('multiagente-correo', html2.indexOf('em=pedro%40correo.com') !== -1);
+ok('multiagente-lic',    html2.indexOf('lic=09-9999') !== -1);
+ok('multiagente-sep',    html2.indexOf('/?n=Pedro') !== -1);   // primer parámetro con '?', no '&'
 
 console.log('\npoliza-email: ' + pass + ' OK, ' + fail + ' FAIL');
 process.exit(fail ? 1 : 0);

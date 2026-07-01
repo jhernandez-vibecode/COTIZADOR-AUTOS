@@ -1099,6 +1099,7 @@ e031693  fix(detalle): firstName toma parts[0] (nombre del cliente en orden norm
 - `js/poliza-email.js` (`buildPolizaActivaEmail`): correo "✅ Póliza Activa" — Centro de Asistencia Digital (+ tip PWA) + docs adjuntos + emergencias (800-800-8000/911/8001) + nota terceros + cross-sell Viaje/Estudiantil + firma. Personalizable por agente vía CFG.
 - `js/poliza-app.js`: orquesta. Reusa agent-profile/gmail-auth/mime-builder/state.
 - 3 campos nuevos en el perfil ⚙: `ASSIST_URL`, `XSELL_VIAJE_URL`, `XSELL_ESTUDIANTIL_URL`.
+- **1 jul 2026 — ficha del agente embebida en el link de la guía:** `buildPolizaActivaEmail` arma `assistUrl` con `?n,tel,wa,em,lic,web` (de CFG/perfil ⚙; `_waIntl` normaliza WhatsApp a intl CR; `web` crudo, sin fallback a JC). La app de asistencia (repo `APP-ASISTENCIA-SEGURO-AUTOS`) los lee en `getAgent()` y muestra al agente correcto. Retrocompatible (respeta `?a=`). **Ambos repos despliegan juntos.** Checks `asistencia-agente`/`multiagente-*` en test-poliza-email.
 - Tests: test-poliza-extract, test-poliza-email.
 
 ## Documentos estándar auto-adjuntos (commit 3d3b585)

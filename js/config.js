@@ -22,7 +22,9 @@ const CFG = {
   LICENSE:     '08-1318',
 
   // Envío de pólizas activas (sub-página polizas-activas/) — personalizables por agente desde ⚙
-  // ASSIST_URL: Centro de Asistencia Digital (app de asistencia autos). Otros agentes le agregan su ?a=<id>.
+  // ASSIST_URL: Centro de Asistencia Digital (app de asistencia autos). El correo le añade
+  //   automáticamente la ficha del agente por parámetros (?n,tel,wa,em,lic,web) para que el
+  //   cliente vea al agente correcto. Basta con dejar la URL base; el ?a=<id> es opcional.
   // XSELL_*: links "Comprar" del cross-sell al final del correo. Si quedan vacíos, el botón cae al sitio web del agente.
   ASSIST_URL:            'https://appasistenciaseguroautos.netlify.app/',
   XSELL_VIAJE_URL:       'https://seguros-viajero.appsegurosdigitales.com/',

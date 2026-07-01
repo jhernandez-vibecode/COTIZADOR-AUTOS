@@ -9,7 +9,7 @@
  *
  * 100% personalizable por agente: TODO sale de CFG (perfil en localStorage):
  *   firma/licencia/teléfono/web (FROM_*, LICENSE, PHONE, WEBSITE),
- *   ASSIST_URL (Centro de Asistencia, con ?a=<id> del agente),
+ *   ASSIST_URL (Centro de Asistencia; se le embeben los datos del agente por URL),
  *   XSELL_VIAJE_URL / XSELL_ESTUDIANTIL_URL (botones "Comprar" del cross-sell).
  *
  * Email-friendly: tablas anidadas + estilos inline + texto/color. Sin imágenes
@@ -49,9 +49,35 @@ function buildPolizaActivaEmail(params) {
   var web      = (CFG.WEBSITE   || 'www.segurosdelins.com').replace(/^https?:\/\//i, '');
   var logoUrl  = CFG.LOGO_URL   || 'https://cotizador.appsegurosdigitales.com/img/ins-logo.png';
 
+  // Guía de emergencia personalizada: embebemos la ficha del agente actual
+  // (nombre, contacto, licencia, web) como parámetros para que la app de
+  // asistencia muestre a ESTE agente y no al owner por default. Respeta la
+  // query previa que traiga ASSIST_URL (p.ej. ?a=<id>).
+  var _waIntl = function (v) {
+    var d = String(v == null ? '' : v).replace(/\D/g, '');
+    if (d.length === 8) d = '506' + d;   // número CR sin código país
+    return d;
+  };
+  var _assistUrl = function () {
+    var base = String(CFG.ASSIST_URL == null ? '' : CFG.ASSIST_URL).trim();
+    if (!/^https?:\/\//i.test(base)) return '';   // sin base válida no hay guía
+    // web: usamos el valor CRUDO del perfil (no el fallback al sitio de JC),
+    // así un agente sin web propia no arrastra el sitio del owner a su guía.
+    var webRaw = String(CFG.WEBSITE == null ? '' : CFG.WEBSITE).replace(/^https?:\/\//i, '').trim();
+    var pairs = [
+      ['n',   agente], ['tel', tel], ['wa', _waIntl(CFG.WHATSAPP || tel)],
+      ['em',  correoAg], ['lic', lic], ['web', webRaw]
+    ];
+    var qs = pairs
+      .filter(function (x) { return x[1] != null && String(x[1]).trim() !== ''; })
+      .map(function (x) { return x[0] + '=' + encodeURIComponent(String(x[1]).trim()); })
+      .join('&');
+    return qs ? base + (base.indexOf('?') >= 0 ? '&' : '?') + qs : base;
+  };
+
   // Links saneados (solo http/https). Si un cross-sell viene vacío, cae al sitio del agente.
   var siteFallback = web ? ('https://' + web) : '#';
-  var assistUrl = _safe(CFG.ASSIST_URL) || siteFallback;
+  var assistUrl = e(_assistUrl()) || siteFallback;
   var viajeUrl  = _safe(CFG.XSELL_VIAJE_URL) || siteFallback;
   var estUrl    = _safe(CFG.XSELL_ESTUDIANTIL_URL) || siteFallback;
 
