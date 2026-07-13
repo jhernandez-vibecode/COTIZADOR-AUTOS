@@ -13,6 +13,31 @@ description: >
 
 # Cotizador SDI - Checkpoint 11 junio 2026
 
+> ## ✅ NUEVO — 13 jul 2026: El PDF INS trae MATRIZ de precios por tipo de repuesto (EN PROD, commits `acfa5db` + `84aca0d`)
+> El INS rediseñó la **página 2** del PDF de cotización (ASINS-170): la tabla **FORMA DE PAGO** pasó de **UNA
+> columna** de precios a una **MATRIZ de hasta 5 columnas**, una por tipo de repuesto — en este orden fijo:
+> **`Vehículo en Garantía · Original · Extensión Garantía · Extensión Garantía Plus · Alternativo/Genérico/Usados`**.
+> - **Bug que causó:** el parser viejo agarraba el **primer número** de cada fila (columna 0 = *Vehículo en
+>   garantía*), enviando al cliente el precio equivocado. Ej.: repuesto "Extensión de garantía Plus" → mandaba
+>   Anual ₡383.365 cuando lo correcto era ₡402.726.
+> - **Fix (`pdf-extract.js`):** `_parsePaymentMatrix(rows, sustRepos)` detecta las columnas por posición X
+>   (`_clusterCenters`), lee el encabezado de cada una y **selecciona la columna del repuesto elegido**
+>   ("Sustitución de repuestos" de la página 1) por solape de tokens (`_labelMatch`) + fallback al orden fijo de
+>   5 columnas (`_reposFixedIndex`). **Backward-compatible** con el formato viejo de 1 columna. Expone
+>   `selectPriceColumn` / `pricesForColumn` / `priceColumnConfident` (públicas: las usa app.js para re-seleccionar
+>   si el agente corrige el repuesto). El grid queda en `data.priceMatrix = {centers, labels, values}`.
+> - **`app.js`:** `_syncDataFromView2` re-selecciona la columna si el agente edita el tipo de repuesto; la vista 2
+>   muestra una nota **"📋 Precios según el repuesto elegido: …"** (o ⚠️ si no se pudo confirmar la columna,
+>   `reposColumn.confident`).
+> - **`email-template.js`:** nuevo clasificador **`_reposKind`** reconoce las **5 variantes** del campo INS
+>   (`plus`/`garantia`/`vehiculo`/`original`/`alternativo`); `_sustitucionText` y `_sustReposToCode` delegan en él.
+>   Arregla el caso real "**Alternativo genérico / Usados**" que antes caía al texto genérico.
+> - **PDF adjunto (decisión de JC):** se deja con las **5 columnas** visibles (solo se ocultan Mensual/Deducción
+>   como siempre, a lo ancho de las 5). Es el correo + el explicador los que muestran solo la opción elegida.
+> - **Verificación:** end-to-end con **PDF.js 3.11.174 real** + **pdf-lib real** sobre 2 PDFs reales (118450 Plus,
+>   118550 Alternativo). Tests: `tests/test-payment-matrix.js` (14, con items reales) + `test-explicador-url.js`
+>   (+5 variantes). Suite completa verde.
+
 > ## ✅ NUEVO — jun 2026: Buscador por placa / cliente en la pestaña 📊 (EN PROD, commit `95d90db`)
 > Caso de uso de JC: cuando un cliente **confirma**, encontrar su cotización al instante para marcarla Concretada.
 > - **Input ESTÁTICO** `#statsSearch` en `index.html` (NO se genera dentro de `renderStats`/innerHTML) — esa es
@@ -714,18 +739,30 @@ sustRepos    ← /Sustituci[oó]n de repuestos:\s*(.+)/i
 formaAseg    ← /Forma de Aseguramiento:\s*(.+)/i
 ```
 
-### Campos pagina 2
+### Campos pagina 2 — MATRIZ FORMA DE PAGO (desde 13 jul 2026)
+El INS cambió la tabla FORMA DE PAGO a una **matriz de hasta 5 columnas por tipo de
+repuesto**. `_parsePaymentMatrix(rows2, data.sustRepos)` la parsea y **elige la columna
+del repuesto elegido**. `_pageItems` ahora incluye `w: i.width` (necesario para el centro
+horizontal de cada item y ubicar la columna).
 ```javascript
-prices.mensual     ← fila /^Mensual$/i + valor /^[\d,]+\.\d{2}$/
-prices.trimestral  ← /^Trimestral$/i + valor
-prices.semestral   ← /^Semestral$/i + valor
-prices.anual       ← /^Anual$/i + valor
-prices.deduccion   ← /^Deducci[oó]n Mensual$/i + valor
-deductibles[]      ← lineas que empiezan con /^Cobertura\s/i
-rowsToRemove[]     ← [{ y: float, label: string }] para mensual y deduccion
-pageWidth          ← p2.view[2] (siempre 612 = Letter US)
-pageHeight         ← p2.view[3] (siempre 792)
+// Filas de precio: etiqueta izq + N montos (/^\d{1,3}(?:,\d{3})*\.\d{2}$/)
+//   _PRICE_ROWS = mensual|trimestral|semestral|anual|deduccion (regex sobre label normalizado)
+// Columnas: _clusterCenters(centros X de TODOS los montos, gap 40) → N centros
+// Encabezados: texto no-numérico en banda 50px sobre la fila top, a ≤46px de un centro
+//   → labels[] por columna (ej: "extension garantia plus", "alternativo / generico / usados")
+// Selección: selectPriceColumn(grid, sustRepos)
+//   1) _labelMatch (solape de tokens, Jaccard rompe empates)  2) _reposFixedIndex (orden fijo 5col)  3) col 0
+data.prices        = pricesForColumn(grid, sel)   // { mensual, trimestral, semestral, anual, deduccion }
+data.priceMatrix   = grid = { centers, labels, values }   // re-seleccionable (app.js) si cambia el repuesto
+data.reposColumn   = { index, label, confident, count }   // qué columna quedó (para la nota de la vista 2)
+deductibles[]      ← lineas que empiezan con /^Cobertura\s/i (sin cambios)
+rowsToRemove[]     ← [{ y, label:'mensual'|'deduccion' }] (fila completa; tapa las 5 columnas)
+pageWidth          ← p2.view[2] (612)   pageHeight ← p2.view[3] (792)
 ```
+**Backward-compat:** con el formato viejo de 1 columna `centers.length===1` → `selectPriceColumn` devuelve 0 y
+agarra el único monto. `reposColumn.count===1` → la vista 2 no muestra la nota "Precios según…".
+**Orden fijo de columnas INS:** `Vehículo en Garantía(0) · Original(1) · Extensión Garantía(2) · Extensión
+Garantía Plus(3) · Alternativo/Genérico/Usados(4)`.
 
 ### Validaciones obligatorias (lanzan Error)
 - PDF debe tener ≥ 2 paginas
@@ -752,8 +789,13 @@ p2.drawRectangle({
 ```
 
 ### Filas SIEMPRE eliminadas (rowsToRemove de extractData)
-1. Mensual + su monto
-2. Deduccion Mensual + su monto
+1. Mensual + sus montos
+2. Deduccion Mensual + sus montos
+
+> Con la matriz de 5 columnas (jul 2026) el rectángulo full-width (`x=28 → pageWidth-28`) sigue tapando
+> **las 5 columnas** de esas dos filas — verificado rasterizando el PDF limpio con pdf-lib real. Las filas
+> Trimestral/Semestral/Anual quedan visibles con sus 5 columnas (decisión de JC: el correo/explicador ya
+> muestran solo la opción elegida; el PDF adjunto no se redacta más allá de Mensual/Deducción).
 
 ### Importante (decision tecnica)
 - Los rectangulos solo cubren VISUALMENTE el texto. El texto sigue en el PDF
@@ -798,12 +840,16 @@ interestMap = {
   compra:      'En proceso de compra'
 }
 
-// _sustitucionText(label) - case-insensitive y sin acentos
-// "garantia plus"        → "8 anos / 80,000 km"  ← antes que "garantia"
-// "garantia"             → "5 anos / 60,000 km"
-// "repuesto original"    → "originales en taller multimarca o especializado"
-// "repuesto alternativo" → "genericos y/o usados segun disponibilidad"
-// default                → "condiciones estandar de sustitucion del INS"
+// _reposKind(label) - clasifica el campo "Sustitucion de repuestos" en 5 tipos
+// (sin acentos, minusculas; orden: plus → alternativo → vehiculo → garantia → original):
+//   plus        (incluye "plus")                         → sr='p', "8 anos / 80,000 km"
+//   alternativo (alternativ|generic|usad)                → sr='n', "alternativos, genericos y/o usados"
+//   vehiculo    (vehiculo + garantia)                    → sr='0', "originales mientras en garantia de fabrica"
+//   garantia    (extension|garantia)                     → sr='g', "5 anos / 60,000 km"
+//   original    (original)                               → sr='0', "originales en taller multimarca"
+//   ''          (desconocido/vacio)                      → sr='n', "condiciones estandar del INS"
+// _sustitucionText(label) y _sustReposToCode(label) delegan en _reposKind.
+// Casos REALES vistos: "Extensión de garantía Plus" (plus), "Alternativo genérico / Usados" (alternativo).
 ```
 
 ## Gmail: Autenticacion (gmail-auth.js)
@@ -975,6 +1021,13 @@ Usa `vm.runInContext` con sandbox que polyfilla:
 - window.pdfjsLib, window.PDFLib (libs como globals + propiedad de window)
 - btoa/atob (Buffer.from)
 - localStorage (objeto en memoria con get/set/remove)
+
+Tests puros con `node tests/test-*.js` (sin runner). `pdf-extract.js` exporta vía `module.exports`
+(guard `typeof module`) → `tests/test-payment-matrix.js` lo requiere directo y le pasa **items REALES**
+del PDF (coords PDF.js). Para verificación end-to-end del parser sin depender del preview congelado
+(gotcha #16): instalar `pdfjs-dist@3.11.174` + `pdf-lib@1.17.1` en un scratchpad, extraer los items reales
+con `getTextContent()` y correr `_parsePaymentMatrix`, y rasterizar el PDF limpio con pdf-lib para confirmar
+que las filas Mensual/Deducción quedan tapadas en las 5 columnas.
 
 ## Historial completo de commits (18 commits)
 
