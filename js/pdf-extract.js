@@ -79,37 +79,31 @@ async function extractData(arrayBuffer) {
   data.pageWidth  = p2.view[2];
   data.pageHeight = p2.view[3];
 
-  // Etiquetas de precios y su clave en data.prices
-  // Las filas Mensual y Deduccion Mensual se agregan a rowsToRemove para borrarlas
-  const priceLabels = {
-    mensual:    /^Mensual$/i,
-    trimestral: /^Trimestral$/i,
-    semestral:  /^Semestral$/i,
-    anual:      /^Anual$/i,
-    deduccion:  /^Deducci[oó]n Mensual$/i
-  };
-
+  // Deducibles: filas que empiezan con "Cobertura " (cubre "Cobertura C:" y "Cobertura D,F Y H:")
   for (const row of rows2) {
-    // 1. Precios: buscar etiqueta + valor numerico (formato 53,738.00) en la misma fila
-    for (const [key, rx] of Object.entries(priceLabels)) {
-      const labelItem = row.items.find(i => rx.test(i.t.trim()));
-      if (!labelItem) continue;
-
-      const numItem = row.items.find(i => /^[\d,]+\.\d{2}$/.test(i.t.trim()));
-      if (!numItem) continue;
-
-      data.prices[key] = numItem.t.trim();
-      if (key === 'mensual' || key === 'deduccion') {
-        data.rowsToRemove.push({ y: row.y, label: labelItem.t.trim() });
-      }
-      break;
-    }
-
-    // 2. Deducibles: filas que empiezan con "Cobertura " (cubre "Cobertura C:" y "Cobertura D,F Y H:")
     const rowText = row.items.map(i => i.t.trim()).join(' ').replace(/\s+/g, ' ').trim();
     if (/^Cobertura\s/i.test(rowText)) {
       data.deductibles.push(rowText);
     }
+  }
+
+  // Precios: la tabla "FORMA DE PAGO" del INS cambio (jul 2026) de UNA sola
+  // columna a una MATRIZ de hasta 5 columnas, una por tipo de repuesto
+  // (Vehiculo en garantia / Original / Extension / Extension Plus / Alternativo).
+  // Elegimos la columna que corresponde al repuesto de la pagina 1 ("Sustitucion
+  // de repuestos"). _parsePaymentMatrix es backward-compatible con el formato
+  // viejo de 1 sola columna (elige la unica). Ver tests/test-payment-matrix.js.
+  const matrix = _parsePaymentMatrix(rows2, data.sustRepos);
+  if (matrix) {
+    data.prices       = matrix.prices;
+    data.rowsToRemove = matrix.rowsToRemove;
+    data.priceMatrix  = matrix.grid;   // { centers, labels, values } — re-seleccionable si el agente corrige el repuesto
+    data.reposColumn  = {              // que columna quedo elegida (para mostrarla al agente)
+      index:     matrix.selectedIndex,
+      label:     matrix.selectedLabel,
+      confident: matrix.confident,
+      count:     matrix.grid.centers.length
+    };
   }
 
   // Monto del deducible de D,F y H — personaliza la seccion 3 del explicador.
@@ -145,7 +139,8 @@ async function _pageItems(page) {
   return tc.items.map(i => ({
     t: i.str,
     x: i.transform[4],
-    y: i.transform[5]
+    y: i.transform[5],
+    w: i.width          // ancho del run — necesario para ubicar la columna de precio
   }));
 }
 
@@ -207,4 +202,267 @@ function _findField(rows, regex) {
     if (m) return (m[1] || m[0]).trim();
   }
   return '';
+}
+
+// =====================================================================
+// FORMA DE PAGO — matriz de precios por tipo de repuesto (jul 2026)
+// =====================================================================
+// El INS cambio la tabla de UNA columna a hasta 5 columnas, una por tipo de
+// repuesto. Estas funciones detectan las columnas por su posicion X, leen el
+// encabezado de cada una, y eligen la que corresponde al repuesto de la
+// pagina 1. Son PURAS (sin DOM ni PDF.js) → testeables con node.
+
+// Formato de un monto del INS: "36,085.00", "402,726.00", "1,234,567.00".
+var _MATRIX_NUM_RX = /^\d{1,3}(?:,\d{3})*\.\d{2}$/;
+
+// Filas de la tabla FORMA DE PAGO y su clave en data.prices.
+var _PRICE_ROWS = [
+  { key: 'mensual',    rx: /^mensual$/ },
+  { key: 'trimestral', rx: /^trimestral$/ },
+  { key: 'semestral',  rx: /^semestral$/ },
+  { key: 'anual',      rx: /^anual$/ },
+  { key: 'deduccion',  rx: /^deduccion mensual$/ }
+];
+
+// Palabras vacias que no aportan al match de repuesto.
+var _REPOS_STOP = { de: 1, y: 1, o: 1, la: 1, el: 1, del: 1, en: 1, con: 1 };
+
+/**
+ * Normaliza texto: minusculas, sin acentos, espacios colapsados.
+ * Quita los combining marks (U+0300..U+036F) por codigo numerico en vez de un
+ * rango de regex con caracteres literales, que un editor podria corromper.
+ */
+function _normTxt(s) {
+  var out = String(s == null ? '' : s).toLowerCase().normalize('NFD');
+  var res = '';
+  for (var i = 0; i < out.length; i++) {
+    var c = out.charCodeAt(i);
+    if (c < 0x300 || c > 0x36f) res += out[i];
+  }
+  return res.replace(/\s+/g, ' ').trim();
+}
+
+/** Centro horizontal de un item de texto (x izquierdo + mitad del ancho). */
+function _itemCenter(it) {
+  return it.x + (Number(it.w) || 0) / 2;
+}
+
+/**
+ * Agrupa coordenadas X en columnas: valores separados por mas de `gap` puntos
+ * inician una columna nueva. Devuelve el centro (promedio) de cada columna,
+ * ordenado de izquierda a derecha.
+ */
+function _clusterCenters(values, gap) {
+  var sorted = values.slice().sort(function (a, b) { return a - b; });
+  var cols = [], cur = [];
+  for (var i = 0; i < sorted.length; i++) {
+    if (!cur.length || sorted[i] - cur[cur.length - 1] <= gap) cur.push(sorted[i]);
+    else { cols.push(cur); cur = [sorted[i]]; }
+  }
+  if (cur.length) cols.push(cur);
+  return cols.map(function (c) {
+    return c.reduce(function (a, b) { return a + b; }, 0) / c.length;
+  });
+}
+
+/** Indice de la columna cuyo centro esta mas cerca de x, con la distancia. */
+function _nearestColumn(centers, x) {
+  var best = 0, bd = Infinity;
+  for (var i = 0; i < centers.length; i++) {
+    var d = Math.abs(centers[i] - x);
+    if (d < bd) { bd = d; best = i; }
+  }
+  return { index: best, dist: bd };
+}
+
+/** Tokens significativos de un texto de repuesto (sin acentos ni stopwords). */
+function _reposTokens(s) {
+  return _normTxt(s).split(/[^a-z0-9]+/).filter(function (t) {
+    return t && !_REPOS_STOP[t];
+  });
+}
+
+/**
+ * Match por solape de tokens entre el repuesto elegido y cada etiqueta de
+ * columna. Devuelve {index, score}. score = tokens compartidos + Jaccard, asi
+ * el conteo de coincidencias domina y el Jaccard rompe empates (ej: para
+ * "extension garantia" prefiere la columna sin "plus").
+ */
+function _labelMatch(labels, sustRepos) {
+  var st = _reposTokens(sustRepos);
+  var best = { index: 0, score: 0 };
+  if (!st.length) return best;
+  for (var i = 0; i < labels.length; i++) {
+    var lt = _reposTokens(labels[i]);
+    if (!lt.length) continue;
+    var lset = {}; lt.forEach(function (t) { lset[t] = 1; });
+    var inter = 0; st.forEach(function (t) { if (lset[t]) inter++; });
+    var union = {}; st.concat(lt).forEach(function (t) { union[t] = 1; });
+    var jacc = inter / Object.keys(union).length;
+    var score = inter + jacc;
+    if (score > best.score) best = { index: i, score: score };
+  }
+  return best;
+}
+
+/**
+ * Fallback por el ORDEN FIJO de la plantilla INS de 5 columnas:
+ * [Vehiculo en garantia, Original, Extension garantia, Extension garantia Plus,
+ *  Alternativo/Generico/Usados]. Devuelve -1 si no aplica.
+ */
+function _reposFixedIndex(sustRepos, nCols) {
+  if (nCols !== 5) return -1;
+  var n = _normTxt(sustRepos);
+  if (/garantia plus/.test(n) || /\bplus\b/.test(n)) return 3;
+  if (/extension/.test(n) && /garantia/.test(n))     return 2;
+  if (/alternativ|generic|usad/.test(n))             return 4;
+  if (/original/.test(n))                            return 1;
+  if (/vehiculo|garantia/.test(n))                   return 0;
+  return -1;
+}
+
+/**
+ * Elige el indice de columna de precios para el repuesto elegido:
+ *   1) Match por etiquetas del encabezado (robusto a que el INS reordene).
+ *   2) Fallback al orden fijo de 5 columnas si el encabezado no matcheo.
+ *   3) 0 (primera columna) como ultimo recurso.
+ * Publica (la usa app.js para re-seleccionar si el agente corrige el repuesto).
+ * @param {object} grid - { centers, labels, values }
+ * @param {string} sustRepos
+ * @returns {number} indice de columna
+ */
+function selectPriceColumn(grid, sustRepos) {
+  var centers = (grid && grid.centers) || [];
+  if (centers.length <= 1) return 0;
+  var byLabel = _labelMatch(grid.labels || [], sustRepos);
+  if (byLabel.score >= 1) return byLabel.index;
+  var fx = _reposFixedIndex(sustRepos, centers.length);
+  if (fx >= 0) return fx;
+  return byLabel.index || 0;
+}
+
+/** true si pudimos identificar la columna con confianza (o solo hay una). */
+function priceColumnConfident(grid, sustRepos) {
+  var centers = (grid && grid.centers) || [];
+  if (centers.length <= 1) return true;
+  return _labelMatch(grid.labels || [], sustRepos).score >= 1
+      || _reposFixedIndex(sustRepos, centers.length) >= 0;
+}
+
+/** Precios de una columna dada del grid → { mensual, trimestral, ... }. */
+function pricesForColumn(grid, index) {
+  var out = {};
+  var vals = (grid && grid.values) || {};
+  for (var k in vals) {
+    if (Object.prototype.hasOwnProperty.call(vals, k)) {
+      out[k] = vals[k][index] || '';
+    }
+  }
+  return out;
+}
+
+/**
+ * Parsea la tabla FORMA DE PAGO (matriz de precios por tipo de repuesto) de la
+ * pagina 2 y devuelve la columna que corresponde al repuesto elegido.
+ * Compatible con el formato viejo de 1 sola columna.
+ *
+ * @param {Array} rows - filas de _groupByY de la pagina 2 (items con {t,x,y,w})
+ * @param {string} sustRepos - "Sustitucion de repuestos" de la pagina 1
+ * @returns {?object} { prices, rowsToRemove, grid:{centers,labels,values},
+ *                      selectedIndex, selectedLabel, confident } o null
+ */
+function _parsePaymentMatrix(rows, sustRepos) {
+  // 1) Filas de precio: etiqueta a la izquierda + >=1 monto.
+  var priceRows = [];
+  for (var r = 0; r < rows.length; r++) {
+    var nums = [], labelItems = [];
+    var items = rows[r].items;
+    for (var j = 0; j < items.length; j++) {
+      var t = (items[j].t || '').trim();
+      if (!t) continue;
+      if (_MATRIX_NUM_RX.test(t)) nums.push({ t: t, center: _itemCenter(items[j]) });
+      else labelItems.push(items[j]);
+    }
+    if (!nums.length) continue;
+    var labelText = _normTxt(labelItems.map(function (i) { return i.t; }).join(' '));
+    var pk = null;
+    for (var p = 0; p < _PRICE_ROWS.length; p++) {
+      if (_PRICE_ROWS[p].rx.test(labelText)) { pk = _PRICE_ROWS[p].key; break; }
+    }
+    if (!pk) continue;
+    priceRows.push({ key: pk, y: rows[r].y, nums: nums });
+  }
+  if (!priceRows.length) return null;
+
+  // 2) Centros de columna a partir de TODOS los montos de las filas de precio.
+  var allCenters = [];
+  priceRows.forEach(function (pr) { pr.nums.forEach(function (n) { allCenters.push(n.center); }); });
+  var centers = _clusterCenters(allCenters, 40);
+
+  // 3) Etiquetas de columna: texto de encabezado (no numerico) justo por
+  //    encima de las filas de precio y alineado a un centro de columna. El
+  //    filtro por X descarta "FORMA DE PAGO" y las etiquetas de fila (a la
+  //    izquierda), y la banda vertical descarta "Observaciones"/deducibles.
+  var yTopPrice = priceRows.reduce(function (mx, pr) { return Math.max(mx, pr.y); }, -Infinity);
+  var HEADER_BAND = 50;   // puntos por encima de la fila de precio mas alta
+  var X_TOL = 46;         // ~mitad del ancho de columna
+  var headerBuckets = centers.map(function () { return []; });
+  for (var rr = 0; rr < rows.length; rr++) {
+    var ry = rows[rr].y;
+    if (!(ry > yTopPrice && ry <= yTopPrice + HEADER_BAND)) continue;
+    var its = rows[rr].items;
+    for (var k = 0; k < its.length; k++) {
+      var tx = (its[k].t || '').trim();
+      if (!tx || _MATRIX_NUM_RX.test(tx)) continue;
+      var near = _nearestColumn(centers, _itemCenter(its[k]));
+      if (near.dist <= X_TOL) headerBuckets[near.index].push({ y: ry, x: its[k].x, t: tx });
+    }
+  }
+  var labels = headerBuckets.map(function (b) {
+    b.sort(function (a, z) { return (z.y - a.y) || (a.x - z.x); }); // arriba primero, luego izq
+    return _normTxt(b.map(function (i) { return i.t; }).join(' '));
+  });
+
+  // 4) Valores por columna (alineados a `centers`).
+  var values = {};
+  priceRows.forEach(function (pr) {
+    var arr = []; for (var i = 0; i < centers.length; i++) arr.push('');
+    pr.nums.forEach(function (n) { arr[_nearestColumn(centers, n.center).index] = n.t; });
+    values[pr.key] = arr;
+  });
+
+  var grid = { centers: centers, labels: labels, values: values };
+
+  // 5) Seleccion de la columna del repuesto elegido.
+  var sel = selectPriceColumn(grid, sustRepos);
+
+  // 6) rowsToRemove: mensual + deduccion (fila completa; pdf-modify tapa a lo ancho).
+  var rowsToRemove = [];
+  priceRows.forEach(function (pr) {
+    if (pr.key === 'mensual' || pr.key === 'deduccion') rowsToRemove.push({ y: pr.y, label: pr.key });
+  });
+
+  return {
+    prices:        pricesForColumn(grid, sel),
+    rowsToRemove:  rowsToRemove,
+    grid:          grid,
+    selectedIndex: sel,
+    selectedLabel: labels[sel] || '',
+    confident:     priceColumnConfident(grid, sustRepos)
+  };
+}
+
+// Export para tests node (guardado: en el browser no existe module).
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    _parsePaymentMatrix: _parsePaymentMatrix,
+    selectPriceColumn: selectPriceColumn,
+    pricesForColumn: pricesForColumn,
+    priceColumnConfident: priceColumnConfident,
+    _groupByY: _groupByY,
+    _labelMatch: _labelMatch,
+    _reposFixedIndex: _reposFixedIndex,
+    _clusterCenters: _clusterCenters,
+    _normTxt: _normTxt
+  };
 }

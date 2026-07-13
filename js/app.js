@@ -1026,6 +1026,20 @@ function _syncDataFromView2() {
   S.data.valor      = document.getElementById('f-valor').value.replace(/[₡]/g, '').trim();
   S.data.formaAseg  = document.getElementById('f-forma').value.trim();
   S.data.sustRepos  = document.getElementById('f-sust').value.trim();
+
+  // Si el agente corrigio el tipo de repuesto, re-seleccionar la columna de la
+  // matriz FORMA DE PAGO para que el correo/explicador usen el monto correcto.
+  var pm = S.data.priceMatrix;
+  if (pm && pm.centers && pm.centers.length > 1 && typeof selectPriceColumn === 'function') {
+    var sel = selectPriceColumn(pm, S.data.sustRepos);
+    S.data.prices = pricesForColumn(pm, sel);
+    S.data.reposColumn = {
+      index:     sel,
+      label:     (pm.labels || [])[sel] || '',
+      confident: (typeof priceColumnConfident === 'function') ? priceColumnConfident(pm, S.data.sustRepos) : true,
+      count:     pm.centers.length
+    };
+  }
 }
 
 /**
@@ -1326,6 +1340,7 @@ function _renderPriceTable() {
   const t = document.getElementById('priceTable');
   const p = S.data.prices;
   t.innerHTML =
+    _reposNote() +
     _priceRow('Mensual',           p.mensual    || '0.00', 'removed') +
     _priceRow('Trimestral',        p.trimestral || '0.00', '')        +
     _priceRow('Semestral',         p.semestral  || '0.00', '')        +
@@ -1339,6 +1354,26 @@ function _priceRow(label, value, klass) {
     '<div class="price-row-label">' + _escapeHtml(label) + badge + '</div>' +
     '<div class="price-row-value">\u20A1 ' + _escapeHtml(value) + '</div>' +
   '</div>';
+}
+
+/**
+ * Nota sobre la columna de precios elegida. El PDF INS (jul 2026) trae una
+ * matriz de precios por tipo de repuesto; mostramos SEGUN cual se calcularon
+ * estos montos para que el agente confirme (o corrija el campo Repuestos).
+ * Solo aparece cuando hay matriz (>1 columna). Estilo inline: no depende de CSS.
+ */
+function _reposNote() {
+  const rc = S.data ? S.data.reposColumn : null;
+  if (!rc || !(rc.count > 1)) return '';
+  const repos = (S.data.sustRepos || rc.label || '').trim();
+  const base = 'margin:0 0 12px;padding:8px 11px;border-radius:8px;font-size:12px;line-height:1.45;';
+  if (rc.confident) {
+    return '<div style="' + base + 'background:#eff6ff;border:1px solid #bfdbfe;color:#0c4a6e;">'
+      + '\uD83D\uDCCB Precios seg\u00FAn el repuesto elegido: <b>' + _escapeHtml(repos || '\u2014') + '</b></div>';
+  }
+  return '<div style="' + base + 'background:#fffbeb;border:1px solid #fcd34d;color:#92400e;">'
+    + '\u26A0\uFE0F Verific\u00E1 el <b>tipo de repuesto</b>: no se pudo confirmar a qu\u00E9 columna corresponde. '
+    + 'Se us\u00F3 <b>' + _escapeHtml(repos || '\u2014') + '</b>.</div>';
 }
 
 function _renderDeductibles() {
