@@ -104,6 +104,25 @@ test('sustReposToCode default a "n" si vacío', () => {
   assertEq(_sustReposToCode(''), 'n');
   assertEq(_sustReposToCode(null), 'n');
 });
+test('sustReposToCode: "Alternativo genérico / Usados" (campo real del PDF) -> n', () => {
+  assertEq(_sustReposToCode('Alternativo genérico / Usados'), 'n');
+});
+test('sustReposToCode: "Vehículo en garantía" -> 0 (repuesto original de fábrica)', () => {
+  assertEq(_sustReposToCode('Vehículo en garantía'), '0');
+});
+test('sustReposToCode: "Original" (sin la palabra repuesto) -> 0', () => {
+  assertEq(_sustReposToCode('Original'), '0');
+});
+
+test('sustitucionText: Alternativo describe repuestos alternativos (no cae al genérico)', () => {
+  const t = _sustitucionText('Alternativo genérico / Usados');
+  assertContains(t, 'alternativos');
+  if (t.includes('condiciones estandar')) throw new Error('cayó al fallback genérico');
+});
+test('sustitucionText: Plus vs Garantía simple se distinguen', () => {
+  assertContains(_sustitucionText('Extensión de garantía Plus'), '8 anos');
+  assertContains(_sustitucionText('Extensión de garantía'), '5 anos');
+});
 
 test('dedDFH valido agrega dd= al URL', () => {
   const url = _buildGuideUrl({ dedDFH: 300000 });

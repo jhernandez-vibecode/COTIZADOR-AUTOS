@@ -384,56 +384,74 @@ function _interestText(key) {
 }
 
 /**
+ * Clasifica el campo "Sustitucion de repuestos" del PDF INS en uno de los 5
+ * tipos que existen en la tabla FORMA DE PAGO. Las cadenas reales vistas:
+ *   "Extension de garantia Plus"   -> 'plus'
+ *   "Extension de garantia"        -> 'garantia'
+ *   "Vehiculo en garantia"         -> 'vehiculo'
+ *   "Original" / "Repuesto original" -> 'original'
+ *   "Alternativo generico / Usados"  -> 'alternativo'
+ * Compara sin acentos y en minusculas. El orden importa: "plus" antes que
+ * "garantia" (la comparte), y "vehiculo" antes que "garantia" sola.
+ * @param {string} label
+ * @returns {string} 'plus'|'garantia'|'vehiculo'|'original'|'alternativo'|''
+ */
+function _reposKind(label) {
+  const n = (label || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  if (n.includes('plus'))                              return 'plus';
+  if (n.includes('alternativ') || n.includes('generic') || n.includes('usad')) return 'alternativo';
+  if (n.includes('vehiculo') && n.includes('garantia')) return 'vehiculo';
+  if (n.includes('extension') || n.includes('garantia')) return 'garantia';
+  if (n.includes('original'))                         return 'original';
+  return '';
+}
+
+/**
  * Devuelve el parrafo descriptivo de la sustitucion de repuestos
- * segun el texto exacto que viene en el PDF del INS.
- * Compara case-insensitive y sin acentos para tolerar variaciones
- * (ej: PDF dice "garantia" minuscula, SKILL menciona "Garantia" mayuscula).
+ * segun el tipo detectado por _reposKind. Describe SOLO la opcion del cliente.
  * @param {string} label - texto del campo "Sustitucion de repuestos" del PDF
  * @returns {string} parrafo descriptivo para el correo
  */
 function _sustitucionText(label) {
-  const norm = (label || '')
-    .toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, ''); // quita acentos
-
-  // Orden importante: "plus" debe ir antes que "garantia" sola
-  if (norm.includes('garantia plus')) {
-    return 'Su vehiculo aplica a repuestos originales de agencia (cobertura hasta 8 anos / 80,000 km segun la Extension de Garantia Plus).';
+  switch (_reposKind(label)) {
+    case 'plus':
+      return 'Su vehiculo aplica a repuestos originales de agencia (cobertura hasta 8 anos / 80,000 km segun la Extension de Garantia Plus).';
+    case 'garantia':
+      return 'Su vehiculo aplica a repuestos originales de agencia (cobertura hasta 5 anos / 60,000 km segun la Extension de Garantia).';
+    case 'vehiculo':
+      return 'Su vehiculo aplica a repuestos originales de agencia mientras se mantenga en garantia de fabrica.';
+    case 'original':
+      return 'Su poliza incluye repuestos originales en taller multimarca o especializado.';
+    case 'alternativo':
+      return 'Su poliza utiliza repuestos alternativos, genericos y/o usados segun disponibilidad del mercado.';
+    default:
+      return 'Su poliza aplica las condiciones estandar de sustitucion de repuestos del INS.';
   }
-  if (norm.includes('garantia')) {
-    return 'Su vehiculo aplica a repuestos originales de agencia (cobertura hasta 5 anos / 60,000 km segun la Extension de Garantia).';
-  }
-  if (norm.includes('repuesto original')) {
-    return 'Su poliza incluye repuestos originales en taller multimarca o especializado.';
-  }
-  if (norm.includes('repuesto alternativo')) {
-    return 'Su poliza utiliza repuestos genericos y/o usados segun disponibilidad del mercado.';
-  }
-  return 'Su poliza aplica las condiciones estandar de sustitucion de repuestos del INS.';
 }
 
 /**
- * Mapea el texto de sustitucion de repuestos del PDF al codigo corto
- * que usa el explicador como URL param `sr`.
- *
- *   "Extension de garantia Plus" -> 'p'
- *   "Extension de garantia"      -> 'g'
- *   "repuesto original"          -> '0'  (carro nuevo)
- *   "repuesto alternativo"       -> 'n'  (sin extension, fila generica)
- *   vacio / desconocido          -> 'n'  (default seguro)
- *
+ * Mapea el tipo de repuesto al codigo corto que usa el explicador como URL
+ * param `sr` (controla que fila de repuestos muestra):
+ *   'plus'       -> 'p'
+ *   'garantia'   -> 'g'
+ *   'vehiculo'   -> '0'  (repuesto original, en garantia de fabrica)
+ *   'original'   -> '0'  (repuesto original)
+ *   'alternativo'-> 'n'  (fila generica/alternativa)
+ *   desconocido  -> 'n'  (default seguro)
  * @param {string} label - texto del PDF
  * @returns {string} codigo de una letra: 'p' | 'g' | '0' | 'n'
  */
 function _sustReposToCode(label) {
-  const norm = (label || '')
-    .toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  if (norm.includes('garantia plus'))       return 'p';
-  if (norm.includes('garantia'))            return 'g';
-  if (norm.includes('repuesto original'))   return '0';
-  if (norm.includes('repuesto alternativo')) return 'n';
-  return 'n';
+  switch (_reposKind(label)) {
+    case 'plus':        return 'p';
+    case 'garantia':    return 'g';
+    case 'vehiculo':    return '0';
+    case 'original':    return '0';
+    case 'alternativo': return 'n';
+    default:            return 'n';
+  }
 }
 
 /**
