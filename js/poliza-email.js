@@ -46,7 +46,11 @@ function buildPolizaActivaEmail(params) {
   var lic      = CFG.LICENSE    || '08-1318';
   var tel      = CFG.PHONE      || '8822-1348';
   var correoAg = CFG.FROM_EMAIL || 'jhernandez@segurosdelins.com';
-  var web      = (CFG.WEBSITE   || 'www.segurosdelins.com').replace(/^https?:\/\//i, '');
+  // website: valor CRUDO del perfil, SIN fallback al sitio del owner. Si el agente
+  // no tiene web propia, queda '' y NO se muestra en la firma (no arrastramos
+  // www.segurosdelins.com de JC al correo de otro agente). Para JC, el default de
+  // config.js ya trae su sitio, así que a él sí le sale.
+  var web      = String(CFG.WEBSITE == null ? '' : CFG.WEBSITE).replace(/^https?:\/\//i, '').trim();
   var logoUrl  = CFG.LOGO_URL   || 'https://cotizador.appsegurosdigitales.com/img/ins-logo.png';
 
   // Guía de emergencia personalizada: embebemos la ficha del agente actual
@@ -75,9 +79,13 @@ function buildPolizaActivaEmail(params) {
     return qs ? base + (base.indexOf('?') >= 0 ? '&' : '?') + qs : base;
   };
 
-  // Links saneados (solo http/https). Si un cross-sell viene vacío, cae al sitio del agente.
-  var siteFallback = web ? ('https://' + web) : '#';
-  var assistUrl = e(_assistUrl()) || siteFallback;
+  // Links saneados (solo http/https). Si un cross-sell viene vacío, cae al sitio
+  // del agente — PERO solo si el agente tiene web propia. Si no la tiene, queda ''
+  // (el botón se oculta abajo) en lugar de arrastrar el sitio del owner.
+  var siteFallback = web ? ('https://' + web) : '';
+  // El botón de asistencia es el CTA central: nunca lo dejamos con href vacío
+  // (ASSIST_URL trae un default real, así que en la práctica siempre resuelve).
+  var assistUrl = e(_assistUrl()) || siteFallback || '#';
   var viajeUrl  = _safe(CFG.XSELL_VIAJE_URL) || siteFallback;
   var estUrl    = _safe(CFG.XSELL_ESTUDIANTIL_URL) || siteFallback;
 
@@ -183,14 +191,14 @@ function buildPolizaActivaEmail(params) {
         '<p style="margin:0 0 2px;font-size:22px;line-height:1;">&#9992;&#65039;</p>' +
         '<p style="margin:6px 0 2px;font-family:' + fontFam + ';font-size:14px;font-weight:700;color:#0c2340;">Seguros de Viaje</p>' +
         '<p style="margin:0 0 12px;font-size:12px;color:#475569;line-height:1.5;">Proteja su próxima aventura dentro y fuera del país.</p>' +
-        '<a href="' + viajeUrl + '" style="display:inline-block;background:#0369a1;color:#ffffff;text-decoration:none;border-radius:8px;padding:9px 18px;font-family:' + fontFam + ';font-weight:700;font-size:13px;">Comprar &rarr;</a>' +
+        (viajeUrl ? '<a href="' + viajeUrl + '" style="display:inline-block;background:#0369a1;color:#ffffff;text-decoration:none;border-radius:8px;padding:9px 18px;font-family:' + fontFam + ';font-weight:700;font-size:13px;">Comprar &rarr;</a>' : '') +
       '</td>' +
       // Estudiantil
       '<td width="50%" valign="top" style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:16px;">' +
         '<p style="margin:0 0 2px;font-size:22px;line-height:1;">&#127891;</p>' +
         '<p style="margin:6px 0 2px;font-family:' + fontFam + ';font-size:14px;font-weight:700;color:#0c2340;">Seguro Estudiantil</p>' +
         '<p style="margin:0 0 12px;font-size:12px;color:#475569;line-height:1.5;">Asegure el futuro de sus hijos durante todo el año lectivo.</p>' +
-        '<a href="' + estUrl + '" style="display:inline-block;background:#16a34a;color:#ffffff;text-decoration:none;border-radius:8px;padding:9px 18px;font-family:' + fontFam + ';font-weight:700;font-size:13px;">Comprar &rarr;</a>' +
+        (estUrl ? '<a href="' + estUrl + '" style="display:inline-block;background:#16a34a;color:#ffffff;text-decoration:none;border-radius:8px;padding:9px 18px;font-family:' + fontFam + ';font-weight:700;font-size:13px;">Comprar &rarr;</a>' : '') +
       '</td>' +
     '</tr></table>' +
   '</td></tr>' +
@@ -201,7 +209,7 @@ function buildPolizaActivaEmail(params) {
     '<p style="margin:10px 0 0;font-family:' + fontFam + ';font-weight:700;color:#0c2340;font-size:14px;">' + e(agente) + '</p>' +
     '<p style="margin:2px 0 0;font-size:11px;color:#64748b;line-height:1.6;">Agente de Seguros Exclusivo &middot; Instituto Nacional de Seguros<br>' +
       'Licencia SUGESE ' + e(lic) + ' &middot; Tel: ' + e(tel) + '<br>' +
-      '<a href="mailto:' + e(correoAg) + '" style="color:#0369a1;text-decoration:none;">' + e(correoAg) + '</a> &middot; ' + e(web) +
+      '<a href="mailto:' + e(correoAg) + '" style="color:#0369a1;text-decoration:none;">' + e(correoAg) + '</a>' + (web ? (' &middot; ' + e(web)) : '') +
     '</p>' +
   '</td></tr>' +
 

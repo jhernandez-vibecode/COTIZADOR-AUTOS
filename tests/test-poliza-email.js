@@ -75,6 +75,18 @@ ok('multiagente-tel',    html2.indexOf('tel=7000-0000') !== -1 && html2.indexOf(
 ok('multiagente-correo', html2.indexOf('em=pedro%40correo.com') !== -1);
 ok('multiagente-lic',    html2.indexOf('lic=09-9999') !== -1);
 ok('multiagente-sep',    html2.indexOf('/?n=Pedro') !== -1);   // primer parámetro con '?', no '&'
+// La web del owner (segurosdelins.com) NO debe filtrarse al correo de un agente
+// sin web propia — ni en la firma ni como fallback de los botones cross-sell.
+ok('multiagente-sin-web-owner', html2.indexOf('segurosdelins.com') === -1);
+
+// Firma del owner (html = config JC): SU web sí debe salir en la firma.
+ok('firma-web-owner', html.indexOf(' &middot; www.segurosdelins.com') !== -1);
+
+// Agente CON su propia web → la firma muestra SU sitio, nunca el del owner.
+global.CFG.WEBSITE = 'www.pedroseguros.com';
+var html3 = buildPolizaActivaEmail({ nombrePila: 'Ana', poliza: 'P', vehiculo: 'V', placa: 'PL' });
+ok('agente-web-propia',   html3.indexOf('www.pedroseguros.com') !== -1);
+ok('agente-web-no-owner', html3.indexOf('segurosdelins.com') === -1);
 
 console.log('\npoliza-email: ' + pass + ' OK, ' + fail + ' FAIL');
 process.exit(fail ? 1 : 0);

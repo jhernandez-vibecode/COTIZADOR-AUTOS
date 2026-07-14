@@ -613,7 +613,9 @@ function buildFollowUpEmail(p) {
   // PHONE primero (campo obligatorio del perfil = siempre del agente). WHATSAPP es
   // opcional; si se pusiera primero, un agente sin WhatsApp mostraría el de JC (default).
   const contacto = _escHtml(CFG.PHONE  || CFG.WHATSAPP || '8822-1348');
-  const web      = _escHtml(CFG.WEBSITE   || 'segurosdelins.com');
+  // Sin fallback a la web del owner: si el agente no tiene web propia, queda ''
+  // y no se muestra (misma regla que el correo de cotización principal).
+  const web      = CFG.WEBSITE ? _escHtml(CFG.WEBSITE) : '';
   const fontFam  = "'Inter','Segoe UI',Arial,Helvetica,sans-serif";
 
   return `<!DOCTYPE html>
@@ -668,7 +670,7 @@ function buildFollowUpEmail(p) {
               <div style="border-top:1px solid #e5e7eb;padding-top:16px;font-size:13px;color:#374151;line-height:1.6;">
                 <div style="font-weight:700;color:#0c2340;">${agente}</div>
                 <div>Agente de seguros del INS &middot; Licencia SUGESE ${lic}</div>
-                <div>WhatsApp / Tel: ${contacto} &middot; ${web}</div>
+                <div>WhatsApp / Tel: ${contacto}${web ? ' &middot; ' + web : ''}</div>
               </div>
             </td>
           </tr>
