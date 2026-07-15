@@ -34,6 +34,16 @@ const CFG = {
   GMAIL_SCOPE:    'https://www.googleapis.com/auth/gmail.send',
   GMAIL_SEND_URL: 'https://gmail.googleapis.com/gmail/v1/users/me/messages/send',
 
+  // Respaldo del control (historial + estados 📊 + perfil) en Google Drive.
+  // Scope 'drive.appdata': una carpeta PRIVADA y OCULTA por-app y por-cuenta.
+  // Multi-agente por diseño: cada agente respalda en SU propio Drive; nadie más
+  // lo ve. Es un token SEPARADO del de Gmail (drive-sync.js) para no arriesgar
+  // el envío de correos si el agente no autoriza Drive.
+  DRIVE_SCOPE:       'https://www.googleapis.com/auth/drive.appdata',
+  DRIVE_FILES_URL:   'https://www.googleapis.com/drive/v3/files',
+  DRIVE_UPLOAD_URL:  'https://www.googleapis.com/upload/drive/v3/files',
+  DRIVE_BACKUP_NAME: 'cotizador-sdi-control.json',
+
   // Worker de PDF.js
   PDFJS_WORKER: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
 };

@@ -119,6 +119,12 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
+  // ============ RESPALDO EN GOOGLE DRIVE (dentro del modal ⚙) ============
+  var _btnDriveSync = document.getElementById('btnDriveSync');
+  if (_btnDriveSync) _btnDriveSync.addEventListener('click', driveSyncNow);
+  var _btnDriveRestore = document.getElementById('btnDriveRestore');
+  if (_btnDriveRestore) _btnDriveRestore.addEventListener('click', driveRestoreNow);
+
   // ============ MODAL DE HISTORIAL DE ENVIOS ============
   document.getElementById('btnHistory').addEventListener('click', openHistoryModal);
   document.getElementById('btnHistoryClose').addEventListener('click', closeHistoryModal);
@@ -218,12 +224,96 @@ function openProfileModal(firstTime) {
     btnClose.style.display  = '';
   }
 
+  if (typeof _refreshDriveStatus === 'function') _refreshDriveStatus();
+
   modal.classList.add('active');
   setTimeout(function () { document.getElementById('p-name').focus(); }, 100);
 }
 
 function closeProfileModal() {
   document.getElementById('profileModal').classList.remove('active');
+}
+
+// =====================================================================
+// RESPALDO EN GOOGLE DRIVE (⚙) — historial + estados 📊 + perfil del agente
+// La lógica de red/OAuth vive en drive-sync.js; acá van UI, toasts y re-render.
+// =====================================================================
+
+/** Refresca la línea de estado del respaldo en el modal ⚙. */
+function _refreshDriveStatus() {
+  const el = document.getElementById('driveStatus');
+  if (!el) return;
+  if (typeof driveBackupEnabled !== 'function' || !driveBackupEnabled()) {
+    el.textContent = '⚪ Respaldo desactivado. Tocá “Sincronizar ahora” para guardar tu control en tu Google Drive.';
+    return;
+  }
+  const last = driveLastBackup();
+  let when = 'aún sin subir';
+  if (last) {
+    const d = new Date(last);
+    if (!isNaN(d.getTime())) {
+      when = d.toLocaleString('es-CR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+    }
+  }
+  el.textContent = '✅ Respaldo activo en tu Google Drive · Último: ' + when + '.';
+}
+
+/** Repinta las listas abiertas (historial / estadísticas) tras cambiar los datos. */
+function _refreshOpenLists() {
+  const hist = document.getElementById('historyModal');
+  if (hist && hist.classList.contains('active') && typeof renderHistory === 'function') renderHistory();
+  const stats = document.getElementById('statsModal');
+  if (stats && stats.classList.contains('active') && typeof renderStats === 'function') renderStats();
+}
+
+/** Botón "Sincronizar ahora": activa el respaldo y deja Drive ↔ local idénticos. */
+async function driveSyncNow() {
+  const btn = document.getElementById('btnDriveSync');
+  const orig = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Sincronizando…'; }
+  try {
+    const res = await driveSync();
+    _refreshDriveStatus();
+    _refreshOpenLists();
+    const n = (res && res.found) ? res.merged : loadHistory().length;
+    showToast('Respaldo activado. Tu control quedó guardado en tu Google Drive (' + n + ' cotización' + (n === 1 ? '' : 'es') + ').', 'success');
+  } catch (e) {
+    console.error('[drive] sync:', e);
+    showToast('No se pudo sincronizar con Drive: ' + e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = orig; }
+  }
+}
+
+/** Botón "Restaurar de Drive": trae y fusiona el respaldo (y el perfil si falta). */
+async function driveRestoreNow() {
+  const btn = document.getElementById('btnDriveRestore');
+  const orig = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Restaurando…'; }
+  try {
+    const res = await driveRestore();
+    if (!res.found) {
+      showToast('No hay respaldo en tu Drive todavía. Usá “Sincronizar ahora” para crearlo.', 'info');
+      return;
+    }
+    driveEnable();
+    driveResetAuto();
+    if (res.profileRestored) {
+      // Se recuperó también el perfil (caso "limpié el navegador"): recargamos
+      // para que la app arranque ya configurada y con el historial de vuelta.
+      showToast('Recuperé tu configuración y ' + res.merged + ' cotizaciones. Recargando…', 'success');
+      setTimeout(function () { location.reload(); }, 1100);
+      return;
+    }
+    _refreshDriveStatus();
+    _refreshOpenLists();
+    showToast('Recuperé ' + res.merged + ' cotizaciones desde tu Drive.', 'success');
+  } catch (e) {
+    console.error('[drive] restore:', e);
+    showToast('No se pudo restaurar desde Drive: ' + e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = orig; }
+  }
 }
 
 // =====================================================================
@@ -248,7 +338,15 @@ function renderHistory() {
   const entries = loadHistory();
 
   if (!entries.length) {
-    list.innerHTML = '<div class="history-empty">Aún no has enviado cotizaciones desde este navegador.</div>';
+    list.innerHTML =
+      '<div class="history-empty">Aún no has enviado cotizaciones desde este navegador.</div>' +
+      '<div style="margin-top:14px;text-align:center;">' +
+        '<p style="margin:0 0 8px;font-size:12px;color:var(--gray-500,#64748b);">' +
+          '¿Ya usabas la app antes o limpiaste este navegador? Recuperá tu control desde tu Google Drive:</p>' +
+        '<button class="btn btn-secondary" id="btnHistoryRestore" type="button">☁️ Restaurar de Drive</button>' +
+      '</div>';
+    var _hr = document.getElementById('btnHistoryRestore');
+    if (_hr) _hr.addEventListener('click', driveRestoreNow);
     return;
   }
 
@@ -912,6 +1010,9 @@ function handleProfileSave() {
     showToast(e.message, 'error');
     return;
   }
+
+  // Si el respaldo en Drive está activo, sube también la configuración nueva.
+  if (typeof scheduleDriveBackup === 'function') scheduleDriveBackup();
 
   showToast('Perfil guardado.', 'success');
   closeProfileModal();

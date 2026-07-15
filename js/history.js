@@ -72,10 +72,12 @@ function loadHistory() {
  */
 function saveHistoryEntry(entry) {
   try {
+    if (entry && !entry.updatedAt) entry.updatedAt = entry.date || _nowIso();
     const arr = loadHistory();
     arr.unshift(entry);
     if (arr.length > HISTORY_MAX) arr.length = HISTORY_MAX;
     localStorage.setItem(HISTORY_KEY, JSON.stringify(arr));
+    _afterHistoryChange();
   } catch (e) {
     console.warn('[history] no se pudo guardar la entrada:', e);
   }
@@ -90,6 +92,23 @@ function clearHistory() {
   } catch (e) {
     console.warn('[history] error borrando localStorage:', e);
   }
+}
+
+/**
+ * Punto ÚNICO por el que pasan TODAS las mutaciones del historial (crear,
+ * cambiar estado, seguimiento, borrar…). Dispara el respaldo en Drive si el
+ * módulo drive-sync está cargado y el agente lo activó. En Node (tests) la
+ * función no existe → se ignora sin romper. Nunca lanza.
+ */
+function _afterHistoryChange() {
+  try {
+    if (typeof scheduleDriveBackup === 'function') scheduleDriveBackup();
+  } catch (e) { /* el respaldo jamás debe tumbar una operación del historial */ }
+}
+
+/** Sello de tiempo ISO para marcar la última modificación de una entrada. */
+function _nowIso() {
+  try { return new Date().toISOString(); } catch (e) { return ''; }
 }
 
 /**
@@ -136,7 +155,9 @@ function setLatestHistoryWa(waCliente) {
     const arr = loadHistory();
     if (arr.length && waCliente) {
       arr[0].waCliente = waCliente;
+      arr[0].updatedAt = _nowIso();
       localStorage.setItem(HISTORY_KEY, JSON.stringify(arr));
+      _afterHistoryChange();
     }
   } catch (e) {
     console.warn('[history] no se pudo actualizar waCliente:', e);
@@ -298,7 +319,9 @@ function setHistoryEstado(id, estado, citaFecha) {
     } else {
       delete e.citaFecha;  // al salir de 'agendada' no queda fecha de cita vieja latente
     }
+    e.updatedAt = _nowIso();
     localStorage.setItem(HISTORY_KEY, JSON.stringify(arr));
+    _afterHistoryChange();
     return true;
   } catch (err) {
     console.warn('[history] no se pudo actualizar el estado:', err);
@@ -325,7 +348,9 @@ function dismissFollowUp(id) {
     const e = arr.find(function (x) { return x && x.id === id; });
     if (!e) return false;
     e.followUpDismissed = true;
+    e.updatedAt = _nowIso();
     localStorage.setItem(HISTORY_KEY, JSON.stringify(arr));
+    _afterHistoryChange();
     return true;
   } catch (err) {
     console.warn('[history] no se pudo descartar el seguimiento:', err);
@@ -348,6 +373,7 @@ function deleteHistoryEntry(id) {
     if (idx === -1) return false;
     arr.splice(idx, 1);
     localStorage.setItem(HISTORY_KEY, JSON.stringify(arr));
+    _afterHistoryChange();
     return true;
   } catch (e) {
     console.warn('[history] no se pudo eliminar la entrada:', e);
@@ -369,7 +395,9 @@ function setHistoryFollowUp(id, iso) {
     const e = arr.find(function (x) { return x && x.id === id; });
     if (!e) return false;
     e.followUpAt = iso || new Date().toISOString();
+    e.updatedAt = _nowIso();
     localStorage.setItem(HISTORY_KEY, JSON.stringify(arr));
+    _afterHistoryChange();
     return true;
   } catch (err) {
     console.warn('[history] no se pudo marcar el seguimiento:', err);
@@ -525,4 +553,85 @@ function buildWaFollowUpUrl(entry, phoneOverride) {
   return 'https://web.whatsapp.com/send/?'
     + (phone ? 'phone=' + phone + '&' : '')
     + 'text=' + encodeURIComponent(msg);
+}
+
+// =====================================================================
+// FUSIÓN / RESPALDO (para sincronización con Google Drive — drive-sync.js)
+// Todo PURO y testeable: recibe/devuelve arrays, no toca la red.
+// =====================================================================
+
+/**
+ * Clave de identidad de una entrada para deduplicar al fusionar. Prefiere el id
+ * estable; si una entrada legacy no lo tiene, cae a una firma de sus datos.
+ * @param {object} e
+ * @returns {string}
+ */
+function _entryKey(e) {
+  if (e && e.id) return 'id:' + e.id;
+  return 'k:' + [
+    (e && e.date) || '',
+    historyEntryPlate(e),
+    (e && e.email) || '',
+    (e && e.client) || ''
+  ].join('|');
+}
+
+/** Sello de última MODIFICACIÓN (ms) para resolver conflictos: gana el más nuevo. */
+function _entryStamp(e) {
+  const t = Date.parse((e && (e.updatedAt || e.date)) || '');
+  return isFinite(t) ? t : 0;
+}
+
+/** Sello de ENVÍO (ms) para ordenar la lista: la cotización más reciente primero. */
+function _dateStamp(e) {
+  const t = Date.parse((e && e.date) || '');
+  return isFinite(t) ? t : 0;
+}
+
+/**
+ * Fusiona dos historiales SIN perder datos. Unión por identidad de entrada; si
+ * la misma entrada aparece en ambos lados, gana la de `updatedAt` más reciente
+ * (así el estado agendada/concretada más nuevo prevalece). El resultado queda
+ * ordenado por fecha de envío (más reciente primero) y recortado a HISTORY_MAX.
+ *
+ * Casos que cubre:
+ *   - Restaurar tras limpiar el navegador: local vacío + Drive lleno → Drive.
+ *   - Dos computadoras: unión de ambas, conservando el estado más avanzado.
+ *
+ * @param {Array<object>} a
+ * @param {Array<object>} b
+ * @returns {Array<object>}
+ */
+function mergeHistories(a, b) {
+  const map = {};
+  const add = function (e) {
+    if (!e) return;
+    const k = _entryKey(e);
+    const prev = map[k];
+    if (!prev || _entryStamp(e) >= _entryStamp(prev)) map[k] = e;
+  };
+  (Array.isArray(a) ? a : []).forEach(add);
+  (Array.isArray(b) ? b : []).forEach(add);
+  const out = Object.keys(map).map(function (k) { return map[k]; });
+  out.sort(function (x, y) { return _dateStamp(y) - _dateStamp(x); });
+  if (out.length > HISTORY_MAX) out.length = HISTORY_MAX;
+  return out;
+}
+
+/**
+ * Reemplaza TODO el historial guardado por el array dado (ya fusionado).
+ * Lo usa la restauración desde Drive. Recorta a HISTORY_MAX. Nunca lanza.
+ * NO dispara respaldo (evita un bucle: se restaura, no se vuelve a subir aquí).
+ * @param {Array<object>} arr
+ * @returns {boolean} true si se guardó
+ */
+function replaceHistory(arr) {
+  try {
+    const list = (Array.isArray(arr) ? arr : []).slice(0, HISTORY_MAX);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+    return true;
+  } catch (e) {
+    console.warn('[history] no se pudo reemplazar el historial:', e);
+    return false;
+  }
 }

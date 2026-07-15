@@ -10,5 +10,7 @@ const S = {
   modPDF:       null,     // Uint8Array del PDF ya limpiado (sin filas Mensual/Deducción)
   accessToken:  null,     // token OAuth Gmail vigente (dura 1h)
   tokenClient:  null,     // instancia de Google Identity Services
-  prevTimer:    null      // debounce de la vista previa del correo
+  prevTimer:    null,     // debounce de la vista previa del correo
+  driveTokenClient: null, // instancia GIS para el scope de Drive (respaldo)
+  driveToken:   null      // token OAuth con scope drive.appdata (dura 1h)
 };
