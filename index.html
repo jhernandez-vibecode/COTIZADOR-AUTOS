@@ -248,6 +248,16 @@
 
   <main class="container">
 
+    <!-- ===== Invitación (una vez) a activar el respaldo en Drive ===== -->
+    <div id="driveInvite" style="display:none;align-items:center;gap:14px;flex-wrap:wrap;margin:0 0 18px;background:var(--navy,#0c2340);color:#fff;border-radius:12px;padding:14px 16px;">
+      <span style="font-size:22px;line-height:1;">☁️</span>
+      <div style="flex:1;min-width:220px;font-size:13px;line-height:1.45;">
+        <strong>Protegé tu control de cotizaciones.</strong> Activá el respaldo en tu Google Drive para no perderlo si limpiás el navegador o cambiás de computadora. Es un clic, una sola vez.
+      </div>
+      <button class="btn btn-primary" id="btnDriveInviteActivate" type="button" style="white-space:nowrap;">Activar respaldo</button>
+      <button id="btnDriveInviteDismiss" type="button" aria-label="Ahora no" title="Ahora no" style="background:transparent;border:0;color:#cbd5e1;font-size:22px;line-height:1;cursor:pointer;padding:0 4px;">×</button>
+    </div>
+
     <!-- ======================== VISTA 1 · SUBIR PDF ======================== -->
     <section class="view active" id="view1">
       <div class="card">

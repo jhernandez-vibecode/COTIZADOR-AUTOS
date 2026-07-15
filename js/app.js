@@ -124,6 +124,11 @@ document.addEventListener('DOMContentLoaded', function () {
   if (_btnDriveSync) _btnDriveSync.addEventListener('click', driveSyncNow);
   var _btnDriveRestore = document.getElementById('btnDriveRestore');
   if (_btnDriveRestore) _btnDriveRestore.addEventListener('click', driveRestoreNow);
+  // Barra de invitación (una vez) a activar el respaldo
+  var _btnInviteAct = document.getElementById('btnDriveInviteActivate');
+  if (_btnInviteAct) _btnInviteAct.addEventListener('click', driveSyncNow);
+  var _btnInviteDis = document.getElementById('btnDriveInviteDismiss');
+  if (_btnInviteDis) _btnInviteDis.addEventListener('click', dismissDriveInvite);
 
   // ============ MODAL DE HISTORIAL DE ENVIOS ============
   document.getElementById('btnHistory').addEventListener('click', openHistoryModal);
@@ -175,6 +180,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // Aviso al inicio (citas de hoy + seguimientos +3d). Solo con perfil
     // configurado; pequeño delay para no chocar con el render inicial.
     setTimeout(maybeShowAviso, 400);
+    // Invitación (una vez) a activar el respaldo en Drive si aún no lo hizo.
+    maybeShowDriveInvite();
   } else {
     openProfileModal(true);
   }
@@ -273,6 +280,7 @@ async function driveSyncNow() {
   if (btn) { btn.disabled = true; btn.textContent = 'Sincronizando…'; }
   try {
     const res = await driveSync();
+    _hideDriveInvite();
     _refreshDriveStatus();
     _refreshOpenLists();
     const n = (res && res.found) ? res.merged : loadHistory().length;
@@ -314,6 +322,30 @@ async function driveRestoreNow() {
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = orig; }
   }
+}
+
+// ---- Barra de invitación (una vez) a activar el respaldo en Drive ----
+var DRIVE_INVITE_DISMISS_KEY = 'cotizador_sdi_drive_invite_dismissed_v1';
+
+/** Muestra la barra si el agente ya tiene perfil, aún no activó el respaldo y no la descartó. */
+function maybeShowDriveInvite() {
+  var el = document.getElementById('driveInvite');
+  if (!el) return;
+  if (!loadProfile()) return;                                             // primer uso: no molestar
+  if (typeof driveBackupEnabled === 'function' && driveBackupEnabled()) return;  // ya activo
+  try { if (localStorage.getItem(DRIVE_INVITE_DISMISS_KEY) === '1') return; } catch (e) { /* noop */ }
+  el.style.display = 'flex';
+}
+
+function _hideDriveInvite() {
+  var el = document.getElementById('driveInvite');
+  if (el) el.style.display = 'none';
+}
+
+/** "Ahora no": oculta la barra y no la vuelve a mostrar en este navegador. */
+function dismissDriveInvite() {
+  try { localStorage.setItem(DRIVE_INVITE_DISMISS_KEY, '1'); } catch (e) { /* noop */ }
+  _hideDriveInvite();
 }
 
 // =====================================================================
