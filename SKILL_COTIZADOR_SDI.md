@@ -1,17 +1,26 @@
 ---
-name: cotizador-sdi
+name: especialista-cotizador-autos-sdi
 description: >
-  Especialista en Cotizador SDI - App web vanilla JS que extrae datos
-  de PDFs de cotizacion INS, los limpia, genera correo HTML personalizado
-  y lo envia SOLO via Gmail API. Multi-agente via localStorage, sin
-  backend. Stack 100% sin build (HTML + JS vanilla, sin Tailwind).
-  Incluye calculadora de cancelacion anticipada con envio de informe al
-  cliente, historial de envios y compartir por WhatsApp. Usar cuando Juan
-  Carlos pida construir, modificar o depurar cualquier modulo de esta app.
-  Leer COMPLETO antes de escribir cualquier codigo.
+  CHECKPOINT EXTENDIDO del Cotizador Autos SDI - App web vanilla JS que extrae
+  datos de PDFs de cotizacion INS, los limpia, genera correo HTML personalizado
+  y lo envia SOLO via Gmail API. Multi-agente via localStorage, sin backend.
+  Stack 100% sin build (HTML + JS vanilla, sin Tailwind). Incluye calculadora de
+  cancelacion anticipada, envio de polizas activas, explicador, tabla de marcas,
+  historial + estadisticas y respaldo en Google Drive. Este archivo es el
+  HISTORICO LARGO; el router vigente es el skill de usuario
+  /especialista-cotizador-autos-sdi.
 ---
 
-# Cotizador SDI - Checkpoint 11 junio 2026
+# Cotizador SDI — Checkpoint extendido (historico largo)
+
+> **Cual leer primero.** El **router vigente** es el skill de usuario
+> `C:/Users/segur/.claude/skills/especialista-cotizador-autos-sdi/SKILL.md`
+> (`/especialista-cotizador-autos-sdi`): estado actual, reglas, gotchas y pendientes.
+> **Este archivo** es el historico largo (decisiones viejas, commits, root causes) y vive
+> en la raiz del repo. Los dos deben decir lo mismo sobre los hechos que comparten; si se
+> contradicen, **manda el router de usuario** para lo vigente y este para el detalle historico.
+> Hay una tercera copia espejo en `C:/Users/segur/Downloads/SKILL_COTIZADOR_SDI.md`
+> (⚠️ Downloads lo barren los limpiadores de disco — la del repo es la que manda).
 
 > ## ✅ NUEVO — 13 jul 2026: El PDF INS trae MATRIZ de precios por tipo de repuesto (EN PROD, commits `acfa5db` + `84aca0d`)
 > El INS rediseñó la **página 2** del PDF de cotización (ASINS-170): la tabla **FORMA DE PAGO** pasó de **UNA
@@ -98,10 +107,10 @@ description: >
 > - **Seguimiento por fila:** 💬 WhatsApp (`buildWaFollowUpUrl`, mensaje distinto al de guía)
 >   + ✉️ correo (`buildFollowUpEmail` texto+colores SIN imágenes; `buildMIMESimple` MIME sin
 >   adjunto; mismo pipeline Gmail `getToken`→`sendEmail`).
-> - **Contador + filtro ⏳ Para seguir:** cada fila muestra "hace N días"; insignia `⏳ seguir` +
+> - **Contador + filtro ⏳ Para seguir (commit `ba0daab`):** cada fila muestra "hace N días"; insignia `⏳ seguir` +
 >   chip de filtro para enviadas hace +3 días, SIN confirmar y aún vigentes (≤15d) —
 >   `historyDaysSince`/`historyNeedsFollowUp`. Estado de chip = `_statsFilter` ('all'|'high'|'followup').
-> - **Eliminar registro:** botón 🗑 (`.history-btn.danger`) por fila → `deleteHistoryEntry(id)` con
+> - **Eliminar registro (commit `8b9ef21`):** botón 🗑 (`.history-btn.danger`) por fila → `deleteHistoryEntry(id)` con
 >   confirm. Para borrar pruebas/duplicados; PERMANENTE. Historial compartido → se va de 📊 y 🕘.
 > - **history.js** suma: ids estables (`newHistoryId`/`ensureHistoryIds`), `confirmed`, `valor`,
 >   y funciones PURAS `computeHistoryStats`/`groupHistoryByMonth`/`historyEntryValue`/`setHistoryConfirmed`.
@@ -119,8 +128,14 @@ description: >
 > - **Nuevos módulos**: `js/toast.js` (notificaciones), `js/history.js` (historial
 >   de envíos + WhatsApp), `404.html`, `netlify.toml` (404 docs + headers seguridad).
 > - **XSS del explicador cerrado** (esc + safeHttpUrl). Param `dd` (deducible real).
-> - **Marcas**: 56 entradas, alias de búsqueda, hint del toggle 🌏 corregido.
-> - 8 commits aislados sobre tag `pre-e2e-11jun`, **sin push** (esperan autorización).
+> - **Marcas**: **58 entradas** (se agregó SUZUKI Eléctrico+Híbrido "No Aplica" al cotejar
+>   contra el PDF oficial "Marcas Alta Siniestralidad"; la tabla pasó de 56 → 58), alias de
+>   búsqueda, hint del toggle 🌏 corregido.
+> - **14 commits pusheados a main** sobre el tag `pre-e2e-11jun` (= `4c16d79`), HEAD de la
+>   tanda `e08fa75`. Contado en git el 22 jul 2026
+>   (`git rev-list --count pre-e2e-11jun..e08fa75` = 14, todos con fecha 11 jun 2026).
+>   **TODO EN PRODUCCIÓN** — la nota vieja de "8 commits sin push, esperan autorización"
+>   quedó desactualizada.
 > - Ver el SKILL user-level (`especialista-cotizador-autos-sdi`) para el detalle vigente.
 
 ## Estado actual (histórico — pre 11 jun)
@@ -129,9 +144,10 @@ Multi-agente operativo via localStorage. Gmail Y Outlook soportados
 (selector de proveedor en modal ⚙). Correo con logo INS y headers
 RFC 2047. Probado en produccion con PDF real BRK454 y cotizacion THG170.
 **Calculadora de cancelacion anticipada** en `/cancelacion/`.
-**Detalle de coberturas vigentes** en `/coberturas/` + `/detalle/`.
+~~**Detalle de coberturas vigentes** en `/coberturas/` + `/detalle/`~~ — **ELIMINADO el 29 jun 2026**.
 **Marcas con deducible diferenciado (INS)** en `/marcas-recargo/`.
-**Skill especialista** creado: `especialista-cotizador-sdi` en skills de Claude Code.
+**Skill especialista:** `especialista-cotizador-autos-sdi` (el nombre viejo `especialista-cotizador-sdi`
+ya no existe en `C:/Users/segur/.claude/skills/`).
 
 ## Decisiones recientes
 
@@ -154,9 +170,46 @@ El badge del nivel sin extension cambia de "Repuesto Generico" a **"Alternativo 
 - `446c116` fix(explicador): etiqueta repuesto alternativo con nombre oficial INS
 
 **Skill especialista creado:**
-- Archivo: `C:/Users/segur/.claude/skills/especialista-cotizador-sdi/SKILL.md`
-- Disponible como `/especialista-cotizador-sdi` en futuras sesiones
+- Archivo: `C:/Users/segur/.claude/skills/especialista-cotizador-autos-sdi/SKILL.md`
+- Disponible como `/especialista-cotizador-autos-sdi` en futuras sesiones
 - Contiene: arquitectura, archivos clave, orden JS, flags de vehiculo, tabla sr, gotchas, reglas de no cambiar
+- **Commit de docs:** `4c16d79` docs(skill): checkpoint 28 mayo 2026 — fix repuestos + skill especialista.
+  Es tambien el commit al que apunta el tag de rollback `pre-e2e-11jun`.
+
+---
+
+### 27 mayo 2026 — Seccion "📅 ¿Que pasara el dia de tu cita?" en el explicador (EN PROD, commit `31ec130`)
+
+**Pedido de JC:** anticipar al cliente los 4 pasos del aseguramiento virtual (preparar vehiculo /
+subir fotos por QR / aceptar con token / pagar) para bajar la friccion antes del CTA de agendar.
+
+**Implementado en produccion — `<section id="qtcita">` en `explicacion/index.html`:**
+- Va **entre `s5` (Pagos) y el bloque de cierre**. Es una seccion nueva, no reemplaza ninguna.
+- Pill cyan "📅 ¿Que pasara el dia de tu cita?" + titulo "Tu aseguramiento es 100% virtual".
+- **4 pasos numerados** en timeline vertical (`.cita-steps` › `.cita-step` › `.num-circle` con
+  gradient azul + `.step-body`):
+  1. 🚗 **Preparate** — vehiculo a mano, en lugar iluminado y limpio; se toman fotos del exterior
+     para registrar el estado antes de activar la poliza.
+  2. 📸 **Sube tus fotos** — llega un **Codigo QR al correo**, se escanea con el celular y se cargan
+     las fotos desde ahi, sin instalar aplicaciones.
+  3. 📲 **Aceptacion digital** — revisadas las fotos se envia la poliza; el cliente la acepta desde
+     el celular con un **Token de seguridad**. Sin papeles fisicos ni firma presencial.
+  4. 💳 **Pago y listo** — paga y el vehiculo queda asegurado al instante; recibe la poliza por correo.
+- **Bloque de metodos de pago** (`.cita-pay-methods`): 💳 tarjeta (link de pago seguro) · 📱 SINPE Movil ·
+  🏦 transferencia a cuentas del INS · 🌐 link a `insenlinea.grupoins.com`.
+- **Navegacion:** el boton "next" de `s5` paso de "Agendar mi cita ✓" a **"Avanzar →"**
+  (`data-target="qtcita"`); el pie de `qtcita` tiene "← Pagos" + "Agendar mi cita ✓", que hace
+  scroll al `.cta-rect` del cierre (no abre el formulario directo).
+- **Estilos:** reusan los tokens existentes (`--azul`, `--azul-deep`, `--cyan-bg`, Space Grotesk + Inter).
+  No introdujo paleta nueva.
+- **NO se toco:** header, ribbon, sticky-nav ni floatNav. La sticky-nav sigue con **5 dots** (s1…s5) y
+  el contador flotante sigue diciendo **"1 / 5"** — `qtcita` es a proposito una seccion **sin dot**.
+  No tratarlo como bug; si algun dia se renumera el explicador, hay que decidir si entra como 6º dot.
+
+**Mockup de rediseño completo (parking, NO aplicado):** `C:/Users/segur/mockup-c-final.html` — estilo C
+"Digital claro y eficiente" con DM Sans, iconos SVG Lucide, tabs de asistencia por rango 0-6 / 7-15,
+comparacion visual de IDD y esta misma seccion "¿Que pasara?" en version sin emojis. Sigue siendo
+opcion viable para un rediseño futuro del explicador entero.
 
 ---
 
@@ -180,7 +233,7 @@ El badge del nivel sin extension cambia de "Repuesto Generico" a **"Alternativo 
 | `js/email-template.js:117-126, 471-476, 506-509` | `_buildGuideUrl` serializa `og=1` y `ag=1` |
 | `js/email-template.js:130-163, 204-205` | **Punto 2 del correo dinamico** segun toggles (titulo + texto cambian, ya NO miente con "cero deducible") |
 | `explicacion/index.html` | +2 secciones (s3a + s3b) con CSS rose/violet, **sustituyen** s3 segun flags, dot del paso 3 se reapunta dinamicamente |
-| `marcas-recargo/index.html` | Subpagina nueva con tabla literal del Excel INS (56 entradas), busqueda + chips, fuentes citadas |
+| `marcas-recargo/index.html` | Subpagina nueva con tabla literal del Excel INS (56 entradas al nacer; **hoy 58**, ver abajo), busqueda + chips, fuentes citadas |
 | `index.html` header | Boton 📋 entre 🧮 y 🛡 → /marcas-recargo/ en pestana nueva |
 
 **Reglas INS aplicadas (verificar contra fuentes oficiales antes de modificar):**
@@ -204,15 +257,31 @@ El badge del nivel sin extension cambia de "Repuesto Generico" a **"Alternativo 
 - `vt=e` (preexistente) → vehiculo electrico/hibrido
 
 **Pagina /marcas-recargo/ (consulta del agente):**
-- 56 entradas literales del Excel oficial INS (marca + combustible + recargo + deducible)
-- 2 reglas resumen arriba (origen asiatico = tabla, alta gama = suma ≥ ¢50M independiente)
-- Filtros: busqueda por marca + chips (Todas / Recargo aplica / No aplica)
+- 🔴 **CONTEO VIGENTE = 58 entradas** literales del Excel oficial INS (marca + combustible + ¿recargo? +
+  deducible aplicable). Nacio con 55, se corrigio el drift a 56 (commit `5d58b60`) y el 11 jun 2026 se
+  agrego **SUZUKI** (Electrico + Hibrido, "No Aplica") al cotejar contra el PDF oficial "Marcas Alta
+  Siniestralidad" → **58**, verificado en el array `DATA` de `marcas-recargo/index.html`. Las cifras
+  55/56 de mas abajo son historicas.
+- **2 reglas resumen ARRIBA de la tabla** (`.rules-grid`, 2 `.rule-card`) — son reglas DISTINTAS y
+  confundirlas es el error clasico:
+  - 🌏 **Regla por marca / origen** ("Aplica segun la tabla de abajo"): deducible **unico 20% del daño,
+    minimo ¢500.000 / $830** en daño directo. Que la marca este en la tabla es lo que decide si el
+    agente activa el toggle **🌏 origen asiatico** en el cotizador.
+  - 💎 **Regla por alta gama** ("Independiente de la marca"): aplica cuando la **suma asegurada ≥ ¢50.000.000**;
+    deducible **escalonado 10% min ¢500k** en perdidas ≤ ¢6M y **20%** en perdidas mayores. El toggle 💎
+    se activa **segun la suma, no segun la marca**.
+- **Filtros:** buscador de texto (`#search`, placeholder "🔍 Buscar marca (ej. BYD, Mercedes, MG)") +
+  **3 chips** (`#chips`, `data-filter`): **Todas** (`all`, activo por defecto) · **Recargo aplica** (`si`,
+  chip rosado) · **No aplica** (`no`, chip gris). Buscador y chip se combinan (AND); el contador
+  `#resultCount` muestra cuantas filas quedan.
 - Fuentes citadas al pie: Circulares 0186-2025 y 0324-2025
+- **NO corregir la ortografia de los datos** (MASERATTI, CHERRY, DONG-FENG): son literales del documento
+  INS. Para buscar con la grafia comercial correcta existe el objeto `ALIAS` (Maserati→MASERATTI, etc.).
 
 **Verificado en preview local:**
 - 4 escenarios del explicador (sin flags, og solo, ag solo, og+ag) → secciones correctas + dot reapuntado
 - 4 escenarios del correo (mismas combinaciones) → titulo + texto del benefit 2 correctos
-- /marcas-recargo/ → 56 filas, busqueda + filtros combinados funcionan, sin errores en consola
+- /marcas-recargo/ → 56 filas *en ese momento* (hoy 58), busqueda + filtros combinados funcionan, sin errores en consola
 
 **Commits del 25 may 2026:**
 - `ecc50c0` feat(cotizador): toggles 'origen asiatico' + 'alta gama' con deducibles INS diferenciados
@@ -326,6 +395,8 @@ compatibilidad email (tablas anidadas + inline styles + fallback de fuentes).
 - Scroll suave + IntersectionObserver para fade-in de secciones
 - `scroll-margin-top: 100px` para que el sticky nav no tape titulos al saltar
 - Respeta `prefers-reduced-motion` (sin confetti, sin bounce)
+- ⚠️ Los dots 1-5 y el contador "X/5" **siguen en 5 aunque hoy el explicador tenga 6 secciones**: la
+  sexta (`qtcita`, 27 may 2026) se agrego a proposito **sin dot**. Ver el checkpoint del 27 mayo.
 
 **CTA final:** "Agende su cita de Aseguramiento" rectangular puntas redondeadas (radius 10px, no pill), gradient emerald, texto Space Grotesk 700.
 
@@ -380,36 +451,53 @@ Wrapper E2E: `C:/tmp/pdf-test/test-e2e-explicador-url.js` — pipeline completo 
 Nueva pagina standalone en `cancelacion/index.html` que implementa la Clausula 33 de las
 Condiciones Generales del Seguro Voluntario de Automoviles del INS.
 
+> 🔴 **CORREGIDO EL 11 JUN 2026 — LEER ESTO ANTES QUE EL RESTO DE LA SECCION.**
+> La version original de esta calculadora aplicaba el factor de la tabla **sobre la cuota
+> del periodo** (prima pagada trimestral/semestral/mensual). **Eso estaba MAL.** La norma
+> dice "Factor de tarifa a corto plazo **SOBRE PRIMA ANUAL**". Solo acertaba cuando el pago
+> era Anual; en fraccionado prometia devoluciones inexistentes. Confirmado por **dos
+> auditores actuariales**. El texto de abajo ya refleja la formula correcta, que es la que
+> esta EN PRODUCCION. Fuente: `docs/fuentes-ins/REGLAS-INS-VERIFICADAS.md`.
+
 **Campos del formulario:**
 - Nombre del cliente, Correo del cliente (para envio), Numero de poliza, Placa
 - **Fecha de emision** (fin de vigencia se calcula automatico = emision + 1 año)
 - Fecha de cancelacion
-- Prima pagada (₡) — lo que el cliente pago en su periodo (semestral, trimestral, etc.)
-- Forma de pago (solo informativo, NO multiplica), Motivo/nota opcional
+- **Prima anual (₡)** — base sobre la que se aplica el factor de la tabla
+- **Total pagado por el cliente (₡)** — base de la devolucion neta; se autocompleta
+  igual a la prima anual cuando la forma de pago es Anual
+- Forma de pago (SOLO informativo: no multiplica ni divide nada), Motivo/nota opcional
 
 **Dos escenarios de calculo (Clausula 33):**
 
-1. **≤ 5 dias naturales desde emision:** 100% devolucion, sin cargos.
-2. **> 5 dias:** tabla de factores Clausula 33, aplicada sobre la **prima pagada**.
+1. **≤ 5 dias naturales desde emision:** 100% devolucion de lo pagado, sin cargos.
+2. **> 5 dias:** tabla de factores Clausula 33, aplicada sobre la **PRIMA ANUAL**.
    - `idx = Math.min(monthsComplete(emission, cancel), 11)`
    - Si meses < 6: `factor_efectivo = factor_tabla × 50%`
    - Si meses ≥ 6: `factor_efectivo = factor_tabla`
-   - `prima_devengada = prima_pagada × factor_efectivo`
-   - `devuelta = prima_pagada - prima_devengada`
+   - `prima_devengada (INS retiene) = factor_efectivo × PRIMA ANUAL`
+   - `prima_no_devengada = prima_anual − prima_devengada`
+   - `devolucion_neta = max(0, total_pagado − prima_devengada)`
 
-**REGLA CLAVE — prima pagada, NO prima anual:**
-El campo prima = lo que el cliente efectivamente pago en su periodo de pago.
-Para un cliente semestral en el primer semestre: ingresa 175.525 (no 351.050).
-El calculo se hace sobre ese monto. Si el cliente pagara el segundo semestre en
-septiembre, ese es un pago futuro que aun no realizo — no entra al calculo.
-NO se multiplica por el numero de periodos (esto era el bug anterior).
+**REGLA CLAVE — el factor va sobre la PRIMA ANUAL, no sobre la cuota del periodo:**
+La cuota que el cliente paga cada trimestre o semestre NO es la base del factor; es
+solo el `total_pagado` con el que se calcula la devolucion neta. Caso real de control:
+prima anual ₡570.891, pago trimestral con ₡428.166 pagados, cancela a los 8 meses →
+el codigo viejo devolvia ₡15.700, **la norma da ₡0**. Se verificaron 4 casos contra
+la norma. Si la prima devengada iguala o supera lo pagado, la devolucion es ₡0 y puede
+quedar prima devengada pendiente de cobro (el correo lo advierte).
 
 **Recargos por fraccionamiento (GUIA SUSCRIPCION 2025, pag. 9):**
 SVA Colones: Semestral 8%, Trimestral 11%, Mensual 13%.
-Estos recargos estan incluidos en la prima que pago el cliente. La Clausula 33
-no hace distincion explicita — se aplica el factor sobre el monto total pagado
-(prima neta + recargo). Si en el futuro se requiere separar el recargo, agregar
-campo opcional para descontarlo antes de aplicar el factor.
+Estos recargos ya vienen incluidos en lo que el cliente pago, asi que forman parte
+del `total_pagado` y no se descuentan aparte. No afectan la base del factor, que es
+la prima anual.
+
+**Matiz menor pendiente (NO modificado, es conservador — decision de JC):**
+la tabla oficial dice "Hasta 1 mes" (inclusivo), pero en el dia de aniversario mensual
+exacto el codigo manda el borde al tramo superior → retiene un poco mas / devuelve un
+poco menos. Solo afecta ese dia exacto. El disclaimer del informe aclara que el monto
+final lo confirma el INS.
 
 **Tabla de factores Clausula 33 (12 filas):**
 ```
@@ -470,6 +558,9 @@ function parsePremium(s) {
 - `4b0d381` fix(cancelacion): label dinamico por forma de pago + tabla Clausula 33 siempre visible
 - `d09e637` style(cancelacion): tabla Clausula 33 en correo con fondo navy oscuro igual que la app
 - `3185ebe` fix(cancelacion): fecha emision unica + calculo sobre prima pagada sin multiplicar
+  ⚠️ Titulo historico: ese commit dejo el calculo sobre la prima pagada, que despues resulto
+  ser el error. Lo vigente es el fix del 11 jun 2026 (factor sobre PRIMA ANUAL, ver el aviso
+  al inicio de esta seccion).
 
 ### 20 abril 2026 — Fix link del formulario de cita (dos botones) + override localStorage
 - **Juan Carlos reporto** que el boton "Agendar mi cita ahora" del correo
@@ -480,7 +571,15 @@ function parsePremium(s) {
 - **Archivos modificados:**
   - `js/config.js:15` — `AGENDA_URL`
   - `explicacion/index.html:395` — `href` del CTA verde
-- **Commit:** `6a024e3` fix(agenda): actualizar link del formulario de cita
+- **Commits:** `6a024e3` fix(agenda): actualizar link del formulario de cita ·
+  `4e9b891` docs(skill): checkpoint 20 abr · `d9c9adc` feat(branding): favicon
+- **FAVICON (commit `d9c9adc`, 20 abr 2026):** `img/favicon.svg` — **carrito rojo estilo emoji**.
+  Se aplico con `<link rel="icon" type="image/svg+xml" href="img/favicon.svg">` en `index.html` y
+  `explicacion/index.html`. **Hoy (verificado en disco) lo llevan las 5 paginas HTML**: `index.html`,
+  `explicacion/`, `cancelacion/`, `marcas-recargo/` y `polizas-activas/` (en las sub-paginas la ruta
+  es relativa: `../img/favicon.svg`). **Toda pagina nueva debe llevar el link** o queda con el
+  favicon en blanco de Netlify. Otros assets de `img/`: `ins-logo.png` (header del correo),
+  `sdi-logo.svg` (footer del explicador), `og-explicacion.png` (preview Open Graph para WhatsApp).
 - **GOTCHA importante:** `agent-profile.js:87` hace `if (p.agendaUrl) CFG.AGENDA_URL = p.agendaUrl;`
   Es decir, si el agente ya tiene guardado un `agendaUrl` en `localStorage['cotizador_sdi_agent_v1']`,
   ese valor **sobrescribe** el del `config.js` al cargar la app. Por eso JC seguia viendo el link
@@ -576,7 +675,10 @@ COTIZADOR-AUTOS/
 ├── css/
 │   └── styles.css          ← Variables marca, drop-zone, step-dots, precios, modal, btn, radio-group
 ├── img/
-│   └── ins-logo.png        ← Logo INS para el header del correo
+│   ├── favicon.svg         ← Favicon carrito rojo estilo emoji (commit d9c9adc, 20 abr 2026) — enlazado en las 5 paginas HTML
+│   ├── ins-logo.png        ← Logo INS para el header del correo
+│   ├── sdi-logo.svg        ← Logo SDI del footer del explicador
+│   └── og-explicacion.png  ← Preview Open Graph del explicador (WhatsApp)
 ├── js/
 │   ├── config.js           ← CFG: client_id, MSAL_CLIENT_ID, FROM_NAME/EMAIL/PHONE/LICENSE/WEBSITE, URLs
 │   ├── state.js            ← S: { step, data, modPDF, accessToken, tokenClient, msalInstance, outlookToken, provider, prevTimer }
@@ -1029,7 +1131,36 @@ del PDF (coords PDF.js). Para verificación end-to-end del parser sin depender d
 con `getTextContent()` y correr `_parsePaymentMatrix`, y rasterizar el PDF limpio con pdf-lib para confirmar
 que las filas Mensual/Deducción quedan tapadas en las 5 columnas.
 
-## Historial completo de commits (18 commits)
+### PDF de muestra y su dataset VALIDADO
+
+Archivo: `C:/Users/segur/Downloads/INFORME-ASINS-170-92637.pdf`
+(⚠️ Downloads lo barren los limpiadores de disco — si no aparece, pedirle a JC otro PDF de cotizacion.)
+
+Contra estos valores se contrasta cualquier refactor del parser:
+
+| Campo | Valor |
+|---|---|
+| `quoteNum` | ASINS-170-92637 |
+| `cotizDate` | **14/04/2026** |
+| `clientName` | DELGADO ARGUELLO SILVIA MARIEL |
+| `plate` / `year` / `vehicleType` | BRK454 · 2019 · Sedan/Coupe |
+| `valor` | 10,000,000.00 |
+| `sustRepos` | Extension de garantia Plus |
+| `formaAseg` | Valor declarado (VD) |
+| `prices` | mensual **53.738,00** · trimestral **158.423,00** · semestral **308.283,00** · anual **570.891,00** · deduccion **51.360,00** |
+| `deductibles` | **2 lineas** (Cobertura C · Cobertura D,F Y H) |
+| `pageWidth` | 612 (Letter US) |
+
+Notas: **mensual** y **deduccion** son exactamente las 2 filas que `pdf-modify.js` tapa con rectangulos
+blancos. La prima anual **570.891** es la misma del caso de control de la Clausula 33 (factor sobre prima
+anual). `deductibles` con **2 lineas** es lo normal en el formato ASINS-170 — si el parser devuelve 0 o 1,
+sospechar del regex `/^Cobertura\s/i` o de un PDF con formato nuevo.
+
+## Historial de commits — arranque hasta 23 abr 2026
+
+⚠️ Esta lista cubre SOLO el arranque del proyecto. El repo va por **125 commits (contados el 22 jul 2026)**;
+para el conteo real correr `git log --oneline | wc -l` en `C:/Users/segur/COTIZADOR-AUTOS`, no confiar en
+un numero escrito acá.
 
 ```
 b301934  init: estructura base + shell visual + explicador integrado
@@ -1048,11 +1179,30 @@ a0a800e  feat(app): orquestacion completa end-to-end              ⭐ FINAL
 0117a57  feat(profile): link agenda editable + rural/jeep fix     ⭐ AJUSTE CAMPO
 71de232  feat(outlook): soporte Outlook/Microsoft 365 via MSAL    ⭐ OUTLOOK
 6a024e3  fix(agenda): actualizar link del formulario de cita      ⭐ LINK NUEVO
+4e9b891  docs(skill): checkpoint 20 abr - fix link agenda + override localStorage
+d9c9adc  feat(branding): favicon de carrito rojo estilo emoji     ⭐ FAVICON
 [checkpoint 20 abr 2026]
-[pendiente]  feat(cancelacion): calculadora Clausula 33 + boton en header  ⭐ NUEVA FEATURE
-[pendiente]  docs(skill): sync SKILL_COTIZADOR_SDI.md checkpoint 23 abr
+69001c9  feat(cancelacion): calculadora Clausula 33 + link header ⭐ NUEVA FEATURE
+4b0d381  fix(cancelacion): label dinamico por forma de pago + tabla siempre visible
+d09e637  style(cancelacion): tabla Clausula 33 en correo con fondo navy
+7322a98  docs(skill): sync SKILL_COTIZADOR_SDI.md checkpoint 23 abr
+3185ebe  fix(cancelacion): fecha emision unica + calculo sobre prima pagada
+1077f39  docs(skill): checkpoint calculo cancelacion prima pagada
 [checkpoint 23 abr 2026]
 ```
+⚠️ Ojo con `3185ebe`/`1077f39`: dejaron el calculo de la Clausula 33 **sobre la prima pagada**, que
+despues resulto ser el error grande. Lo vigente es el fix del 11 jun 2026 (`e08fa75`): el factor va
+**sobre la PRIMA ANUAL**.
+
+**Otros commits que se citan seguido** (verificados en git): `777697d` fix multiagente agendaUrl (8 may) ·
+`c3b062b` docs checkpoint 8 may · `31ec130` seccion "¿Que pasara el dia de tu cita?" (27 may) ·
+`6a6502e` + `446c116` seccion 4 solo fila del cliente + etiqueta oficial (28 may) ·
+`4c16d79` docs checkpoint 28 may (**= tag `pre-e2e-11jun`**) · `5d58b60` drift 55→56 marcas ·
+`4eb6554` coberturas G/M + SUZUKI (→58 marcas) · `e08fa75` fix Clausula 33 sobre prima anual (11 jun) ·
+`e71f82d` pestaña 📊 · `ba0daab` contador/filtro "⏳ Para seguir" · `8b9ef21` boton 🗑 eliminar registro ·
+`2f6967f` seguimiento a 3 dias · `bf21fc2` ciclo de estados · `785dc5e` conversion + orden de embudo ·
+`95d90db` buscador por placa/cliente · `79aec27` + `3d3b585` polizas activas + docs estandar (29 jun) ·
+`acfa5db` + `84aca0d` matriz de precios por repuesto (13 jul) · `0a468c5` respaldo en Drive (15 jul).
 
 ## Checkpoint 14 mayo 2026 — Detalle de coberturas vigentes
 
@@ -1105,22 +1255,33 @@ N en C · Fijo ₡400.000 · Fijo ₡500.000 · 20% min ₡150.000 · 20% min �
 - `tests/test-coverage-url.js` — 14/14 (URL builder con todos los casos)
 - `tests/test-coverage-email.js` — 10/10 (HTML + escape)
 
-### Spec + Plan
+### Spec + Plan (siguen versionados en el repo, commit `ee8e3c9`)
 - `docs/superpowers/specs/2026-05-14-detalle-coberturas-vigentes-design.md`
 - `docs/superpowers/plans/2026-05-14-detalle-coberturas-vigentes.md`
+- `netlify.toml` 404ea `/docs/*`, asi que no se sirven en produccion.
 
-### Commits (7) + tag rollback
-`pre-coberturas-vigentes-14may` apunta al HEAD pre-merge.
+### Commits + tag de rollback
+🔴 **Dato real verificado en git (22 jul 2026):** el tag **`pre-coberturas-vigentes-14may` apunta a
+`e031693`**, o sea al **ultimo commit de la rama `feat/coberturas-vigentes`** — NO al punto de `main`
+anterior al merge. El punto de main previo al merge es `ee8e3c9` (spec + plan) y el merge es `945871e`.
+Cualquier documento que diga "apunta al HEAD pre-merge" esta impreciso.
 
 ```
+ee8e3c9  docs(coberturas): spec + plan            ← main, antes de la rama
 be38baf  feat(perfil): agregar campo WhatsApp al perfil del agente
 503fc27  feat(coberturas): helper buildDetalleUrl + tests Node (14/14)
 9f8946b  feat(coberturas): buildCoverageEmail con HTML corto + tests (10/10)
 448d32d  feat(coberturas): formulario del agente con validacion + vista previa + envio Gmail/Outlook
 3515472  feat(coberturas): pagina /detalle/ con todas las secciones condicionales
 be7a960  feat(cotizador): boton dorado para detalle de coberturas en header
-e031693  fix(detalle): firstName toma parts[0] (nombre del cliente en orden normal, no PDF INS)
+e031693  fix(detalle): firstName toma parts[0]    ← AQUI apunta el tag
+945871e  Merge: feat/coberturas-vigentes
+c4d3a0c  docs(skill): checkpoint 14 may detalle de coberturas vigentes
 ```
+
+⚠️ El modulo **se elimino por completo el 29 jun 2026** (ver el checkpoint del final). Esta seccion se
+conserva solo como rastro para recuperarlo desde git si JC lo vuelve a pedir. Lo unico que sobrevivio y
+sigue en uso es el **campo `whatsapp` del perfil ⚙** (`be38baf`).
 
 ## Pendientes
 1. **Configurar SPF/DKIM en segurosdelins.com** (pendiente): si Juan Carlos comparte
