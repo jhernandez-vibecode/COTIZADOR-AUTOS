@@ -347,7 +347,10 @@
    */
   function correoHtml() {
     var d = ST.ultima.data;
-    var paraCliente = ST.vista === 'cliente';
+    // La vista se CONGELA al abrir el modal. Si se leyera ST.vista aca, cambiar
+    // de pestana con el modal abierto mandaria la version interna —con citas de
+    // clausulas— a un cliente.
+    var paraCliente = ST.vistaMail === 'cliente';
     var cuerpo = paraCliente && d.resumen_cliente ? d.resumen_cliente : d.respuesta;
     var nombre = (typeof CFG !== 'undefined' && CFG.FROM_NAME) || '';
     var lic = (typeof CFG !== 'undefined' && CFG.LICENSE) || '';
@@ -411,22 +414,44 @@
   }
 
   function abrirMail() {
-    var asunto = ST.vista === 'cliente'
+    // Se congela la version en este momento: lo que diga la nota es lo que sale.
+    ST.vistaMail = ST.vista;
+    var paraCliente = ST.vistaMail === 'cliente';
+    $('mailSubject').value = (paraCliente
       ? 'Sobre su consulta del seguro de automóviles'
-      : 'Consulta: ' + ST.ultima.pregunta;
-    $('mailSubject').value = asunto.slice(0, 120);
-    $('mailNota').textContent = ST.vista === 'cliente'
-      ? 'Se enviará la versión para el cliente: lenguaje llano, sin citas de cláusulas y con la nota de condiciones particulares.'
-      : 'Se enviará la versión interna: respuesta completa con las citas, documento, versión y página.';
+      : 'Consulta: ' + ST.ultima.pregunta).slice(0, 120);
+    $('mailNota').textContent = paraCliente
+      ? 'Se enviará la versión PARA EL CLIENTE: lenguaje llano, sin citas de cláusulas y con la nota de condiciones particulares.'
+      : 'Se enviará la versión INTERNA: respuesta completa con las citas, documento, versión y página. No es para un cliente.';
     $('mailBg').hidden = false;
+    $('mailTo').value = '';
     $('mailTo').focus();
+    document.addEventListener('keydown', atraparFoco, true);
+  }
+
+  function cerrarMail() {
+    $('mailBg').hidden = true;
+    document.removeEventListener('keydown', atraparFoco, true);
+    var b = $('btnMail'); if (b) b.focus();
+  }
+
+  /** El Tab no debe salirse del modal mientras esta abierto. */
+  function atraparFoco(ev) {
+    if (ev.key !== 'Tab' || $('mailBg').hidden) return;
+    var f = [$('mailTo'), $('mailSubject'), $('mailCancel'), $('mailSend')].filter(function (x) { return x && !x.disabled; });
+    if (!f.length) return;
+    var i = f.indexOf(document.activeElement);
+    ev.preventDefault();
+    f[(i + (ev.shiftKey ? -1 : 1) + f.length) % f.length].focus();
   }
 
   async function enviarMail() {
+    if (ST.enviando) return;                     // doble clic: no mandar dos veces
     var para = $('mailTo').value.trim();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(para)) { $('mailTo').focus(); toast('Revisá el correo'); return; }
 
     var btn = $('mailSend');
+    ST.enviando = true;
     btn.disabled = true;
     btn.textContent = 'Enviando…';
     try {
@@ -439,11 +464,16 @@
         to: para, from: from, subject: $('mailSubject').value.trim(), html: correoHtml()
       });
       await sendEmail(raw);
-      $('mailBg').hidden = true;
+      cerrarMail();
       toast('Correo enviado a ' + para);
     } catch (e) {
-      $('mailNota').textContent = 'No se pudo enviar: ' + (e.message || e);
+      // Si el modal ya se cerro, el mensaje en mailNota no lo ve nadie y el
+      // agente se queda creyendo que el correo salio. El toast si se ve.
+      var msg = 'No se pudo enviar: ' + (e.message || e);
+      $('mailNota').textContent = msg;
+      if ($('mailBg').hidden) toast(msg, 6000);
     } finally {
+      ST.enviando = false;
       btn.disabled = false;
       btn.textContent = 'Autorizar Gmail y Enviar';
     }
@@ -466,6 +496,15 @@
   ];
 
   document.addEventListener('DOMContentLoaded', function () {
+    // Pisar CFG con el perfil ⚙ de ESTE navegador. Sin esto el correo sale
+    // firmado con el nombre y la licencia SUGESE de JC aunque lo mande otro
+    // agente — poner la licencia ajena en un correo a un cliente no es un
+    // detalle cosmetico.
+    try {
+      var perfil = typeof loadProfile === 'function' ? loadProfile() : null;
+      if (perfil && typeof applyProfile === 'function') applyProfile(perfil);
+    } catch (e) { console.warn('[consultor] no se pudo aplicar el perfil', e); }
+
     $('chips').innerHTML = EJEMPLOS.map(function (e) {
       return '<span class="chip">' + esc(e) + '</span>';
     }).join('');
@@ -497,13 +536,15 @@
     });
 
     // Modal de correo. "Salir" y no "Cancelar": no es una acción destructiva.
-    $('mailCancel').onclick = function () { $('mailBg').hidden = true; };
+    // No se cierra mientras se está enviando: perder el modal en ese momento
+    // esconde el error y el agente cree que el correo salió.
+    $('mailCancel').onclick = function () { if (!ST.enviando) cerrarMail(); };
     $('mailSend').onclick = enviarMail;
     $('mailBg').addEventListener('click', function (ev) {
-      if (ev.target === $('mailBg')) $('mailBg').hidden = true;
+      if (ev.target === $('mailBg') && !ST.enviando) cerrarMail();
     });
     document.addEventListener('keydown', function (ev) {
-      if (ev.key === 'Escape' && !$('mailBg').hidden) $('mailBg').hidden = true;
+      if (ev.key === 'Escape' && !$('mailBg').hidden && !ST.enviando) cerrarMail();
     });
   });
 })();

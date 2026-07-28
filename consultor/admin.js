@@ -57,7 +57,8 @@
   }
 
   async function cargarInventario() {
-    var r = await fetch('/api/corpus?token=' + encodeURIComponent(ST.token));
+    // El token va por cabecera, no en la URL: las URLs quedan en los logs.
+  var r = await fetch('/api/corpus', { headers: { authorization: 'Bearer ' + ST.token } });
     if ((r.headers.get('content-type') || '').indexOf('json') === -1) {
       throw new Error('La función de administración no está publicada (HTTP ' + r.status + ').');
     }
@@ -125,8 +126,8 @@
       btn.textContent = 'Comparando…';
       var r = await fetch('/api/corpus', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ token: ST.token, documento: $('doc').value, paginas: paginas })
+        headers: { 'content-type': 'application/json', authorization: 'Bearer ' + ST.token },
+        body: JSON.stringify({ documento: $('doc').value, paginas: paginas })
       });
       if ((r.headers.get('content-type') || '').indexOf('json') === -1) {
         throw new Error('El servidor cortó la comparación (HTTP ' + r.status + ').');

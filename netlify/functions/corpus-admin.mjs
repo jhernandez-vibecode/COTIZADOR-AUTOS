@@ -95,11 +95,14 @@ const norm = (s) =>
     .toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 
 export default async function handler(req) {
-  const auth = await verificarGoogle(
-    req.method === "GET"
-      ? new URL(req.url).searchParams.get("token")
-      : (await req.clone().json().catch(() => ({}))).token
-  );
+  // El token va por CABECERA, nunca por query string: las URLs quedan en los
+  // logs de Netlify, del CDN y en el historial del navegador, y ahi un token
+  // de Google es una credencial viva por una hora.
+  const cabecera = (req.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
+  const delCuerpo = req.method === "POST"
+    ? (await req.clone().json().catch(() => ({}))).token
+    : null;
+  const auth = await verificarGoogle(cabecera || delCuerpo);
   if (!auth.ok) return json(403, { error: auth.motivo });
 
   const c = await corpus();
@@ -140,6 +143,7 @@ export default async function handler(req) {
 
   let body;
   try { body = await req.json(); } catch { return json(400, { error: "Cuerpo invalido." }); }
+  if (!body || typeof body !== "object") return json(400, { error: "Cuerpo invalido." });
 
   const docId = String(body.documento || "");
   const doc = c.documentos.find((d) => d.id === docId);
@@ -158,7 +162,11 @@ export default async function handler(req) {
     const nueva = norm(nuevas[p - 1] || "");
     const vieja = norm(viejas.get(p) || "");
     if (!nueva && !vieja) continue;
-    if (!vieja) { cambios.push({ pagina: p, tipo: "nueva" }); continue; }
+    // Que una pagina no tenga texto publicado NO significa que sea nueva: el
+    // corpus solo indexa lo que quedo dentro de una seccion (portadas, indices
+    // y paginas sueltas no estan). Reportarlas como "nueva" hacia que subir el
+    // MISMO PDF publicado mostrara decenas de cambios falsos.
+    if (!vieja) { if (p <= viejas.size || !viejas.size) continue; cambios.push({ pagina: p, tipo: "nueva" }); continue; }
     if (!nueva) { cambios.push({ pagina: p, tipo: "eliminada" }); continue; }
     if (nueva === vieja) continue;
 

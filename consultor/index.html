@@ -163,6 +163,9 @@ details.src-list .it .pg{color:var(--mute);white-space:nowrap;font-variant-numer
      mismo scope gmail.send, mismo constructor de MIME. state.js aporta el objeto
      S que gmail-auth.js necesita para cachear su token. -->
 <script src="../js/state.js"></script>
+<!-- agent-profile.js pisa CFG con el perfil ⚙ guardado en este navegador. SIN
+     esto el correo sale firmado como JC aunque lo mande otro agente. -->
+<script src="../js/agent-profile.js"></script>
 <script src="../js/gmail-auth.js"></script>
 <script src="../js/mime-builder.js"></script>
 <script src="consultor.js"></script>

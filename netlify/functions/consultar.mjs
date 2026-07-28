@@ -21,7 +21,6 @@
 
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { getStore } from "@netlify/blobs";
 
 // ─────────────────────────────────────────────────────────────── configuracion
 
@@ -236,6 +235,11 @@ async function verTope(correo) {
 
   const clave = `${diaCR()}|${correo}`;
   try {
+    // Import perezoso a proposito: @netlify/blobs solo existe en el build de
+    // Netlify. Arriba del todo dejaria el modulo sin cargar en local y los
+    // tests (que importan buscarLiteral de aca) no correrian. Ademas, si la
+    // dependencia fallara, cae solo el contador y no la funcion entera.
+    const { getStore } = await import("@netlify/blobs");
     const s = getStore({ name: "consultor-uso", consistency: "strong" });
     const usadas = Number((await s.get(clave)) || 0);
     if (usadas >= limite) {
@@ -244,7 +248,12 @@ async function verTope(correo) {
         motivo: `Llegaste al tope de ${limite} consultas por hoy. Se reinicia mañana.`,
       };
     }
-    return { permitido: true, limite, usadas, sumar: () => s.set(clave, String(usadas + 1)) };
+    // Se INCREMENTA YA, antes de la llamada al modelo. Antes se leia aca y se
+    // escribia 15 segundos despues: en una rafaga todas leian el mismo valor y
+    // el tope no frenaba nada. Y una consulta que falla igual costo dinero, asi
+    // que tambien tiene que contar.
+    await s.set(clave, String(usadas + 1));
+    return { permitido: true, limite, usadas: usadas + 1 };
   } catch (e) {
     console.error("[consultor] no se pudo contar el uso", e);
     return { permitido: true, limite, usadas: 0 };   // fail-open a proposito
@@ -640,7 +649,6 @@ export default async function handler(req) {
     if (!t.permitido) return json(429, { error: t.motivo });
 
     const paso2 = await responder(clave, pregunta, secciones, c);
-    if (t.sumar) await t.sumar().catch(() => {});
     if (recortadas > 0) {
       paso2.datos.alertas = paso2.datos.alertas || [];
       paso2.datos.alertas.push(
