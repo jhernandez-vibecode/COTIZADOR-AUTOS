@@ -27,6 +27,7 @@ import { join } from "node:path";
 const MODELO_BUSCAR    = "claude-haiku-4-5";
 const MODELO_RESPONDER = "claude-opus-5";
 const MAX_SECCIONES    = 12;      // tope de secciones que viajan al paso 2
+const MAX_MATERIAL     = 55000;   // tope de caracteres de texto para el paso 2
 const MAX_PREGUNTA     = 600;     // caracteres
 const API              = "https://api.anthropic.com/v1/messages";
 const VERSION_API      = "2023-06-01";
@@ -319,7 +320,9 @@ async function responder(clave, pregunta, secciones, c) {
     "6. Si el material tiene una tabla (viene en formato Markdown), leela bien: los limites por\n" +
     "   plan estan ahi y confundir columnas cambia la respuesta.\n" +
     "7. No afirmes nada sobre la poliza concreta de un cliente: vos ves el reglamento del\n" +
-    "   producto, no sus Condiciones Particulares.\n\n" +
+    "   producto, no sus Condiciones Particulares.\n" +
+    "8. Sé conciso. La respuesta va en pocas oraciones directas; no repitas dentro de la\n" +
+    "   respuesta el texto que ya va en las citas. El agente tiene prisa.\n\n" +
     "SECCIONES:\n\n" + material;
 
   // Seguro contra el error de mandar la pregunta sin el material: si el texto
@@ -331,12 +334,18 @@ async function responder(clave, pregunta, secciones, c) {
 
   const resp = await anthropic(clave, {
     model: MODELO_RESPONDER,
-    max_tokens: 8000,
+    // max_tokens y effort estan elegidos por LATENCIA, no por plata: la
+    // funcion de Netlify tiene un limite de ejecucion corto y cada token
+    // generado es tiempo. La tarea es extractiva (encontrar y copiar del
+    // material, no razonar en abierto) y la verificacion literal por codigo
+    // atrapa las citas malas, asi que effort bajo no compromete el control de
+    // calidad. Si la sonda ?demora= confirma techo de 26 s, se puede subir.
+    max_tokens: 3000,
     // Sin esto el modelo recibe la pregunta sola, sin una linea de los
     // documentos, y contesta "no se adjunto ningun documento".
     system: [{ type: "text", text: sistema }],
     output_config: {
-      effort: "high",
+      effort: "low",
       format: {
         type: "json_schema",
         schema: {
@@ -435,6 +444,16 @@ export default async function handler(req) {
    * para saber QUE falla sin tener que adivinar leyendo logs.
    */
   if (req.method === "GET") {
+    // SONDA TEMPORAL: ?demora=N duerme N segundos y responde. Sirve para medir
+    // el techo real de ejecucion de la funcion en este sitio (10 o 26 s segun
+    // el plan de Netlify) sin gastar API. QUITAR antes de mezclar a main.
+    const demora = Math.min(Number(new URL(req.url).searchParams.get("demora")) || 0, 26);
+    if (demora) {
+      const inicio = Date.now();
+      await new Promise((r) => setTimeout(r, demora * 1000));
+      return json(200, { demora_pedida: demora, demora_real_ms: Date.now() - inicio });
+    }
+
     const estado = {
       clave_configurada: Boolean(claveAnthropic()),
       agentes_autorizados: correosAutorizados().length,
@@ -483,9 +502,40 @@ export default async function handler(req) {
 
   try {
     const c = await corpus();
+    const accion = body.accion || "completa";
 
-    const paso1 = await buscarSecciones(clave, pregunta, c);
-    if (paso1.ids.length === 0) {
+    // La consulta va en DOS llamadas separadas (buscar y despues responder)
+    // porque las funciones de Netlify tienen un limite de ejecucion corto: las
+    // dos etapas juntas en una sola invocacion se pasaban del limite y el
+    // gateway cortaba con una pagina HTML ("Unexpected token '<'" en el front).
+    // Separadas, cada una corre con su propio presupuesto de tiempo.
+    // "completa" (sin accion) queda para pruebas por curl.
+    if (accion === "buscar") {
+      const paso1 = await buscarSecciones(clave, pregunta, c);
+      return json(200, {
+        ids: paso1.ids,
+        razon: paso1.razon,
+        secciones: paso1.ids.map((id) => {
+          const s = c._porId.get(id);
+          return { id: s.id, ruta: s.ruta, pagina_desde: s.pagina_desde };
+        }),
+        uso: { buscar: paso1.uso },
+      });
+    }
+
+    let ids;
+    if (accion === "responder") {
+      // Los ids vienen del paso "buscar" previo. Se revalidan contra el corpus:
+      // un id inventado no rompe nada — no existe y se descarta.
+      ids = Array.isArray(body.ids)
+        ? [...new Set(body.ids.filter((x) => typeof x === "string" && c._porId.has(x)))].slice(0, MAX_SECCIONES)
+        : [];
+      if (!ids.length) return json(400, { error: "Faltan las secciones a leer (ids)." });
+    } else {
+      ids = (await buscarSecciones(clave, pregunta, c)).ids;
+    }
+
+    if (ids.length === 0) {
       return json(200, {
         encontrado: false,
         respuesta:
@@ -498,8 +548,27 @@ export default async function handler(req) {
       });
     }
 
-    const secciones = paso1.ids.map((id) => c._porId.get(id));
+    // Tope de material: las secciones van ordenadas por relevancia y se leen
+    // hasta agotar el presupuesto. Protege la latencia cuando el buscador trae
+    // varias de las secciones grandes que dejamos sin partir.
+    const todas = ids.map((id) => c._porId.get(id));
+    const secciones = [];
+    let acumulado = 0;
+    for (const s of todas) {
+      if (secciones.length && acumulado + s.texto.length > MAX_MATERIAL) break;
+      secciones.push(s);
+      acumulado += s.texto.length;
+    }
+    const recortadas = todas.length - secciones.length;
+
     const paso2 = await responder(clave, pregunta, secciones, c);
+    if (recortadas > 0) {
+      paso2.datos.alertas = paso2.datos.alertas || [];
+      paso2.datos.alertas.push(
+        "Por límite de tamaño se leyeron " + secciones.length + " de " + todas.length +
+        " secciones encontradas; si la respuesta se siente incompleta, preguntá algo más específico."
+      );
+    }
     const citas = verificarCitas(paso2.datos.citas, c);
     const sinVerificar = citas.filter((x) => !x.verificada).length;
 
@@ -521,10 +590,7 @@ export default async function handler(req) {
         pagina_desde: s.pagina_desde,
         pagina_hasta: s.pagina_hasta,
       })),
-      uso: {
-        buscar: paso1.uso,
-        responder: paso2.uso,
-      },
+      uso: { responder: paso2.uso },
     });
   } catch (e) {
     console.error("[consultor]", e);

@@ -68,46 +68,83 @@
 
   // ─────────────────────────────────────────────────────────────── consulta
 
-  var PASOS =
-    '<div class="think"><span class="dots"><span></span><span></span><span></span></span> ' +
-    'Buscando en el corpus…</div>' +
-    '<div class="step">' +
-    '<div class="now">→ Encontrando las secciones que aplican</div>' +
-    '<div class="next">· Leyendo las cláusulas completas</div>' +
-    '<div class="next">· Verificando las citas contra el documento</div>' +
-    '</div>';
+  function tarjetaPasos(fase, n) {
+    var buscar = fase === 'buscar';
+    return '<div class="card"><div class="body">' +
+      '<div class="think"><span class="dots"><span></span><span></span><span></span></span> ' +
+      (buscar ? 'Buscando en el corpus…' : 'Leyendo las cláusulas completas…') + '</div>' +
+      '<div class="step">' +
+      (buscar
+        ? '<div class="now">→ Encontrando las secciones que aplican</div>' +
+          '<div class="next">· Leyendo las cláusulas completas</div>'
+        : '<div class="done">✓ Encontró ' + n + (n === 1 ? ' sección relevante' : ' secciones relevantes') + '</div>' +
+          '<div class="now">→ Leyendo las cláusulas y armando la respuesta</div>') +
+      '<div class="next">· Verificando las citas contra el documento</div>' +
+      '</div></div></div>';
+  }
 
+  /**
+   * Fetch que no explota si el servidor devuelve HTML en vez de JSON — que es
+   * lo que manda el gateway de Netlify cuando corta la funcion por limite de
+   * tiempo (el famoso "Unexpected token '<'").
+   */
+  async function llamar(payload) {
+    var r = await fetch('/api/consultar', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if ((r.headers.get('content-type') || '').indexOf('json') === -1) {
+      throw new Error('El servidor cortó la consulta a medias (HTTP ' + r.status +
+        '), casi seguro por el límite de tiempo. Volvé a intentar.');
+    }
+    return { status: r.status, body: await r.json() };
+  }
+
+  /** Reintenta UNA vez con token nuevo si el actual venció (dura 1 hora). */
+  async function conToken(payload) {
+    if (!S.token) await pedirToken();
+    payload.token = S.token;
+    var res = await llamar(payload);
+    if (res.status === 403) {
+      S.token = null;
+      await pedirToken();
+      payload.token = S.token;
+      res = await llamar(payload);
+    }
+    return res;
+  }
+
+  // La consulta va en DOS llamadas (buscar y despues responder) porque las
+  // funciones de Netlify tienen un limite de tiempo corto y las dos etapas
+  // juntas en una sola invocacion se pasaban del limite.
   async function consultar(pregunta) {
     var out = $('out');
-    out.innerHTML = '<div class="card"><div class="body">' + PASOS + '</div></div>';
+    out.innerHTML = tarjetaPasos('buscar', 0);
     $('btnGo').disabled = true;
 
     try {
-      if (!S.token) await pedirToken();
+      var b = await conToken({ pregunta: pregunta, accion: 'buscar' });
+      if (b.status !== 200) { pintarError(pregunta, b.body.error || ('Error ' + b.status)); return; }
 
-      var r = await fetch('/api/consultar', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ token: S.token, pregunta: pregunta })
-      });
-      var data = await r.json();
-
-      if (r.status === 403) {
-        // el token pudo haber expirado (dura 1h): un reintento con token nuevo
-        S.token = null;
-        await pedirToken();
-        r = await fetch('/api/consultar', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ token: S.token, pregunta: pregunta })
+      if (!b.body.ids || !b.body.ids.length) {
+        pintar(pregunta, {
+          encontrado: false,
+          respuesta: 'No encontré nada sobre eso en los documentos cargados (Guía de Suscripción, ' +
+            'Condiciones Generales, Multiasistencia, Perfeccionamiento, Pacto Amistoso y DAM).',
+          citas: [], alertas: [], resumen_cliente: '', secciones_consultadas: []
         });
-        data = await r.json();
+        return;
       }
 
-      if (!r.ok) { pintarError(pregunta, data.error || ('Error ' + r.status)); return; }
-      S.ultima = { pregunta: pregunta, data: data };
+      out.innerHTML = tarjetaPasos('leer', b.body.ids.length);
+
+      var r2 = await conToken({ pregunta: pregunta, accion: 'responder', ids: b.body.ids });
+      if (r2.status !== 200) { pintarError(pregunta, r2.body.error || ('Error ' + r2.status)); return; }
+
+      S.ultima = { pregunta: pregunta, data: r2.body };
       S.vista = 'interna';
-      pintar(pregunta, data);
+      pintar(pregunta, r2.body);
     } catch (e) {
       pintarError(pregunta, e.message || String(e));
     } finally {
