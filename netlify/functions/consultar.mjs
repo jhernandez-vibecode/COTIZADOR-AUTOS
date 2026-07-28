@@ -487,16 +487,10 @@ export default async function handler(req) {
    * para saber QUE falla sin tener que adivinar leyendo logs.
    */
   if (req.method === "GET") {
-    // SONDA TEMPORAL: ?demora=N duerme N segundos y responde. Sirve para medir
-    // el techo real de ejecucion de la funcion en este sitio (10 o 26 s segun
-    // el plan de Netlify) sin gastar API. QUITAR antes de mezclar a main.
-    const demora = Math.min(Number(new URL(req.url).searchParams.get("demora")) || 0, 26);
-    if (demora) {
-      const inicio = Date.now();
-      await new Promise((r) => setTimeout(r, demora * 1000));
-      return json(200, { demora_pedida: demora, demora_real_ms: Date.now() - inicio });
-    }
-
+    // Nota: el techo de ejecucion de este sitio se midio el 28 jul 2026 con
+    // una sonda temporal (ya retirada): 26 segundos por invocacion. Por eso
+    // la consulta va partida en dos llamadas y el paso 2 esta afinado para
+    // velocidad. Si algun dia el plan de Netlify cambia, re-medir.
     const estado = {
       clave_configurada: Boolean(claveAnthropic()),
       agentes_autorizados: correosAutorizados().length,
