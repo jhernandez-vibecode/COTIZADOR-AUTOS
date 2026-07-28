@@ -1,5 +1,14 @@
 # Cotizador SDI · Configuración Netlify
-# Sitio 100% estático — sin build, publish = raíz del repo.
+# Sitio estático — sin build, publish = raíz del repo — más las funciones
+# del Consultor de Autos (unico backend del proyecto).
+
+# ============ FUNCIONES ============
+# El corpus del Consultor NO lo detecta el empaquetador solo (se lee en tiempo
+# de ejecucion, no con un import), asi que hay que declararlo. Sin esta linea
+# la funcion se despliega sin sus datos y responde error.
+[functions]
+  directory = "netlify/functions"
+  included_files = ["netlify/functions/data/corpus.json"]
 
 # ============ ARCHIVOS INTERNOS — NO SERVIR EN PRODUCCIÓN ============
 # Documentación interna, specs y tests viven en el repo pero no deben
