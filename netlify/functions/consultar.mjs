@@ -243,9 +243,19 @@ async function responder(clave, pregunta, secciones, c) {
     "   producto, no sus Condiciones Particulares.\n\n" +
     "SECCIONES:\n\n" + material;
 
+  // Seguro contra el error de mandar la pregunta sin el material: si el texto
+  // de las secciones no viaja, el modelo contesta cualquier cosa con total
+  // aplomo y desde afuera parece que "no encontro nada". Preferible reventar.
+  if (!material || !sistema.includes(secciones[0].id)) {
+    throw new Error("Bug interno: las secciones no llegaron al prompt.");
+  }
+
   const resp = await anthropic(clave, {
     model: MODELO_RESPONDER,
     max_tokens: 8000,
+    // Sin esto el modelo recibe la pregunta sola, sin una linea de los
+    // documentos, y contesta "no se adjunto ningun documento".
+    system: [{ type: "text", text: sistema }],
     output_config: {
       effort: "high",
       format: {
