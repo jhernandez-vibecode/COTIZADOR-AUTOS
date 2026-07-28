@@ -1,5 +1,14 @@
 # Cotizador SDI · Configuración Netlify
-# Sitio 100% estático — sin build, publish = raíz del repo.
+# Sitio estático — sin build, publish = raíz del repo — más las funciones
+# del Consultor de Autos (unico backend del proyecto).
+
+# ============ FUNCIONES ============
+# El corpus del Consultor NO lo detecta el empaquetador solo (se lee en tiempo
+# de ejecucion, no con un import), asi que hay que declararlo. Sin esta linea
+# la funcion se despliega sin sus datos y responde error.
+[functions]
+  directory = "netlify/functions"
+  included_files = ["netlify/functions/data/corpus.json"]
 
 # ============ ARCHIVOS INTERNOS — NO SERVIR EN PRODUCCIÓN ============
 # Documentación interna, specs y tests viven en el repo pero no deben
@@ -25,6 +34,25 @@
 
 [[redirects]]
   from = "/tests/*"
+  to = "/404.html"
+  status = 404
+  force = true
+
+# Backend del Consultor de Autos. Netlify no publica el directorio de funciones,
+# pero aca vive tambien la Guia de Suscripcion — documento INTERNO del INS para
+# intermediarios exclusivos, que NO debe ser descargable desde el dominio publico
+# (a diferencia de documentos-ins/, cuyos PDF se adjuntan a los correos al cliente
+# y por eso el navegador si tiene que poder bajarlos).
+[[redirects]]
+  from = "/netlify/*"
+  to = "/404.html"
+  status = 404
+  force = true
+
+# Scripts que generan el corpus del Consultor. Se corren en la maquina del
+# agente, no en el sitio; no tienen por que ser accesibles desde el dominio.
+[[redirects]]
+  from = "/procesador/*"
   to = "/404.html"
   status = 404
   force = true
