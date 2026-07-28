@@ -100,13 +100,19 @@
    * lo que manda el gateway de Netlify cuando corta la funcion por limite de
    * tiempo (el famoso "Unexpected token '<'").
    */
-  async function llamar(payload) {
+  async function llamar(payload, etapa) {
     var r = await fetch('/api/consultar', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(payload)
     });
     if ((r.headers.get('content-type') || '').indexOf('json') === -1) {
+      // Cuál de las dos llamadas se cortó cambia el consejo: si fue al leer,
+      // acotar la pregunta sirve; si fue al buscar, no.
+      if (r.status !== 404 && r.status !== 405 && etapa === 'responder') {
+        throw new Error('La consulta tardó demasiado leyendo las cláusulas (HTTP ' + r.status +
+          '). Probá con una pregunta más acotada: un tema o una cobertura por vez.');
+      }
       // HTML en vez de JSON: o el gateway corto por tiempo (5xx) o la funcion
       // no existe en este sitio (404). Son problemas distintos — no hay que
       // mandar a reintentar lo que nunca va a funcionar.
@@ -119,14 +125,15 @@
 
   /** Reintenta UNA vez con token nuevo si el actual venció (dura 1 hora). */
   async function conToken(payload) {
+    var etapa = payload.accion;
     if (!ST.token) await pedirToken();
     payload.token = ST.token;
-    var res = await llamar(payload);
+    var res = await llamar(payload, etapa);
     if (res.status === 403) {
       ST.token = null;
       await pedirToken();
       payload.token = ST.token;
-      res = await llamar(payload);
+      res = await llamar(payload, etapa);
     }
     return res;
   }

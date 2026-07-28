@@ -27,7 +27,12 @@ import { join } from "node:path";
 const MODELO_BUSCAR    = "claude-haiku-4-5";
 const MODELO_RESPONDER = "claude-opus-5";
 const MAX_SECCIONES    = 12;      // tope de secciones que viajan al paso 2
-const MAX_MATERIAL     = 55000;   // tope de caracteres de texto para el paso 2
+// Tope de material para el paso 2. Bajado de 55k a 32k (~8k tokens) el 28 jul:
+// con 55k, una pregunta amplia ("cilindradas y tarifas de motocicletas", que
+// toca las secciones grandes de la Guia) se pasaba de los 26 s de Netlify y el
+// gateway cortaba con un 504. Ocho mil tokens alcanzan de sobra para responder
+// con cita: el limite real es cuantas secciones DISTINTAS entran, no su largo.
+const MAX_MATERIAL     = 32000;
 const MAX_PREGUNTA     = 600;     // caracteres
 const API              = "https://api.anthropic.com/v1/messages";
 const VERSION_API      = "2023-06-01";
@@ -124,8 +129,17 @@ function normaliza(s) {
  * importar como se llame.
  */
 export function buscarLiteral(pregunta, c, tope) {
+  // Se busca por RAIZ, no por palabra completa. El agente escribe como habla y
+  // el documento usa otra forma de la misma palabra: "cilindradas" vs
+  // "cilindraje", "tarifas" vs "tarifaria", "requisitos" vs "requisito". Con
+  // igualdad exacta esa consulta devolvia CERO candidatos y el buscador
+  // semantico se quedaba sin red. Seis caracteres alcanzan para la raiz y
+  // siguen siendo especificos; el limite de palabra evita que "moto" matchee
+  // "motor".
   const terminos = [...new Set(
-    normaliza(pregunta).split(/[^a-z0-9ñ]+/).filter((t) => t.length >= 4 && !VACIAS.has(t))
+    normaliza(pregunta).split(/[^a-z0-9ñ]+/)
+      .filter((t) => t.length >= 4 && !VACIAS.has(t))
+      .map((t) => (t.length > 6 ? t.slice(0, 6) : t))
   )];
   if (!terminos.length) return [];
 
@@ -142,11 +156,15 @@ export function buscarLiteral(pregunta, c, tope) {
     const rotulo = normaliza(s.ruta + " " + s.resumen + " " + s.palabras_clave.join(" "));
     let puntos = 0, distintos = 0;
     for (const t of terminos) {
-      const enTexto = texto.includes(t);
-      const enRotulo = rotulo.includes(t);
+      // La raiz tiene que empezar una palabra: "cilindr" vale para
+      // "cilindraje" pero "arifa" no debe colarse dentro de otra palabra.
+      const re = new RegExp("(^|[^a-z0-9ñ])" + t, "g");
+      const enTexto = re.test(texto);
+      re.lastIndex = 0;
+      const enRotulo = re.test(rotulo);
       if (enTexto || enRotulo) distintos++;
       if (enRotulo) puntos += 6;          // el titulo pesa mas que el cuerpo
-      if (enTexto) puntos += Math.min(3, (texto.split(t).length - 1));
+      if (enTexto) puntos += Math.min(3, (texto.match(new RegExp("(^|[^a-z0-9ñ])" + t, "g")) || []).length);
     }
     // Con dos o mas terminos hay que acertar al menos dos. Si no, una palabra
     // comun sola arrastra medio corpus: "capital" (de Francia) matchea la
@@ -593,8 +611,12 @@ export default async function handler(req) {
     // Separadas, cada una corre con su propio presupuesto de tiempo.
     // "completa" (sin accion) queda para pruebas por curl.
     if (accion === "buscar") {
+      const t0 = Date.now();
       const paso1 = await buscarSecciones(clave, pregunta, c);
+      const ms = Date.now() - t0;
+      if (ms > 15000) console.warn("[consultor] paso1 lento:", ms, "ms —", pregunta);
       return json(200, {
+        ms,
         ids: paso1.ids,
         razon: paso1.razon,
         secciones: paso1.ids.map((id) => {
@@ -648,7 +670,15 @@ export default async function handler(req) {
     const t = await verTope(auth.correo);
     if (!t.permitido) return json(429, { error: t.motivo });
 
+    const t0 = Date.now();
     const paso2 = await responder(clave, pregunta, secciones, c);
+    const ms = Date.now() - t0;
+    // Si esto se acerca al techo de Netlify (26 s), el siguiente que pregunte
+    // algo parecido se come un 504. Queda en el log para poder bajar el tope.
+    if (ms > 15000) {
+      console.warn("[consultor] paso2 lento:", ms, "ms —", secciones.length,
+        "secciones,", acumulado, "chars —", pregunta);
+    }
     if (recortadas > 0) {
       paso2.datos.alertas = paso2.datos.alertas || [];
       paso2.datos.alertas.push(
@@ -679,6 +709,8 @@ export default async function handler(req) {
         pagina_desde: s.pagina_desde,
         pagina_hasta: s.pagina_hasta,
       })),
+      ms,
+      material_chars: acumulado,
       uso: { responder: paso2.uso },
     });
   } catch (e) {
