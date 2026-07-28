@@ -51,10 +51,22 @@
         S.cliente = google.accounts.oauth2.initTokenClient({
           client_id: clientId,
           scope: SCOPE,
-          callback: function () {}
+          callback: function () {},
+          // Sin esto, un popup bloqueado o cerrado dejaba la Promise colgada
+          // PARA SIEMPRE: spinner eterno y boton muerto hasta recargar. GIS
+          // reporta esos casos unicamente por error_callback.
+          error_callback: function (err) {
+            var tipo = (err && err.type) || 'error';
+            var msg = tipo === 'popup_closed'
+              ? 'Cerraste la ventana de Google. Intentá de nuevo.'
+              : 'El navegador bloqueó la ventana de Google (' + tipo + '). Hacé clic de nuevo.';
+            if (S.rechazar) { var rj = S.rechazar; S.rechazar = null; rj(new Error(msg)); }
+          }
         });
       }
+      S.rechazar = reject;
       S.cliente.callback = function (r) {
+        S.rechazar = null;
         if (r.error) { reject(new Error(r.error_description || r.error)); return; }
         S.token = r.access_token;
         resolve(r.access_token);
@@ -62,7 +74,7 @@
       try {
         // prompt vacio = reuso silencioso si ya autorizo antes
         S.cliente.requestAccessToken({ prompt: '' });
-      } catch (e) { reject(e); }
+      } catch (e) { S.rechazar = null; reject(e); }
     });
   }
 
@@ -95,8 +107,12 @@
       body: JSON.stringify(payload)
     });
     if ((r.headers.get('content-type') || '').indexOf('json') === -1) {
-      throw new Error('El servidor cortó la consulta a medias (HTTP ' + r.status +
-        '), casi seguro por el límite de tiempo. Volvé a intentar.');
+      // HTML en vez de JSON: o el gateway corto por tiempo (5xx) o la funcion
+      // no existe en este sitio (404). Son problemas distintos — no hay que
+      // mandar a reintentar lo que nunca va a funcionar.
+      throw new Error(r.status === 404 || r.status === 405
+        ? 'La función del consultor no está publicada en este sitio (HTTP ' + r.status + '). Reintentar no sirve: falta desplegarla.'
+        : 'El servidor cortó la consulta a medias (HTTP ' + r.status + '), casi seguro por el límite de tiempo. Volvé a intentar.');
     }
     return { status: r.status, body: await r.json() };
   }
@@ -173,9 +189,17 @@
     }
 
     var sin = d.citas_sin_verificar || 0;
-    var badge = sin > 0
-      ? '<span class="badge b-warn">' + sin + (sin === 1 ? ' cita sin verificar' : ' citas sin verificar') + '</span>'
-      : '<span class="badge b-ok">' + d.citas.length + ' de ' + d.citas.length + ' citas verificadas</span>';
+    var nCitas = (d.citas || []).length;
+    var badge;
+    if (sin > 0) {
+      badge = '<span class="badge b-warn">' + sin + (sin === 1 ? ' cita sin verificar' : ' citas sin verificar') + '</span>';
+    } else if (!nCitas) {
+      // "0 de 0 verificadas" en verde seria mentirle al agente: una respuesta
+      // sin citas no paso por NINGUNA verificacion.
+      badge = '<span class="badge b-warn">Sin citas verificables</span>';
+    } else {
+      badge = '<span class="badge b-ok">' + nCitas + ' de ' + nCitas + ' citas verificadas</span>';
+    }
 
     var texto = S.vista === 'cliente' && d.resumen_cliente ? d.resumen_cliente : d.respuesta;
 
@@ -214,8 +238,7 @@
       '<button class="btn-s btn-wa" id="btnWa"' + (d.apto_para_enviar ? '' : ' disabled') + '>WhatsApp</button>' +
       '</div>' +
       (d.apto_para_enviar ? '' :
-        '<div class="lock">⚠ Envío bloqueado: ' + (sin === 1 ? 'hay 1 cita que no pasó' : 'hay ' + sin + ' citas que no pasaron') +
-        ' la verificación contra el documento.</div>') +
+        '<div class="lock">⚠ Envío bloqueado: ' + motivoBloqueo(d, sin) + '</div>') +
       '</div></div>';
 
     $('out').innerHTML = html;
@@ -224,6 +247,20 @@
     if (d.resumen_cliente) $('vCli').onclick = function () { S.vista = 'cliente'; pintar(pregunta, d); };
     $('btnCopy').onclick = copiar;
     if (d.apto_para_enviar) $('btnWa').onclick = mandarWhatsApp;
+  }
+
+  /**
+   * El bloqueo tiene tres causas distintas y el mensaje debe decir LA REAL:
+   * decir "hay 0 citas que no pasaron" junto a un badge verde era contradecirse.
+   */
+  function motivoBloqueo(d, sin) {
+    if (sin > 0) {
+      return sin === 1
+        ? 'hay 1 cita que no pasó la verificación contra el documento.'
+        : 'hay ' + sin + ' citas que no pasaron la verificación contra el documento.';
+    }
+    if (!d.citas || !d.citas.length) return 'la respuesta no trae citas verificables.';
+    return 'el consultor no encontró una respuesta completa en los documentos.';
   }
 
   function parrafos(t) {
@@ -267,8 +304,11 @@
     if (S.vista === 'interna' && d.citas && d.citas.length) {
       t += '\n\nFuentes:';
       d.citas.forEach(function (c) {
-        t += '\n· ' + (c.documento || '') + (c.version ? ' ' + c.version : '') +
-             ', pág. ' + c.pagina_desde + (c.ruta ? ' — ' + c.ruta : '');
+        // pagina_desde falta cuando la seccion citada no existio en el corpus
+        // (cita rechazada): sin el guard el texto pegado decia "pág. undefined"
+        var pg = c.pagina_desde ? ', pág. ' + c.pagina_desde : '';
+        t += '\n· ' + (c.documento || 'documento no identificado') + (c.version ? ' ' + c.version : '') +
+             pg + (c.ruta ? ' — ' + c.ruta : '');
       });
     }
     if (S.vista === 'cliente') {

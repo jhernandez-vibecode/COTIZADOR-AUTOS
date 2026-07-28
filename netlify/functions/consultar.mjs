@@ -188,6 +188,19 @@ async function verificarGoogle(token) {
   if (!correo) return { ok: false, motivo: "El token de Google no trae correo." };
   if (info.email_verified === "false") return { ok: false, motivo: "El correo de Google no esta verificado." };
 
+  // El token tiene que haber sido emitido A ESTA app. Sin este chequeo sirve
+  // cualquier access_token con scope email del mismo correo emitido a OTRA app
+  // (OAuth Playground, un "Sign in with Google" de un sitio de terceros): el
+  // clasico token-substitution. tokeninfo ya trae aud/azp en la respuesta.
+  // El client id es informacion PUBLICA (vive en js/config.js del front), asi
+  // que este valor por defecto no viola la regla de no hardcodear secretos.
+  const esperado =
+    process.env.CONSULTOR_CLIENT_ID ||
+    "255791314248-apgnrs0tiii72ogau5dpsjm2eie6d2hu.apps.googleusercontent.com";
+  if (info.aud !== esperado && info.azp !== esperado) {
+    return { ok: false, motivo: "El token no fue emitido por esta aplicacion. Entra por la pagina del consultor." };
+  }
+
   const permitidos = correosAutorizados();
   if (permitidos.length === 0) {
     // Fail-closed: sin lista configurada NO se atiende a nadie. Lo contrario
@@ -385,7 +398,28 @@ async function responder(clave, pregunta, secciones, c) {
     messages: [{ role: "user", content: pregunta }],
   });
 
-  return { datos: JSON.parse(textoDe(resp)), uso: resp.usage };
+  // Truncado por max_tokens: el JSON llega cortado y JSON.parse revienta con
+  // "Unterminated string". Mejor un mensaje que diga que hacer.
+  if (resp.stop_reason === "max_tokens") {
+    const e = new Error(
+      "La pregunta pide demasiado de una sola vez y la respuesta no cupo. " +
+      "Hacela mas acotada: una cobertura o un tema por consulta."
+    );
+    e.publico = true;
+    e.estado = 422;
+    throw e;
+  }
+
+  let datos;
+  try {
+    datos = JSON.parse(textoDe(resp));
+  } catch {
+    const e = new Error("El modelo devolvio una respuesta malformada. Volve a intentar.");
+    e.publico = true;
+    e.estado = 502;
+    throw e;
+  }
+  return { datos, uso: resp.usage };
 }
 
 // ────────────────────────────────────────────────────────────── verificacion
@@ -413,11 +447,20 @@ function verificarCitas(citas, c) {
       return { ...cita, verificada: false, motivo: "La seccion citada no existe en el corpus." };
     }
     const d = c._docs.get(s.documento);
-    const ok = normalizar(s.texto).includes(normalizar(cita.texto_literal));
+    const literal = normalizar(cita.texto_literal);
+    // Una cita vacia o de dos palabras pasa includes() contra cualquier texto
+    // ("".includes("") es SIEMPRE true). Menos de 15 caracteres no identifica
+    // nada: se rechaza como no verificable, no se da por buena.
+    const muyCorta = literal.length < 15;
+    const ok = !muyCorta && normalizar(s.texto).includes(literal);
     return {
       ...cita,
       verificada: ok,
-      motivo: ok ? null : "El texto citado no aparece literalmente en el documento.",
+      motivo: ok
+        ? null
+        : muyCorta
+          ? "La cita es demasiado corta para verificarse contra el documento."
+          : "El texto citado no aparece literalmente en el documento.",
       documento: d.titulo,
       documento_id: s.documento,
       version: s.version,
@@ -580,7 +623,9 @@ export default async function handler(req) {
       resumen_cliente: paso2.datos.resumen_cliente || "",
       // Con una sola cita sin verificar el envio queda bloqueado en el front:
       // no sale para afuera nada que no haya pasado el chequeo contra la fuente.
-      apto_para_enviar: sinVerificar === 0 && paso2.datos.encontrado,
+      // Y sin NINGUNA cita tampoco: "0 de 0 verificadas" no es una garantia,
+      // es una respuesta que no paso por ninguna verificacion.
+      apto_para_enviar: citas.length > 0 && sinVerificar === 0 && paso2.datos.encontrado,
       citas_sin_verificar: sinVerificar,
       secciones_consultadas: secciones.map((s) => ({
         id: s.id,
@@ -593,8 +638,11 @@ export default async function handler(req) {
       uso: { responder: paso2.uso },
     });
   } catch (e) {
+    // El detalle completo va al log de la funcion, NO al cliente: los mensajes
+    // crudos filtran rutas absolutas del deploy y cuerpos de error de terceros.
     console.error("[consultor]", e);
-    return json(502, { error: "No se pudo completar la consulta.", detalle: String(e.message || e) });
+    if (e && e.publico) return json(e.estado || 502, { error: e.message });
+    return json(502, { error: "No se pudo completar la consulta. Volve a intentar." });
   }
 }
 
