@@ -39,9 +39,17 @@
         reject(new Error('Google todavía no cargó. Recargá la página.'));
         return;
       }
+      // config.js declara "const CFG", y las const NO se cuelgan de window —
+      // hay que referenciar CFG directo, como hace app.js. Con window.CFG
+      // llegaba vacio y Google contestaba "Missing required parameter client_id".
+      var clientId = (typeof CFG !== 'undefined' && CFG.CLIENT_ID) || '';
+      if (!clientId) {
+        reject(new Error('No se cargó la configuración (js/config.js). Recargá la página.'));
+        return;
+      }
       if (!S.cliente) {
         S.cliente = google.accounts.oauth2.initTokenClient({
-          client_id: (window.CFG && CFG.CLIENT_ID) || '',
+          client_id: clientId,
           scope: SCOPE,
           callback: function () {}
         });
