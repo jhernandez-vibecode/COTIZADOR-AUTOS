@@ -20,6 +20,7 @@
  */
 
 import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 
 // ─────────────────────────────────────────────────────────────── configuracion
 
@@ -57,10 +58,37 @@ function correosAutorizados() {
 
 let _corpus = null;
 
+/**
+ * Netlify copia los included_files conservando su ruta desde la raiz del repo,
+ * que no siempre es la misma que la del archivo de la funcion ya empaquetado.
+ * Se prueban las ubicaciones posibles en vez de asumir una: si esto falla, la
+ * funcion se despliega "bien" y recien revienta en la primera consulta.
+ */
 async function corpus() {
   if (_corpus) return _corpus;
-  const url = new URL("./data/corpus.json", import.meta.url);
-  _corpus = JSON.parse(await readFile(url, "utf-8"));
+
+  const candidatos = [
+    new URL("./data/corpus.json", import.meta.url),
+    join(process.cwd(), "netlify", "functions", "data", "corpus.json"),
+    join(process.cwd(), "data", "corpus.json"),
+    join(process.cwd(), "corpus.json"),
+  ];
+
+  let crudo = null;
+  const intentos = [];
+  for (const ruta of candidatos) {
+    try {
+      crudo = await readFile(ruta, "utf-8");
+      break;
+    } catch (e) {
+      intentos.push(`${ruta} (${e.code || "error"})`);
+    }
+  }
+  if (crudo === null) {
+    throw new Error("No se encontro corpus.json. Rutas probadas: " + intentos.join(" | "));
+  }
+
+  _corpus = JSON.parse(crudo);
   _corpus._porId = new Map(_corpus.secciones.map((s) => [s.id, s]));
   _corpus._docs = new Map(_corpus.documentos.map((d) => [d.id, d]));
   return _corpus;
@@ -312,6 +340,34 @@ const json = (estado, cuerpo) =>
   });
 
 export default async function handler(req) {
+  /**
+   * Chequeo de salud. Responde si la clave, la lista de agentes y el corpus
+   * estan donde deben — nunca los valores, solo si estan y cuantos son. Sirve
+   * para saber QUE falla sin tener que adivinar leyendo logs.
+   */
+  if (req.method === "GET") {
+    const estado = {
+      clave_configurada: Boolean(claveAnthropic()),
+      agentes_autorizados: correosAutorizados().length,
+      corpus: null,
+      error: null,
+    };
+    try {
+      const c = await corpus();
+      estado.corpus = {
+        version: c.version_corpus,
+        documentos: c.documentos.length,
+        secciones: c.secciones.length,
+        con_tabla: c.secciones.filter((s) => s.tiene_tabla).length,
+      };
+    } catch (e) {
+      estado.error = String(e.message || e);
+    }
+    estado.listo =
+      estado.clave_configurada && estado.agentes_autorizados > 0 && Boolean(estado.corpus);
+    return json(estado.listo ? 200 : 503, estado);
+  }
+
   if (req.method !== "POST") return json(405, { error: "Usa POST." });
 
   const clave = claveAnthropic();
