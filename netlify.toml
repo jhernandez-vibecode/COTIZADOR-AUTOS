@@ -57,6 +57,21 @@
   status = 404
   force = true
 
+# package.json y su lock: no tienen secretos, pero publican las versiones de
+# las dependencias — que es por donde se empieza a buscar vulnerabilidades
+# conocidas. No hay razon para servirlos.
+[[redirects]]
+  from = "/package.json"
+  to = "/404.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/package-lock.json"
+  to = "/404.html"
+  status = 404
+  force = true
+
 # ============ HEADERS DE SEGURIDAD ============
 [[headers]]
   for = "/*"
