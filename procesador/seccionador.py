@@ -11,7 +11,7 @@ Cambios sobre v1:
     Bajo la cobertura A"), para que el indice del paso 1 no pierda el tema madre.
   - Multiasistencia no exige negrita (todo su cuerpo lo esta).
 """
-import fitz, re, json, unicodedata, warnings
+import fitz, re, json, os, unicodedata, warnings
 from collections import Counter
 warnings.filterwarnings("ignore")
 import pymupdf4llm
@@ -93,6 +93,31 @@ def anotar_contexto(lineas):
                 break
         L["ctx"] = " · ".join(v for v in (vig["ambito"], vig["categoria"], vig["uso"]) if v)
     return lineas
+
+
+def tablas_de_imagen(doc_id):
+    """
+    Tablas que viven como IMAGEN en el PDF y ninguna herramienta de texto ve.
+
+    La de depreciacion de la bateria (CG pag 54) dejaba el corpus con "conforme
+    a la siguiente tabla:" y nada detras: el consultor citaba la clausula sin
+    poder decir el porcentaje. Estan transcritas a mano en tablas-imagen.json
+    tras LEER la imagen; ver procesador/detectar_tablas_imagen.py para
+    encontrar mas.
+    """
+    ruta = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tablas-imagen.json")
+    try:
+        with open(ruta, encoding="utf-8") as f:
+            datos = json.load(f)
+    except FileNotFoundError:
+        return {}
+    out = {}
+    for t in datos.get("tablas", []):
+        if t["documento"] != doc_id:
+            continue
+        bloque = f"**{t['titulo']}**\n" + "\n".join(t["markdown"])
+        out.setdefault(t["pagina"], []).append(bloque)
+    return out
 
 
 def extraer_tablas(path):
@@ -257,6 +282,9 @@ def explotar(bloque, padre, prof=0):
 def procesar(doc):
     lineas = leer_lineas(doc["archivo"])
     tablas = extraer_tablas(doc["archivo"])
+    # Las que viven como imagen: transcritas a mano, se suman a las extraidas.
+    for pg, bloques in tablas_de_imagen(doc["id"]).items():
+        tablas.setdefault(pg, []).extend(bloques)
     regla = doc["regla"]
 
     if regla == "clausulas":

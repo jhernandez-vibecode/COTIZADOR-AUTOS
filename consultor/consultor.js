@@ -13,7 +13,7 @@
   'use strict';
 
   var SCOPE = 'https://www.googleapis.com/auth/userinfo.email';
-  var S = { token: null, cliente: null, ultima: null, vista: 'interna' };
+  var ST = { token: null, cliente: null, ultima: null, vista: 'interna' };
 
   var $ = function (id) { return document.getElementById(id); };
 
@@ -47,8 +47,8 @@
         reject(new Error('No se cargó la configuración (js/config.js). Recargá la página.'));
         return;
       }
-      if (!S.cliente) {
-        S.cliente = google.accounts.oauth2.initTokenClient({
+      if (!ST.cliente) {
+        ST.cliente = google.accounts.oauth2.initTokenClient({
           client_id: clientId,
           scope: SCOPE,
           callback: function () {},
@@ -60,21 +60,21 @@
             var msg = tipo === 'popup_closed'
               ? 'Cerraste la ventana de Google. Intentá de nuevo.'
               : 'El navegador bloqueó la ventana de Google (' + tipo + '). Hacé clic de nuevo.';
-            if (S.rechazar) { var rj = S.rechazar; S.rechazar = null; rj(new Error(msg)); }
+            if (ST.rechazar) { var rj = ST.rechazar; ST.rechazar = null; rj(new Error(msg)); }
           }
         });
       }
-      S.rechazar = reject;
-      S.cliente.callback = function (r) {
-        S.rechazar = null;
+      ST.rechazar = reject;
+      ST.cliente.callback = function (r) {
+        ST.rechazar = null;
         if (r.error) { reject(new Error(r.error_description || r.error)); return; }
-        S.token = r.access_token;
+        ST.token = r.access_token;
         resolve(r.access_token);
       };
       try {
         // prompt vacio = reuso silencioso si ya autorizo antes
-        S.cliente.requestAccessToken({ prompt: '' });
-      } catch (e) { S.rechazar = null; reject(e); }
+        ST.cliente.requestAccessToken({ prompt: '' });
+      } catch (e) { ST.rechazar = null; reject(e); }
     });
   }
 
@@ -119,13 +119,13 @@
 
   /** Reintenta UNA vez con token nuevo si el actual venció (dura 1 hora). */
   async function conToken(payload) {
-    if (!S.token) await pedirToken();
-    payload.token = S.token;
+    if (!ST.token) await pedirToken();
+    payload.token = ST.token;
     var res = await llamar(payload);
     if (res.status === 403) {
-      S.token = null;
+      ST.token = null;
       await pedirToken();
-      payload.token = S.token;
+      payload.token = ST.token;
       res = await llamar(payload);
     }
     return res;
@@ -158,8 +158,8 @@
       var r2 = await conToken({ pregunta: pregunta, accion: 'responder', ids: b.body.ids });
       if (r2.status !== 200) { pintarError(pregunta, r2.body.error || ('Error ' + r2.status)); return; }
 
-      S.ultima = { pregunta: pregunta, data: r2.body };
-      S.vista = 'interna';
+      ST.ultima = { pregunta: pregunta, data: r2.body };
+      ST.vista = 'interna';
       pintar(pregunta, r2.body);
     } catch (e) {
       pintarError(pregunta, e.message || String(e));
@@ -201,7 +201,7 @@
       badge = '<span class="badge b-ok">' + nCitas + ' de ' + nCitas + ' citas verificadas</span>';
     }
 
-    var texto = S.vista === 'cliente' && d.resumen_cliente ? d.resumen_cliente : d.respuesta;
+    var texto = ST.vista === 'cliente' && d.resumen_cliente ? d.resumen_cliente : d.respuesta;
 
     var html =
       '<div class="card"><header><div class="q">' + esc(pregunta) + '</div>' + badge + '</header>' +
@@ -230,11 +230,12 @@
 
     html += '</div><div class="acts">' +
       '<div class="seg">' +
-      '<button id="vInt" class="' + (S.vista === 'interna' ? 'on' : '') + '">Para mí</button>' +
-      '<button id="vCli" class="' + (S.vista === 'cliente' ? 'on' : '') + '"' +
+      '<button id="vInt" class="' + (ST.vista === 'interna' ? 'on' : '') + '">Para mí</button>' +
+      '<button id="vCli" class="' + (ST.vista === 'cliente' ? 'on' : '') + '"' +
         (d.resumen_cliente ? '' : ' disabled') + '>Para el cliente</button>' +
       '</div><div class="sp">' +
       '<button class="btn-s" id="btnCopy">Copiar</button>' +
+      '<button class="btn-s btn-mail" id="btnMail"' + (d.apto_para_enviar ? '' : ' disabled') + '>Correo</button>' +
       '<button class="btn-s btn-wa" id="btnWa"' + (d.apto_para_enviar ? '' : ' disabled') + '>WhatsApp</button>' +
       '</div>' +
       (d.apto_para_enviar ? '' :
@@ -243,10 +244,13 @@
 
     $('out').innerHTML = html;
 
-    $('vInt').onclick = function () { S.vista = 'interna'; pintar(pregunta, d); };
-    if (d.resumen_cliente) $('vCli').onclick = function () { S.vista = 'cliente'; pintar(pregunta, d); };
+    $('vInt').onclick = function () { ST.vista = 'interna'; pintar(pregunta, d); };
+    if (d.resumen_cliente) $('vCli').onclick = function () { ST.vista = 'cliente'; pintar(pregunta, d); };
     $('btnCopy').onclick = copiar;
-    if (d.apto_para_enviar) $('btnWa').onclick = mandarWhatsApp;
+    if (d.apto_para_enviar) {
+      $('btnWa').onclick = mandarWhatsApp;
+      $('btnMail').onclick = abrirMail;
+    }
   }
 
   /**
@@ -298,10 +302,10 @@
   // ──────────────────────────────────────────────────────────────── salida
 
   function textoPlano() {
-    var d = S.ultima.data;
-    var base = S.vista === 'cliente' && d.resumen_cliente ? d.resumen_cliente : d.respuesta;
+    var d = ST.ultima.data;
+    var base = ST.vista === 'cliente' && d.resumen_cliente ? d.resumen_cliente : d.respuesta;
     var t = base;
-    if (S.vista === 'interna' && d.citas && d.citas.length) {
+    if (ST.vista === 'interna' && d.citas && d.citas.length) {
       t += '\n\nFuentes:';
       d.citas.forEach(function (c) {
         // pagina_desde falta cuando la seccion citada no existio en el corpus
@@ -311,7 +315,7 @@
              pg + (c.ruta ? ' — ' + c.ruta : '');
       });
     }
-    if (S.vista === 'cliente') {
+    if (ST.vista === 'cliente') {
       t += '\n\nEsto refleja las Condiciones Generales del producto; su póliza puede tener ' +
            'condiciones particulares distintas.';
     }
@@ -334,6 +338,147 @@
     }
   }
 
+  // ─────────────────────────────────────────────────────────── correo
+
+  /**
+   * Cuerpo HTML del correo. Texto y color, SIN imagenes: Gmail bloquea SVG y
+   * base64, y un correo que llega con los cuadros rotos se ve peor que uno
+   * sin adornos.
+   */
+  function correoHtml() {
+    var d = ST.ultima.data;
+    // La vista se CONGELA al abrir el modal. Si se leyera ST.vista aca, cambiar
+    // de pestana con el modal abierto mandaria la version interna —con citas de
+    // clausulas— a un cliente.
+    var paraCliente = ST.vistaMail === 'cliente';
+    var cuerpo = paraCliente && d.resumen_cliente ? d.resumen_cliente : d.respuesta;
+    var nombre = (typeof CFG !== 'undefined' && CFG.FROM_NAME) || '';
+    var lic = (typeof CFG !== 'undefined' && CFG.LICENSE) || '';
+    var tel = (typeof CFG !== 'undefined' && CFG.PHONE) || '';
+    var web = (typeof CFG !== 'undefined' && CFG.WEBSITE) || '';
+
+    var citas = '';
+    if (!paraCliente && d.citas && d.citas.length) {
+      citas = '<p style="margin:22px 0 6px;font-size:12px;color:#64748b;text-transform:uppercase;' +
+        'letter-spacing:.05em;font-weight:700;">Respaldo documental</p>';
+      d.citas.forEach(function (c) {
+        citas += '<div style="border-left:3px solid #16a34a;background:#f8fafc;padding:10px 14px;margin:0 0 9px;">' +
+          '<div style="font-size:12px;color:#64748b;margin-bottom:5px;">' +
+            '<b style="color:#0c2340;">' + esc(c.documento || '') + '</b>' +
+            (c.version ? ' · ' + esc(c.version) : '') +
+            (c.pagina_desde ? ' · pág. ' + esc(c.pagina_desde) : '') +
+            (c.ruta ? '<br>' + esc(c.ruta) : '') +
+          '</div>' +
+          '<div style="font-size:13px;color:#334155;font-style:italic;">' + esc(c.texto_literal) + '</div>' +
+        '</div>';
+      });
+    }
+
+    var aviso = paraCliente
+      ? '<p style="margin:20px 0 0;padding:12px 14px;background:#fffbeb;border:1px solid #fde68a;' +
+        'font-size:12.5px;color:#78350f;">Esto refleja las Condiciones Generales del producto. ' +
+        'Su póliza puede tener condiciones particulares distintas: con gusto se lo confirmo sobre su caso.</p>'
+      : '';
+
+    return '<!doctype html><html><body style="margin:0;padding:0;background:#f1f5f9;">' +
+      '<table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:24px 12px;">' +
+      '<tr><td align="center">' +
+      '<table width="100%" cellpadding="0" cellspacing="0" style="max-width:620px;background:#ffffff;">' +
+        '<tr><td style="background:#0c2340;padding:18px 24px;">' +
+          '<div style="color:#ffffff;font-family:Arial,sans-serif;font-size:17px;font-weight:bold;">Seguros del INS</div>' +
+          '<div style="color:#cbd5e1;font-family:Arial,sans-serif;font-size:12.5px;margin-top:3px;">Consulta sobre las condiciones del seguro de automóviles</div>' +
+        '</td></tr>' +
+        '<tr><td style="padding:24px;font-family:Arial,sans-serif;color:#0f172a;font-size:14.5px;line-height:1.65;">' +
+          '<p style="margin:0 0 6px;font-size:12px;color:#64748b;text-transform:uppercase;letter-spacing:.05em;font-weight:700;">Consulta</p>' +
+          '<p style="margin:0 0 18px;font-weight:600;">' + esc(ST.ultima.pregunta) + '</p>' +
+          parrafosMail(cuerpo) +
+          citas +
+          aviso +
+        '</td></tr>' +
+        '<tr><td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:18px 24px;' +
+          'font-family:Arial,sans-serif;font-size:12.5px;color:#475569;line-height:1.6;">' +
+          '<b style="color:#0c2340;">' + esc(nombre) + '</b><br>' +
+          'Agente de Seguros del INS' + (lic ? ' · Licencia SUGESE ' + esc(lic) : '') + '<br>' +
+          (tel ? 'Tel / WhatsApp: ' + esc(tel) + '<br>' : '') +
+          (web ? esc(web) : '') +
+          '<p style="margin:12px 0 0;font-size:10.5px;color:#94a3b8;">&copy; 2026 Propiedad Intelectual de ' +
+            esc(nombre) + '. Documento generado a partir de las condiciones oficiales del INS.</p>' +
+        '</td></tr>' +
+      '</table></td></tr></table></body></html>';
+  }
+
+  function parrafosMail(t) {
+    return String(t || '').split(/\n{2,}/).map(function (p) {
+      return '<p style="margin:0 0 13px;">' + esc(p).replace(/\n/g, '<br>') + '</p>';
+    }).join('');
+  }
+
+  function abrirMail() {
+    // Se congela la version en este momento: lo que diga la nota es lo que sale.
+    ST.vistaMail = ST.vista;
+    var paraCliente = ST.vistaMail === 'cliente';
+    $('mailSubject').value = (paraCliente
+      ? 'Sobre su consulta del seguro de automóviles'
+      : 'Consulta: ' + ST.ultima.pregunta).slice(0, 120);
+    $('mailNota').textContent = paraCliente
+      ? 'Se enviará la versión PARA EL CLIENTE: lenguaje llano, sin citas de cláusulas y con la nota de condiciones particulares.'
+      : 'Se enviará la versión INTERNA: respuesta completa con las citas, documento, versión y página. No es para un cliente.';
+    $('mailBg').hidden = false;
+    $('mailTo').value = '';
+    $('mailTo').focus();
+    document.addEventListener('keydown', atraparFoco, true);
+  }
+
+  function cerrarMail() {
+    $('mailBg').hidden = true;
+    document.removeEventListener('keydown', atraparFoco, true);
+    var b = $('btnMail'); if (b) b.focus();
+  }
+
+  /** El Tab no debe salirse del modal mientras esta abierto. */
+  function atraparFoco(ev) {
+    if (ev.key !== 'Tab' || $('mailBg').hidden) return;
+    var f = [$('mailTo'), $('mailSubject'), $('mailCancel'), $('mailSend')].filter(function (x) { return x && !x.disabled; });
+    if (!f.length) return;
+    var i = f.indexOf(document.activeElement);
+    ev.preventDefault();
+    f[(i + (ev.shiftKey ? -1 : 1) + f.length) % f.length].focus();
+  }
+
+  async function enviarMail() {
+    if (ST.enviando) return;                     // doble clic: no mandar dos veces
+    var para = $('mailTo').value.trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(para)) { $('mailTo').focus(); toast('Revisá el correo'); return; }
+
+    var btn = $('mailSend');
+    ST.enviando = true;
+    btn.disabled = true;
+    btn.textContent = 'Enviando…';
+    try {
+      // Token de Gmail: SEPARADO del de identidad del consultor. Si el agente
+      // no autoriza Gmail, el consultor sigue funcionando igual.
+      await getToken();
+      var from = ((typeof CFG !== 'undefined' && CFG.FROM_NAME) || '') +
+                 ' <' + ((typeof CFG !== 'undefined' && CFG.FROM_EMAIL) || '') + '>';
+      var raw = buildMIMESimple({
+        to: para, from: from, subject: $('mailSubject').value.trim(), html: correoHtml()
+      });
+      await sendEmail(raw);
+      cerrarMail();
+      toast('Correo enviado a ' + para);
+    } catch (e) {
+      // Si el modal ya se cerro, el mensaje en mailNota no lo ve nadie y el
+      // agente se queda creyendo que el correo salio. El toast si se ve.
+      var msg = 'No se pudo enviar: ' + (e.message || e);
+      $('mailNota').textContent = msg;
+      if ($('mailBg').hidden) toast(msg, 6000);
+    } finally {
+      ST.enviando = false;
+      btn.disabled = false;
+      btn.textContent = 'Autorizar Gmail y Enviar';
+    }
+  }
+
   function mandarWhatsApp() {
     // SIEMPRE web.whatsapp.com/send/, nunca wa.me
     var t = textoPlano();
@@ -351,6 +496,15 @@
   ];
 
   document.addEventListener('DOMContentLoaded', function () {
+    // Pisar CFG con el perfil ⚙ de ESTE navegador. Sin esto el correo sale
+    // firmado con el nombre y la licencia SUGESE de JC aunque lo mande otro
+    // agente — poner la licencia ajena en un correo a un cliente no es un
+    // detalle cosmetico.
+    try {
+      var perfil = typeof loadProfile === 'function' ? loadProfile() : null;
+      if (perfil && typeof applyProfile === 'function') applyProfile(perfil);
+    } catch (e) { console.warn('[consultor] no se pudo aplicar el perfil', e); }
+
     $('chips').innerHTML = EJEMPLOS.map(function (e) {
       return '<span class="chip">' + esc(e) + '</span>';
     }).join('');
@@ -379,6 +533,18 @@
     };
     $('q').addEventListener('keydown', function (e) {
       if (e.key === 'Enter') $('btnGo').click();
+    });
+
+    // Modal de correo. "Salir" y no "Cancelar": no es una acción destructiva.
+    // No se cierra mientras se está enviando: perder el modal en ese momento
+    // esconde el error y el agente cree que el correo salió.
+    $('mailCancel').onclick = function () { if (!ST.enviando) cerrarMail(); };
+    $('mailSend').onclick = enviarMail;
+    $('mailBg').addEventListener('click', function (ev) {
+      if (ev.target === $('mailBg') && !ST.enviando) cerrarMail();
+    });
+    document.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Escape' && !$('mailBg').hidden && !ST.enviando) cerrarMail();
     });
   });
 })();

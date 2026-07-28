@@ -215,6 +215,51 @@ async function verificarGoogle(token) {
 
 // ─────────────────────────────────────────────────────────── llamadas al modelo
 
+/**
+ * Tope diario por agente (hora de Costa Rica, UTC-6 sin horario de verano).
+ *
+ * No es el control de acceso — ese es la whitelist verificada contra Google.
+ * Esto es el cinturon contra un bucle accidental o un agente entusiasmado
+ * quemando la clave de JC. Solo cuenta el paso 2, que es donde esta el gasto.
+ *
+ * Si Blobs falla NO se bloquea al agente: perder la cuenta es menos grave que
+ * dejarlo sin trabajar por un problema de infraestructura.
+ */
+function diaCR() {
+  return new Date(Date.now() - 6 * 3600 * 1000).toISOString().slice(0, 10);
+}
+
+async function verTope(correo) {
+  const limite = Number(process.env.CONSULTOR_TOPE_DIARIO || 0);
+  if (!limite || limite < 1) return { permitido: true, limite: 0, usadas: 0 };
+
+  const clave = `${diaCR()}|${correo}`;
+  try {
+    // Import perezoso a proposito: @netlify/blobs solo existe en el build de
+    // Netlify. Arriba del todo dejaria el modulo sin cargar en local y los
+    // tests (que importan buscarLiteral de aca) no correrian. Ademas, si la
+    // dependencia fallara, cae solo el contador y no la funcion entera.
+    const { getStore } = await import("@netlify/blobs");
+    const s = getStore({ name: "consultor-uso", consistency: "strong" });
+    const usadas = Number((await s.get(clave)) || 0);
+    if (usadas >= limite) {
+      return {
+        permitido: false, limite, usadas,
+        motivo: `Llegaste al tope de ${limite} consultas por hoy. Se reinicia mañana.`,
+      };
+    }
+    // Se INCREMENTA YA, antes de la llamada al modelo. Antes se leia aca y se
+    // escribia 15 segundos despues: en una rafaga todas leian el mismo valor y
+    // el tope no frenaba nada. Y una consulta que falla igual costo dinero, asi
+    // que tambien tiene que contar.
+    await s.set(clave, String(usadas + 1));
+    return { permitido: true, limite, usadas: usadas + 1 };
+  } catch (e) {
+    console.error("[consultor] no se pudo contar el uso", e);
+    return { permitido: true, limite, usadas: 0 };   // fail-open a proposito
+  }
+}
+
 async function anthropic(clave, cuerpo) {
   const r = await fetch(API, {
     method: "POST",
@@ -597,6 +642,11 @@ export default async function handler(req) {
       acumulado += s.texto.length;
     }
     const recortadas = todas.length - secciones.length;
+
+    // El tope se consulta justo antes del paso 2 — el unico que gasta de
+    // verdad. Buscar es centavos y no vale la pena bloquearlo.
+    const t = await verTope(auth.correo);
+    if (!t.permitido) return json(429, { error: t.motivo });
 
     const paso2 = await responder(clave, pregunta, secciones, c);
     if (recortadas > 0) {

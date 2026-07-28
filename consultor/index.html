@@ -90,6 +90,14 @@ details.src-list .it .pg{color:var(--mute);white-space:nowrap;font-variant-numer
 .step div{margin:3px 0} .step .done{color:var(--green-dark)} .step .now{color:var(--navy);font-weight:600} .step .next{color:#cbd5e1}
 
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:11px 20px;border-radius:10px;font-size:14px;box-shadow:var(--shadow-md);z-index:50}
+.modal-bg{position:fixed;inset:0;background:rgba(12,35,64,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:60}
+.modal{background:#fff;border-radius:14px;box-shadow:var(--shadow-lg);padding:22px;width:100%;max-width:460px}
+.modal h3{margin:0 0 16px;font-size:17px}
+.modal label{display:block;font-size:12px;font-weight:600;color:var(--mute);text-transform:uppercase;letter-spacing:.05em;margin:12px 0 5px}
+.modal input{width:100%;border:1.5px solid var(--line);border-radius:9px;padding:11px 13px;font:inherit;font-size:14.5px}
+.modal input:focus{outline:0;border-color:var(--blue-light);box-shadow:0 0 0 3px rgba(14,165,233,.14)}
+.modal-nota{font-size:12.5px;color:var(--mute);margin-top:12px;line-height:1.5}
+.modal-acts{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
 .gate{background:#fff;border:1px solid var(--line);border-radius:14px;padding:34px 26px;text-align:center;box-shadow:var(--shadow-md)}
 .gate h2{margin:0 0 8px;font-size:19px} .gate p{color:var(--mute);margin:0 0 18px;font-size:14px}
 .foot{color:var(--mute);font-size:12.5px;text-align:center;margin-top:28px;line-height:1.7}
@@ -100,6 +108,7 @@ details.src-list .it .pg{color:var(--mute);white-space:nowrap;font-variant-numer
 <div class="top">
   <a class="back-link" href="../" title="Volver al cotizador">← Cotizador</a>
   <div class="marca">Consultor de Autos</div>
+  <a class="back-link" href="admin.html" style="margin-left:auto" title="Corpus: inventario y comparar un PDF nuevo">⚙ Corpus</a>
 </div>
 
 <div class="wrap">
@@ -125,6 +134,22 @@ details.src-list .it .pg{color:var(--mute);white-space:nowrap;font-variant-numer
     <div id="out"></div>
   </div>
 
+  <!-- Modal de envío por correo -->
+  <div class="modal-bg" id="mailBg" hidden>
+    <div class="modal">
+      <h3 class="g">Enviar por correo</h3>
+      <label>Para</label>
+      <input id="mailTo" type="email" placeholder="correo@dominio.com" autocomplete="off">
+      <label>Asunto</label>
+      <input id="mailSubject" type="text">
+      <div class="modal-nota" id="mailNota"></div>
+      <div class="modal-acts">
+        <button class="btn-s" id="mailCancel">Salir</button>
+        <button class="btn btn-p" id="mailSend">Autorizar Gmail y Enviar</button>
+      </div>
+    </div>
+  </div>
+
   <div class="foot">
     Consulta seis documentos del INS: Guía de Suscripción 2026, Condiciones Generales V31.1,
     Multiasistencia, Perfeccionamiento, Pacto Amistoso y Accidente Menor.<br>
@@ -134,6 +159,15 @@ details.src-list .it .pg{color:var(--mute);white-space:nowrap;font-variant-numer
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="../js/config.js"></script>
+<!-- Reusa la infraestructura de correo que ya usa el cotizador: mismo Client ID,
+     mismo scope gmail.send, mismo constructor de MIME. state.js aporta el objeto
+     S que gmail-auth.js necesita para cachear su token. -->
+<script src="../js/state.js"></script>
+<!-- agent-profile.js pisa CFG con el perfil ⚙ guardado en este navegador. SIN
+     esto el correo sale firmado como JC aunque lo mande otro agente. -->
+<script src="../js/agent-profile.js"></script>
+<script src="../js/gmail-auth.js"></script>
+<script src="../js/mime-builder.js"></script>
 <script src="consultor.js"></script>
 </body>
 </html>
