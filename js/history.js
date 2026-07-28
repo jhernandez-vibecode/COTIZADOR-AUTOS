@@ -120,7 +120,7 @@ function _nowIso() {
  * @param {string} [phoneOverride] - WhatsApp del cliente; pisa entry.waCliente
  * @returns {string}
  */
-function buildWaShareUrl(entry, phoneOverride) {
+function buildWaShareUrl(entry, phoneOverride, urlGuia) {
   // Nombre del agente: de la entrada, o del CFG global (mismo navegador), o genérico.
   const agente = entry.agentName || (typeof CFG !== 'undefined' && CFG.FROM_NAME) || '';
   const intro  = agente
@@ -134,7 +134,7 @@ function buildWaShareUrl(entry, phoneOverride) {
     + (entry.vehicle || 'vehículo')
     + (entry.plate ? ' (placa ' + entry.plate + ')' : '')
     + '. Para que la veás con todo el detalle, te preparé una guía explicada paso a paso que podés abrir en este enlace: '
-    + entry.guideUrl
+    + (urlGuia || entry.guideUrl)
     + ' — cualquier consulta, quedo a la orden.';
   const raw = String(phoneOverride != null ? phoneOverride : (entry.waCliente || '')).replace(/\D/g, '');
   let phone = '';
@@ -142,6 +142,46 @@ function buildWaShareUrl(entry, phoneOverride) {
   return 'https://web.whatsapp.com/send/?'
     + (phone ? 'phone=' + phone + '&' : '')
     + 'text=' + encodeURIComponent(msg);
+}
+
+/**
+ * Cambia el link largo de la guia por un alias corto (/g/XXXXXXXXXX).
+ *
+ * El link lleva hasta 13 parametros y ronda los 230 caracteres: WhatsApp lo
+ * colapsa con "Leer mas" y lo parte, y el cliente abre un link roto.
+ *
+ * Se usa SOLO donde el cliente ve la URL cruda (WhatsApp y Copiar). El correo
+ * y el historial guardan el link LARGO a proposito: el boton del correo lo
+ * esconde igual, y historyEntryValue/historyEntryPlate parsean `va` y `p` del
+ * guideUrl para reconstruir entradas viejas del 📊.
+ *
+ * Si el acortador falla devuelve el link largo: acortar nunca debe impedir
+ * que el agente comparta la cotizacion.
+ *
+ * @param {string} urlLarga
+ * @returns {Promise<string>}
+ */
+async function acortarGuia(urlLarga) {
+  const larga = String(urlLarga || '');
+  const i = larga.indexOf('?');
+  if (i === -1) return larga;                       // sin parametros no hay nada que acortar
+  try {
+    // Tope de espera: la pestaña de WhatsApp ya esta abierta esperando esto.
+    // Sin timeout, una red colgada la deja en blanco para siempre.
+    const r = await fetch('/g', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ q: larga.slice(i + 1) }),
+      signal: AbortSignal.timeout ? AbortSignal.timeout(6000) : undefined
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    if (!data || !/^[A-Z2-9]{10}$/.test(data.id || '')) throw new Error('id invalido');
+    return location.origin + '/g/' + data.id;
+  } catch (e) {
+    console.warn('[cotizador] no se pudo acortar el enlace; se comparte el largo', e);
+    return larga;
+  }
 }
 
 /**

@@ -1,0 +1,10 @@
+{
+  "name": "cotizador-autos-sdi",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cotizador SDI Autos · Seguros Digitales. El sitio es HTML/CSS/JS vanilla SIN build: este package.json existe SOLO para que Netlify instale la dependencia de las Functions (enlace corto de la guia + tope diario del Consultor). No agregar dependencias del front aca.",
+  "type": "module",
+  "dependencies": {
+    "@netlify/blobs": "^10.0.0"
+  }
+}

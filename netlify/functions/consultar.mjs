@@ -21,6 +21,7 @@
 
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { getStore } from "@netlify/blobs";
 
 // ─────────────────────────────────────────────────────────────── configuracion
 
@@ -214,6 +215,41 @@ async function verificarGoogle(token) {
 }
 
 // ─────────────────────────────────────────────────────────── llamadas al modelo
+
+/**
+ * Tope diario por agente (hora de Costa Rica, UTC-6 sin horario de verano).
+ *
+ * No es el control de acceso — ese es la whitelist verificada contra Google.
+ * Esto es el cinturon contra un bucle accidental o un agente entusiasmado
+ * quemando la clave de JC. Solo cuenta el paso 2, que es donde esta el gasto.
+ *
+ * Si Blobs falla NO se bloquea al agente: perder la cuenta es menos grave que
+ * dejarlo sin trabajar por un problema de infraestructura.
+ */
+function diaCR() {
+  return new Date(Date.now() - 6 * 3600 * 1000).toISOString().slice(0, 10);
+}
+
+async function verTope(correo) {
+  const limite = Number(process.env.CONSULTOR_TOPE_DIARIO || 0);
+  if (!limite || limite < 1) return { permitido: true, limite: 0, usadas: 0 };
+
+  const clave = `${diaCR()}|${correo}`;
+  try {
+    const s = getStore({ name: "consultor-uso", consistency: "strong" });
+    const usadas = Number((await s.get(clave)) || 0);
+    if (usadas >= limite) {
+      return {
+        permitido: false, limite, usadas,
+        motivo: `Llegaste al tope de ${limite} consultas por hoy. Se reinicia mañana.`,
+      };
+    }
+    return { permitido: true, limite, usadas, sumar: () => s.set(clave, String(usadas + 1)) };
+  } catch (e) {
+    console.error("[consultor] no se pudo contar el uso", e);
+    return { permitido: true, limite, usadas: 0 };   // fail-open a proposito
+  }
+}
 
 async function anthropic(clave, cuerpo) {
   const r = await fetch(API, {
@@ -598,7 +634,13 @@ export default async function handler(req) {
     }
     const recortadas = todas.length - secciones.length;
 
+    // El tope se consulta justo antes del paso 2 — el unico que gasta de
+    // verdad. Buscar es centavos y no vale la pena bloquearlo.
+    const t = await verTope(auth.correo);
+    if (!t.permitido) return json(429, { error: t.motivo });
+
     const paso2 = await responder(clave, pregunta, secciones, c);
+    if (t.sumar) await t.sumar().catch(() => {});
     if (recortadas > 0) {
       paso2.datos.alertas = paso2.datos.alertas || [];
       paso2.datos.alertas.push(

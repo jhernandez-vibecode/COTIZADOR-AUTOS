@@ -96,11 +96,22 @@ document.addEventListener('DOMContentLoaded', function () {
     if (waBtn) waBtn.href = buildWaShareUrl(S.lastEntry, this.value);
   });
 
-  // Al compartir, persistir el numero en el historial para que el modal 🕘
-  // tambien abra el chat directo. Es sincrono: corre antes de abrir WhatsApp.
-  document.getElementById('btnWhatsApp').addEventListener('click', function () {
+  // Al compartir: persistir el numero en el historial (para que el modal 🕘
+  // tambien abra el chat directo) y acortar el link de la guia, que con sus
+  // 13 parametros WhatsApp corta con "Leer mas".
+  document.getElementById('btnWhatsApp').addEventListener('click', function (ev) {
     const wa = document.getElementById('m-wa-cliente').value.trim();
     if (wa) setLatestHistoryWa(wa);
+    if (!S.lastEntry) return;
+
+    ev.preventDefault();
+    // La pestaña se reserva ANTES del await: abrirla despues de una llamada de
+    // red ya no cuenta como gesto del usuario y el navegador la bloquea.
+    const win = window.open('', '_blank');
+    acortarGuia(S.lastEntry.guideUrl).then(function (corto) {
+      const url = buildWaShareUrl(S.lastEntry, wa, corto);
+      if (win) win.location.href = url; else window.open(url, '_blank', 'noopener');
+    });
   });
 
   // ============ MODAL DE CONFIGURACION DEL AGENTE ============
@@ -399,20 +410,39 @@ function renderHistory() {
       '<div class="history-actions">' +
         '<a class="history-btn" href="' + _escapeHtml(e.guideUrl || '#') + '" target="_blank" rel="noopener" title="Abrir la guía explicada">🔗</a>' +
         '<button class="history-btn" data-copy="' + i + '" title="Copiar link de la guía">📄</button>' +
-        '<a class="history-btn" href="' + _escapeHtml(buildWaShareUrl(e)) + '" target="_blank" rel="noopener" title="Compartir por WhatsApp">💬</a>' +
+        '<a class="history-btn" data-wa="' + i + '" href="' + _escapeHtml(buildWaShareUrl(e)) + '" target="_blank" rel="noopener" title="Compartir por WhatsApp">💬</a>' +
       '</div>' +
     '</div>';
   }).join('');
+
+  // Compartir por WhatsApp desde el historial: mismo acortado que la vista 4.
+  // El href queda con el link largo como respaldo por si el JS no corre.
+  list.querySelectorAll('a[data-wa]').forEach(function (a) {
+    a.addEventListener('click', function (ev) {
+      const e = entries[parseInt(a.dataset.wa, 10)];
+      if (!e || !e.guideUrl) return;
+      ev.preventDefault();
+      const win = window.open('', '_blank');   // reservar ANTES del await
+      acortarGuia(e.guideUrl).then(function (corto) {
+        const url = buildWaShareUrl(e, null, corto);
+        if (win) win.location.href = url; else window.open(url, '_blank', 'noopener');
+      });
+    });
+  });
 
   // Botones de copiar (delegado simple por data-copy)
   list.querySelectorAll('button[data-copy]').forEach(function (btn) {
     btn.addEventListener('click', function () {
       const e = entries[parseInt(btn.dataset.copy, 10)];
       if (!e || !e.guideUrl) return;
-      navigator.clipboard.writeText(e.guideUrl).then(function () {
-        showToast('Link de la guía copiado.', 'success');
-      }, function () {
-        showToast('No se pudo copiar el link.', 'error');
+      // Se copia el link CORTO: es el que el cliente ve crudo al pegarlo.
+      acortarGuia(e.guideUrl).then(function (corto) {
+        navigator.clipboard.writeText(corto).then(function () {
+          showToast('Link de la guía copiado.', 'success');
+        }, function () {
+          // Tras el await el navegador puede negar el portapapeles.
+          window.prompt('Copiá el link manualmente:', corto);
+        });
       });
     });
   });
