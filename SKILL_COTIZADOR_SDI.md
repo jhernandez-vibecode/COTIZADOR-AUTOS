@@ -1328,3 +1328,71 @@ sigue en uso es el **campo `whatsapp` del perfil ⚙** (`be38baf`).
 
 ## Nota de estado
 Outlook YA fue eliminado (11 jun) — ignorar el pendiente "Cleanup Outlook" de más arriba; la app es **SOLO Gmail**. `mime-builder.js` ahora expone `buildMIME` + `buildMIMEMulti` + `buildMIMESimple`.
+
+---
+
+# Checkpoint 28 julio 2026 — Consultor de Autos (primer backend del proyecto)
+
+(Detalle completo y mantenido en el SKILL de usuario `especialista-cotizador-autos-sdi`.)
+
+## NUEVO módulo /consultor/ — EN PROD (merge cd2134e, rollback: tag pre-consultor-28jul)
+Q&A sobre los 6 documentos del INS (279 págs) con citas verificadas contra la fuente.
+Diseño completo en `docs/superpowers/specs/2026-07-28-consultor-autos-design.md`.
+
+- **Corpus**: `netlify/functions/data/corpus.json` — 428 secciones cortadas por
+  cláusula/artículo/título (NUNCA por conteo de palabras), 58 con tablas en Markdown.
+  Se genera con `procesador/seccionador.py` (Python: pymupdf + pymupdf4llm — las
+  tablas de límites de asistencia salen mal con cualquier otro método probado; ver
+  procesador/README.md). NO puede correr en Netlify: regenerar local + push.
+- **Backend**: `netlify/functions/consultar.mjs` (v2, fetch crudo, SIN npm) en
+  `/api/consultar`. Flujo en DOS llamadas HTTP (`accion:"buscar"` → Haiku 4.5 sobre el
+  índice completo + rescate por búsqueda literal en el texto; `accion:"responder"` →
+  Opus 5 effort low con cláusulas enteras) porque el techo de Netlify de este sitio es
+  **26 s por invocación** (medido 28 jul con sonda, ya retirada). Verificación literal
+  de cada cita por código (≥15 chars normalizados); `apto_para_enviar` exige ≥1 cita y
+  todas verificadas — el front bloquea WhatsApp/copiar-envío si no.
+- **Seguridad**: token Google validado contra Google EN EL SERVIDOR (scope
+  userinfo.email, separado del de Gmail) + chequeo aud/azp contra el CLIENT_ID (anti
+  token-substitution) + whitelist `CONSULTOR_EMAILS` (hoy solo JC; fail-closed si
+  vacía). Rechazo ANTES de tocar la clave → intento no autorizado cuesta $0.
+  La Guía de Suscripción 2026 es material INTERNO del INS: vive en
+  `netlify/functions/data/` (no en documentos-ins/ que es público) con 404 forzado
+  para `/netlify/*` y `/procesador/*` en netlify.toml.
+- **Variables Netlify** (scope Functions): `CONSULTOR_COTIZADOR_AUTOS_AKEY` (clave
+  Anthropic; el código también acepta ANTHROPIC_API_KEY), `CONSULTOR_EMAILS`,
+  `CONSULTOR_CLIENT_ID` (opcional, override del client id), `CONSULTOR_TOPE_DIARIO`
+  (creada, AÚN NO aplicada — necesita storage persistente = decisión package.json).
+- **Sumar un agente** = editar `CONSULTOR_EMAILS` + Trigger deploy (las funciones leen
+  env al desplegarse). Cada consulta ~$0,10 de la clave de JC.
+- **Salud**: GET /api/consultar → clave/agentes/corpus sin exponer valores.
+- netlify.toml ganó bloque `[functions]` con `included_files` para el corpus (sin eso
+  la función despliega SIN datos). Deploy Previews activados en Netlify el 28 jul.
+- Entry point: botón 🔎 en el header (visible para todos; solo whitelist puede usar).
+
+## Bugs propios encontrados y corregidos el mismo día (lecciones)
+- `window.CFG` no existe: config.js usa `const` (no se cuelga de window) → referenciar
+  `CFG` directo como gmail-auth/drive-sync.
+- El paso 2 armaba el prompt con las secciones y NO lo enviaba (faltaba `system:`) →
+  el modelo pedía "adjuntá el documento". Ahora hay guard que revienta si el material
+  no viaja.
+- El buscador solo veía título/resumen/keywords (lista manual) → "vehículo
+  diplomático" invisible. Fix: búsqueda literal sobre el TEXTO de las 428 secciones,
+  unida al buscador semántico + letras de cobertura aparte. Test:
+  `tests/busqueda-literal.mjs` (7/7, corre sin API).
+- Multiasistencia repite "PLAN BÁSICO" por ámbito×categoría×uso con límites DISTINTOS
+  (3 eventos particular vs 2 moto) → el seccionador arrastra esos encabezados al
+  título de la sección.
+- Revisión adversarial (17 agentes): 10 hallazgos corregidos — candado abrible sin
+  citas, cita vacía "verificada" (`"".includes("")`), JSON truncado por max_tokens,
+  GIS sin error_callback (spinner eterno), aud/azp, fuga de rutas en errores.
+
+## Pendientes del Consultor
+1. Fase 5: botón de correo (reusar gmail-auth + mime-builder; Copiar y WhatsApp ya están).
+2. Fase 6: pantalla admin con versionado/diff — decidir cómo corre el procesador
+   Python (acceso directo local / GitHub Action / lo corre Claude).
+3. Tope diario por agente (requiere Netlify Blobs → package.json; discutir).
+4. Fase 7 formal: banco de 6 preguntas de REGLAS-INS-VERIFICADAS — JC corriéndolo.
+5. Tarea aparte de JC: acortar el link de la cotización en el mensaje de WhatsApp
+   (como Vital 360).
+6. 4 secciones grandes sin partir (Guía 2.7/2.4, Perfec. C, Cláusula 5) — JC decidió
+   dejarlas y evaluar en la práctica.
