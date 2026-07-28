@@ -101,6 +101,70 @@ function indice(c) {
     .join("\n");
 }
 
+// ───────────────────────────────────────────────────── busqueda literal
+
+const VACIAS = new Set(("de la el los las un una unos unas y o u en con por para " +
+  "que cual cuales como cuando donde cuanto cuantos cuanta cuantas es son esta estan " +
+  "del al se su sus lo le me te nos si no mas pero tiene tienen hay sobre entre " +
+  "cubre cubren aplica aplican puede pueden debe deben ser estar tener").split(" "));
+
+function normaliza(s) {
+  return (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+}
+
+/**
+ * Rastrilla el TEXTO de las 428 secciones buscando los terminos de la pregunta.
+ *
+ * El indice que ve el paso 1 son titulo, resumen y palabras clave — nunca el
+ * texto. Si la pregunta usa una palabra que quedo enterrada en el cuerpo de una
+ * seccion grande ("diplomatico" dentro de "2.9 Otras clasificaciones de
+ * riesgo"), el indice no la delata y la seccion es invisible. Esto la rescata:
+ * si la palabra esta en el documento, la seccion entra como candidata sin
+ * importar como se llame.
+ */
+export function buscarLiteral(pregunta, c, tope) {
+  const terminos = [...new Set(
+    normaliza(pregunta).split(/[^a-z0-9ñ]+/).filter((t) => t.length >= 4 && !VACIAS.has(t))
+  )];
+  if (!terminos.length) return [];
+
+  // Las letras de cobertura ("cobertura E", "la D") son de una sola letra y el
+  // filtro por largo se las come, justo cuando son lo mas especifico de la
+  // pregunta. Se buscan aparte contra el rotulo de la seccion.
+  const letras = [...new Set(
+    [...pregunta.matchAll(/\bcoberturas?\s*["“'‘]?\s*([a-zA-Z]{1,3})\b/g)].map((m) => m[1].toLowerCase())
+  )].filter((l) => !["de", "del", "la", "el", "en", "es", "que"].includes(l));
+
+  const puntuadas = [];
+  for (const s of c.secciones) {
+    const texto = normaliza(s.texto);
+    const rotulo = normaliza(s.ruta + " " + s.resumen + " " + s.palabras_clave.join(" "));
+    let puntos = 0, distintos = 0;
+    for (const t of terminos) {
+      const enTexto = texto.includes(t);
+      const enRotulo = rotulo.includes(t);
+      if (enTexto || enRotulo) distintos++;
+      if (enRotulo) puntos += 6;          // el titulo pesa mas que el cuerpo
+      if (enTexto) puntos += Math.min(3, (texto.split(t).length - 1));
+    }
+    // Con dos o mas terminos hay que acertar al menos dos. Si no, una palabra
+    // comun sola arrastra medio corpus: "capital" (de Francia) matchea la
+    // clausula de cancelacion y le mete ruido al paso 2 sin aportar nada.
+    // Cobertura por letra: 'cobertura "e"' en el rotulo es una senal fortisima
+    for (const L of letras) {
+      if (new RegExp(`cobertura\\s*["“'‘]?\\s*${L}\\b`).test(rotulo)) {
+        puntos += 30;
+        distintos += 2;
+      }
+    }
+
+    const minimo = terminos.length >= 2 ? 2 : 1;
+    if (distintos >= minimo) puntuadas.push({ id: s.id, puntos, distintos });
+  }
+  puntuadas.sort((a, b) => b.distintos - a.distintos || b.puntos - a.puntos);
+  return puntuadas.slice(0, tope || 10).map((x) => x.id);
+}
+
 // ──────────────────────────────────────────────────────────────────── auth
 
 /**
@@ -175,11 +239,19 @@ async function buscarSecciones(clave, pregunta, c) {
     "- Si no hay nada relevante, devolvé la lista vacia.\n\n" +
     "INDICE:\n" + indice(c);
 
+  // Candidatos por coincidencia textual: rescatan lo que el indice no delata.
+  const literales = buscarLiteral(pregunta, c, 10);
+  const pista = literales.length
+    ? "\n\nEstas secciones contienen literalmente palabras de la pregunta en su " +
+      "TEXTO (que vos no ves en el indice). Miralas con atencion:\n" +
+      literales.map((id) => `${id} | ${c._porId.get(id).ruta}`).join("\n")
+    : "";
+
   const resp = await anthropic(clave, {
     model: MODELO_BUSCAR,
     max_tokens: 1000,
     system: [{ type: "text", text: sistema, cache_control: { type: "ephemeral" } }],
-    messages: [{ role: "user", content: `Pregunta: ${pregunta}` }],
+    messages: [{ role: "user", content: `Pregunta: ${pregunta}${pista}` }],
     output_config: {
       format: {
         type: "json_schema",
@@ -202,8 +274,15 @@ async function buscarSecciones(clave, pregunta, c) {
   } catch {
     out = { ids: [], razon: "" };
   }
-  const ids = (out.ids || []).filter((id) => c._porId.has(id)).slice(0, MAX_SECCIONES);
-  return { ids, razon: out.razon || "", uso: resp.usage };
+  // Union: lo que eligio el modelo primero, mas los mejores aciertos literales
+  // que haya descartado. Un termino que esta textualmente en el documento no se
+  // puede perder por criterio del buscador — es el caso "vehiculo diplomatico",
+  // que vive dentro de una seccion titulada "Otras clasificaciones de riesgo".
+  const elegidos = (out.ids || []).filter((id) => c._porId.has(id));
+  const rescate = literales.filter((id) => !elegidos.includes(id)).slice(0, 3);
+  const ids = [...new Set([...elegidos, ...rescate])].slice(0, MAX_SECCIONES);
+
+  return { ids, razon: out.razon || "", literales, uso: resp.usage };
 }
 
 /** PASO 2 — responder citando solo esas secciones. */
