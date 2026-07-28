@@ -55,9 +55,44 @@ def leer_lineas(path):
                     continue
                 txt = "".join(sp["text"] for sp in spans).strip()
                 if txt:
-                    out.append({"pg": i, "txt": txt,
+                    out.append({"pg": i, "txt": txt, "ctx": "",
                                 "bold": any("bold" in sp["font"].lower() for sp in spans)})
     return out
+
+
+# En Multiasistencia los planes se repiten para cada combinacion de ambito x
+# categoria de vehiculo x uso, con limites DISTINTOS: el Plan Basico da 3
+# eventos de remolque a un particular de uso personal y 2 a una motocicleta.
+# Esos encabezados no abren una seccion — califican a las que vienen despues.
+# Sin arrastrarlos, tres secciones se llaman igual y el consultor puede
+# contestar el limite de otra categoria, que es una respuesta equivocada.
+# Los encabezados son rotulos cortos ("ASISTENCIA NACIONAL"); las definiciones
+# del Articulo 1 empiezan igual pero siguen con una oracion ("ASISTENCIA
+# INTERNACIONAL: Servicio complementario del seguro..."). El $ y el largo los
+# separan — sin eso una definicion contamina el contexto de las paginas siguientes.
+CONTEXTO = {
+    "ambito":    re.compile(r"^ASISTENCIA\s+(NACIONAL|INTERNACIONAL)\s*$", re.I),
+    "categoria": re.compile(r"^(PARTICULARES\s+Y\s+CARGA\s+LIVIANA|MOTOCICLETAS[^\n]*|CARGA\s+PESADA[^\n]*|AUTOBUSES[^\n]*)$", re.I),
+    "uso":       re.compile(r"^USO\s+(PERSONAL|COMERCIAL)\b", re.I),
+    "antig":     re.compile(r"^Veh[ií]culos?\s+(?:de\s+)?\d+\s*a\s*\d+\s*a[nñ]os", re.I),
+}
+
+def anotar_contexto(lineas):
+    """Marca cada linea con el ambito/categoria/uso vigente en ese punto."""
+    vig = {"ambito": "", "categoria": "", "uso": ""}
+    for L in lineas:
+        t = L["txt"].strip()
+        for clave in ("ambito", "categoria", "uso"):
+            m = CONTEXTO[clave].match(t)
+            if m:
+                vig[clave] = re.sub(r"\s+", " ", t).strip().title()
+                if clave == "ambito":       # un ambito nuevo reinicia lo de abajo
+                    vig["categoria"] = vig["uso"] = ""
+                elif clave == "categoria":
+                    vig["uso"] = ""
+                break
+        L["ctx"] = " · ".join(v for v in (vig["ambito"], vig["categoria"], vig["uso"]) if v)
+    return lineas
 
 
 def extraer_tablas(path):
@@ -228,6 +263,7 @@ def procesar(doc):
         det = lambda t: (lambda m: f"Cláusula {m.group(1)} — {m.group(2).strip().title()}" if m else None)(R["clausula"].match(t))
         cts = cortes(lineas, det, bold=True)
     elif regla == "articulos":
+        anotar_contexto(lineas)   # ambito / categoria de vehiculo / uso
         det = lambda t: (lambda m: f"Artículo {m.group(1)} — {m.group(2).strip().title()}" if m else None)(R["articulo"].match(t))
         cts = cortes(lineas, det)
     elif regla == "guia":
@@ -259,12 +295,19 @@ def procesar(doc):
             txt = txt + "\n\n" + "\n\n".join(dict.fromkeys(adj))
         n += 1
         tit = b["titulo"]
+        # Si la seccion nace bajo un encabezado calificador (ambito / categoria
+        # de vehiculo / uso), va en el titulo: sin eso tres "PLAN BASICO" con
+        # limites distintos se llaman igual y son indistinguibles en el indice.
+        ctx = b["lineas"][0].get("ctx", "") if b["lineas"] else ""
+        if ctx and ctx.lower() not in tit.lower():
+            tit = f"{ctx} · {tit}"
         secciones.append({
             "id": f"{doc['id']}-s{n:03d}",
             "documento": doc["id"],
             "version": doc["version"],
             "titulo": tit,
             "titulo_padre": padre,
+            "contexto": ctx or None,
             "ruta": f"{padre} › {tit}" if padre else tit,
             "pagina_desde": b["p1"],
             "pagina_hasta": b["p2"],
