@@ -1396,3 +1396,83 @@ Diseño completo en `docs/superpowers/specs/2026-07-28-consultor-autos-design.md
    (como Vital 360).
 6. 4 secciones grandes sin partir (Guía 2.7/2.4, Perfec. C, Cláusula 5) — JC decidió
    dejarlas y evaluar en la práctica.
+
+---
+
+# Checkpoint 28 julio 2026 (tarde) — Fases 5-6 + enlace corto
+
+Todo EN PROD (merge `0d52ee5`, último `eef7735`). Rollbacks: `pre-consultor-28jul`
+(antes de todo el día) y `pre-fase5-6-28jul` (antes de la tarde).
+
+## package.json — el repo YA NO es cero-dependencias
+Se agregó `package.json` con `@netlify/blobs` (solo para las Functions; el front
+sigue sin build). Destraba el enlace corto Y el tope diario, que dependían de
+almacenamiento persistente.
+
+**NO poner `"type": "module"`**: convierte los 10 tests de `tests/*.js` en ESM y
+fallan todos con "require is not defined". Las Functions ya son ESM por su `.mjs`.
+`package.json` y el lock van con 404 forzado en netlify.toml.
+
+## Enlace corto de la guía — `/g` y `/g/:id` (netlify/functions/enlace.mjs)
+El link de la guía mide ~280 chars y WhatsApp lo partía con "Leer más".
+Ahora `cotizador.appsegurosdigitales.com/g/K7M4PQ2XRB` (54 chars).
+
+- Se acorta SOLO en WhatsApp (vista 4 e historial 💬) y Copiar 📄.
+  El **correo y el historial guardan el link LARGO a propósito**:
+  `historyEntryValue`/`historyEntryPlate` parsean `va` y `p` del guideUrl.
+- Si el acortador falla se comparte el largo. La pestaña se reserva con
+  `window.open('')` ANTES del await o el navegador la bloquea.
+- **La huella DEBE ser sha256 del query completo.** La primera versión truncaba
+  a 90 bytes y, como `_buildGuideUrl` pone siempre primero los datos del agente
+  (116 bytes), TODAS las cotizaciones compartían huella: el segundo cliente veía
+  la guía del primero. Lo cazó la revisión adversarial, no las pruebas manuales
+  (yo probé idempotencia con el MISMO query string).
+- Lista blanca de las 18 claves del explicador + rechazo de `javascript:`/`data:`
+  y de CR/LF (¡pero NO de espacios: `URLSearchParams` decodifica y los nombres
+  reales los traen!).
+
+## Correo del Consultor (fase 5)
+Botón Correo con el mismo candado que WhatsApp. Reusa `gmail-auth` + `mime-builder`
++ **`agent-profile.js`** (sin este último el correo sale con la licencia SUGESE de
+JC aunque lo mande otro agente). HTML texto+color sin imágenes.
+La vista interna/cliente **se congela al abrir el modal**: si se leyera al enviar,
+cambiar de pestaña con el modal abierto mandaría las citas de cláusulas a un cliente.
+`consultor.js` usa `ST` y no `S` para no pisar el `S` global de state.js.
+
+## Admin del corpus (fase 6) — /consultor/admin.html + /api/corpus
+Inventario + diff de un PDF nuevo (qué páginas cambiaron, qué palabras entran/salen,
+qué secciones revisar). El texto se extrae con pdf.js en el navegador.
+**No re-secciona y la pantalla lo dice**: el seccionador es Python.
+El token va por cabecera `Authorization`, nunca en la URL (queda en los logs).
+
+## Tablas que viven como IMAGEN — hallazgo importante
+Cuatro tablas del corpus estaban incrustadas como imagen; ninguna herramienta de
+texto las ve. El corpus quedaba con "conforme a la siguiente tabla:" y NADA detrás.
+Transcritas leyendo la imagen a `procesador/tablas-imagen.json`:
+CG p54 depreciación de batería · Guía p56 las 33 clases tarifarias ·
+Guía p107 bonificación/recargo por índice siniestral · Guía p112 parentesco.
+`procesador/detectar_tablas_imagen.py` encuentra más (descarta la plantilla del INS
+por REPETICIÓN, no por margen: el fondo ocupa la hoja entera).
+
+## Búsqueda por RAÍZ, no por palabra exacta
+JC preguntó por "cilindradas" y el INS escribe "cilindraje" → 0 candidatos → el
+buscador semántico eligió a ojo 12 secciones grandes → 504 por tiempo.
+`buscarLiteral` ahora trunca los términos a 6 caracteres y exige límite de palabra.
+Tope de material bajado de 55k a 32k chars (medido: "diplomático" arrastraba 82k).
+Cada paso mide su tiempo y avisa en el log si pasa de 15 s.
+
+## Tests: 12/12
+10 CommonJS del cotizador + `tests/busqueda-literal.mjs` (7 casos) +
+`tests/banco-reglas-ins.mjs` (8 casos, el banco de REGLAS-INS-VERIFICADAS
+convertido en test que corre sin API).
+
+## Pendientes para la próxima
+1. **JC no probó todavía con su sesión**: el botón Correo del Consultor y la
+   pantalla de administración. Son lo único sin validar en uso real.
+2. Quedan ~21 páginas con imagen sin revisar (de las 25 que detecta el script);
+   solo 2 "prometían tabla" y ya están. Revisar si aparece algún dato perdido.
+3. Las 4 secciones grandes sin partir (Guía 2.7 y 2.4, Perfeccionamiento C,
+   Cláusula 5) — JC decidió dejarlas y evaluar en la práctica.
+4. Limpieza opcional en Google Cloud: quitar los orígenes `deploy-preview-2--…`
+   y `deploy-preview-3--…` de Authorized JavaScript origins.
+5. Cooldown: hubo mucho cambio en un día. Dejar asentar antes de tocar más.
