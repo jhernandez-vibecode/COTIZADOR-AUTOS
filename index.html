@@ -51,7 +51,6 @@
         <a href="cancelacion/" class="header-btn" title="Calculadora de cancelación" aria-label="Calculadora de cancelación" style="text-decoration:none;font-size:16px;">🧮</a>
         <a href="marcas-recargo/" target="_blank" rel="noopener" class="header-btn" title="Marcas con deducible diferenciado" aria-label="Marcas con deducible diferenciado" style="text-decoration:none;font-size:16px;">📋</a>
         <a href="polizas-activas/" class="header-btn" title="Envío de pólizas activas" aria-label="Envío de pólizas activas" style="text-decoration:none;font-size:16px;">📨</a>
-        <a href="consultor/" class="header-btn" title="Consultor de Autos — preguntas sobre las condiciones" aria-label="Consultor de Autos" style="text-decoration:none;font-size:16px;">🔎</a>
         <button id="btnStats" class="header-btn" title="Estadísticas de cotizaciones" aria-label="Estadísticas de cotizaciones">📊</button>
         <button id="btnHistory" class="header-btn" title="Historial de cotizaciones enviadas" aria-label="Historial de cotizaciones enviadas">🕘</button>
         <button id="btnSettings" class="header-btn" title="Configuración del agente" aria-label="Configuración del agente">⚙</button>
@@ -202,7 +201,7 @@
         <div class="stats-section-title">Cotizaciones</div>
         <div class="stats-search-wrap">
           <span class="stats-search-icon" aria-hidden="true">🔎</span>
-          <input type="text" id="statsSearch" class="stats-search" placeholder="Buscar por placa o cliente…" autocomplete="off" aria-label="Buscar cotización por placa o cliente">
+          <input type="text" id="statsSearch" class="stats-search" placeholder="Buscar por placa, nombre o apellido…" autocomplete="off" aria-label="Buscar cotización por placa, nombre o apellido del cliente">
           <button type="button" id="statsSearchClear" class="stats-search-clear" aria-label="Limpiar búsqueda" title="Limpiar" hidden>×</button>
         </div>
         <div class="stats-search-count" id="statsSearchCount" aria-live="polite"></div>
@@ -474,20 +473,44 @@
         <div class="success-icon">✓</div>
         <div class="success-title">¡Cotización enviada!</div>
         <div class="success-msg" id="successMsg">La cotización fue enviada exitosamente.</div>
-        <div style="display:flex;flex-direction:column;align-items:center;gap:14px;">
-          <div id="waShareWrap" style="display:none;flex-direction:column;gap:8px;width:100%;max-width:380px;text-align:left;">
+        <!-- Los dos botones comparten .btn-step (mismo ancho, alto y tipografía).
+             El orden es el del flujo real: primero se comparte la guía, después
+             se arranca otra cotización. -->
+        <div class="success-actions">
+          <div id="waShareWrap" style="display:none;flex-direction:column;gap:8px;text-align:left;">
             <label class="form-label" for="m-wa-cliente" style="margin-bottom:0;">WhatsApp del cliente <span style="font-weight:400;color:var(--gray-500);">(opcional)</span></label>
             <input class="form-control" id="m-wa-cliente" type="tel" inputmode="numeric" placeholder="8888-8888" autocomplete="off" />
             <span style="font-size:11px;color:var(--gray-500);line-height:1.4;">Si lo ponés, el botón abre el chat directo del cliente con la guía. Si lo dejás vacío, elegís el contacto dentro de WhatsApp.</span>
-            <a class="btn btn-send" id="btnWhatsApp" href="#" target="_blank" rel="noopener"
-               style="text-decoration:none;">💬 Compartir guía por WhatsApp</a>
+            <a class="btn btn-send btn-step" id="btnWhatsApp" href="#" target="_blank" rel="noopener"
+               style="text-decoration:none;"><span class="btn-step-num">1</span> Compartir guía por WhatsApp</a>
           </div>
-          <button class="btn btn-primary" id="btnReset">Enviar otra cotización</button>
+          <button class="btn btn-primary btn-step" id="btnReset"><span class="btn-step-num">2</span> Enviar otra cotización</button>
         </div>
       </div>
     </section>
 
   </main>
+
+  <!-- ======================== PIE · REGISTRO DE CAMBIOS ========================
+       Que se le fue agregando a la app, en lenguaje de usuario (nada de nombres
+       de archivos ni jerga). La entrada mas reciente va ARRIBA. Cada vez que se
+       toca la app se agrega una linea aca. -->
+  <footer class="app-foot">
+    <details>
+      <summary>Última actualización: 5 ago 2026 — botones parejos en la pantalla final y búsqueda por nombre completo</summary>
+      <ul>
+        <li><b>5 ago 2026</b> — En la pantalla de "¡Cotización enviada!" los dos botones quedaron del mismo tamaño y numerados: 1 compartir la guía por WhatsApp, 2 enviar otra cotización. El historial y las estadísticas ahora guardan el <b>nombre completo</b> del cliente, así se puede buscar por apellido. Se retiró el Consultor de Autos.</li>
+        <li><b>28 jul 2026</b> — El enlace de la guía que se comparte por WhatsApp ahora es corto: ya no le sale al cliente cortado con "Leer más".</li>
+        <li><b>15 jul 2026</b> — Respaldo del control de cotizaciones en tu propio Google Drive, para no perderlo si se limpia el navegador.</li>
+        <li><b>13 jul 2026</b> — El INS cambió el PDF de cotización: ahora trae precios por tipo de repuesto y la app toma los de la opción que le corresponde al cliente.</li>
+        <li><b>29 jun 2026</b> — Nueva pantalla para enviar pólizas ya emitidas (📨), con los documentos del INS adjuntos automáticamente.</li>
+        <li><b>17 jun 2026</b> — Cada cotización lleva estado (pendiente, agendada, concretada, desechada) y al abrir la app se avisan las citas del día.</li>
+        <li><b>16 jun 2026</b> — Pestaña de estadísticas (📊) con buscador, filtros y recordatorio de las cotizaciones que llevan más de 3 días sin respuesta.</li>
+        <li><b>11 jun 2026</b> — El envío pasó a ser solo por Gmail, con historial de envíos (🕘) y la opción de compartir la guía por WhatsApp.</li>
+        <li><b>27 may 2026</b> — La guía del cliente explica qué pasa el día de la cita: fotos, aceptación con token y formas de pago.</li>
+      </ul>
+    </details>
+  </footer>
 
   <!-- ======================== LIBRERÍAS EXTERNAS ======================== -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>

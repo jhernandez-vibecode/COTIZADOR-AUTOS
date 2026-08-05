@@ -402,7 +402,7 @@ function renderHistory() {
     const fecha = sent.toLocaleDateString('es-CR', { day: '2-digit', month: 'short' });
     return '<div class="history-item">' +
       '<div class="history-main">' +
-        '<div class="history-title">' + _escapeHtml(e.client || '(sin nombre)') +
+        '<div class="history-title">' + _escapeHtml(historyClientName(e) || '(sin nombre)') +
           (e.plate ? ' · ' + _escapeHtml(e.plate) : '') + ' ' + badge + '</div>' +
         '<div class="history-meta">' + fecha + ' · ' + _escapeHtml(e.email || '') +
           (e.vehicle ? ' · ' + _escapeHtml(e.vehicle) : '') + '</div>' +
@@ -639,7 +639,7 @@ function _statsListHtml(entries) {
       + '<div class="stat-main">'
         + '<div class="stat-title">'
           + (high ? '<span class="stat-star" title="Carro de alto valor (≥₡10M)">⭐</span>' : '')
-          + _escapeHtml(e.client || '(sin nombre)')
+          + _escapeHtml(historyClientName(e) || '(sin nombre)')
           + (e.plate ? ' &middot; ' + _escapeHtml(e.plate) : '')
           + (value ? ' <span class="stat-value">' + _fmtMillones(value) + '</span>' : '')
           + (badges ? ' ' + badges : '')
@@ -736,7 +736,7 @@ function _onStatsListClick(e) {
   const del = e.target.closest('[data-del]');
   if (del) {
     const entry = loadHistory().find(function (x) { return x && x.id === del.dataset.del; });
-    const quien = (entry && entry.client) ? entry.client : 'este registro';
+    const quien = historyClientName(entry) || 'este registro';
     if (confirm('¿Eliminar el registro de ' + quien + '?\nEsta acción no se puede deshacer.')) {
       deleteHistoryEntry(del.dataset.del);
       showToast('Registro eliminado.', 'success');
@@ -871,7 +871,7 @@ function _avisoListHtml(entries) {
     const id  = _escapeHtml(e.id || '');
     return '<div class="aviso-item">'
       + '<div class="aviso-main">'
-        + '<div class="aviso-name">' + _escapeHtml(e.client || '(sin nombre)') + '</div>'
+        + '<div class="aviso-name">' + _escapeHtml(historyClientName(e) || '(sin nombre)') + '</div>'
         + '<div class="aviso-meta">'
           + (e.vehicle ? _escapeHtml(e.vehicle) : '')
           + (e.plate ? ' &middot; ' + _escapeHtml(e.plate) : '')
@@ -891,7 +891,7 @@ function _avisoCitasHtml(citas) {
     const id = _escapeHtml(e.id || '');
     return '<div class="aviso-item cita">'
       + '<div class="aviso-main">'
-        + '<div class="aviso-name">' + _escapeHtml(e.client || '(sin nombre)') + '</div>'
+        + '<div class="aviso-name">' + _escapeHtml(historyClientName(e) || '(sin nombre)') + '</div>'
         + '<div class="aviso-meta">' + (e.vehicle ? _escapeHtml(e.vehicle) : '')
           + (e.plate ? ' &middot; ' + _escapeHtml(e.plate) : '') + '</div>'
       + '</div>'
@@ -1400,7 +1400,8 @@ async function handleSend() {
       const entry = {
         id:        newHistoryId(),
         date:      new Date().toISOString(),
-        client:    document.getElementById('m-name').value.trim(),
+        client:    document.getElementById('m-name').value.trim(),   // nombre de pila → saludo de los mensajes
+        clientFull: String(S.data.clientName || '').trim(),           // nombre completo → mostrar y buscar por apellido
         agentName: CFG.FROM_NAME || '',
         email:     toAddr,
         plate:     S.data.plate,

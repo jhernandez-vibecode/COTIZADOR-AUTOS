@@ -392,6 +392,37 @@ textarea.form-control { resize: vertical; min-height: 70px; }
   margin-bottom: 24px;
 }
 
+/* Columna de acciones de la vista 4. Los dos botones (compartir por WhatsApp y
+   "Enviar otra cotizacion") van al MISMO ancho, alto y tamano de letra: antes el
+   azul heredaba las medidas chicas de .btn y se veia mas pequeno que el verde. */
+.success-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+  width: 100%;
+  max-width: 380px;
+  margin: 0 auto;
+}
+.btn-step {
+  width: 100%;
+  padding: 14px 18px;
+  font-size: 15px;
+}
+/* Numerito del paso (1 y 2): marca el orden sin quitarle peso al texto. */
+.btn-step-num {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .25);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
 /* ============ HEADER BUTTON (settings) ============ */
 .header-btn {
   background: rgba(255, 255, 255, .08);
@@ -900,3 +931,28 @@ textarea.form-control { resize: vertical; min-height: 70px; }
 .toggle-switch input:focus-visible + .toggle-slider {
   box-shadow: 0 0 0 3px rgba(6, 182, 212, .25);
 }
+
+/* ============ PIE · REGISTRO DE CAMBIOS ============ */
+/* Que se le fue agregando a la app, en lenguaje de usuario. Cerrado por
+   defecto: a la vista queda solo la ultima actualizacion. */
+.app-foot {
+  max-width: 1200px;
+  margin: 8px auto 40px;
+  padding: 18px 24px 0;
+  border-top: 1px solid var(--gray-200);
+  color: var(--gray-500);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.app-foot summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--gray-700);
+  list-style: none;
+}
+.app-foot summary::-webkit-details-marker { display: none; }
+.app-foot summary::before { content: '\25B8\00A0'; }
+.app-foot details[open] summary::before { content: '\25BE\00A0'; }
+.app-foot ul { margin: 12px 0 0; padding: 0 0 0 18px; }
+.app-foot li { margin-bottom: 8px; }
+.app-foot b { color: var(--gray-700); font-weight: 600; }

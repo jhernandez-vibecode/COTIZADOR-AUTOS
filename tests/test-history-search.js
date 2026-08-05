@@ -78,6 +78,38 @@ test('historyMatchesSearch: coincide por nombre del cliente, ignora tildes', () 
   eq(historyMatchesSearch({ plate: 'X', client: 'María Rodríguez' }, 'maria'), true);
 });
 
+// ---------- historyClientName ----------
+
+test('historyClientName: prefiere el nombre completo', () => {
+  eq(historyClientName({ client: 'Silvia', clientFull: 'DELGADO ARGUELLO SILVIA MARIEL' }),
+     'DELGADO ARGUELLO SILVIA MARIEL');
+});
+
+test('historyClientName: entrada legacy sin clientFull → cae al nombre de pila', () => {
+  eq(historyClientName({ client: 'Silvia' }), 'Silvia');
+});
+
+test('historyClientName: sin nada → cadena vacía', () => {
+  eq(historyClientName({}), '');
+  eq(historyClientName(null), '');
+});
+
+test('historyMatchesSearch: encuentra por APELLIDO usando el nombre completo', () => {
+  const e = { plate: 'BRK454', client: 'Silvia', clientFull: 'DELGADO ARGUELLO SILVIA MARIEL' };
+  eq(historyMatchesSearch(e, 'arguello'), true);
+  eq(historyMatchesSearch(e, 'delgado'), true);
+  eq(historyMatchesSearch(e, 'silvia'), true);
+});
+
+test('historyMatchesSearch: apellido con tilde en el nombre completo', () => {
+  eq(historyMatchesSearch({ plate: 'X', client: 'Juan', clientFull: 'Hernández Vargas Juan Carlos' }, 'hernandez'), true);
+});
+
+test('historyMatchesSearch: entrada legacy (solo nombre de pila) sigue funcionando', () => {
+  eq(historyMatchesSearch({ plate: 'X', client: 'Silvia' }, 'silvia'), true);
+  eq(historyMatchesSearch({ plate: 'X', client: 'Silvia' }, 'arguello'), false);
+});
+
 test('historyMatchesSearch: coincide por vehículo', () => {
   eq(historyMatchesSearch({ plate: 'X', vehicle: 'Toyota Yaris 2020' }, 'yaris'), true);
 });

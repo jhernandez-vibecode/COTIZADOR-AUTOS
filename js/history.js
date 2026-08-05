@@ -23,6 +23,7 @@
  *   - deleteHistoryEntry(id)     -> bool  (elimina un registro por id)
  *   - historyEntryValue(entry)   -> number (valor asegurado, recuperable del link)
  *   - historyEntryPlate(entry)   -> string (placa, recuperable del link)
+ *   - historyClientName(entry)   -> string (nombre COMPLETO para mostrar/buscar)
  *   - historyMatchesSearch(e,q)  -> bool   (coincide por placa / cliente / vehiculo)
  *   - computeHistoryStats(arr)   -> { total, agendada, concretada, desechada, rate }  (pura)
  *   - groupHistoryByMonth(arr)   -> [{ key, label, entries, stats }]  (pura)
@@ -33,8 +34,14 @@
  *   - historyFollowUpState(e)    -> 'seguir'|'seguido'|null (solo pendientes)
  *
  * Forma de entry:
- *   { id, date: ISO string, client, email, plate, vehicle, quote,
+ *   { id, date: ISO string, client, clientFull, email, plate, vehicle, quote,
  *     valor, estado, citaFecha, confirmed, followUpAt, guideUrl, waCliente }
+ *   - client     : nombre de PILA. Es el del SALUDO — va dentro de los mensajes
+ *                  ("Hola Silvia, ..."), no se toca.
+ *   - clientFull : nombre COMPLETO tal cual viene del PDF del INS (apellidos
+ *                  incluidos). Sirve para MOSTRAR y BUSCAR en el historial y en
+ *                  el 📊: con solo el nombre de pila no se podia buscar por
+ *                  apellido. Entradas viejas no lo traen -> cae a `client`.
  *   - valor      : valor asegurado del vehiculo (para filtro de alto valor).
  *                  Entradas viejas no lo traen: se recupera del param `va` del guideUrl.
  *   - estado     : ciclo de vida 'pendiente'|'agendada'|'concretada'|'desechada'
@@ -296,9 +303,21 @@ function _normHistorySearch(s) {
 }
 
 /**
+ * Nombre del cliente para MOSTRAR y BUSCAR: el completo si la entrada lo tiene,
+ * si no el de pila. Las entradas anteriores al 5 ago 2026 solo guardaban el
+ * nombre del saludo, asi que el fallback no es opcional.
+ * @param {object} e
+ * @returns {string}
+ */
+function historyClientName(e) {
+  if (!e) return '';
+  return String(e.clientFull || e.client || '').trim();
+}
+
+/**
  * ¿La cotizacion coincide con el texto buscado? Busca por PLACA (lo principal)
- * y tambien por nombre del cliente y vehiculo, de forma tolerante (sin tildes
- * ni separadores). Query vacia → siempre coincide (no filtra).
+ * y tambien por nombre del cliente (completo y de pila) y vehiculo, de forma
+ * tolerante (sin tildes ni separadores). Query vacia → siempre coincide.
  * @param {object} e
  * @param {string} query
  * @returns {boolean}
@@ -309,6 +328,7 @@ function historyMatchesSearch(e, query) {
   if (!e) return false;
   return _normHistorySearch(historyEntryPlate(e)).indexOf(q) !== -1
       || _normHistorySearch(e.client).indexOf(q) !== -1
+      || _normHistorySearch(e.clientFull).indexOf(q) !== -1
       || _normHistorySearch(e.vehicle).indexOf(q) !== -1;
 }
 

@@ -2,7 +2,7 @@
   "name": "cotizador-autos-sdi",
   "version": "1.0.0",
   "private": true,
-  "description": "Cotizador SDI Autos · Seguros Digitales. El sitio es HTML/CSS/JS vanilla SIN build: este package.json existe SOLO para que Netlify instale la dependencia de las Functions (enlace corto de la guia + tope diario del Consultor). No agregar dependencias del front aca.",
+  "description": "Cotizador SDI Autos · Seguros Digitales. El sitio es HTML/CSS/JS vanilla SIN build: este package.json existe SOLO para que Netlify instale la dependencia de la Function del enlace corto de la guia (/g). No agregar dependencias del front aca.",
   "//type": "NO poner \"type\": \"module\". Los 10 tests de tests/*.js son CommonJS y usan require(): declararlo los rompe TODOS. Las Functions ya son ESM por su extension .mjs, que manda sobre este campo.",
   "dependencies": {
     "@netlify/blobs": "^10.0.0"
