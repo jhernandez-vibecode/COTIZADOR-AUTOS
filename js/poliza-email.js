@@ -19,6 +19,88 @@
  * API: buildPolizaActivaEmail({ nombrePila, cliente, poliza, vehiculo, placa,
  *                               notaAdicional }) -> string HTML
  */
+/**
+ * Numero de telefono en formato internacional CR, solo digitos.
+ * 8 digitos (numero tico pelado) -> se le antepone el 506.
+ * @param {string} v
+ * @returns {string}
+ */
+function polizaWaIntl(v) {
+  var d = String(v == null ? '' : v).replace(/\D/g, '');
+  if (d.length === 8) d = '506' + d;
+  return d;
+}
+
+/**
+ * URL del Centro de Asistencia CON la ficha del agente actual embebida
+ * (?n,tel,wa,em,lic,web). Sin esto la app de asistencia muestra al agente
+ * por defecto y no a quien de verdad mando la poliza.
+ *
+ * Devuelve la URL CRUDA (sin escapar): el correo la escapa por su cuenta,
+ * WhatsApp la necesita tal cual. Cadena vacia si CFG.ASSIST_URL no es http(s).
+ * @returns {string}
+ */
+function polizaAsistenciaUrl() {
+  var base = String(CFG.ASSIST_URL == null ? '' : CFG.ASSIST_URL).trim();
+  if (!/^https?:\/\//i.test(base)) return '';   // sin base valida no hay guia
+  // web: valor CRUDO del perfil (no el fallback al sitio del owner), asi un
+  // agente sin web propia no arrastra la de otro a su guia.
+  var webRaw = String(CFG.WEBSITE == null ? '' : CFG.WEBSITE).replace(/^https?:\/\//i, '').trim();
+  var tel    = CFG.PHONE || '';
+  var pairs = [
+    ['n',   CFG.FROM_NAME || ''], ['tel', tel], ['wa', polizaWaIntl(CFG.WHATSAPP || tel)],
+    ['em',  CFG.FROM_EMAIL || ''], ['lic', CFG.LICENSE || ''], ['web', webRaw]
+  ];
+  var qs = pairs
+    .filter(function (x) { return x[1] != null && String(x[1]).trim() !== ''; })
+    .map(function (x) { return x[0] + '=' + encodeURIComponent(String(x[1]).trim()); })
+    .join('&');
+  return qs ? base + (base.indexOf('?') >= 0 ? '&' : '?') + qs : base;
+}
+
+/**
+ * URL de WhatsApp para avisarle al cliente que su poliza ya esta activa.
+ *
+ * SIEMPRE web.whatsapp.com/send/ — wa.me corrompe los emojis del mensaje.
+ * Con telefono abre el chat directo del cliente; sin telefono, WhatsApp abre
+ * el selector de contactos del agente.
+ *
+ * El saludo NO lleva "Estimado/Estimada": del PDF solo sacamos el nombre, no
+ * el genero, y equivocarse ahi con un cliente es peor que sonar menos formal.
+ *
+ * @param {object} params - { nombrePila, poliza, vehiculo, placa, telCliente }
+ * @returns {string}
+ */
+function buildPolizaWaUrl(params) {
+  var p = params || {};
+  var saludo   = String(p.nombrePila || '').trim();
+  var poliza   = String(p.poliza     || '').trim();
+  var vehiculo = String(p.vehiculo   || '').trim();
+  var placa    = String(p.placa      || '').trim();
+  var guia     = polizaAsistenciaUrl();
+
+  // Identificacion: "Su numero de poliza es X (Toyota Yaris, placa BRK454)."
+  var ident = '';
+  if (poliza) {
+    var detalle = [vehiculo, placa ? 'placa ' + placa : ''].filter(Boolean).join(', ');
+    ident = 'Su número de póliza es ' + poliza + (detalle ? ' (' + detalle + ')' : '') + '.\n';
+  }
+
+  var msg =
+    '¡' + (saludo ? saludo + ', su' : 'Su') + ' póliza de automóvil está lista! 🚗✅\n\n' +
+    'Le acabamos de enviar todos los documentos del seguro a su correo electrónico. 📧\n' +
+    ident + '\n' +
+    'Recuerde que ante cualquier choque, avería o emergencia en carretera, debe reportarlo de inmediato.\n\n' +
+    'Para facilitarle el proceso, nuestra oficina diseñó esta app exclusiva con la guía paso a paso y todos los números de asistencia a un clic:\n\n' +
+    (guia ? '👉 ' + guia + '\n\n' : '') +
+    '¡Guárdela en sus favoritos y conduzca con total tranquilidad! 🛡️';
+
+  var phone = polizaWaIntl(p.telCliente);
+  return 'https://web.whatsapp.com/send/?'
+    + (phone ? 'phone=' + phone + '&' : '')
+    + 'text=' + encodeURIComponent(msg);
+}
+
 function buildPolizaActivaEmail(params) {
   // Escape HTML (XSS-safe) y sanitizador de URL — LOCALES para no contaminar el
   // espacio global (la sub-página comparte scripts con el resto de la app).
@@ -57,27 +139,10 @@ function buildPolizaActivaEmail(params) {
   // (nombre, contacto, licencia, web) como parámetros para que la app de
   // asistencia muestre a ESTE agente y no al owner por default. Respeta la
   // query previa que traiga ASSIST_URL (p.ej. ?a=<id>).
-  var _waIntl = function (v) {
-    var d = String(v == null ? '' : v).replace(/\D/g, '');
-    if (d.length === 8) d = '506' + d;   // número CR sin código país
-    return d;
-  };
-  var _assistUrl = function () {
-    var base = String(CFG.ASSIST_URL == null ? '' : CFG.ASSIST_URL).trim();
-    if (!/^https?:\/\//i.test(base)) return '';   // sin base válida no hay guía
-    // web: usamos el valor CRUDO del perfil (no el fallback al sitio de JC),
-    // así un agente sin web propia no arrastra el sitio del owner a su guía.
-    var webRaw = String(CFG.WEBSITE == null ? '' : CFG.WEBSITE).replace(/^https?:\/\//i, '').trim();
-    var pairs = [
-      ['n',   agente], ['tel', tel], ['wa', _waIntl(CFG.WHATSAPP || tel)],
-      ['em',  correoAg], ['lic', lic], ['web', webRaw]
-    ];
-    var qs = pairs
-      .filter(function (x) { return x[1] != null && String(x[1]).trim() !== ''; })
-      .map(function (x) { return x[0] + '=' + encodeURIComponent(String(x[1]).trim()); })
-      .join('&');
-    return qs ? base + (base.indexOf('?') >= 0 ? '&' : '?') + qs : base;
-  };
+  // La arma polizaAsistenciaUrl() (arriba), compartida con el WhatsApp de la
+  // vista 4: si el correo y el mensaje mandaran fichas distintas, el cliente
+  // vería un agente en un lado y otro en el otro.
+  var _assistUrl = polizaAsistenciaUrl;
 
   // Links saneados (solo http/https). Si un cross-sell viene vacío, cae al sitio
   // del agente — PERO solo si el agente tiene web propia. Si no la tiene, queda ''
@@ -233,4 +298,11 @@ function buildPolizaActivaEmail(params) {
 }
 
 // Export para tests Node (sin romper el browser).
-if (typeof module !== 'undefined' && module.exports) { module.exports = { buildPolizaActivaEmail: buildPolizaActivaEmail }; }
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    buildPolizaActivaEmail: buildPolizaActivaEmail,
+    buildPolizaWaUrl:       buildPolizaWaUrl,
+    polizaAsistenciaUrl:    polizaAsistenciaUrl,
+    polizaWaIntl:           polizaWaIntl
+  };
+}

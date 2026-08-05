@@ -16,7 +16,9 @@ global.CFG = {
   XSELL_ESTUDIANTIL_URL: ''   // vacío a propósito → debe caer al sitio del agente
 };
 
-var buildPolizaActivaEmail = require('../js/poliza-email.js').buildPolizaActivaEmail;
+var _pe = require('../js/poliza-email.js');
+var buildPolizaActivaEmail = _pe.buildPolizaActivaEmail;
+var buildPolizaWaUrl       = _pe.buildPolizaWaUrl;
 
 var pass = 0, fail = 0;
 function ok(name, cond) { if (cond) { pass++; } else { fail++; console.error('FAIL ' + name); } }
@@ -87,6 +89,59 @@ global.CFG.WEBSITE = 'www.pedroseguros.com';
 var html3 = buildPolizaActivaEmail({ nombrePila: 'Ana', poliza: 'P', vehiculo: 'V', placa: 'PL' });
 ok('agente-web-propia',   html3.indexOf('www.pedroseguros.com') !== -1);
 ok('agente-web-no-owner', html3.indexOf('segurosdelins.com') === -1);
+
+// ---------- WhatsApp de la vista 4 (aviso de póliza activa) ----------
+// CFG quedó con el agente Pedro (sin web propia) de los tests de arriba;
+// lo devolvemos al owner para leer el mensaje "normal".
+global.CFG.FROM_NAME  = 'Juan Carlos Hernandez Vargas';
+global.CFG.PHONE      = '8822-1348';
+global.CFG.WHATSAPP   = '8822-1348';
+global.CFG.FROM_EMAIL = 'jhernandez@segurosdelins.com';
+global.CFG.LICENSE    = '08-1318';
+global.CFG.WEBSITE    = 'www.segurosdelins.com';
+global.CFG.ASSIST_URL = 'https://appasistenciaseguroautos.netlify.app/';
+
+var waUrl = buildPolizaWaUrl({
+  nombrePila: 'Natanael',
+  poliza: '0101AUT221211200',
+  vehiculo: 'NISSAN FRONTIER 2023',
+  placa: 'CL-612977',
+  telCliente: '8888-8888'
+});
+var waMsg = decodeURIComponent(waUrl.split('text=')[1]);
+
+ok('wa-endpoint',    waUrl.indexOf('https://web.whatsapp.com/send/?') === 0);
+ok('wa-NO-wame',     waUrl.indexOf('wa.me') === -1);
+ok('wa-telefono',    waUrl.indexOf('phone=50688888888&') !== -1);
+ok('wa-saludo',      waMsg.indexOf('¡Natanael, su póliza de automóvil está lista!') === 0);
+ok('wa-NO-genero',   !/Estimad[oa]\b/.test(waMsg));          // del PDF no sale el género
+ok('wa-poliza',      waMsg.indexOf('Su número de póliza es 0101AUT221211200') !== -1);
+ok('wa-vehiculo',    waMsg.indexOf('(NISSAN FRONTIER 2023, placa CL-612977)') !== -1);
+ok('wa-correo',      /documentos del seguro a su correo/.test(waMsg));
+ok('wa-reportar',    /debe reportarlo de inmediato/.test(waMsg));
+ok('wa-app',         waMsg.indexOf('https://appasistenciaseguroautos.netlify.app/') !== -1);
+ok('wa-cierre',      /conduzca con total tranquilidad/.test(waMsg));
+ok('wa-agente',      waMsg.indexOf('n=Juan%20Carlos%20Hernandez%20Vargas') !== -1
+                     && waMsg.indexOf('lic=08-1318') !== -1);
+
+// Sin teléfono: WhatsApp abre el selector de contactos, no un chat vacío.
+var waSinTel = buildPolizaWaUrl({ nombrePila: 'Ana', poliza: 'P1' });
+ok('wa-sin-telefono', waSinTel.indexOf('phone=') === -1 && waSinTel.indexOf('text=') !== -1);
+
+// Sin número de póliza (PDF raro): la línea entera desaparece, no queda colgando.
+var waSinPoliza = buildPolizaWaUrl({ nombrePila: 'Ana' });
+ok('wa-sin-poliza', decodeURIComponent(waSinPoliza.split('text=')[1]).indexOf('número de póliza') === -1);
+
+// Multi-agente: el link lleva la ficha del agente que envía, no la del owner.
+global.CFG.FROM_NAME  = 'Pedro Ramírez';
+global.CFG.PHONE      = '7000-0000';
+global.CFG.WHATSAPP   = '7000-0000';
+global.CFG.FROM_EMAIL = 'pedro@correo.com';
+global.CFG.LICENSE    = '09-9999';
+global.CFG.WEBSITE    = '';
+var waPedro = decodeURIComponent(buildPolizaWaUrl({ nombrePila: 'Ana', poliza: 'P1' }).split('text=')[1]);
+ok('wa-multiagente',  waPedro.indexOf('n=Pedro%20Ram%C3%ADrez') !== -1 && waPedro.indexOf('wa=50670000000') !== -1);
+ok('wa-sin-web-owner', waPedro.indexOf('segurosdelins.com') === -1);
 
 console.log('\npoliza-email: ' + pass + ' OK, ' + fail + ' FAIL');
 process.exit(fail ? 1 : 0);

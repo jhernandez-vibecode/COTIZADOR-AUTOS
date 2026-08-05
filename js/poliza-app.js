@@ -192,6 +192,20 @@
     if (fr) fr.srcdoc = html;
   }
 
+  /**
+   * Regenera el link del boton "Avisar por WhatsApp" de la vista 4.
+   * Usa los MISMOS datos que el correo (currentEmailParams) para que el saludo
+   * del mensaje y el del correo no se contradigan.
+   */
+  function refreshWaBtn() {
+    var btn = $('btnWhatsApp');
+    if (!btn) return;
+    var p = currentEmailParams();
+    var waIn = $('m-wa-cliente');
+    p.telCliente = waIn ? waIn.value : '';
+    btn.href = buildPolizaWaUrl(p);
+  }
+
   // ----- Envío -----
   async function send() {
     syncReview(); // por si volvió a editar
@@ -245,6 +259,17 @@
       }
 
       $('successMsg').textContent = 'El correo de póliza activa fue enviado a ' + to + '.';
+
+      // Aviso por WhatsApp. Nada de esto debe poder tumbar el flujo: el correo
+      // YA salió y la póliza está entregada.
+      try {
+        var waIn = $('m-wa-cliente');
+        if (waIn) waIn.value = '';
+        refreshWaBtn();
+        var wrap = $('waShareWrap');
+        if (wrap) wrap.style.display = 'flex';
+      } catch (e) { console.warn('[poliza] aviso WhatsApp:', e); }
+
       setStep(4);
       showToast('✅ Póliza enviada a ' + to, 'success');
     } catch (e) {
@@ -262,6 +287,8 @@
     $('fileInput').value = '';
     if ($('fileInput2')) $('fileInput2').value = '';
     $('m-nota').value = '';
+    if ($('m-wa-cliente')) $('m-wa-cliente').value = '';
+    if ($('waShareWrap')) $('waShareWrap').style.display = 'none';
     setProgress(0, '');
     renderDocs();
     setStep(1);
@@ -316,6 +343,11 @@
     $('btnBack3').addEventListener('click', function () { setStep(2); });
     $('btnSend').addEventListener('click', send);
     $('btnReset').addEventListener('click', resetAll);
+
+    // Al escribir el WhatsApp del cliente, regenerar el link del boton
+    // (chat directo si hay numero; selector de contactos si queda vacio).
+    var waIn = $('m-wa-cliente');
+    if (waIn) waIn.addEventListener('input', function () { refreshWaBtn(); });
 
     // Vista previa en vivo al editar el correo
     ['m-saludo', 'm-nota'].forEach(function (id) {
