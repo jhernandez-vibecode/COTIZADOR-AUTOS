@@ -1563,9 +1563,15 @@ js/poliza-email.js` no devuelve un solo commit. El módulo terminaba en "¡Póli
 enviada!" y el aviso al cliente lo escribía él a mano. Lo pidió "como viajero", con
 el número de póliza dentro del mensaje.
 
-- **Vista 4** de `/polizas-activas/`: mismo patrón que la del cotizador —
-  `#waShareWrap` (label + input opcional del WhatsApp del cliente + nota) y los dos
-  botones con `.btn-step` numerados 1 y 2 dentro de `.success-actions`.
+- **Vista 4** de `/polizas-activas/`: `#waShareWrap` (label + input opcional del
+  WhatsApp del cliente + nota) y los dos botones con `.btn-step` numerados dentro de
+  `.success-actions`.
+- **Orden invertido a pedido de JC** (commit `f582c4d`, el mismo día): acá
+  **1 = "Enviar otra póliza"** y **2 = "Avisar por WhatsApp"** — al revés que en el
+  cotizador, donde el WhatsApp va primero (también decisión suya). Los dos órdenes
+  son deliberados: no unificarlos. Se le avisó la consecuencia — el azul dispara
+  `resetAll()`, así que tocarlo antes del WhatsApp deja esa póliza sin aviso. No se
+  le puso confirmación porque no la pidió.
 - **`buildPolizaWaUrl(...)`** en `poliza-email.js`: el mensaje de JC + la línea
   "Su número de póliza es X (vehículo, placa)". Sin número de póliza, la línea
   entera desaparece.
