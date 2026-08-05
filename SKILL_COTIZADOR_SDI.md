@@ -1476,3 +1476,88 @@ convertido en test que corre sin API).
 4. Limpieza opcional en Google Cloud: quitar los orígenes `deploy-preview-2--…`
    y `deploy-preview-3--…` de Authorized JavaScript origins.
 5. Cooldown: hubo mucho cambio en un día. Dejar asentar antes de tocar más.
+
+---
+
+# Checkpoint 5 agosto 2026 — Vista 4 pareja, nombre completo en el historial y salida del Consultor
+
+Commit único `0089472` (23 archivos: 6 modificados, 20 borrados; +155 / −14.041).
+Tag de rollback **`pre-borrar-consultor-5ago` → `59f3c4d`** (pusheado). Tests 10/10.
+JC pidió ver previews antes de aprobar; se le mostraron y dio el visto bueno.
+
+## 1. Vista 4 — los dos botones al mismo tamaño
+
+**Lo que pedía JC:** "igualar el tamaño de estos botones" y numerarlos 1 y 2.
+Preguntado el orden (él había escrito "poner de primero el azul de enviar por
+correo", pero en esa pantalla no existe ningún botón de correo — el correo ya
+salió en el paso anterior), respondió: **dejar el orden actual, solo el tamaño.**
+
+- Antes: el verde `.btn-send` medía **380×48** (width:100% dentro de un wrap de
+  380px) y el azul, con solo `.btn`, medía **156×40** — vivía FUERA del wrap.
+- Ahora: `.success-actions` (columna, `max-width:380px`, `margin:0 auto`) envuelve
+  a los dos, y `.btn-step` (width:100%, padding 14/18, font 15px) les da las mismas
+  medidas. Medido en el navegador: **380×48 los dos**.
+- `.btn-step-num`: círculo de 20px con el 1 y el 2, `rgba(255,255,255,.25)` — se ve
+  igual sobre el verde y sobre el azul.
+- El `#waShareWrap` conserva su `style="display:none"` inline porque `app.js` lo
+  cambia a `'flex'` al terminar el envío. Mover eso a CSS rompería la revelación.
+
+## 2. Historial — `clientFull`, el nombre completo
+
+**El problema, en palabras de JC:** "en el buscador de pólizas enviadas que se
+registre el nombre completo del cliente, no solo el nombre, se dificulta hacer la
+búsqueda". Real: la entrada guardaba `client = #m-name`, que es el campo del
+**saludo** (nombre de pila). Buscar "Arguello" en el 📊 daba cero.
+
+- `app.js` agrega `clientFull: String(S.data.clientName || '').trim()` — el nombre
+  completo de la vista 2, ya con las correcciones que haya hecho el agente.
+- `history.js`: `historyClientName(e) = clientFull || client` (nueva, pura) y
+  `historyMatchesSearch` matchea también `clientFull`.
+- Pasan a mostrar el completo: 🕘 historial, lista del 📊, aviso de citas/seguir y
+  la confirmación de borrado. **NO** cambia `nombre:` de `buildFollowUpEmail` ni los
+  mensajes de WhatsApp: ahí sigue el de pila, o el cliente recibiría "Hola DELGADO
+  ARGUELLO SILVIA MARIEL".
+- Placeholder del buscador: "Buscar por placa, nombre o apellido…".
+- 6 tests nuevos en `test-history-search.js` (14 → 20).
+- **Sin backfill:** las entradas viejas no tienen el apellido en ninguna parte — el
+  param `c=` del `guideUrl` también es el saludo. Caen al nombre de pila y se
+  siguen encontrando por placa. No inventar una migración: no hay de dónde sacarlo.
+
+Verificado en el navegador con datos de prueba: buscando `arguello` aparece
+"DELGADO ARGUELLO SILVIA MARIEL · BRK454 — 1 coincidencia", y una entrada legacy
+(solo "Ana") se sigue encontrando por su nombre de pila.
+
+## 3. Consultor de Autos — eliminado por completo
+
+Decisión de JC ("eliminados del todo el módulo de consultor de autos"). Preguntado
+si borrar o solo esconder, eligió **borrar con tag de rollback**.
+
+Borrados (20 archivos): `consultor/` (4), `netlify/functions/consultar.mjs`,
+`corpus-admin.mjs`, `netlify/functions/data/` (corpus.json 1 MB + el PDF de la Guía
+de Suscripción), `procesador/` (5), `tests/banco-reglas-ins.mjs`,
+`tests/busqueda-literal.mjs`, la spec del 28 jul y el botón 🔎 del header.
+
+- `netlify.toml`: fuera el `included_files` del corpus y el 404 de `/procesador/*`;
+  reescritos los comentarios. **Se queda** el 404 de `/netlify/*`.
+- `package.json`: la descripción ya no habla del tope diario del Consultor. **Se
+  queda** `@netlify/blobs`: lo necesita `enlace.mjs`.
+- **Sobrevive `enlace.mjs`** (enlace corto `/g`): es del mismo 28 jul pero no es del
+  Consultor, y es lo que arregla el link de la guía en WhatsApp.
+- Sobrevive `docs/fuentes-ins/REGLAS-INS-VERIFICADAS.md`: es fuente del proyecto.
+- Del lado de Netlify (lo hace JC): borrar `CONSULTOR_COTIZADOR_AUTOS_AKEY`,
+  `CONSULTOR_EMAILS`, `CONSULTOR_CLIENT_ID`, `CONSULTOR_TOPE_DIARIO` y **revocar la
+  clave de Anthropic**.
+
+## 4. Pie con el registro de cambios (estreno en esta app)
+
+`footer.app-foot` al final de `index.html`: un `<details>` cerrado cuyo `<summary>`
+dice "Última actualización: 5 ago 2026 — …" y despliega 9 entradas desde mayo 2026,
+la más reciente arriba, en lenguaje de usuario (sin nombres de archivos ni jerga).
+Cumple la regla del 5 ago 2026: todo update se anota al pie de la propia app.
+
+## Pendientes para la próxima
+1. **Netlify**: borrar las 4 variables `CONSULTOR_*` y revocar la clave de Anthropic.
+2. **Pie del explicador** (`/explicacion/`): la regla dice que en apps con dos caras
+   va también en la del cliente. Falta proponérselo a JC — lo ve el asegurado.
+3. Sigue pendiente de siempre: borrar el sitio Netlify duplicado
+   `cotizador-autos-sdi.netlify.app` y el SPF/DKIM de segurosdelins.com.
