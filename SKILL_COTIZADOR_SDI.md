@@ -1555,6 +1555,43 @@ dice "Última actualización: 5 ago 2026 — …" y despliega 9 entradas desde m
 la más reciente arriba, en lenguaje de usuario (sin nombres de archivos ni jerga).
 Cumple la regla del 5 ago 2026: todo update se anota al pie de la propia app.
 
+## 5. Aviso por WhatsApp al enviar una póliza activa (commit `5557cde`)
+
+JC mandó una póliza y reportó que "ya no sale el botón de WhatsApp". **Verificado
+en git: nunca existió** — `git log -S whatsapp -- polizas-activas js/poliza-app.js
+js/poliza-email.js` no devuelve un solo commit. El módulo terminaba en "¡Póliza
+enviada!" y el aviso al cliente lo escribía él a mano. Lo pidió "como viajero", con
+el número de póliza dentro del mensaje.
+
+- **Vista 4** de `/polizas-activas/`: mismo patrón que la del cotizador —
+  `#waShareWrap` (label + input opcional del WhatsApp del cliente + nota) y los dos
+  botones con `.btn-step` numerados 1 y 2 dentro de `.success-actions`.
+- **`buildPolizaWaUrl(...)`** en `poliza-email.js`: el mensaje de JC + la línea
+  "Su número de póliza es X (vehículo, placa)". Sin número de póliza, la línea
+  entera desaparece.
+- **`polizaAsistenciaUrl()`**: la URL del Centro de Asistencia con la ficha del
+  agente, CRUDA. El `_assistUrl` local del correo **ahora delega en ella** — antes
+  era código duplicado dentro de `buildPolizaActivaEmail`, y dos copias de la misma
+  ficha terminan divergiendo. Si el correo y el WhatsApp mandaran fichas distintas,
+  el cliente vería un agente en un lado y otro en el otro.
+- **`polizaWaIntl()`**: 8 dígitos → `506XXXXXXXX`. Endpoint `web.whatsapp.com/send/`,
+  nunca `wa.me` (corrompe los emojis).
+- `refreshWaBtn()` usa `currentEmailParams()` — los MISMOS datos del correo, para que
+  el saludo no se contradiga. Se revela dentro de `try/catch` (el correo ya salió) y
+  se esconde en `resetAll()`.
+
+**Decisiones del texto (avisadas a JC):**
+- **Sin "Estimado":** del PDF sale el nombre, no el género. Quedó "¡Natanael, su
+  póliza de automóvil está lista!". Equivocarse de género con un cliente es peor que
+  sonar menos formal.
+- Registro unificado en **usted**: el borrador mezclaba "su póliza" con "facilitarte"
+  y "conduce". Corregido también "diseño" → "diseñó".
+
+Mensaje final medido: **710 caracteres**, con el link de la ficha (~180). Si algún día
+WhatsApp lo corta con "Leer más", ese link es lo primero a mirar.
+
+16 checks nuevos en `test-poliza-email.js` (31 → 47).
+
 ## Pendientes para la próxima
 1. **Netlify**: borrar las 4 variables `CONSULTOR_*` y revocar la clave de Anthropic.
 2. **Pie del explicador** (`/explicacion/`): la regla dice que en apps con dos caras
