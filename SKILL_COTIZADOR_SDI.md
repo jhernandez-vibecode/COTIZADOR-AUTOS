@@ -1544,9 +1544,10 @@ de Suscripción), `procesador/` (5), `tests/banco-reglas-ins.mjs`,
 - **Sobrevive `enlace.mjs`** (enlace corto `/g`): es del mismo 28 jul pero no es del
   Consultor, y es lo que arregla el link de la guía en WhatsApp.
 - Sobrevive `docs/fuentes-ins/REGLAS-INS-VERIFICADAS.md`: es fuente del proyecto.
-- Del lado de Netlify (lo hace JC): borrar `CONSULTOR_COTIZADOR_AUTOS_AKEY`,
-  `CONSULTOR_EMAILS`, `CONSULTOR_CLIENT_ID`, `CONSULTOR_TOPE_DIARIO` y **revocar la
-  clave de Anthropic**.
+- Del lado de Netlify: **✅ HECHO por JC el 6 ago 2026** — borradas
+  `CONSULTOR_COTIZADOR_AUTOS_AKEY`, `CONSULTOR_EMAILS`, `CONSULTOR_CLIENT_ID`,
+  `CONSULTOR_TOPE_DIARIO`, y **revocada la clave de Anthropic**. Para revivir el
+  Consultor habría que crear una clave NUEVA: la vieja ya no existe.
 
 ## 4. Pie con el registro de cambios (estreno en esta app)
 
@@ -1601,7 +1602,8 @@ WhatsApp lo corta con "Leer más", ese link es lo primero a mirar.
 16 checks nuevos en `test-poliza-email.js` (31 → 47).
 
 ## Pendientes para la próxima
-1. **Netlify**: borrar las 4 variables `CONSULTOR_*` y revocar la clave de Anthropic.
+1. ~~**Netlify**: borrar las 4 variables `CONSULTOR_*` y revocar la clave de Anthropic.~~
+   **✅ CERRADO el 6 ago 2026** — ver el checkpoint de esa fecha.
 2. **Pie del explicador** (`/explicacion/`): la regla dice que en apps con dos caras
    va también en la del cliente. Falta proponérselo a JC — lo ve el asegurado.
 3. Sigue pendiente de siempre: borrar el sitio Netlify duplicado
@@ -1682,9 +1684,16 @@ tarjetas blancas y step-nav de 4 pasos, así que de reojo se confunden.
 - Página nueva que cargue `css/styles.css` arranca gris; si es otra pantalla del mismo
   flujo, hay que ponerle su clase a mano.
 
-## Pendientes para la próxima (sin cambios respecto del 5 ago)
-1. **Netlify**: borrar las 4 variables `CONSULTOR_*` y revocar la clave de Anthropic.
-   Sigue abierto — se le recordó a JC el 6 ago.
-2. **Pie del explicador** (`/explicacion/`): falta proponérselo — lo ve el asegurado.
-3. Borrar el sitio Netlify duplicado `cotizador-autos-sdi.netlify.app` y el SPF/DKIM
+## Cierre de la limpieza del Consultor (6 ago 2026)
+
+**Se cerró el último resto de infraestructura.** JC borró en Netlify las 4 variables
+`CONSULTOR_COTIZADOR_AUTOS_AKEY`, `CONSULTOR_EMAILS`, `CONSULTOR_CLIENT_ID` y
+`CONSULTOR_TOPE_DIARIO`, y **revocó la clave de Anthropic** en
+`console.anthropic.com/settings/keys`. El Consultor ya no existe ni en código ni en
+infraestructura; el único rastro es el tag `pre-borrar-consultor-5ago`. Revivirlo
+exige **clave nueva** y volver a cargar las 4 variables.
+
+## Pendientes para la próxima
+1. **Pie del explicador** (`/explicacion/`): falta proponérselo — lo ve el asegurado.
+2. Borrar el sitio Netlify duplicado `cotizador-autos-sdi.netlify.app` y el SPF/DKIM
    de segurosdelins.com.
