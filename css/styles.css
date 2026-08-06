@@ -41,6 +41,14 @@ body {
   min-height: 100vh;
 }
 
+/* Fondo tenue que distingue las dos pantallas de un vistazo: las dos comparten
+   header, tarjetas y pasos, y de reojo se confunden. VERDE = cotizar (index),
+   AZUL = enviar una poliza ya emitida (/polizas-activas/). Solo el fondo: las
+   tarjetas siguen blancas, asi el contenido no cambia de lectura.
+   Pagina sin clase (cancelacion, 404) = el gris de siempre. */
+body.page-cotizar { background: #edf6f0; }
+body.page-poliza  { background: #ebf2fc; }
+
 /* Titulares con la tipografia display estandar SDI */
 .brand-title,
 .card-title,
