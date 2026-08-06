@@ -1551,9 +1551,11 @@ de Suscripción), `procesador/` (5), `tests/banco-reglas-ins.mjs`,
 ## 4. Pie con el registro de cambios (estreno en esta app)
 
 `footer.app-foot` al final de `index.html`: un `<details>` cerrado cuyo `<summary>`
-dice "Última actualización: 5 ago 2026 — …" y despliega 9 entradas desde mayo 2026,
+dice "Última actualización: <fecha> — …" y despliega las entradas desde mayo 2026,
 la más reciente arriba, en lenguaje de usuario (sin nombres de archivos ni jerga).
 Cumple la regla del 5 ago 2026: todo update se anota al pie de la propia app.
+(Al 6 ago 2026 van **12 entradas**; el conteo cambia con cada release, no lo tomes
+como dato fijo — el `<summary>` y la primera entrada son lo que hay que actualizar.)
 
 ## 5. Aviso por WhatsApp al enviar una póliza activa (commit `5557cde`)
 
@@ -1604,3 +1606,85 @@ WhatsApp lo corta con "Leer más", ese link es lo primero a mirar.
    va también en la del cliente. Falta proponérselo a JC — lo ve el asegurado.
 3. Sigue pendiente de siempre: borrar el sitio Netlify duplicado
    `cotizador-autos-sdi.netlify.app` y el SPF/DKIM de segurosdelins.com.
+
+---
+
+# Checkpoint 6 agosto 2026 — Guía del deducible + fondo tenue por pantalla
+
+Jornada corta y **100% visual**: dos pedidos de JC, ninguno toca extracción de PDF,
+correo, envío ni historial. Tests 10/10 en verde (217 checks) antes y después.
+Commits `d9ab693` y `73e37f0`, los dos verificados **contra producción** (no contra
+el preview local, que sirve el HEAD del inicio de sesión — gotcha de siempre).
+
+## 1. Guía del deducible en la vista 1 del cotizador (commit `d9ab693`)
+
+JC mandó una imagen con el contenido ya armado y pidió montarlo *"a manera de
+explicación con una barra desplegable, cerrada siempre, y el agente o la persona que
+lo necesite consulta"*.
+
+`<details class="card ded-guide">` **dentro de `#view1`**, debajo de la tarjeta de
+cargar el PDF y arriba del pie. Es consulta **interna del agente**: por eso vive en la
+consola y no en `/explicacion/`, que la ve el cliente.
+
+- **Sin atributo `open`** → cerrada en cada carga. En reposo son 64 px de alto; abierta,
+  719 px. Verificado en el sitio publicado.
+- **Bloque 1 — Cobertura C con exención "N"** (deducible ordinario 20% mín ₡150.000):
+  | Tramo | Resultado |
+  |---|---|
+  | Daño < ₡150.000 | No hay indemnización — el mínimo supera la pérdida |
+  | ₡150.000 a ₡750.000 | El cliente paga ₡150.000 — opera el mínimo fijo, la "N" **no** cubre el mínimo |
+  | Daño > ₡750.000 | El INS paga el 100% — opera el 20% porcentual y la "N" lo exime |
+
+  El quiebre de **₡750.000 es `150.000 ÷ 0,20`**: el punto exacto donde el porcentual
+  supera al mínimo. Si algún día cambian los montos del ejemplo, ese número se
+  recalcula — no es una cifra suelta.
+- **Bloque 2 — D, F y H con IDD** (deducible fijo ₡400.000, IDD contratada por ₡400.000):
+  | Tramo | Resultado |
+  |---|---|
+  | Daño < ₡400.000 | No hay indemnización — no supera el deducible |
+  | > ₡400.000, eventos **1 y 2** | El INS paga el 100% — la IDD paga el deducible |
+  | > ₡400.000, **evento 3** | El cliente paga ₡400.000 — se agotó el límite anual |
+
+  Los dos eventos cubiertos son los de **IDD2**, que es lo que JC cotiza siempre.
+- **Leyenda** de 3 colores al pie: sin indemnización (rojo) · el cliente paga el
+  deducible (ámbar) · cubierto al 100% (verde).
+- **Nota que NO se quita.** Arriba de los bloques va una línea gris: *"Ejemplos de
+  referencia para consulta interna. En cada caso mandan los montos que trae el PDF de
+  la cotización o la póliza del INS."* La puse por decisión propia y se la avisé a JC:
+  esos montos leídos como fijos serían una promesa que la póliza no respalda, y él
+  responde como agente con licencia SUGESE 08-1318.
+- **Aviso abierto a JC (no resuelto, decisión suya):** el ejemplo de IDD usa
+  **₡400.000**, tal cual la imagen que mandó, pero su estándar es **IDD2 de ₡500.000**.
+  El caso es válido (IDD contratada justo por el monto del deducible) y lo dejó así.
+  Si alguna vez pide alinearlo, hay que cambiar **los tres tramos del bloque 2 y el
+  subtítulo**, no solo un número.
+- **CSS**: todo anidado bajo `.ded-guide` en `css/styles.css` — obligatorio, porque
+  `/polizas-activas/` carga la misma hoja y no debe heredar nada. Filas oscuras
+  (`#5b1a1f` · `#63400b` · `#10493f`) con texto blanco; bajo 620 px las dos mitades de
+  cada fila se apilan con separador translúcido en vez de encimarse.
+
+## 2. Fondo tenue que separa las dos pantallas gemelas (commit `73e37f0`)
+
+JC: *"la pantalla de cotizar y envío de póliza son casi iguales, ¿podés poner un color
+de fondo tenue diferenciador? cotizar verde y enviar azul"*. Comparten header navy,
+tarjetas blancas y step-nav de 4 pasos, así que de reojo se confunden.
+
+| Pantalla | Clase del `<body>` | Fondo |
+|---|---|---|
+| Cotizar (`index.html`) | `page-cotizar` | verde `#edf6f0` |
+| Enviar póliza (`polizas-activas/`) | `page-poliza` | azul `#ebf2fc` |
+
+- **Solo cambia el `<body>`.** Las tarjetas siguen `#fff` (verificado en prod en las
+  dos páginas), así que ningún texto perdió contraste.
+- La regla global `body { background: var(--gray-50) }` **queda intacta**: es lo que
+  deja `/cancelacion/` y `404.html` como estaban. Si el tinte se moviera ahí, las dos
+  pantallas volverían a ser iguales — que es exactamente lo que se vino a arreglar.
+- Página nueva que cargue `css/styles.css` arranca gris; si es otra pantalla del mismo
+  flujo, hay que ponerle su clase a mano.
+
+## Pendientes para la próxima (sin cambios respecto del 5 ago)
+1. **Netlify**: borrar las 4 variables `CONSULTOR_*` y revocar la clave de Anthropic.
+   Sigue abierto — se le recordó a JC el 6 ago.
+2. **Pie del explicador** (`/explicacion/`): falta proponérselo — lo ve el asegurado.
+3. Borrar el sitio Netlify duplicado `cotizador-autos-sdi.netlify.app` y el SPF/DKIM
+   de segurosdelins.com.
