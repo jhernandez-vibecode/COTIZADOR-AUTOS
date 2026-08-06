@@ -956,3 +956,139 @@ textarea.form-control { resize: vertical; min-height: 70px; }
 .app-foot ul { margin: 12px 0 0; padding: 0 0 0 18px; }
 .app-foot li { margin-bottom: 8px; }
 .app-foot b { color: var(--gray-700); font-weight: 600; }
+
+/* ============ GUIA DEL DEDUCIBLE (vista 1, desplegable) ============ */
+/* Consulta interna del agente. Todo va anidado bajo .ded-guide para no
+   filtrarse a las otras paginas que cargan esta hoja. Cerrada por defecto. */
+.ded-guide {
+  margin-top: 18px;
+  padding: 20px 24px;
+}
+.ded-guide > summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  list-style: none;
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--navy);
+  transition: color .15s;
+}
+.ded-guide > summary::-webkit-details-marker { display: none; }
+.ded-guide > summary:hover { color: var(--blue); }
+.ded-guide > summary::after {
+  content: '\25BE';
+  margin-left: auto;
+  padding-left: 10px;
+  font-size: 12px;
+  color: var(--gray-500);
+  transition: transform .2s;
+}
+.ded-guide[open] > summary::after { transform: rotate(180deg); }
+.ded-guide > summary:focus-visible {
+  outline: 2px solid var(--blue-light);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+.ded-guide .ded-guide-ico { font-size: 17px; }
+
+.ded-guide .ded-guide-note {
+  margin: 16px 0 20px;
+  padding-left: 12px;
+  border-left: 3px solid var(--gray-200);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--gray-500);
+}
+.ded-guide .ded-block-title {
+  margin: 0 0 3px;
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--navy);
+}
+.ded-guide .ded-block-sub {
+  margin: 0 0 12px;
+  font-size: 12.5px;
+  color: var(--gray-500);
+}
+
+.ded-guide .ded-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0 0 24px;
+}
+.ded-guide .ded-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 20px;
+  padding: 13px 18px;
+  border-radius: 10px;
+  color: #fff;
+}
+.ded-guide .ded-side {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.ded-guide .ded-side--end {
+  margin-left: auto;
+  text-align: right;
+}
+.ded-guide .ded-main {
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.ded-guide .ded-sub {
+  font-size: 12.5px;
+  line-height: 1.3;
+}
+
+/* Rojo = el cliente no recibe nada · Ambar = paga el deducible · Verde = cubierto */
+.ded-guide .ded-row--no   { background: #5b1a1f; }
+.ded-guide .ded-row--no   .ded-sub { color: #f3aab0; }
+.ded-guide .ded-row--pay  { background: #63400b; }
+.ded-guide .ded-row--pay  .ded-sub { color: #eabd77; }
+.ded-guide .ded-row--full { background: #10493f; }
+.ded-guide .ded-row--full .ded-sub { color: #83d5c0; }
+
+.ded-guide .ded-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  padding-top: 14px;
+  border-top: 1px solid var(--gray-200);
+  font-size: 12.5px;
+  color: var(--gray-500);
+}
+.ded-guide .ded-legend-item { display: inline-flex; align-items: center; }
+.ded-guide .ded-dot {
+  width: 9px;
+  height: 9px;
+  margin-right: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.ded-guide .ded-dot--no   { background: #e05263; }
+.ded-guide .ded-dot--pay  { background: #e9a13b; }
+.ded-guide .ded-dot--full { background: #2ec4a6; }
+
+/* En pantallas angostas las dos mitades se apilan y todo alinea a la izquierda */
+@media (max-width: 620px) {
+  .ded-guide { padding: 18px 16px; }
+  .ded-guide > summary { font-size: 14px; }
+  .ded-guide .ded-row { flex-direction: column; align-items: stretch; gap: 8px; }
+  .ded-guide .ded-side--end {
+    margin-left: 0;
+    text-align: left;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, .18);
+  }
+}

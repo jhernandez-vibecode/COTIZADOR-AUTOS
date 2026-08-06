@@ -275,6 +275,102 @@
         </div>
         <div class="progress-label" id="progressLabel"></div>
       </div>
+
+      <!-- Guia rapida del deducible. Es material de CONSULTA del agente, no del
+           cliente: arranca siempre cerrada y solo se abre si alguien la necesita. -->
+      <details class="card ded-guide">
+        <summary>
+          <span class="ded-guide-ico" aria-hidden="true">📐</span>
+          <span>¿Cómo funciona el deducible? — Cobertura C con exención “N” · D, F y H con IDD</span>
+        </summary>
+
+        <p class="ded-guide-note">
+          Ejemplos de referencia para consulta interna. En cada caso mandan los montos que trae
+          el PDF de la cotización o la póliza del INS.
+        </p>
+
+        <h3 class="ded-block-title">Cobertura C con exención de deducible “N”</h3>
+        <p class="ded-block-sub">Deducible ordinario: 20% con mínimo de ₡150.000</p>
+
+        <div class="ded-rows">
+          <div class="ded-row ded-row--no">
+            <div class="ded-side">
+              <span class="ded-main">Daño menor a ₡150.000</span>
+              <span class="ded-sub">El mínimo supera la pérdida</span>
+            </div>
+            <div class="ded-side ded-side--end">
+              <span class="ded-main">No hay indemnización</span>
+              <span class="ded-sub">El cliente asume todo</span>
+            </div>
+          </div>
+
+          <div class="ded-row ded-row--pay">
+            <div class="ded-side">
+              <span class="ded-main">De ₡150.000 a ₡750.000</span>
+              <span class="ded-sub">Opera el mínimo fijo</span>
+            </div>
+            <div class="ded-side ded-side--end">
+              <span class="ded-main">El cliente paga ₡150.000</span>
+              <span class="ded-sub">“N” no cubre el mínimo</span>
+            </div>
+          </div>
+
+          <div class="ded-row ded-row--full">
+            <div class="ded-side">
+              <span class="ded-main">Daño mayor a ₡750.000</span>
+              <span class="ded-sub">Opera el 20% porcentual</span>
+            </div>
+            <div class="ded-side ded-side--end">
+              <span class="ded-main">El INS paga el 100%</span>
+              <span class="ded-sub">“N” exime el deducible</span>
+            </div>
+          </div>
+        </div>
+
+        <h3 class="ded-block-title">Coberturas D, F y H con IDD</h3>
+        <p class="ded-block-sub">Deducible fijo de ₡400.000 e IDD contratada por ₡400.000</p>
+
+        <div class="ded-rows">
+          <div class="ded-row ded-row--no">
+            <div class="ded-side">
+              <span class="ded-main">Daño menor a ₡400.000</span>
+              <span class="ded-sub">No supera el deducible</span>
+            </div>
+            <div class="ded-side ded-side--end">
+              <span class="ded-main">No hay indemnización</span>
+              <span class="ded-sub">El cliente asume todo</span>
+            </div>
+          </div>
+
+          <div class="ded-row ded-row--full">
+            <div class="ded-side">
+              <span class="ded-main">Mayor a ₡400.000, eventos 1 y 2</span>
+              <span class="ded-sub">La IDD paga el deducible fijo</span>
+            </div>
+            <div class="ded-side ded-side--end">
+              <span class="ded-main">El INS paga el 100%</span>
+              <span class="ded-sub">El cliente no paga nada</span>
+            </div>
+          </div>
+
+          <div class="ded-row ded-row--pay">
+            <div class="ded-side">
+              <span class="ded-main">Mayor a ₡400.000, evento 3</span>
+              <span class="ded-sub">Se agotó el límite anual</span>
+            </div>
+            <div class="ded-side ded-side--end">
+              <span class="ded-main">El cliente paga ₡400.000</span>
+              <span class="ded-sub">La IDD ya no opera</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="ded-legend">
+          <span class="ded-legend-item"><i class="ded-dot ded-dot--no"></i>Sin indemnización</span>
+          <span class="ded-legend-item"><i class="ded-dot ded-dot--pay"></i>El cliente paga el deducible</span>
+          <span class="ded-legend-item"><i class="ded-dot ded-dot--full"></i>Cubierto al 100%</span>
+        </div>
+      </details>
     </section>
 
     <!-- ======================== VISTA 2 · REVISAR DATOS ======================== -->
@@ -497,8 +593,9 @@
        toca la app se agrega una linea aca. -->
   <footer class="app-foot">
     <details>
-      <summary>Última actualización: 5 ago 2026 — aviso por WhatsApp al enviar una póliza, botones parejos y búsqueda por apellido</summary>
+      <summary>Última actualización: 6 ago 2026 — guía rápida del deducible en la pantalla de inicio</summary>
       <ul>
+        <li><b>6 ago 2026</b> — En la pantalla de inicio hay una <b>guía del deducible</b> para consultar en el momento: qué pasa en Cobertura C cuando lleva exención “N” y qué pasa en D, F y H cuando hay IDD, tramo por tramo. Viene cerrada y se abre solo cuando se necesita.</li>
         <li><b>5 ago 2026</b> — Al terminar de enviar una <b>póliza activa</b> aparece el botón para avisarle al cliente por WhatsApp: el mensaje ya va escrito, con el número de póliza y el enlace a la app de asistencia.</li>
         <li><b>5 ago 2026</b> — En la pantalla de "¡Cotización enviada!" los dos botones quedaron del mismo tamaño y numerados: 1 compartir la guía por WhatsApp, 2 enviar otra cotización. El historial y las estadísticas ahora guardan el <b>nombre completo</b> del cliente, así se puede buscar por apellido. Se retiró el Consultor de Autos.</li>
         <li><b>28 jul 2026</b> — El enlace de la guía que se comparte por WhatsApp ahora es corto: ya no le sale al cliente cortado con "Leer más".</li>
