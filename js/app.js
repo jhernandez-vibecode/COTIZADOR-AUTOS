@@ -336,9 +336,29 @@ async function driveSyncNow() {
   if (btn) { btn.disabled = true; btn.textContent = 'Sincronizando…'; }
   try {
     const res = await driveSync();
+
+    // Si de paso se recupero el PERFIL del agente (caso "limpie el navegador":
+    // driveSync llama a driveRestore, que restaura el perfil cuando el navegador
+    // no tiene ninguno), hay que recargar igual que en driveRestoreNow.
+    //
+    // Sin esto el modal ⚙ se queda abierto con los inputs que se llenaron ANTES
+    // desde los defaults de CFG — o sea con el nombre y la licencia SUGESE del
+    // dueno de la app — y en primer uso el unico boton disponible es "Guardar":
+    // el agente lo pulsa, pisa el perfil que se acaba de recuperar y sube esa
+    // suplantacion a SU propio Drive. Terminaria cotizando con una licencia
+    // ajena sin enterarse.
+    if (res && res.profileRestored) {
+      driveEnable();
+      driveResetAuto();
+      showToast('Recuperé tu configuración y ' + res.merged + ' cotizaciones. Recargando…', 'success');
+      setTimeout(function () { location.reload(); }, 1100);
+      return;
+    }
+
     _hideDriveInvite();
     _refreshDriveStatus();
     _refreshOpenLists();
+    paintRailAgent();
     const n = (res && res.found) ? res.merged : loadHistory().length;
     showToast('Respaldo activado. Tu control quedó guardado en tu Google Drive (' + n + ' cotización' + (n === 1 ? '' : 'es') + ').', 'success');
   } catch (e) {
