@@ -143,5 +143,40 @@ var waPedro = decodeURIComponent(buildPolizaWaUrl({ nombrePila: 'Ana', poliza: '
 ok('wa-multiagente',  waPedro.indexOf('n=Pedro%20Ram%C3%ADrez') !== -1 && waPedro.indexOf('wa=50670000000') !== -1);
 ok('wa-sin-web-owner', waPedro.indexOf('segurosdelins.com') === -1);
 
+// ---------- Enlace corto de la guía de emergencias (7 ago 2026) ----------
+// La URL de asistencia con la ficha del agente ronda los 180 caracteres y
+// empujaba el mensaje al "Leer más" de WhatsApp. Con el alias /a/XXXXXXXXXX
+// el mensaje entra completo.
+global.CFG.FROM_NAME  = 'Juan Carlos Hernandez Vargas';
+global.CFG.PHONE      = '8822-1348';
+global.CFG.WHATSAPP   = '8822-1348';
+global.CFG.FROM_EMAIL = 'jhernandez@segurosdelins.com';
+global.CFG.LICENSE    = '08-1318';
+global.CFG.WEBSITE    = 'www.segurosdelins.com';
+global.CFG.ASSIST_URL = 'https://appasistenciaseguroautos.netlify.app/';
+
+var CORTO = 'https://cotizador.appsegurosdigitales.com/a/K7M4PQ2XRB';
+var baseWa = { nombrePila: 'Natanael', poliza: '0101AUT221211200', vehiculo: 'NISSAN FRONTIER 2023', placa: 'CL-612977' };
+function msgDe(p) { return decodeURIComponent(buildPolizaWaUrl(p).split('text=')[1]); }
+
+var msgLargo = msgDe(baseWa);
+var msgCorto = msgDe(Object.assign({ urlGuia: CORTO }, baseWa));
+
+ok('corto-usa-alias',     msgCorto.indexOf(CORTO) !== -1);
+ok('corto-sin-larga',     msgCorto.indexOf('appasistenciaseguroautos.netlify.app') === -1);
+ok('corto-sin-ficha',     msgCorto.indexOf('lic=08-1318') === -1);   // la ficha viaja del lado del servidor
+ok('corto-acorta-mensaje', msgCorto.length < msgLargo.length - 100);
+// El resto del mensaje NO cambia: mismo saludo, misma línea de póliza, mismo cierre.
+ok('corto-mismo-saludo',  msgCorto.indexOf('¡Natanael, su póliza de automóvil está lista!') === 0);
+ok('corto-misma-poliza',  msgCorto.indexOf('Su número de póliza es 0101AUT221211200') !== -1);
+ok('corto-mismo-cierre',  /conduzca con total tranquilidad/.test(msgCorto));
+
+// Fallback: si el acortador falla devuelve '' o la URL larga → el mensaje
+// tiene que salir igual con el enlace largo, nunca sin enlace.
+ok('corto-fallback-vacio', msgDe(Object.assign({ urlGuia: '' }, baseWa)).indexOf('appasistenciaseguroautos.netlify.app') !== -1);
+ok('corto-fallback-nulo',  msgDe(Object.assign({ urlGuia: null }, baseWa)).indexOf('appasistenciaseguroautos.netlify.app') !== -1);
+
+console.log('   mensaje WhatsApp: ' + msgLargo.length + ' chars con el link largo → ' + msgCorto.length + ' con el corto');
+
 console.log('\npoliza-email: ' + pass + ' OK, ' + fail + ' FAIL');
 process.exit(fail ? 1 : 0);

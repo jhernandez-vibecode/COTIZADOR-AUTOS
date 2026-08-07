@@ -152,43 +152,16 @@ function buildWaShareUrl(entry, phoneOverride, urlGuia) {
 }
 
 /**
- * Cambia el link largo de la guia por un alias corto (/g/XXXXXXXXXX).
- *
- * El link lleva hasta 13 parametros y ronda los 230 caracteres: WhatsApp lo
- * colapsa con "Leer mas" y lo parte, y el cliente abre un link roto.
- *
- * Se usa SOLO donde el cliente ve la URL cruda (WhatsApp y Copiar). El correo
- * y el historial guardan el link LARGO a proposito: el boton del correo lo
- * esconde igual, y historyEntryValue/historyEntryPlate parsean `va` y `p` del
- * guideUrl para reconstruir entradas viejas del 📊.
- *
- * Si el acortador falla devuelve el link largo: acortar nunca debe impedir
- * que el agente comparta la cotizacion.
+ * Cambia el link largo de la guia de la cotizacion por un alias corto
+ * (/g/XXXXXXXXXX). La implementacion vive en js/shortlink.js, compartida con
+ * el aviso de poliza activa (que acorta su propia guia de emergencias); aca
+ * queda el nombre que usa app.js en la vista 4 y en el historial 💬.
  *
  * @param {string} urlLarga
  * @returns {Promise<string>}
  */
 async function acortarGuia(urlLarga) {
-  const larga = String(urlLarga || '');
-  const i = larga.indexOf('?');
-  if (i === -1) return larga;                       // sin parametros no hay nada que acortar
-  try {
-    // Tope de espera: la pestaña de WhatsApp ya esta abierta esperando esto.
-    // Sin timeout, una red colgada la deja en blanco para siempre.
-    const r = await fetch('/g', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ q: larga.slice(i + 1) }),
-      signal: AbortSignal.timeout ? AbortSignal.timeout(6000) : undefined
-    });
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const data = await r.json();
-    if (!data || !/^[A-Z2-9]{10}$/.test(data.id || '')) throw new Error('id invalido');
-    return location.origin + '/g/' + data.id;
-  } catch (e) {
-    console.warn('[cotizador] no se pudo acortar el enlace; se comparte el largo', e);
-    return larga;
-  }
+  return acortarEnlace(urlLarga, 'g');
 }
 
 /**

@@ -22,6 +22,47 @@ description: >
 > Hay una tercera copia espejo en `C:/Users/segur/Downloads/SKILL_COTIZADOR_SDI.md`
 > (⚠️ Downloads lo barren los limpiadores de disco — la del repo es la que manda).
 
+> ## ✅ NUEVO — 7 ago 2026: El aviso de póliza lista por WhatsApp ya manda el enlace CORTO (`/a/:id`)
+> Lo pidió JC: *"podemos acortar el link que enviamos por WA cuando la póliza está lista, como hicimos en otros
+> proyectos"*. El acortador **ya existía** desde el 28 jul, pero servía solo a la guía de la cotización: armaba el
+> destino fijo `/explicacion/` **del propio sitio** y validaba contra la lista blanca de parámetros del explicador.
+> El de la póliza apunta a **otro sitio** (la app de asistencia) con **otros parámetros** (la ficha del agente), así
+> que hubo que ampliarlo en vez de reusarlo tal cual.
+> - **Function (`netlify/functions/enlace.mjs`):** rutas nuevas `/a` y `/a/:id`. Los registros de asistencia se
+>   guardan bajo la clave `a:<ID>` con `{b, q}` — **separados de los de la guía**, que siguen siendo el query string
+>   plano bajo `<ID>`: los enlaces ya enviados **no se tocan ni se rompen**.
+> - **Lista blanca de destinos `DESTINOS_A`:** `/a` es el único que redirige FUERA del sitio, y el host llega del
+>   cliente. Se compara el **origin exacto** (no por prefijo: `…netlify.app.malo.com` debe fallar) y se revalida
+>   **también al servir**, no solo al crear. Un host no autorizado da 400 y el front se queda con el link largo.
+>   Sin esto el acortador sería un **redirector abierto**.
+> - **Front:** `js/shortlink.js` nuevo con `acortarEnlace(url, tipo)`, cargado por las dos páginas;
+>   `acortarGuia` de `history.js` quedó como wrapper de una línea (es el nombre que usa `app.js` en 3 lugares).
+>   `buildPolizaWaUrl` acepta `urlGuia`; `shareWa` en `poliza-app.js` acorta al hacer clic y abre la pestaña
+>   ANTES del await. El `href` del botón conserva el LARGO como red de seguridad.
+> - **Dedup:** en `/a` **todos los avisos de un mismo agente comparten id, a propósito** — ese query es solo su
+>   ficha, sin ningún dato del cliente. NO confundir con el bug de la huella truncada del 28 jul.
+> - **Resultado:** el mensaje pasó de **710 a 581 caracteres**; el enlace, de 183 a 54. **El texto no se tocó.**
+> - **Tests:** `test-shortlink.js` (18) + `test-enlace-validacion.mjs` (23). Total del repo: **12 archivos, 267 checks**.
+>   Los validadores se mudaron a `netlify/functions/lib/validacion.mjs` para poder correrlos con Node pelado
+>   (importar `enlace.mjs` exige `@netlify/blobs`, que localmente no está instalado).
+>
+> ### 🔴 Root cause que casi rompe producción: un byte NUL que se lee como un espacio
+> Al reescribir `enlace.mjs` se introdujo un bug en el camino de la guía **que ya funcionaba**. La línea real era
+> `if (/[\r\n<NUL>]/.test(v)) return false;` con el **byte NUL crudo** dentro de la clase de caracteres: al leer el
+> archivo se ve `/[\r\n ]/`, **idéntico a un espacio**. La reescritura puso un espacio de verdad — y como
+> `URLSearchParams` **decodifica** los valores, `n=Juan%20Carlos` llega como `"Juan Carlos"`: el guard habría
+> rechazado **toda** cotización real (ningún agente ni cliente se llama con una sola palabra), cayendo al link
+> largo en silencio.
+> - **Lo cazó un test**, no la lectura del código: `a-acepta` falló con un nombre con `%20`.
+> - **La conclusión intuitiva era falsa** ("el guard siempre estuvo roto"). Un `curl -X POST` contra producción
+>   respondió **200**, lo que probó que el archivo real decía otra cosa que lo que se leía. El byte se ubicó con
+>   `Buffer.indexOf(0)`.
+> - **Git lo venía avisando:** el archivo salía como **`Bin` en `git diff --stat`**. Un `.mjs` que git trata como
+>   binario tiene un byte de control adentro.
+> - **Quedó corregido:** el NUL ahora se escribe con su secuencia de escape (visible en el fuente) y el archivo
+>   de producción quedó **limpio** después de 10 días con el byte adentro. Misma familia que la regla de los
+>   acentos por charCode en `email-template.js`: **nada de caracteres invisibles en el fuente**.
+
 > ## ✅ NUEVO — 13 jul 2026: El PDF INS trae MATRIZ de precios por tipo de repuesto (EN PROD, commits `acfa5db` + `84aca0d`)
 > El INS rediseñó la **página 2** del PDF de cotización (ASINS-170): la tabla **FORMA DE PAGO** pasó de **UNA
 > columna** de precios a una **MATRIZ de hasta 5 columnas**, una por tipo de repuesto — en este orden fijo:

@@ -1,6 +1,7 @@
 # Cotizador SDI · Configuración Netlify
-# Sitio estático — sin build, publish = raíz del repo — más la función del
-# enlace corto de la guia (/g), unico backend que queda en el proyecto.
+# Sitio estático — sin build, publish = raíz del repo — más la función de los
+# enlaces cortos (/g la guia de la cotizacion, /a la de emergencias de la
+# poliza), unico backend que queda en el proyecto.
 
 # ============ FUNCIONES ============
 [functions]

@@ -68,7 +68,12 @@ function polizaAsistenciaUrl() {
  * El saludo NO lleva "Estimado/Estimada": del PDF solo sacamos el nombre, no
  * el genero, y equivocarse ahi con un cliente es peor que sonar menos formal.
  *
- * @param {object} params - { nombrePila, poliza, vehiculo, placa, telCliente }
+ * `urlGuia` es el alias corto (/a/XXXXXXXXXX) que devuelve acortarEnlace: la
+ * URL de asistencia con la ficha del agente ronda los 180 caracteres y empuja
+ * el mensaje al "Leer mas" de WhatsApp. Si no viene — porque el acortador
+ * fallo o porque se llama sin el — cae a la URL larga, que funciona igual.
+ *
+ * @param {object} params - { nombrePila, poliza, vehiculo, placa, telCliente, urlGuia }
  * @returns {string}
  */
 function buildPolizaWaUrl(params) {
@@ -77,7 +82,7 @@ function buildPolizaWaUrl(params) {
   var poliza   = String(p.poliza     || '').trim();
   var vehiculo = String(p.vehiculo   || '').trim();
   var placa    = String(p.placa      || '').trim();
-  var guia     = polizaAsistenciaUrl();
+  var guia     = String(p.urlGuia    || '').trim() || polizaAsistenciaUrl();
 
   // Identificacion: "Su numero de poliza es X (Toyota Yaris, placa BRK454)."
   var ident = '';

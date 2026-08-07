@@ -193,17 +193,46 @@
   }
 
   /**
+   * Datos del aviso por WhatsApp: los MISMOS que el correo
+   * (currentEmailParams) para que el saludo del mensaje y el del correo no se
+   * contradigan, mas el telefono que haya escrito el agente.
+   */
+  function waParams() {
+    var p = currentEmailParams();
+    var waIn = $('m-wa-cliente');
+    p.telCliente = waIn ? waIn.value : '';
+    return p;
+  }
+
+  /**
    * Regenera el link del boton "Avisar por WhatsApp" de la vista 4.
-   * Usa los MISMOS datos que el correo (currentEmailParams) para que el saludo
-   * del mensaje y el del correo no se contradigan.
+   * Deja el enlace LARGO: es el que vale si el acortador falla o si el clic
+   * no pasa por el handler (JS caido, "abrir en pestaña nueva" del menu
+   * contextual). El acortado se resuelve al hacer clic, que es cuando se
+   * puede esperar por la red.
    */
   function refreshWaBtn() {
     var btn = $('btnWhatsApp');
     if (!btn) return;
-    var p = currentEmailParams();
-    var waIn = $('m-wa-cliente');
-    p.telCliente = waIn ? waIn.value : '';
-    btn.href = buildPolizaWaUrl(p);
+    btn.href = buildPolizaWaUrl(waParams());
+  }
+
+  /**
+   * Clic en "Avisar al cliente por WhatsApp": acorta la guia de emergencias
+   * (~180 caracteres con la ficha del agente) y recien ahi abre el chat.
+   * Sin esto WhatsApp colapsa el mensaje con "Leer mas" y parte la URL.
+   */
+  function shareWa(ev) {
+    ev.preventDefault();
+    // La pestaña se reserva ANTES del await: abrirla despues de una llamada de
+    // red ya no cuenta como gesto del usuario y el navegador la bloquea.
+    var win = window.open('', '_blank');
+    acortarEnlace(polizaAsistenciaUrl(), 'a').then(function (corto) {
+      var p = waParams();
+      p.urlGuia = corto;
+      var url = buildPolizaWaUrl(p);
+      if (win) win.location.href = url; else window.open(url, '_blank', 'noopener');
+    });
   }
 
   // ----- Envío -----
@@ -348,6 +377,9 @@
     // (chat directo si hay numero; selector de contactos si queda vacio).
     var waIn = $('m-wa-cliente');
     if (waIn) waIn.addEventListener('input', function () { refreshWaBtn(); });
+
+    var waBtn = $('btnWhatsApp');
+    if (waBtn) waBtn.addEventListener('click', shareWa);
 
     // Vista previa en vivo al editar el correo
     ['m-saludo', 'm-nota'].forEach(function (id) {
