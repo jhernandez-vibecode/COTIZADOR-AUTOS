@@ -22,6 +22,35 @@ description: >
 > Hay una tercera copia espejo en `C:/Users/segur/Downloads/SKILL_COTIZADOR_SDI.md`
 > (⚠️ Downloads lo barren los limpiadores de disco — la del repo es la que manda).
 
+> ## ✅ NUEVO — 7 ago 2026: Menú lateral "Consola" — los 6 accesos ahora con NOMBRE (commit `8ecb819`)
+> JC pidió rediseñar el menú "y ponerlas lateralmente con el nombre y un icono". Se le presentaron **dos mockups**
+> (A "Consola", oscura y compacta; B "Estación", clara y con descripciones) y eligió la **A**: *"Consola A por mucho"*.
+> - **El problema:** los 6 accesos (`🧮 📋 📨 📊 🕘 ⚙`) vivían como emojis sueltos, apretados en la esquina derecha
+>   del header, sin nombre y sin jerarquía. Había que acordarse de cuál era cuál.
+> - **Ahora:** barra navy de **238px** a la izquierda, icono SVG de trazo + nombre, agrupados en **Enviar** (Cotización
+>   nueva · Póliza activa) / **Mi control** (Estadísticas · Historial) / **Consulta** (Cancelación anticipada · Marcas
+>   con recargo) / **Cuenta** (Configuración). Al pie, nombre y licencia del agente; en el header, sus iniciales.
+> - **Alcance: SOLO `index.html`.** Al revisar se confirmó que las 3 sub-páginas **nunca tuvieron** esos botones —
+>   cada una tiene su propio "← Cotizador". La pregunta de "¿en cuántas páginas?" se contestó sola: una.
+> - **`paintRailAgent()`** pinta la ficha desde CFG (multi-agente, nada hardcodeado a JC) y se vuelve a llamar en
+>   `handleProfileSave`. **`_syncHeaderHeight()`** mide el header y lo publica en `--header-h`, porque el header
+>   envuelve sus filas en pantallas angostas (pasa de 64 a 112px) y el rail es `sticky; top:var(--header-h)`.
+>
+> ### 🔴 El riesgo real de este cambio: el fallo en cascada por un id que desaparece
+> `app.js` engancha `btnStats` / `btnHistory` / `btnSettings` con `getElementById(...).addEventListener(...)` dentro
+> del `DOMContentLoaded`. Si un id deja de existir, esa línea lanza `TypeError` y **se cae todo el resto del arranque**:
+> la app queda a medias, sin que nada avise. Durante el desarrollo se vio exactamente eso (`app.js:118`) en el estado
+> intermedio en que los botones ya se habían quitado del header pero el rail aún no existía. **Por eso los ids se
+> conservan tal cual** y se verificó con **clic real en producción** que los 3 modales abren.
+>
+> ### Dos trampas de verificación que costaron tiempo (valen para cualquier revisión visual)
+> - **El panel de preview sirve un SNAPSHOT congelado.** Mostraba el `index.html` nuevo con un `app.js` viejo: las
+>   funciones nuevas salían `undefined` y parecía que el código estaba mal. Se detectó comparando funciones viejas
+>   (existían) contra las nuevas (no). La verificación que vale es **contra producción**, después del deploy.
+> - **Un `style.display='none'` inline le gana a `.modal-backdrop.active{display:flex}`.** Una prueba propia dejó ese
+>   inline puesto y los 3 modales dieron falso negativo ("no abren"). Es el mismo gotcha de `[hidden]` vs `display`
+>   que ya está documentado: **verificar con `getComputedStyle`, y limpiar los estilos inline entre pruebas.**
+
 > ## ✅ NUEVO — 7 ago 2026: El aviso de póliza lista por WhatsApp ya manda el enlace CORTO (`/a/:id`)
 > Lo pidió JC: *"podemos acortar el link que enviamos por WA cuando la póliza está lista, como hicimos en otros
 > proyectos"*. El acortador **ya existía** desde el 28 jul, pero servía solo a la guía de la cotización: armaba el
