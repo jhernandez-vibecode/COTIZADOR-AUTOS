@@ -47,14 +47,10 @@
         </div>
       </nav>
 
-      <div style="display:flex;align-items:center;gap:8px;">
-        <a href="cancelacion/" class="header-btn" title="Calculadora de cancelación" aria-label="Calculadora de cancelación" style="text-decoration:none;font-size:16px;">🧮</a>
-        <a href="marcas-recargo/" target="_blank" rel="noopener" class="header-btn" title="Marcas con deducible diferenciado" aria-label="Marcas con deducible diferenciado" style="text-decoration:none;font-size:16px;">📋</a>
-        <a href="polizas-activas/" class="header-btn" title="Envío de pólizas activas" aria-label="Envío de pólizas activas" style="text-decoration:none;font-size:16px;">📨</a>
-        <button id="btnStats" class="header-btn" title="Estadísticas de cotizaciones" aria-label="Estadísticas de cotizaciones">📊</button>
-        <button id="btnHistory" class="header-btn" title="Historial de cotizaciones enviadas" aria-label="Historial de cotizaciones enviadas">🕘</button>
-        <button id="btnSettings" class="header-btn" title="Configuración del agente" aria-label="Configuración del agente">⚙</button>
-      </div>
+      <!-- Los 6 accesos se mudaron al menú lateral (nav.side-rail). Acá solo
+           quedan las iniciales del agente: en multi-agente deja claro desde
+           qué cuenta se está enviando. -->
+      <div class="hdr-agent" id="hdrAgentIni" title="Agente" aria-hidden="true"></div>
     </div>
   </header>
 
@@ -246,6 +242,60 @@
     </div>
   </div>
 
+  <!-- ======================== CUERPO: MENÚ LATERAL + CONTENIDO ======================== -->
+  <div class="app-shell">
+
+    <!-- Menú "Consola" (7 ago 2026). Antes eran 6 emojis sueltos en la esquina
+         del header (🧮 📋 📨 📊 🕘 ⚙), sin nombre y sin orden. Los botones que
+         abren modales CONSERVAN sus ids (btnStats / btnHistory / btnSettings):
+         app.js los engancha por id, así que renombrarlos rompe los modales. -->
+    <nav class="side-rail" aria-label="Secciones">
+
+      <div class="rail-sec">Enviar</div>
+      <!-- Indicador de posición: no navega ni reinicia (perdería la cotización
+           a medio cargar). Para empezar otra está el botón de la vista 4. -->
+      <div class="rail-item current" aria-current="page" style="animation-delay:.02s">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z"/><path d="M12 18v-6"/><path d="m9 15 3-3 3 3"/></svg>
+        Cotización nueva
+      </div>
+      <a class="rail-item" href="polizas-activas/" style="animation-delay:.06s">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+        Póliza activa
+      </a>
+
+      <div class="rail-sec">Mi control</div>
+      <button type="button" class="rail-item" id="btnStats" style="animation-delay:.10s">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M7 15l3.5-4 3 2.5L20 7"/></svg>
+        Estadísticas
+      </button>
+      <button type="button" class="rail-item" id="btnHistory" style="animation-delay:.14s">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 8v4l3 2"/></svg>
+        Historial
+      </button>
+
+      <div class="rail-sec">Consulta</div>
+      <a class="rail-item" href="cancelacion/" style="animation-delay:.18s">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8"/><path d="M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15v3"/></svg>
+        Cancelación anticipada
+      </a>
+      <a class="rail-item" href="marcas-recargo/" target="_blank" rel="noopener" style="animation-delay:.22s">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h18M3 12h18M3 19h18"/><path d="M8 5v14"/></svg>
+        Marcas con recargo <span class="rail-ext" aria-hidden="true">↗</span>
+      </a>
+
+      <div class="rail-sec">Cuenta</div>
+      <button type="button" class="rail-item" id="btnSettings" style="animation-delay:.26s">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1Z"/></svg>
+        Configuración
+      </button>
+
+      <div class="rail-foot">
+        <b id="railAgentName">&nbsp;</b>
+        <span id="railAgentLic"></span>
+      </div>
+    </nav>
+
+    <div>
   <main class="container">
 
     <!-- ===== Invitación (una vez) a activar el respaldo en Drive ===== -->
@@ -593,8 +643,9 @@
        toca la app se agrega una linea aca. -->
   <footer class="app-foot">
     <details>
-      <summary>Última actualización: 7 ago 2026 — el aviso de póliza lista también lleva el enlace corto</summary>
+      <summary>Última actualización: 7 ago 2026 — menú lateral con los nombres de cada opción</summary>
       <ul>
+        <li><b>7 ago 2026</b> — <b>Menú lateral nuevo.</b> Los seis botoncitos de la esquina (que había que adivinar por el dibujito) pasaron a una barra a la izquierda, cada uno con su nombre y agrupados por para qué sirven: <b>Enviar</b> (cotización nueva, póliza activa), <b>Mi control</b> (estadísticas, historial), <b>Consulta</b> (cancelación anticipada, marcas con recargo) y <b>Cuenta</b> (configuración). Abajo del menú quedan tu nombre y tu licencia a la vista.</li>
         <li><b>7 ago 2026</b> — El aviso de <b>póliza lista</b> por WhatsApp ahora lleva el enlace a la app de asistencia <b>corto</b>, como el de la guía de cotización. El mensaje le llega al cliente completo y el enlace se ve limpio, en vez de una dirección larguísima que WhatsApp partía a la mitad.</li>
         <li><b>6 ago 2026</b> — Las dos pantallas dejaron de parecerse: <b>cotizar</b> tiene un fondo verde tenue y <b>enviar una póliza activa</b> uno azul tenue. Con mirar de reojo ya se sabe en cuál se está.</li>
         <li><b>6 ago 2026</b> — En la pantalla de inicio hay una <b>guía del deducible</b> para consultar en el momento: qué pasa en Cobertura C cuando lleva exención “N” y qué pasa en D, F y H cuando hay IDD, tramo por tramo. Viene cerrada y se abre solo cuando se necesita.</li>
@@ -611,6 +662,8 @@
       </ul>
     </details>
   </footer>
+    </div><!-- /columna de contenido -->
+  </div><!-- /.app-shell -->
 
   <!-- ======================== LIBRERÍAS EXTERNAS ======================== -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>

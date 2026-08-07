@@ -1100,3 +1100,149 @@ textarea.form-control { resize: vertical; min-height: 70px; }
     border-top: 1px solid rgba(255, 255, 255, .18);
   }
 }
+
+/* ============ MENU LATERAL "CONSOLA" (7 ago 2026) ============
+   Reemplaza los 6 botones de emoji que vivian apretados en la esquina
+   derecha del header: cada acceso ahora lleva NOMBRE + icono y quedan
+   agrupados por para que sirven.
+
+   OJO: todo cuelga de .app-shell / .side-rail, clases que solo existen en
+   index.html. Las sub-paginas (/polizas-activas/, /cancelacion/,
+   /marcas-recargo/) cargan esta MISMA hoja y no deben heredar nada: ellas
+   siguen con su enlace "← Volver al cotizador", que es su patron propio.
+   ============================================================ */
+:root { --header-h: 64px; }        /* lo ajusta _syncHeaderHeight en app.js */
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 238px minmax(0, 1fr);
+  align-items: start;
+  /* La columna del rail queda navy de arriba a abajo. El rail es sticky y
+     mide una pantalla, asi que en vistas largas (2 y 3) su franja terminaria
+     antes que el contenido y se veria el fondo verde asomando debajo. */
+  background: linear-gradient(to right, var(--navy) 0 238px, transparent 238px);
+}
+
+.side-rail {
+  position: sticky;
+  top: var(--header-h);
+  align-self: start;
+  min-height: calc(100vh - var(--header-h));
+  background: var(--navy);
+  background-image: radial-gradient(circle at 18% 0%, rgba(56, 189, 248, .13), transparent 58%);
+  border-right: 1px solid rgba(255, 255, 255, .07);
+  padding: 20px 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.rail-sec {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: #64748b;
+  padding: 15px 13px 7px;
+}
+.rail-sec:first-child { padding-top: 2px; }
+
+.rail-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 10px 13px;
+  border-radius: 9px;
+  text-decoration: none;
+  color: #b6c2d3;
+  font-size: 13.5px;
+  font-weight: 500;
+  font-family: inherit;
+  text-align: left;
+  background: none;
+  border: 0;
+  width: 100%;
+  cursor: pointer;
+  position: relative;
+  transition: background .16s, color .16s, transform .16s;
+  animation: railIn .45s cubic-bezier(.22, 1, .36, 1) backwards;
+}
+.rail-item svg { width: 18px; height: 18px; flex: none; stroke-width: 1.7; }
+.rail-item:hover { background: rgba(255, 255, 255, .07); color: #fff; transform: translateX(2px); }
+.rail-item:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
+
+/* El item activo marca DONDE ESTAS: no navega a ningun lado ni reinicia el
+   flujo (perderia la cotizacion a medio cargar), por eso no es un boton. */
+.rail-item.current {
+  background: rgba(255, 255, 255, .11);
+  color: #fff;
+  font-weight: 600;
+  cursor: default;
+}
+.rail-item.current:hover { transform: none; }
+.rail-item.current::before {
+  content: "";
+  position: absolute;
+  left: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px; height: 22px;
+  border-radius: 0 3px 3px 0;
+  background: #38bdf8;
+}
+.rail-item .rail-ext { margin-left: auto; font-size: 10px; color: #475569; }
+
+@keyframes railIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .rail-item { animation: none; } }
+
+.rail-foot {
+  margin-top: auto;
+  padding: 13px 13px 2px;
+  border-top: 1px solid rgba(255, 255, 255, .08);
+  font-size: 10.5px;
+  color: #5b6b81;
+  line-height: 1.5;
+}
+.rail-foot b {
+  color: #94a3b8;
+  font-weight: 600;
+  display: block;
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: 11px;
+}
+
+/* Iniciales del agente en el header (multi-agente: deja claro quien envia) */
+.hdr-agent {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .14);
+  display: grid; place-items: center;
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-weight: 700; font-size: 11px;
+  letter-spacing: .3px;
+}
+
+/* El contenido ya no se centra contra la ventana sino contra el hueco que
+   deja el rail; el tope de 1200px se conserva para no ensanchar las tablas. */
+.app-shell main.container { margin: 32px auto; }
+.app-shell .app-foot { margin-left: auto; margin-right: auto; }
+
+/* Angosto: el rail pasa a ser una fila arriba del contenido. Se ocultan los
+   rotulos de seccion y la ficha del agente (no caben y no hacen falta). */
+@media (max-width: 900px) {
+  .app-shell { grid-template-columns: 1fr; background: none; }
+  .side-rail {
+    position: static;
+    min-height: 0;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 12px;
+    border-right: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, .1);
+  }
+  .rail-sec, .rail-foot { display: none; }
+  .rail-item { width: auto; padding: 8px 11px; font-size: 12.5px; }
+  .rail-item.current::before { display: none; }
+}

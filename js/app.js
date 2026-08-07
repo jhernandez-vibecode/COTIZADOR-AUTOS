@@ -185,9 +185,18 @@ document.addEventListener('DOMContentLoaded', function () {
   // ============ CARGAR PERFIL DEL AGENTE ============
   // Si hay perfil guardado en localStorage, lo aplicamos sobre CFG.
   // Si NO hay (primer uso en este navegador), abrimos el modal forzando configurar.
+  // ============ MENU LATERAL ============
+  // El rail queda pegado justo debajo del header, que es sticky y puede
+  // cambiar de alto al envolverse en pantallas angostas: se mide en vez de
+  // hardcodear los 64px.
+  _syncHeaderHeight();
+  window.addEventListener('resize', _syncHeaderHeight);
+
   const savedProfile = loadProfile();
+  paintRailAgent();            // con perfil o con los defaults de CFG
   if (savedProfile) {
     applyProfile(savedProfile);
+    paintRailAgent();          // ya con los datos del agente aplicados
     // Aviso al inicio (citas de hoy + seguimientos +3d). Solo con perfil
     // configurado; pequeño delay para no chocar con el render inicial.
     setTimeout(maybeShowAviso, 400);
@@ -200,6 +209,42 @@ document.addEventListener('DOMContentLoaded', function () {
   // ============ Inicializar GIS cuando este disponible ============
   _tryInitTokenClient();
 });
+
+/**
+ * Alto real del header sticky -> variable CSS --header-h, que usa .side-rail
+ * para pegarse justo debajo. El header envuelve sus filas en pantallas
+ * angostas, asi que el valor no es constante.
+ */
+function _syncHeaderHeight() {
+  const h = document.querySelector('.app-header');
+  if (!h) return;
+  document.documentElement.style.setProperty('--header-h', Math.round(h.getBoundingClientRect().height) + 'px');
+}
+
+/**
+ * Ficha del agente en el menu lateral (nombre + licencia) e iniciales en el
+ * header. Multi-agente: sale de CFG, que agent-profile.js ya sobreescribio
+ * con el perfil del navegador. Se vuelve a llamar al guardar el perfil.
+ */
+function paintRailAgent() {
+  const nombre = String(CFG.FROM_NAME || '').trim();
+  const lic    = String(CFG.LICENSE   || '').trim();
+
+  const elName = document.getElementById('railAgentName');
+  if (elName) elName.textContent = nombre || ' ';
+  const elLic = document.getElementById('railAgentLic');
+  if (elLic) elLic.textContent = lic ? ('Licencia SUGESE ' + lic) : '';
+
+  const elIni = document.getElementById('hdrAgentIni');
+  if (elIni) {
+    // Dos iniciales: del PDF del INS no salen, estas vienen del perfil que el
+    // propio agente escribio, asi que basta con partir por espacios.
+    const ini = nombre.split(/\s+/).filter(Boolean).slice(0, 2)
+      .map(function (w) { return w.charAt(0).toUpperCase(); }).join('');
+    elIni.textContent = ini;
+    elIni.title = nombre ? ('Enviando como ' + nombre) : 'Agente';
+  }
+}
 
 /**
  * Abre el modal de configuracion del agente.
@@ -1068,6 +1113,7 @@ function handleProfileSave() {
   try {
     saveProfile(profile);
     applyProfile(profile);
+    paintRailAgent();          // el pie del menú y las iniciales del header
   } catch (e) {
     showToast(e.message, 'error');
     return;
