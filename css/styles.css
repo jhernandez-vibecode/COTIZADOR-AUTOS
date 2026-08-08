@@ -49,13 +49,22 @@ body {
 body.page-cotizar { background: #edf6f0; }
 body.page-poliza  { background: #ebf2fc; }
 
+/* SISTEMA TIPOGRAFICO SDI (7 ago 2026, aprobado por JC). Cada letra un trabajo:
+     Questrial  -> SOLO el logotipo (tiene un unico peso: alcanza para una marca,
+                   no para una interfaz). Va vectorizado dentro del SVG.
+     Poppins    -> titulos. Misma familia visual que Questrial (geometrica, "a"
+                   de un piso) pero con pesos, asi el logo y los titulos se leen
+                   como una sola cosa.
+     Inter      -> texto, formularios y avisos: esta hecha para 12-14px.
+     JetBrains  -> cifras y placas: todos los digitos miden igual y quedan en
+                   columna. */
 /* Titulares con la tipografia display estandar SDI */
 .brand-title,
 .card-title,
 .drop-zone-title,
 .success-title,
 .modal-title {
-  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-family: 'Poppins', 'Inter', sans-serif;
 }
 
 /* ============ HEADER ============ */
@@ -92,10 +101,11 @@ body.page-poliza  { background: #ebf2fc; }
   flex-wrap: wrap;
 }
 .brand { display: flex; align-items: center; gap: 13px; }
-/* Logo SDI oficial, variante NEGATIVO, PEGADO en el HTML (no <img>): un SVG
-   enlazado se dibuja aislado y no puede pedir Space Grotesk, asi que el
-   wordmark caia a la fuente del sistema y salia ~9% mas ancho. Pegado hereda
-   la fuente de la pagina. NO reemplazar por <img src>. */
+/* Logo SDI oficial (Questrial), VECTORIZADO: las letras son curvas, no texto,
+   asi que ya no depende de ninguna fuente instalada. Antes era <text> pidiendo
+   Space Grotesk por nombre y, enlazado con <img>, el SVG se dibuja aislado, no
+   podia cargarla y el wordmark salia ~9% mas ancho. Si se regenera el logo,
+   mantenerlo en curvas: el archivo canonico esta en C:/Users/segur/SDI-BRAND-KIT. */
 .brand-mark { height: 33px; width: auto; flex: none; display: block; }
 .brand-sep {
   width: 1px; height: 32px;
@@ -994,7 +1004,7 @@ textarea.form-control { resize: vertical; min-height: 70px; }
   gap: 10px;
   cursor: pointer;
   list-style: none;
-  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-family: 'Poppins', 'Inter', sans-serif;
   font-size: 15px;
   font-weight: 700;
   color: var(--navy);
@@ -1028,7 +1038,7 @@ textarea.form-control { resize: vertical; min-height: 70px; }
 }
 .ded-guide .ded-block-title {
   margin: 0 0 3px;
-  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-family: 'Poppins', 'Inter', sans-serif;
   font-size: 15px;
   font-weight: 700;
   color: var(--navy);
@@ -1165,7 +1175,7 @@ textarea.form-control { resize: vertical; min-height: 70px; }
 }
 
 .rail-sec {
-  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-family: 'Poppins', 'Inter', sans-serif;
   font-size: 9.5px;
   font-weight: 700;
   letter-spacing: .15em;
@@ -1240,7 +1250,7 @@ textarea.form-control { resize: vertical; min-height: 70px; }
   color: #e2e8f0;
   font-weight: 600;
   display: block;
-  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-family: 'Poppins', 'Inter', sans-serif;
   font-size: 11px;
 }
 
@@ -1250,7 +1260,7 @@ textarea.form-control { resize: vertical; min-height: 70px; }
   border-radius: 50%;
   background: rgba(255, 255, 255, .14);
   display: grid; place-items: center;
-  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-family: 'Poppins', 'Inter', sans-serif;
   font-weight: 700; font-size: 11px;
   letter-spacing: .3px;
 }
