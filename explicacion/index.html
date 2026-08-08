@@ -2384,7 +2384,25 @@ main { max-width: 880px; margin: 0 auto; padding: 0 24px 60px; }
 
 <!-- FOOTER -->
 <footer class="footer">
-  <img class="sdi-logo" src="../img/sdi-logo.svg" alt="Seguros Digitales SDI" />
+  <!-- Logo SDI oficial (variante NEGATIVO). Va PEGADO aca y no enlazado con
+       <img> a proposito: un SVG cargado como imagen se dibuja aislado y no puede
+       pedir Space Grotesk, asi que el wordmark caia a la fuente del sistema y
+       salia ~9% mas ancho — o sea, deformado. Pegado hereda la fuente de la
+       pagina, que ya la carga. El archivo ../img/sdi-logo.svg sigue existiendo
+       para quien lo necesite; este bloque tiene que ser identico a el.
+       OJO: esto es la marca de la PLATAFORMA, al pie. El logo del INS va
+       ARRIBA, en el header (.ins-logo), y no se toca: esta es la cara del
+       cliente y ahi el INS manda. -->
+  <svg class="sdi-logo" viewBox="0 0 180 120" role="img" aria-label="Seguros Digitales SDI">
+    <text x="10" y="74" font-family="'Space Grotesk','Inter',sans-serif" font-weight="500" font-size="82" letter-spacing="-2.5" fill="#FFFFFF">SDI</text>
+    <g transform="translate(140, 15)">
+      <rect x="0" y="0"     width="30" height="9" rx="1.5" fill="#FFFFFF"/>
+      <rect x="0" y="16.67" width="30" height="9" rx="1.5" fill="#FFFFFF"/>
+      <rect x="0" y="33.33" width="30" height="9" rx="1.5" fill="#FFFFFF"/>
+      <rect x="0" y="50"    width="30" height="9" rx="1.5" fill="#FFFFFF"/>
+    </g>
+    <text x="90" y="100" text-anchor="middle" font-family="'Inter',sans-serif" font-weight="500" font-size="14" letter-spacing="3.5" fill="#FFFFFF">SEGUROS DIGITALES</text>
+  </svg>
   <div class="bold">Esta aplicación pertenece a Seguros Digitales SDI®.</div>
   <div>Visítenos en <a href="https://www.segurosdelins.com">www.segurosdelins.com</a></div>
   <div class="copyright">

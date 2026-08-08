@@ -5,8 +5,9 @@
    ====================================================================== */
 
 :root {
-  --navy:       #0c2340;
-  --blue:       #0369a1;
+  --navy:       #0c2340;   /* cara CLIENTE: sostiene el logo blanco del INS */
+  --navy-rail:  #0c4a6e;   /* azul-700 SDI: menu lateral, hermano del header */
+  --blue:       #0369a1;   /* azul institucional SDI: manda en la consola */
   --blue-light: #0ea5e9;
   --green:      #16a34a;
   --green-dark: #15803d;
@@ -59,13 +60,27 @@ body.page-poliza  { background: #ebf2fc; }
 }
 
 /* ============ HEADER ============ */
+/* IDENTIDAD SDI (7 ago 2026). La consola es producto SDI, no INS: aca manda el
+   azul institucional #0369A1 del manual de marca. El navy se reserva para las
+   piezas que ve el CLIENTE (correos y /explicacion/), donde sostiene el logo
+   blanco del INS. Ver el skill: "la regla que ordena todo: son dos marcas". */
 .app-header {
   position: sticky;
   top: 0;
   z-index: 40;
-  background: var(--navy);
+  background: var(--blue);
   color: #fff;
   box-shadow: var(--shadow-md);
+}
+/* Filete de marca: la proporcion 60/25/10/5 del manual hecha linea. Es lo unico
+   que mete el dorado #C9A227 — la firma de SDI, el unico color del sistema que
+   NO pertenece al INS y por eso no puede chocar con el. */
+.app-header::after {
+  content: "";
+  display: block;
+  height: 4px;
+  background: linear-gradient(to right,
+    var(--navy) 0 60%, #0D9488 60% 85%, #EA580C 85% 95%, #C9A227 95% 100%);
 }
 .header-inner {
   max-width: 1200px;
@@ -77,16 +92,16 @@ body.page-poliza  { background: #ebf2fc; }
   gap: 16px;
   flex-wrap: wrap;
 }
-.brand { display: flex; align-items: center; gap: 12px; }
-.brand-logo {
-  width: 36px; height: 36px;
-  border-radius: 8px;
-  background: #fff;
-  color: var(--navy);
-  display: grid; place-items: center;
-  font-family: 'Space Grotesk', 'Inter', sans-serif;
-  font-weight: 700; font-size: 13px;
-  letter-spacing: .5px;
+.brand { display: flex; align-items: center; gap: 13px; }
+/* Logo SDI oficial, variante NEGATIVO, PEGADO en el HTML (no <img>): un SVG
+   enlazado se dibuja aislado y no puede pedir Space Grotesk, asi que el
+   wordmark caia a la fuente del sistema y salia ~9% mas ancho. Pegado hereda
+   la fuente de la pagina. NO reemplazar por <img src>. */
+.brand-mark { height: 33px; width: auto; flex: none; display: block; }
+.brand-sep {
+  width: 1px; height: 32px;
+  background: rgba(255, 255, 255, .3);
+  flex: none;
 }
 .brand-title    { font-size: 16px; font-weight: 700; letter-spacing: .3px; }
 .brand-subtitle { font-size: 11px; opacity: .75; margin-top: 2px; }
@@ -95,11 +110,13 @@ body.page-poliza  { background: #ebf2fc; }
 .step-nav { display: flex; align-items: center; gap: 10px; }
 .step {
   display: flex; align-items: center; gap: 8px;
-  font-size: 12px; font-weight: 600; color: #94a3b8;
+  /* #e0f2fe = 5.17:1 sobre el azul del header. El #94a3b8 que servia sobre el
+     navy cae a 2.31:1 aca: al cambiar el fondo hay que recalcular, no heredar. */
+  font-size: 12px; font-weight: 600; color: #e0f2fe;
   transition: color .2s;
 }
 .step.active { color: #fff; }
-.step.done   { color: #86efac; }
+.step.done   { color: #bbf7d0; }
 .step-dot {
   width: 28px; height: 28px;
   border-radius: 50%;
@@ -108,7 +125,7 @@ body.page-poliza  { background: #ebf2fc; }
   font-size: 12px; font-weight: 700;
   transition: background .2s, color .2s;
 }
-.step.active .step-dot { background: #fff; color: var(--navy); }
+.step.active .step-dot { background: #fff; color: var(--blue); }
 .step.done   .step-dot { background: var(--green); color: #fff; }
 .step-sep { width: 24px; height: 2px; background: rgba(255, 255, 255, .18); }
 
@@ -1120,7 +1137,7 @@ textarea.form-control { resize: vertical; min-height: 70px; }
   /* La columna del rail queda navy de arriba a abajo. El rail es sticky y
      mide una pantalla, asi que en vistas largas (2 y 3) su franja terminaria
      antes que el contenido y se veria el fondo verde asomando debajo. */
-  background: linear-gradient(to right, var(--navy) 0 238px, transparent 238px);
+  background: linear-gradient(to right, var(--navy-rail) 0 238px, transparent 238px);
 }
 
 .side-rail {
@@ -1139,7 +1156,7 @@ textarea.form-control { resize: vertical; min-height: 70px; }
   overscroll-behavior: contain;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, .22) transparent;
-  background: var(--navy);
+  background: var(--navy-rail);
   background-image: radial-gradient(circle at 18% 0%, rgba(56, 189, 248, .13), transparent 58%);
   border-right: 1px solid rgba(255, 255, 255, .07);
   padding: 20px 12px 16px;
@@ -1155,9 +1172,10 @@ textarea.form-control { resize: vertical; min-height: 70px; }
   letter-spacing: .15em;
   text-transform: uppercase;
   /* #94a3b8 = 6.16:1 sobre el navy. El #64748b anterior daba 3.32:1 y no llega
-     al 4.5:1 de AA a 9.5px: los grupos se leian como manchas y el agrupamiento
-     es justamente el valor del menu. Es el mismo gris que ya usa .step. */
-  color: #94a3b8;
+     al 4.5:1 de AA. Sobre el azul-700 del rail hace falta subir otro escalon:
+     #cbd5e1 = 6.45:1 (#94a3b8 aca solo daria 3.72:1). Si cambia el fondo del
+     rail, estos tres grises se recalculan. */
+  color: #cbd5e1;
   padding: 15px 13px 7px;
 }
 .rail-sec:first-child { padding-top: 2px; }
@@ -1205,7 +1223,7 @@ textarea.form-control { resize: vertical; min-height: 70px; }
   border-radius: 0 3px 3px 0;
   background: #38bdf8;
 }
-.rail-item .rail-ext { margin-left: auto; font-size: 11px; color: #94a3b8; }
+.rail-item .rail-ext { margin-left: auto; font-size: 11px; color: #cbd5e1; }
 
 @keyframes railIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .rail-item { animation: none; } }
@@ -1216,12 +1234,13 @@ textarea.form-control { resize: vertical; min-height: 70px; }
   border-top: 1px solid rgba(255, 255, 255, .08);
   font-size: 10.5px;
   /* Aca va "Licencia SUGESE 08-1318": dato regulatorio, tiene que leerse.
-     Estaba en #5b6b81 = 2.91:1 sobre el navy. */
-  color: #94a3b8;
+     Estaba en #5b6b81 = 2.91:1 sobre el navy; sobre el azul-700 del rail va
+     #cbd5e1 = 6.45:1. */
+  color: #cbd5e1;
   line-height: 1.5;
 }
 .rail-foot b {
-  color: #e2e8f0;
+  color: #f1f5f9;
   font-weight: 600;
   display: block;
   font-family: 'Space Grotesk', 'Inter', sans-serif;
