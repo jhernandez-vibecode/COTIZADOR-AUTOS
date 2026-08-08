@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 90" role="img" aria-label="Seguros Digitales SDI">
   <title>SDI · Compacto negativo</title>
-  <desc>Sin tagline y en blanco, para headers de app sobre fondo de color. Barra de sistema a la misma altura que el wordmark (4 franjas de 9, huecos de 7.67), alineada al tope y a la base de las letras.</desc>
+  <desc>Sin tagline y en blanco, para headers de app sobre fondo oscuro. Barra de sistema a la misma altura que el wordmark (4 franjas de 9, huecos de 7.67), alineada al tope y a la base de las letras.</desc>
 
   <text x="10" y="74" font-family="'Space Grotesk','Inter',sans-serif" font-weight="500" font-size="82" letter-spacing="-2.5" fill="#FFFFFF">SDI</text>
 

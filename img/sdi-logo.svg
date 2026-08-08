@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 120" role="img" aria-label="Seguros Digitales SDI">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 222 120" role="img" aria-label="Seguros Digitales SDI">
   <title>Seguros Digitales SDI · Negativo</title>
   <desc>Blanco, solo sobre fondos oscuros sólidos. Barra de sistema a la misma altura que el wordmark (4 franjas de 9, huecos de 7.67), alineada al tope y a la base de las letras.</desc>
 
-  <text x="10" y="74" font-family="'Space Grotesk','Inter',sans-serif" font-weight="500" font-size="82" letter-spacing="-2.5" fill="#FFFFFF">SDI</text>
+  <text x="31" y="74" font-family="'Space Grotesk','Inter',sans-serif" font-weight="500" font-size="82" letter-spacing="-2.5" fill="#FFFFFF">SDI</text>
 
-  <g transform="translate(140, 15)">
+  <g transform="translate(161, 15)">
     <rect x="0" y="0" width="30" height="9" rx="1.5" fill="#FFFFFF"/>
     <rect x="0" y="16.67" width="30" height="9" rx="1.5" fill="#FFFFFF"/>
     <rect x="0" y="33.33" width="30" height="9" rx="1.5" fill="#FFFFFF"/>
     <rect x="0" y="50" width="30" height="9" rx="1.5" fill="#FFFFFF"/>
   </g>
 
-  <text x="90" y="100" text-anchor="middle" font-family="'Inter',sans-serif" font-weight="500" font-size="14" letter-spacing="3.5" fill="#FFFFFF">SEGUROS DIGITALES</text>
+  <text x="111" y="100" text-anchor="middle" font-family="'Inter',sans-serif" font-weight="500" font-size="14" letter-spacing="3.5" fill="#FFFFFF">SEGUROS DIGITALES</text>
 </svg>
