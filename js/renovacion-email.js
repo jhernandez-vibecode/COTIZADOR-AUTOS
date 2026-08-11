@@ -21,12 +21,40 @@
  * SVG y base64), con la barra de 4 colores del kit v1.2 — la misma variante que
  * estrenó el header de las consolas.
  *
+ * VARIOS RECIBOS EN UN SOLO CORREO (JC, 10 ago 2026). Un cliente puede tener
+ * dos pólizas, y un plan familiar llega a cinco o más. En vez de mandar cinco
+ * correos, se manda uno con la lista de recibos y el total pagado. En el plan
+ * familiar los recibos vienen a nombre de personas distintas (esposo, esposa,
+ * hijos): el correo se dirige al DUEÑO DEL PLAN, que elige el agente, y la
+ * tabla muestra a quién corresponde cada póliza.
+ *
  * API:
- *   buildRenovacionEmail({ nombrePila, cliente, poliza, placa, vehiculo,
- *                          numComprobante, montoTexto, periodoDesde,
- *                          periodoHasta, fechaPago, notaAdicional }) -> HTML
- *   buildRenovacionWaUrl({ nombrePila, poliza, placa, telCliente, urlGuia }) -> URL
+ *   buildRenovacionEmail({ nombrePila, cliente, recibos:[{poliza, placa,
+ *                          vehiculo, periodoDesde, periodoHasta, montoTexto,
+ *                          monto, asegurado}], numComprobante, fechaPago,
+ *                          totalTexto, notaAdicional }) -> HTML
+ *   buildRenovacionWaUrl({ nombrePila, poliza, placa, recibos, telCliente,
+ *                          urlGuia }) -> URL
+ *
+ * Con UN recibo se puede llamar con los campos sueltos (poliza, placa,
+ * montoTexto…) y el correo queda idéntico al de siempre.
  */
+
+/**
+ * Normaliza la entrada a una lista de recibos. Acepta el formato de un solo
+ * recibo (campos sueltos) para no romper a quien ya llama así.
+ * @returns {Array<object>}
+ */
+function _renovRecibos(p) {
+  if (p && Array.isArray(p.recibos) && p.recibos.length) return p.recibos;
+  if (!p) return [];
+  var suelto = {
+    poliza: p.poliza, placa: p.placa, vehiculo: p.vehiculo,
+    periodoDesde: p.periodoDesde, periodoHasta: p.periodoHasta,
+    montoTexto: p.montoTexto, monto: p.monto, asegurado: p.cliente
+  };
+  return (suelto.poliza || suelto.placa || suelto.montoTexto) ? [suelto] : [];
+}
 
 // La ficha del agente en la guía de emergencias y la normalización del teléfono
 // ya viven en poliza-email.js y están probadas en producción: se reusan tal cual
@@ -61,25 +89,32 @@ function _renovWaIntl(v) {
 function buildRenovacionWaUrl(params) {
   var p = params || {};
   var saludo = String(p.nombrePila || '').trim();
-  var poliza = String(p.poliza || '').trim();
-  var placa  = String(p.placa || '').trim();
+  var lista  = _renovRecibos(p);
   var guia   = String(p.urlGuia || '').trim() || _renovAsistenciaUrl();
+  var n      = lista.length;
 
-  // "Su póliza 0101AUT… (placa BXY123) continúa activa…". Sin número de póliza
-  // la frase entera desaparece en vez de quedar colgando; sin placa se va solo
-  // el paréntesis.
+  // Con VARIAS pólizas no se nombra una sola: se dice cuántas. Con una, el
+  // mensaje queda igual que siempre. Sin número de póliza la frase entera
+  // desaparece en vez de quedar colgando; sin placa se va solo el paréntesis.
   var ident = '';
-  if (poliza) {
-    ident = 'Su póliza ' + poliza + (placa ? ' (placa ' + placa + ')' : '') +
-            ' continúa activa y su vehículo protegido, sin trámites pendientes.\n';
-  } else if (placa) {
-    ident = 'Su vehículo placa ' + placa +
-            ' continúa protegido, sin trámites pendientes.\n';
+  if (n > 1) {
+    ident = 'Sus ' + n + ' pólizas continúan activas y sus vehículos protegidos, sin trámites pendientes.\n';
+  } else if (n === 1) {
+    var poliza = String(lista[0].poliza || '').trim();
+    var placa  = String(lista[0].placa  || '').trim();
+    if (poliza) {
+      ident = 'Su póliza ' + poliza + (placa ? ' (placa ' + placa + ')' : '') +
+              ' continúa activa y su vehículo protegido, sin trámites pendientes.\n';
+    } else if (placa) {
+      ident = 'Su vehículo placa ' + placa +
+              ' continúa protegido, sin trámites pendientes.\n';
+    }
   }
 
   var msg =
     '¡' + (saludo ? saludo + ', su' : 'Su') + ' renovación está confirmada! ✅🚗\n\n' +
-    'Le acabo de enviar a su correo el comprobante de pago oficial del INS.\n' +
+    'Le acabo de enviar a su correo ' +
+      (n > 1 ? 'los comprobantes de pago oficiales del INS' : 'el comprobante de pago oficial del INS') + '.\n' +
     ident + '\n' +
     'Recuerde: ante un accidente o avería, repórtelo de inmediato. En esta guía tiene los pasos a seguir y los números de asistencia 24/7 a un clic:\n\n' +
     (guia ? '👉 ' + guia + '\n\n' : '') +
@@ -105,15 +140,42 @@ function buildRenovacionEmail(params) {
 
   var p = params || {};
   var saludo   = (p.nombrePila || p.cliente || '').trim();
-  var poliza   = (p.poliza   || '').trim();
-  var placa    = (p.placa    || '').trim();
-  var vehiculo = (p.vehiculo || '').trim();
+  var recibos  = _renovRecibos(p);
+  var varios   = recibos.length > 1;
+  var uno      = recibos[0] || {};
+  var poliza   = (uno.poliza   || '').trim();
+  var placa    = (uno.placa    || '').trim();
+  var vehiculo = (uno.vehiculo || '').trim();
   var comprob  = (p.numComprobante || '').trim();
-  var montoTxt = (p.montoTexto || '').trim();
-  var desde    = (p.periodoDesde  || '').trim();
-  var hasta    = (p.periodoHasta  || '').trim();
+  var montoTxt = (uno.montoTexto || '').trim();
+  var desde    = (uno.periodoDesde  || '').trim();
+  var hasta    = (uno.periodoHasta  || '').trim();
   var fPago    = (p.fechaPago     || '').trim();
   var nota     = (p.notaAdicional || '').trim();
+
+  // Total: lo manda la app ya formateado; si no viene, se suma acá.
+  var totalTxt = (p.totalTexto || '').trim();
+  if (varios && !totalTxt) {
+    var suma = 0, sumable = true;
+    for (var q = 0; q < recibos.length; q++) {
+      var v = recibos[q].monto;
+      if (typeof v !== 'number' || !isFinite(v)) { sumable = false; break; }
+      suma += v;
+    }
+    if (sumable) {
+      totalTxt = '₡' + suma.toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
+  }
+
+  // En un plan familiar las pólizas vienen a nombre de distintas personas de la
+  // familia. Si difieren, la tabla lleva columna "Asegurado" para que el dueño
+  // del plan sepa cuál es de quién.
+  var aseg = [];
+  for (var w = 0; w < recibos.length; w++) {
+    var a = String(recibos[w].asegurado || '').trim();
+    if (a && aseg.indexOf(a) === -1) aseg.push(a);
+  }
+  var mostrarAsegurado = varios && aseg.length > 1;
 
   var fontFam  = "'Poppins','Helvetica Neue',Helvetica,Arial,sans-serif";
   var fontBody = "'Inter','Helvetica Neue',Helvetica,Arial,sans-serif";
@@ -139,36 +201,80 @@ function buildRenovacionEmail(params) {
   var viajeUrl  = _safe(CFG.XSELL_VIAJE_URL) || siteFallback;
   var estUrl    = _safe(CFG.XSELL_ESTUDIANTIL_URL) || siteFallback;
 
-  // "su vehículo TOYOTA YARIS 2019 placa BXY123" / "su vehículo placa BXY123"
-  var vehFrase = 'su vehículo' +
-    (vehiculo ? ' <b style="color:#0c2340;">' + e(vehiculo) + '</b>' : '') +
-    (placa ? ' placa <b style="color:#0c2340;">' + e(placa) + '</b>' : '');
-  var polizaFrase = poliza
-    ? ' de su póliza No. <b style="color:#0c2340;">' + e(poliza) + '</b>'
-    : ' de su póliza de automóviles';
+  // Confirmación en singular o en plural según cuántos recibos entren.
+  var vehFrase, polizaFrase;
+  if (varios) {
+    polizaFrase = ' de <b style="color:#0c2340;">sus ' + recibos.length + ' pólizas de automóviles</b>';
+    vehFrase    = 'sus vehículos';
+  } else {
+    // "su vehículo TOYOTA YARIS 2019 placa BXY123" / "su vehículo placa BXY123"
+    vehFrase = 'su vehículo' +
+      (vehiculo ? ' <b style="color:#0c2340;">' + e(vehiculo) + '</b>' : '') +
+      (placa ? ' placa <b style="color:#0c2340;">' + e(placa) + '</b>' : '');
+    polizaFrase = poliza
+      ? ' de su póliza No. <b style="color:#0c2340;">' + e(poliza) + '</b>'
+      : ' de su póliza de automóviles';
+  }
+  var vehPlural  = varios ? 'continúan protegidos' : 'continúa protegido';
+  var adjFrase   = varios
+    ? 'Adjunto encontrará los comprobantes de pago oficiales del INS.'
+    : 'Adjunto encontrará el comprobante de pago oficial del INS.';
 
-  // Datos del comprobante, en dos columnas. Solo se pintan los que el PDF trajo:
-  // una celda vacía se vería como un error de la app.
-  var datos = [];
-  if (poliza) datos.push(['Póliza', poliza]);
-  if (placa)  datos.push(['Placa', placa]);
-  if (desde && hasta) datos.push(['Período pagado', desde + ' &rarr; ' + hasta]);
-  if (fPago)  datos.push(['Fecha de pago', fPago]);
-
+  // Detalle de la tarjeta navy. Con UN recibo: los 4 datos en dos columnas.
+  // Con VARIOS: una fila por póliza, para que el cliente vea qué se pagó de cada
+  // una y no solo un total suelto.
   var datosHtml = '';
-  for (var i = 0; i < datos.length; i += 2) {
-    var celdas = '';
-    for (var j = i; j < i + 2; j++) {
-      if (j < datos.length) {
-        celdas += '<td width="50%" valign="top" style="padding:7px 0;">' +
-          '<div style="font-family:' + fontNum + ';font-size:9.5px;letter-spacing:.1em;color:#7d93ad;text-transform:uppercase;">' + datos[j][0] + '</div>' +
-          '<div style="font-family:' + fontNum + ';font-size:13px;color:#e8eef5;padding-top:2px;">' + e(datos[j][1]).replace('&amp;rarr;', '&rarr;') + '</div>' +
-        '</td>';
-      } else {
-        celdas += '<td width="50%">&nbsp;</td>';
+  if (varios) {
+    datosHtml =
+      '<tr><td colspan="2" style="padding-top:4px;">' +
+        '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">' +
+          '<tr>' +
+            '<th align="left" style="font-family:' + fontNum + ';font-size:9px;letter-spacing:.1em;color:#7d93ad;text-transform:uppercase;font-weight:600;padding:6px 4px;border-bottom:1px solid rgba(255,255,255,.16);">Póliza</th>' +
+            (mostrarAsegurado ? '<th align="left" style="font-family:' + fontNum + ';font-size:9px;letter-spacing:.1em;color:#7d93ad;text-transform:uppercase;font-weight:600;padding:6px 4px;border-bottom:1px solid rgba(255,255,255,.16);">Asegurado</th>' : '') +
+            '<th align="left" style="font-family:' + fontNum + ';font-size:9px;letter-spacing:.1em;color:#7d93ad;text-transform:uppercase;font-weight:600;padding:6px 4px;border-bottom:1px solid rgba(255,255,255,.16);">Placa</th>' +
+            '<th align="left" style="font-family:' + fontNum + ';font-size:9px;letter-spacing:.1em;color:#7d93ad;text-transform:uppercase;font-weight:600;padding:6px 4px;border-bottom:1px solid rgba(255,255,255,.16);">Período pagado</th>' +
+            '<th align="right" style="font-family:' + fontNum + ';font-size:9px;letter-spacing:.1em;color:#7d93ad;text-transform:uppercase;font-weight:600;padding:6px 4px;border-bottom:1px solid rgba(255,255,255,.16);">Monto</th>' +
+          '</tr>' +
+          (function () {
+            var filas = '';
+            for (var r = 0; r < recibos.length; r++) {
+              var x = recibos[r];
+              var per = (x.periodoDesde && x.periodoHasta)
+                ? (e(x.periodoDesde) + ' &rarr; ' + e(x.periodoHasta)) : '&mdash;';
+              filas +=
+                '<tr>' +
+                  '<td style="font-family:' + fontNum + ';font-size:11.5px;color:#e8eef5;padding:7px 4px;border-bottom:1px solid rgba(255,255,255,.09);">' + (e(x.poliza) || '&mdash;') + '</td>' +
+                  (mostrarAsegurado ? '<td style="font-size:11.5px;color:#cbd5e1;padding:7px 4px;border-bottom:1px solid rgba(255,255,255,.09);">' + (e(x.asegurado) || '&mdash;') + '</td>' : '') +
+                  '<td style="font-family:' + fontNum + ';font-size:11.5px;color:#e8eef5;padding:7px 4px;border-bottom:1px solid rgba(255,255,255,.09);">' + (e(x.placa) || '&mdash;') + '</td>' +
+                  '<td style="font-family:' + fontNum + ';font-size:11.5px;color:#e8eef5;padding:7px 4px;border-bottom:1px solid rgba(255,255,255,.09);">' + per + '</td>' +
+                  '<td align="right" style="font-family:' + fontNum + ';font-size:11.5px;color:#ffffff;padding:7px 4px;border-bottom:1px solid rgba(255,255,255,.09);">' + (e(x.montoTexto) || '&mdash;') + '</td>' +
+                '</tr>';
+            }
+            return filas;
+          })() +
+        '</table>' +
+      '</td></tr>';
+  } else {
+    var datos = [];
+    if (poliza) datos.push(['Póliza', poliza]);
+    if (placa)  datos.push(['Placa', placa]);
+    if (desde && hasta) datos.push(['Período pagado', desde + ' &rarr; ' + hasta]);
+    if (fPago)  datos.push(['Fecha de pago', fPago]);
+
+    for (var i = 0; i < datos.length; i += 2) {
+      var celdas = '';
+      for (var j = i; j < i + 2; j++) {
+        if (j < datos.length) {
+          celdas += '<td width="50%" valign="top" style="padding:7px 0;">' +
+            '<div style="font-family:' + fontNum + ';font-size:9.5px;letter-spacing:.1em;color:#7d93ad;text-transform:uppercase;">' + datos[j][0] + '</div>' +
+            '<div style="font-family:' + fontNum + ';font-size:13px;color:#e8eef5;padding-top:2px;">' + e(datos[j][1]).replace('&amp;rarr;', '&rarr;') + '</div>' +
+          '</td>';
+        } else {
+          celdas += '<td width="50%">&nbsp;</td>';
+        }
       }
+      datosHtml += '<tr>' + celdas + '</tr>';
     }
-    datosHtml += '<tr>' + celdas + '</tr>';
   }
 
   var notaHtml = nota ? (
@@ -215,24 +321,28 @@ function buildRenovacionEmail(params) {
     '<p style="margin:0 0 14px;font-family:' + fontFam + ';font-size:18px;font-weight:700;color:#0c2340;">Hola ' + e(saludo) + ',</p>' +
     '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ecfdf5;border:1px solid #a7f3d0;border-left:4px solid #10b981;border-radius:10px;">' +
       '<tr><td style="padding:14px 18px;font-size:14px;line-height:1.6;color:#065f46;">' +
-        '<p style="margin:0;">Es un gusto saludarle. Le confirmo que el pago de la renovación' + polizaFrase + ' fue aplicado correctamente y ' + vehFrase + ' continúa protegido, sin interrupciones.</p>' +
-        '<p style="margin:10px 0 0;">Adjunto encontrará el comprobante de pago oficial del INS. &#9989;</p>' +
+        '<p style="margin:0;">Es un gusto saludarle. Le confirmo que el pago de la renovación' + polizaFrase + ' fue aplicado correctamente y ' + vehFrase + ' ' + vehPlural + ', sin interrupciones.</p>' +
+        '<p style="margin:10px 0 0;">' + adjFrase + ' &#9989;</p>' +
       '</td></tr>' +
     '</table>' +
   '</td></tr>' +
 
   // 3. TARJETA DEL COMPROBANTE (navy, filete dorado SDI abajo)
-  (montoTxt || datos.length ?
+  (montoTxt || totalTxt || datosHtml ?
   '<tr><td style="padding:18px 32px 0;">' +
     '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#0c2340;border-radius:12px;border-bottom:4px solid #c9a227;">' +
       '<tr><td style="padding:20px 22px;">' +
         '<table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>' +
           '<td valign="top">' +
-            (montoTxt ?
+            (varios ?
+              '<div style="font-family:' + fontNum + ';font-size:10px;letter-spacing:.16em;color:#8ba3bf;text-transform:uppercase;">Total pagado</div>' +
+              (totalTxt ? '<div style="font-family:' + fontFam + ';font-size:34px;font-weight:700;color:#ffffff;letter-spacing:-.02em;padding:4px 0 2px;">' + e(totalTxt) + '</div>' : '') +
+              '<div style="font-size:11px;color:#8ba3bf;">Incluye IVA &middot; ' + recibos.length + ' recibos' + (fPago ? ' &middot; Fecha de pago ' + e(fPago) : '') + '</div>'
+            : (montoTxt ?
               '<div style="font-family:' + fontNum + ';font-size:10px;letter-spacing:.16em;color:#8ba3bf;text-transform:uppercase;">Monto pagado</div>' +
               '<div style="font-family:' + fontFam + ';font-size:34px;font-weight:700;color:#ffffff;letter-spacing:-.02em;padding:4px 0 2px;">' + e(montoTxt) + '</div>' +
               '<div style="font-size:11px;color:#8ba3bf;">Incluye IVA' + (comprob ? ' &middot; Comprobante N&ordm; ' + e(comprob) : '') + '</div>'
-            : '') +
+            : '')) +
           '</td>' +
           '<td valign="top" align="right" style="white-space:nowrap;">' +
             '<span style="display:inline-block;background:#0f766e;color:#d1fae5;font-family:' + fontNum + ';font-size:10px;letter-spacing:.14em;padding:5px 12px;border-radius:999px;">PAGADO</span>' +

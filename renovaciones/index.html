@@ -47,11 +47,42 @@
     .estado-box.warn { background: #fffbeb; border-color: #fcd34d; color: #78350f; }
     .estado-box b    { color: inherit; }
 
-    /* Cifras y fechas del comprobante, en letra de ancho fijo: quedan alineadas
-       en columna y es más fácil cotejarlas contra el PDF. */
-    #f-monto, #f-desde, #f-hasta, #f-fpago, #f-poliza, #f-placa, #f-comprobante {
-      font-family: 'JetBrains Mono', Consolas, monospace;
+    /* ---- Lista de recibos (un cliente puede traer 2, o 5 en plan familiar) ---- */
+    .rec {
+      border: 1px solid var(--gray-200, #e5e7eb); border-radius: 10px;
+      background: #fff; padding: 12px 14px; margin-bottom: 10px;
     }
+    .rec-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .rec-pill {
+      font-family: 'JetBrains Mono', Consolas, monospace; font-size: 9.5px; letter-spacing: .1em;
+      border-radius: 999px; padding: 4px 10px; white-space: nowrap;
+    }
+    .rec-pill.ok  { background: #0f766e; color: #d1fae5; }
+    .rec-pill.bad { background: #b91c1c; color: #fee2e2; }
+    .rec-n { flex: 1; font-size: 12px; color: var(--gray-500, #64748b); }
+    .rec-n .mono { font-family: 'JetBrains Mono', Consolas, monospace; }
+    .rec-del {
+      background: none; border: none; color: #ef4444; cursor: pointer;
+      font-size: 20px; line-height: 1; padding: 0 6px; border-radius: 6px;
+    }
+    .rec-del:hover { background: #fee2e2; }
+    .rec-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .rec-f { display: flex; flex-direction: column; gap: 3px; }
+    .rec-f > span {
+      font-size: 10px; font-weight: 700; color: var(--gray-500, #64748b);
+      text-transform: uppercase; letter-spacing: .05em;
+    }
+    /* Cifras, placas y fechas en letra de ancho fijo: quedan alineadas en columna
+       y es más fácil cotejarlas contra el PDF. */
+    .rec-f input { font-family: 'JetBrains Mono', Consolas, monospace; font-size: 12.5px; padding: 7px 9px; }
+    .rec-aseg { margin-top: 9px; font-size: 12px; color: var(--gray-500, #64748b); }
+    .rec-aseg b { color: var(--navy, #0c2340); }
+    .rec-total {
+      text-align: right; font-family: 'JetBrains Mono', Consolas, monospace;
+      font-size: 14px; color: var(--navy, #0c2340); margin-top: 12px;
+      padding-top: 10px; border-top: 2px solid var(--navy, #0c2340);
+    }
+    @media (max-width: 700px) { .rec-grid { grid-template-columns: 1fr 1fr; } }
   </style>
 </head>
 <body class="page-renovacion">
@@ -98,13 +129,13 @@
     <!-- ======================== VISTA 1 · CARGAR COMPROBANTE ======================== -->
     <section class="view active" id="view1">
       <div class="card">
-        <h2 class="card-title">1 · Cargar el comprobante de pago</h2>
-        <p class="pol-note">Arrastrá el <b>Comprobante de Pago</b> que emite el INS cuando el cliente ya pagó la renovación. Leo el número de póliza, la placa, el período pagado y el monto; el PDF se adjunta tal cual al correo.</p>
+        <h2 class="card-title">1 · Cargar los comprobantes de pago</h2>
+        <p class="pol-note">Arrastrá el <b>Comprobante de Pago</b> que emite el INS cuando el cliente ya pagó la renovación. Leo el número de póliza, la placa, el período pagado y el monto; el PDF se adjunta tal cual al correo. Si el cliente tiene <b>varias pólizas o un plan familiar</b>, cargá todos los recibos juntos: van en un solo correo con su detalle y el total.</p>
 
         <label class="drop-zone" id="dropZone" for="fileInput">
           <div class="drop-zone-icon">📄</div>
-          <div class="drop-zone-title">Arrastrá el PDF o hacé clic para seleccionar</div>
-          <div class="drop-zone-hint">Podés agregar otros documentos después, en el paso 2</div>
+          <div class="drop-zone-title">Arrastrá los PDF o hacé clic para seleccionar</div>
+          <div class="drop-zone-hint">Podés soltar varios a la vez — uno por cada póliza del cliente</div>
           <input type="file" id="fileInput" accept="application/pdf" multiple />
         </label>
 
@@ -117,84 +148,46 @@
     <section class="view" id="view2">
       <div class="grid-2">
 
-        <!-- Datos extraídos (editables) -->
+        <!-- Cliente al que se le envía (uno solo, aunque haya varios recibos) -->
         <div class="card">
-          <h2 class="card-title">2 · Datos del comprobante</h2>
-          <p class="pol-note">Revisá lo que leí del PDF y corregí lo que haga falta — todo es editable.</p>
+          <h2 class="card-title">2 · ¿A quién se le envía?</h2>
+          <p class="pol-note">En un <b>plan familiar</b> los recibos vienen a nombre de distintas personas: acá va el <b>dueño del plan</b>, que es a quien se dirige el correo.</p>
 
-          <!-- Guard D7: esta pantalla es solo para recibos YA pagados -->
-          <div class="estado-box warn" id="estadoBox">Cargá un comprobante para revisar su estado.</div>
-
-          <div class="grid-2" style="gap:12px;">
-            <div class="form-row">
-              <label class="form-label">N° de comprobante</label>
-              <input class="form-control" id="f-comprobante" />
-            </div>
-            <div class="form-row">
-              <label class="form-label">N° de póliza</label>
-              <input class="form-control" id="f-poliza" />
-            </div>
-          </div>
           <div class="form-row">
-            <label class="form-label">Nombre del cliente</label>
+            <label class="form-label">Nombre del cliente <span style="font-weight:400;color:var(--gray-500);">(dueño del plan)</span></label>
             <input class="form-control" id="f-cliente" />
           </div>
-          <div class="grid-2" style="gap:12px;">
-            <div class="form-row">
-              <label class="form-label">Nombre para el saludo</label>
-              <input class="form-control" id="f-saludo" placeholder="Ej: Carlos Andrés" />
-            </div>
-            <div class="form-row">
-              <label class="form-label required">Correo del cliente</label>
-              <input class="form-control" id="f-correo" type="email" placeholder="correo@ejemplo.com" />
-            </div>
-          </div>
-          <div class="grid-2" style="gap:12px;">
-            <div class="form-row">
-              <label class="form-label">Vehículo <span style="font-weight:400;color:var(--gray-500);">(opcional)</span></label>
-              <input class="form-control" id="f-vehiculo" placeholder="MARCA MODELO AÑO" />
-            </div>
-            <div class="form-row">
-              <label class="form-label">Placa</label>
-              <input class="form-control" id="f-placa" />
-            </div>
-          </div>
-          <div class="grid-2" style="gap:12px;">
-            <div class="form-row">
-              <label class="form-label">Período pagado — desde</label>
-              <input class="form-control" id="f-desde" placeholder="dd/mm/aaaa" />
-            </div>
-            <div class="form-row">
-              <label class="form-label">Hasta</label>
-              <input class="form-control" id="f-hasta" placeholder="dd/mm/aaaa" />
-            </div>
-          </div>
-          <div class="grid-2" style="gap:12px;">
-            <div class="form-row">
-              <label class="form-label">Monto pagado</label>
-              <input class="form-control" id="f-monto" placeholder="₡0" />
-            </div>
-            <div class="form-row">
-              <label class="form-label">Fecha de pago</label>
-              <input class="form-control" id="f-fpago" placeholder="dd/mm/aaaa" />
-            </div>
-          </div>
-
-          <div class="btn-group">
-            <button class="btn btn-secondary" id="btnBack2">← Volver</button>
-            <button class="btn btn-primary" id="btnNext2">Continuar →</button>
+          <div class="form-row">
+            <label class="form-label">Nombre para el saludo</label>
+            <input class="form-control" id="f-saludo" placeholder="Ej: Carlos Andrés" />
           </div>
         </div>
 
         <!-- Adjuntos -->
         <div class="card">
           <h2 class="card-title">Documentos a adjuntar</h2>
-          <p class="pol-note">El comprobante va adjunto tal cual lo emitió el INS. Podés sumar otro documento si hace falta.</p>
+          <p class="pol-note">Los comprobantes van adjuntos tal cual los emitió el INS. Podés sumar otro documento si hace falta.</p>
           <ul class="doc-list" id="docList"></ul>
           <label class="btn btn-secondary" for="fileInput2" style="cursor:pointer;display:inline-block;margin-top:4px;">+ Agregar más PDF</label>
           <input type="file" id="fileInput2" accept="application/pdf" multiple hidden />
         </div>
 
+      </div>
+
+      <!-- Detalle de los recibos + guard de estado (solo recibos YA pagados) -->
+      <div class="card" style="margin-top:18px;">
+        <h2 class="card-title" id="recibosTitulo">Sin recibos leídos</h2>
+        <p class="pol-note">Revisá lo que leí de cada comprobante y corregí lo que haga falta — todo es editable. Con la ✕ quitás un recibo del correo (y su PDF de los adjuntos).</p>
+
+        <div class="estado-box warn" id="estadoBox">Cargá el comprobante de pago para revisar su estado.</div>
+
+        <div id="recibosList"></div>
+        <div class="rec-total" id="recibosTotal" style="display:none;"></div>
+
+        <div class="btn-group">
+          <button class="btn btn-secondary" id="btnBack2">← Volver</button>
+          <button class="btn btn-primary" id="btnNext2">Continuar →</button>
+        </div>
       </div>
     </section>
 
@@ -206,8 +199,9 @@
           <h2 class="card-title">3 · Configurar correo</h2>
 
           <div class="form-row">
-            <label class="form-label">Para</label>
-            <input class="form-control" id="m-to" type="email" />
+            <label class="form-label required">Para</label>
+            <input class="form-control" id="m-to" type="text" placeholder="correo@ejemplo.com, otro@ejemplo.com" />
+            <span style="font-size:11px;color:var(--gray-500);line-height:1.4;display:block;margin-top:4px;">Podés poner <b>varios correos separados por coma</b> — por ejemplo, esposo y esposa en un plan familiar: a los dos les llega el mismo correo con todos los recibos.</span>
           </div>
           <div class="form-row">
             <label class="form-label">Asunto</label>
@@ -250,7 +244,7 @@
              con el recibo, después el WhatsApp. Igual que /polizas-activas/ y al
              revés que el cotizador, donde el WhatsApp va primero a propósito. -->
         <div class="success-actions">
-          <button class="btn btn-primary btn-step" id="btnReset"><span class="btn-step-num">1</span> Enviar otro comprobante</button>
+          <button class="btn btn-primary btn-step" id="btnReset"><span class="btn-step-num">1</span> Enviar otro recibo — mismo cliente</button>
           <div id="waShareWrap" style="display:none;flex-direction:column;gap:8px;text-align:left;">
             <label class="form-label" for="m-wa-cliente" style="margin-bottom:0;">WhatsApp del cliente <span style="font-weight:400;color:var(--gray-500);">(opcional)</span></label>
             <input class="form-control" id="m-wa-cliente" type="tel" inputmode="numeric" placeholder="8888-8888" autocomplete="off" />
@@ -258,6 +252,9 @@
             <a class="btn btn-send btn-step" id="btnWhatsApp" href="#" target="_blank" rel="noopener"
                style="text-decoration:none;"><span class="btn-step-num">2</span> Avisar al cliente por WhatsApp</a>
           </div>
+          <!-- Reinicio total: va en gris y aparte de los dos numerados, porque no
+               es parte del flujo de este envío sino el comienzo de otro. -->
+          <button class="btn btn-secondary btn-step" id="btnOtroCliente" style="margin-top:4px;">Enviar a otro cliente</button>
         </div>
       </div>
     </section>

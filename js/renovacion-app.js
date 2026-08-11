@@ -1,9 +1,16 @@
 /**
  * Cotizador SDI · Orquestación del módulo "Renovación confirmada"
  *
- * Flujo (sub-página renovaciones/): cargar el Comprobante de Pago del INS →
- * revisar los datos extraídos → redactar → enviar por Gmail con el comprobante
- * adjunto → avisar al cliente por WhatsApp con el enlace corto de la guía.
+ * Flujo (sub-página renovaciones/): cargar el/los Comprobantes de Pago del INS →
+ * revisar los datos extraídos → redactar → enviar por Gmail con los comprobantes
+ * adjuntos → avisar al cliente por WhatsApp con el enlace corto de la guía.
+ *
+ * VARIOS RECIBOS EN UN SOLO CORREO (JC, 10 ago 2026). Un cliente puede tener dos
+ * pólizas y un plan familiar llega a cinco o más. Se cargan todos juntos, la app
+ * los lista y manda UN correo con el detalle y el total. En el plan familiar los
+ * recibos vienen a nombre de distintas personas de la familia: el correo se
+ * dirige al DUEÑO DEL PLAN (lo pone el agente) y la tabla dice de quién es cada
+ * póliza. Se puede enviar a VARIOS correos (p. ej. esposo y esposa).
  *
  * Reusa los módulos compartidos de la app:
  *   - agent-profile.js     : applyProfile(loadProfile())  (multi-agente vía CFG)
@@ -15,16 +22,17 @@
  *   - gmail-auth.js        : getToken() / sendEmail(raw)  (singleton S)
  *
  * NO adjunta los documentos estándar del INS (standard-docs.js): el cliente ya
- * los recibió cuando se emitió la póliza; acá va solo su comprobante.
+ * los recibió cuando se emitió la póliza; acá van solo sus comprobantes.
  * Sin backend y sin localStorage propio (solo el perfil del agente compartido).
  */
 (function () {
   'use strict';
 
   var state = {
-    files: [],    // [{ file, name, size }]
-    data: {},     // lo que devuelve RenovacionParse.extractAll + lo que edite el agente
-    srcName: '',  // archivo del que salieron los datos (para saber si se quitó)
+    files: [],     // adjuntos: [{ file, name, size }]
+    recibos: [],   // comprobantes leídos: [{ srcName, data }] (data = RenovacionParse.extractAll)
+    cliente: {},   // { nombre, saludo } del dueño del plan
+    waEnviado: false,
     step: 1
   };
 
@@ -66,18 +74,16 @@
     if (lab) lab.textContent = label || '';
   }
 
-  /**
-   * Deja la carga como recién abierta: sin archivos, sin datos y sin el aviso
-   * de estado del comprobante anterior.
-   */
-  function limpiarCarga() {
+  /** Deja la carga como recién abierta. `conservarCliente` mantiene a quién se le envía. */
+  function limpiarCarga(conservarCliente) {
     state.files = [];
-    state.data = {};
-    state.srcName = '';
+    state.recibos = [];
+    if (!conservarCliente) state.cliente = {};
     if ($('fileInput'))  $('fileInput').value = '';
     if ($('fileInput2')) $('fileInput2').value = '';
     setProgress(0, '');
     renderDocs();
+    renderRecibos();
     renderEstado();
   }
 
@@ -91,13 +97,11 @@
     });
     if (!arr.length) { showToast('Seleccioná archivos PDF.', 'error'); return; }
 
-    // 🔴 Cargar por el paso 1 EMPIEZA DE CERO. Si solo se apilara, el agente que
-    // se equivoca de cliente y vuelve a cargar seguiría viendo los datos del PDF
-    // anterior (extractFromBest se queda con el primero que califique): el correo
-    // saldría con la póliza y el monto del cliente viejo, con los dos PDF
-    // adjuntos, y —lo peor— el guard D7 seguiría leyendo el "Pagado" del
-    // comprobante anterior, dejando pasar uno que no está pagado.
-    if (doExtract) limpiarCarga();
+    // 🔴 Cargar por el paso 1 EMPIEZA DE CERO (conservando al cliente si el
+    // agente eligió "otro recibo del mismo cliente"). Si solo se apilara, el que
+    // se equivoca de comprobante y vuelve a cargar seguiría viendo los datos del
+    // anterior y el guard del "Pagado" leería el estado viejo.
+    if (doExtract) limpiarCarga(true);
 
     for (var i = 0; i < arr.length; i++) {
       var f = arr[i];
@@ -106,135 +110,239 @@
       state.files.push({ file: f, name: f.name, size: f.size });
     }
 
+    await leerComprobantes();
     if (doExtract) {
-      await extractFromBest();
       fillReview();
-      renderDocs();
       setStep(2);
     } else {
-      renderDocs();
+      renderRecibos();
+      renderEstado();
     }
+    renderDocs();
   }
 
-  /** Extrae del primer PDF que parezca un Comprobante de Pago del INS. */
-  async function extractFromBest() {
-    setProgress(20, 'Leyendo el comprobante…');
-    var got = null, gotName = '', primero = null, primeroName = '', comprobantes = 0;
+  /** Lee TODOS los PDF cargados y arma la lista de recibos. */
+  async function leerComprobantes() {
+    setProgress(20, 'Leyendo los comprobantes…');
+    var previos = {};
+    state.recibos.forEach(function (r) { previos[r.srcName] = r; });
+
+    var nuevos = [], noLeidos = 0;
     for (var i = 0; i < state.files.length; i++) {
+      var nombre = state.files[i].name;
+      // Si ya se leyó en una pasada anterior, se conserva CON las correcciones
+      // que el agente haya hecho a mano.
+      if (previos[nombre]) { nuevos.push(previos[nombre]); continue; }
+      setProgress(20 + Math.round((i / state.files.length) * 70), 'Leyendo ' + (i + 1) + ' de ' + state.files.length + '…');
       try {
-        var text = await RenovacionParse.readPdfText(state.files[i].file);
-        var d = RenovacionParse.extractAll(text);
-        if (!primero) { primero = d; primeroName = state.files[i].name; }
+        var texto = await RenovacionParse.readPdfText(state.files[i].file);
+        var d = RenovacionParse.extractAll(texto);
         if (d.esComprobante && (d.poliza || d.numComprobante)) {
-          comprobantes++;
-          if (!got) { got = d; gotName = state.files[i].name; }
-        }
-      } catch (e) { /* sigue con el próximo */ }
+          nuevos.push({ srcName: nombre, data: d });
+        } else { noLeidos++; }
+      } catch (e) { noLeidos++; }
     }
     setProgress(100, '');
+    state.recibos = nuevos;
 
-    state.data = got || primero || {};
-    state.srcName = got ? gotName : (primero ? primeroName : '');
+    if (!state.recibos.length) {
+      showToast('No pude leer ningún Comprobante de Pago del INS — revisá el PDF o completá los datos a mano.', 'error');
+    } else if (noLeidos) {
+      showToast(noLeidos + ' archivo(s) no son comprobantes del INS: van adjuntos, pero no suman al detalle.', 'info');
+    }
+    if (state.recibos.some(function (r) { return r.data.placaIncierta; })) {
+      showToast('Revisá las placas marcadas: vienen en un formato que no reconozco.', 'info');
+    }
 
-    if (!got && primero) {
-      showToast('Este PDF no parece un Comprobante de Pago del INS — revisá los datos.', 'info');
-    } else if (!got && !primero) {
-      showToast('No pude leer los datos automáticamente — completalos a mano.', 'info');
+    // El cliente (dueño del plan) se propone con el titular del primer recibo.
+    if (state.recibos.length && !state.cliente.nombre) {
+      state.cliente.nombre = state.recibos[0].data.cliente || '';
+      state.cliente.saludo = state.recibos[0].data.nombrePila || '';
     }
-    if (state.data.placaIncierta) {
-      showToast('Revisá la placa: el comprobante la trae en un formato que no reconozco.', 'info');
-    }
-    // Dos comprobantes distintos cargados a la vez: se usa el primero, pero el
-    // agente tiene que saberlo — si no, mandaría un correo con los datos de uno
-    // y los dos PDF adjuntos.
-    state.data.variosComprobantes = comprobantes > 1;
   }
 
   // ----- Vista 2: revisar -----
   function fillReview() {
-    var d = state.data || {};
-    $('f-comprobante').value = d.numComprobante || '';
-    $('f-poliza').value      = d.poliza     || '';
-    $('f-cliente').value     = d.cliente    || '';
-    $('f-saludo').value      = d.nombrePila || d.cliente || '';
-    $('f-correo').value      = d.correo     || '';
-    $('f-vehiculo').value    = d.vehiculo   || '';
-    $('f-placa').value       = d.placa      || '';
-    $('f-desde').value       = d.periodoDesde || '';
-    $('f-hasta').value       = d.periodoHasta || '';
-    $('f-fpago').value       = d.fechaPago  || '';
-    $('f-monto').value       = d.montoTexto || '';
+    $('f-cliente').value = state.cliente.nombre || '';
+    $('f-saludo').value  = state.cliente.saludo || '';
+    renderRecibos();
     renderEstado();
   }
 
-  function syncReview() {
-    var d = state.data || (state.data = {});
-    d.numComprobante = $('f-comprobante').value.trim();
-    d.poliza         = $('f-poliza').value.trim();
-    d.cliente        = $('f-cliente').value.trim();
-    d.nombrePila     = $('f-saludo').value.trim();
-    d.correo         = $('f-correo').value.trim();
-    d.vehiculo       = $('f-vehiculo').value.trim();
-    d.placa          = $('f-placa').value.trim();
-    d.periodoDesde   = $('f-desde').value.trim();
-    d.periodoHasta   = $('f-hasta').value.trim();
-    d.fechaPago      = $('f-fpago').value.trim();
-    d.montoTexto     = $('f-monto').value.trim();
+  function syncCliente() {
+    state.cliente.nombre = $('f-cliente').value.trim();
+    state.cliente.saludo = $('f-saludo').value.trim();
+  }
+
+  /** Vuelca a state.recibos lo que el agente haya corregido en cada renglón. */
+  function syncRecibos() {
+    var filas = document.querySelectorAll('#recibosList [data-rec]');
+    Array.prototype.forEach.call(filas, function (fila) {
+      var i = parseInt(fila.getAttribute('data-rec'), 10);
+      var r = state.recibos[i];
+      if (!r) return;
+      var get = function (campo) {
+        var el = fila.querySelector('[data-campo="' + campo + '"]');
+        return el ? el.value.trim() : '';
+      };
+      r.data.poliza       = get('poliza');
+      r.data.placa        = get('placa');
+      r.data.vehiculo     = get('vehiculo');
+      r.data.periodoDesde = get('desde');
+      r.data.periodoHasta = get('hasta');
+      var mt = get('monto');
+      if (mt !== r.data.montoTexto) {   // el agente lo corrigió: reparsear el número
+        r.data.montoTexto = mt;
+        r.data.monto = RenovacionParse.parseMonto(mt);
+      }
+    });
+  }
+
+  function syncReview() { syncCliente(); syncRecibos(); }
+
+  /** Suma de los recibos, ya formateada. '' si algún monto no es legible. */
+  function totalTexto() {
+    if (!state.recibos.length) return '';
+    var suma = 0;
+    for (var i = 0; i < state.recibos.length; i++) {
+      var v = state.recibos[i].data.monto;
+      if (typeof v !== 'number' || !isFinite(v)) return '';
+      suma += v;
+    }
+    return RenovacionParse.fmtMonto(suma, state.recibos[0].data.moneda || 'CRC');
+  }
+
+  function renderRecibos() {
+    var box = $('recibosList');
+    var tit = $('recibosTitulo');
+    var tot = $('recibosTotal');
+    if (!box) return;
+
+    if (tit) tit.textContent = state.recibos.length
+      ? (state.recibos.length === 1 ? '1 recibo leído' : state.recibos.length + ' recibos leídos')
+      : 'Sin recibos leídos';
+
+    if (!state.recibos.length) {
+      box.innerHTML = '<p class="doc-empty">Cargá el comprobante de pago para ver el detalle.</p>';
+      if (tot) tot.style.display = 'none';
+      return;
+    }
+
+    box.innerHTML = state.recibos.map(function (r, i) {
+      var d = r.data;
+      var pagado = RenovacionParse.estaPagado(d.estado);
+      return '<div class="rec" data-rec="' + i + '">' +
+        '<div class="rec-head">' +
+          '<span class="rec-pill ' + (pagado ? 'ok' : 'bad') + '">' + (pagado ? 'PAGADO' : esc(d.estado || 'SIN ESTADO')) + '</span>' +
+          '<span class="rec-n">Recibo ' + (i + 1) +
+            (d.numComprobante ? ' · <span class="mono">' + esc(d.numComprobante) + '</span>' : '') + '</span>' +
+          '<button type="button" class="rec-del" data-del="' + i + '" title="Quitar este recibo" aria-label="Quitar">&times;</button>' +
+        '</div>' +
+        '<div class="rec-grid">' +
+          _campo('Póliza', 'poliza', d.poliza) +
+          _campo('Placa', 'placa', d.placa) +
+          _campo('Vehículo (opcional)', 'vehiculo', d.vehiculo || '') +
+          _campo('Desde', 'desde', d.periodoDesde) +
+          _campo('Hasta', 'hasta', d.periodoHasta) +
+          _campo('Monto', 'monto', d.montoTexto) +
+        '</div>' +
+        (d.cliente && state.cliente.nombre && d.cliente !== state.cliente.nombre
+          ? '<div class="rec-aseg">Asegurado: <b>' + esc(d.cliente) + '</b></div>' : '') +
+      '</div>';
+    }).join('');
+
+    if (tot) {
+      var t = totalTexto();
+      tot.style.display = state.recibos.length > 1 ? 'block' : 'none';
+      tot.innerHTML = 'Total pagado: <b>' + (t ? esc(t) : '—') + '</b>';
+    }
+
+    Array.prototype.forEach.call(box.querySelectorAll('.rec-del'), function (b) {
+      b.addEventListener('click', function () {
+        syncReview();
+        var i = parseInt(b.getAttribute('data-del'), 10);
+        var quitado = state.recibos.splice(i, 1)[0];
+        // El PDF de ese recibo deja de ir adjunto: mandar un comprobante que el
+        // correo no menciona confunde al cliente.
+        if (quitado) {
+          state.files = state.files.filter(function (f) { return f.name !== quitado.srcName; });
+        }
+        renderRecibos(); renderEstado(); renderDocs(); updateCount();
+      });
+    });
+    Array.prototype.forEach.call(box.querySelectorAll('input'), function (inp) {
+      inp.addEventListener('input', function () { syncRecibos(); renderTotalSolo(); });
+    });
+  }
+
+  function _campo(label, campo, valor) {
+    return '<label class="rec-f"><span>' + label + '</span>' +
+      '<input class="form-control" data-campo="' + campo + '" value="' + esc(valor || '') + '" /></label>';
+  }
+
+  /** Actualiza solo el total (al teclear no conviene repintar toda la lista). */
+  function renderTotalSolo() {
+    var tot = $('recibosTotal');
+    if (!tot || state.recibos.length < 2) return;
+    var t = totalTexto();
+    tot.innerHTML = 'Total pagado: <b>' + (t ? esc(t) : '—') + '</b>';
   }
 
   /**
-   * Guard de estado (decisión D7 de JC, 10 ago 2026).
+   * Guard de estado (decisión D7 + D2 de JC).
    *
-   * Este correo AFIRMA que el pago fue aplicado. Enviarlo sobre un comprobante
-   * que no está pagado sería confirmarle al cliente un pago que no ocurrió, y
-   * quien responde por eso es el agente con su licencia. Por eso:
-   *   · dice "Pagado"        → se puede enviar
-   *   · dice OTRA cosa       → bloqueo, sin escape (es lo que pidió JC)
-   *   · no se pudo leer      → el agente lo confirma con la casilla; el flujo no
-   *                            se muere por un PDF que el parser no entendió
+   * El correo AFIRMA que el pago fue aplicado. JC lo dejó explícito para el caso
+   * de varios recibos: "el envío de los recibos es solo cuando todos están
+   * pagados, no existe esa opción". Así que TODOS tienen que decir "Pagado"; si
+   * uno no lo está, se quita de la lista o no se envía. No hay forma de forzarlo.
    */
   function estadoOk() {
-    var est = String((state.data && state.data.estado) || '').trim();
-    if (RenovacionParse.estaPagado(est)) return true;
-    if (!est) { var c = $('chkPagado'); return !!(c && c.checked); }
-    return false;
+    if (!state.recibos.length) return false;
+    return state.recibos.every(function (r) { return RenovacionParse.estaPagado(r.data.estado); });
   }
 
   function renderEstado() {
     var box = $('estadoBox');
     if (!box) return;
-    var d = state.data || {};
-    var est = String(d.estado || '').trim();
 
-    if (RenovacionParse.estaPagado(est)) {
-      box.className = 'estado-box ok';
-      box.innerHTML = '<b>✓ Comprobante pagado.</b> El INS reporta <b>Estado: ' + esc(est) + '</b>, así que se puede enviar la confirmación.';
-    } else if (est) {
-      box.className = 'estado-box bad';
-      box.innerHTML = '<b>⛔ Este comprobante NO está pagado.</b> El INS reporta <b>Estado: ' + esc(est) +
-        '</b>. Esta pantalla es solo para enviar recibos <b>ya pagados</b>: el correo le confirma al cliente que su pago fue aplicado, y no se puede afirmar eso todavía.';
-    } else if (!state.files.length) {
+    if (!state.recibos.length) {
       box.className = 'estado-box warn';
-      box.innerHTML = 'Cargá un comprobante para revisar su estado.';
-    } else {
-      box.className = 'estado-box warn';
-      box.innerHTML = '<b>No pude leer el estado del comprobante.</b> Esta pantalla es solo para recibos <b>ya pagados</b>. ' +
-        '<label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-weight:600;cursor:pointer;">' +
-        '<input type="checkbox" id="chkPagado" style="width:16px;height:16px;cursor:pointer;"> Confirmo que este recibo ya está pagado</label>';
-      var c = $('chkPagado');
-      if (c) c.addEventListener('change', function () { renderNext2(); });
+      box.innerHTML = 'Cargá el comprobante de pago para revisar su estado.';
+      renderNext2(); return;
     }
 
-    // Avisos que tienen que quedar A LA VISTA mientras el agente revisa: un toast
-    // se va solo y este dato cambia lo que verá el cliente.
-    if (d.variosComprobantes) {
+    var pendientes = state.recibos.filter(function (r) { return !RenovacionParse.estaPagado(r.data.estado); });
+
+    if (!pendientes.length) {
+      box.className = 'estado-box ok';
+      box.innerHTML = state.recibos.length === 1
+        ? '<b>✓ Comprobante pagado.</b> El INS lo reporta como <b>Pagado</b>, así que se puede enviar la confirmación.'
+        : '<b>✓ Los ' + state.recibos.length + ' recibos están pagados.</b> Se puede enviar la confirmación.';
+    } else {
+      box.className = 'estado-box bad';
+      box.innerHTML = '<b>⛔ ' + (pendientes.length === 1
+          ? 'Hay un recibo que NO está pagado'
+          : 'Hay ' + pendientes.length + ' recibos que NO están pagados') + '.</b> ' +
+        'Esta pantalla solo envía recibos <b>ya pagados</b>: el correo le confirma al cliente que su pago fue aplicado. ' +
+        'Quitá de la lista el que no corresponda (✕) y seguí con los demás.' +
+        '<div style="margin-top:8px;font-size:12.5px;">' + pendientes.map(function (r) {
+          return '· <span class="mono">' + esc(r.data.poliza || r.data.numComprobante || 'recibo') + '</span> → ' + esc(r.data.estado || 'sin estado');
+        }).join('<br>') + '</div>';
+    }
+
+    // Plan familiar: los recibos vienen a nombre de distintas personas y eso es
+    // NORMAL (D3 de JC). No se bloquea: se avisa para que el agente confirme
+    // quién es el dueño del plan, que es a quien se dirige el correo.
+    var titulares = [];
+    state.recibos.forEach(function (r) {
+      var c = (r.data.cliente || '').trim();
+      if (c && titulares.indexOf(c) === -1) titulares.push(c);
+    });
+    if (titulares.length > 1) {
       box.innerHTML += '<div style="margin-top:10px;padding-top:10px;border-top:1px solid currentColor;opacity:.9;">' +
-        '<b>⚠ Hay más de un comprobante cargado.</b> Los datos de abajo son los del primero, pero se adjuntan TODOS los PDF. ' +
-        'Quitá el que no corresponda en la lista de la derecha.</div>';
-    } else if (d.polizasEncontradas > 1) {
-      box.innerHTML += '<div style="margin-top:10px;padding-top:10px;border-top:1px solid currentColor;opacity:.9;">' +
-        '<b>⚠ Este comprobante cubre ' + esc(String(d.polizasEncontradas)) + ' pólizas.</b> Se tomaron los datos de la primera. ' +
-        'Verificá que la póliza, la placa y el monto sean los que querés enviar.</div>';
+        '<b>👪 Los recibos son de ' + titulares.length + ' titulares distintos</b> (plan familiar). ' +
+        'El correo se dirige al <b>dueño del plan</b>: revisá arriba que el nombre y el saludo sean los suyos. ' +
+        'En el detalle, cada póliza aparece con su asegurado.</div>';
     }
     renderNext2();
   }
@@ -244,7 +352,7 @@
     if (!btn) return;
     var ok = estadoOk();
     btn.disabled = !ok;
-    btn.title = ok ? '' : 'Solo se pueden enviar comprobantes ya pagados.';
+    btn.title = ok ? '' : 'Solo se pueden enviar recibos ya pagados.';
     btn.style.opacity = ok ? '' : '.5';
     btn.style.cursor = ok ? '' : 'not-allowed';
   }
@@ -254,52 +362,54 @@
     if (!ul) return;
     if (!state.files.length) { ul.innerHTML = '<li class="doc-empty">Sin documentos cargados.</li>'; return; }
     ul.innerHTML = state.files.map(function (x, idx) {
+      var esRecibo = state.recibos.some(function (r) { return r.srcName === x.name; });
       return '<li class="doc-item">' +
         '<span class="doc-ico">📄</span>' +
         '<span class="doc-meta"><span class="doc-name">' + esc(x.name) + '</span>' +
         '<span class="doc-size">' + fmtSize(x.size) + '</span></span>' +
-        '<span class="doc-badge up">Adjunto</span>' +
+        '<span class="doc-badge ' + (esRecibo ? 'std' : 'up') + '">' + (esRecibo ? 'Recibo' : 'Adjunto') + '</span>' +
         '<button class="doc-remove" data-idx="' + idx + '" title="Quitar" aria-label="Quitar">&times;</button>' +
       '</li>';
     }).join('');
     Array.prototype.forEach.call(ul.querySelectorAll('.doc-remove'), function (b) {
       b.addEventListener('click', function () {
         var quitado = state.files.splice(parseInt(b.getAttribute('data-idx'), 10), 1)[0];
-        // Si el que se quita es el PDF del que salieron los datos, los datos se
-        // van con él: dejarlos puestos permitiría enviar un correo con la póliza,
-        // el monto y el "Pagado" de un comprobante que ya no está adjunto.
-        if (quitado && quitado.name === state.srcName) {
-          state.data = {};
-          state.srcName = '';
-          fillReview();
-          showToast('Quitaste el comprobante del que leí los datos — cargá otro o completalos a mano.', 'info');
+        // Si el PDF quitado era un recibo, sus datos se van con él: dejarlos
+        // permitiría un correo que habla de un comprobante que ya no se adjunta.
+        if (quitado) {
+          var antes = state.recibos.length;
+          state.recibos = state.recibos.filter(function (r) { return r.srcName !== quitado.name; });
+          if (state.recibos.length !== antes) {
+            showToast('Quitaste un comprobante: su detalle sale del correo.', 'info');
+          }
         }
-        renderDocs();
-        renderEstado();
-        updateCount();
+        renderDocs(); renderRecibos(); renderEstado(); updateCount();
       });
     });
   }
 
   // ----- Vista 3: redactar -----
-  /**
-   * Prellena el paso 3. Solo pisa lo que el agente NO tocó: `fillCompose` corre
-   * en CADA "Continuar", así que sin la marca `touched` un viaje 3 → 2 → 3
-   * borraba en silencio el asunto o el destinatario que él había corregido.
-   */
   function fillCompose() {
-    var d = state.data || {};
-    _prefill('m-to', d.correo || '');
-    _prefill('m-subject', '✅ Su renovación está confirmada' + (d.poliza ? ' · Póliza ' + d.poliza : ''));
-    _prefill('m-saludo', d.nombrePila || d.cliente || '');
+    _prefill('m-to', '');
+    _prefill('m-subject', _asunto());
+    _prefill('m-saludo', state.cliente.saludo || state.cliente.nombre || '');
     updateCount();
     updatePreview();
   }
 
+  function _asunto() {
+    if (state.recibos.length > 1) {
+      return '✅ Su renovación está confirmada · ' + state.recibos.length + ' pólizas';
+    }
+    var p = state.recibos.length ? state.recibos[0].data.poliza : '';
+    return '✅ Su renovación está confirmada' + (p ? ' · Póliza ' + p : '');
+  }
+
+  /** Solo pisa lo que el agente NO tocó (fillCompose corre en cada "Continuar"). */
   function _prefill(id, valor) {
     var el = $(id);
     if (!el) return;
-    if (el.dataset.touched === '1') return;   // el agente lo editó: manda él
+    if (el.dataset.touched === '1') return;
     el.value = valor;
   }
 
@@ -307,20 +417,32 @@
     var c = $('m-count'); if (c) c.textContent = String(state.files.length);
   }
 
+  /**
+   * Destinatarios: JC pidió poder mandarle el mismo correo a varias personas
+   * (p. ej. esposo y esposa en un plan familiar). Se aceptan separados por coma,
+   * punto y coma o espacio. Se limpian CR/LF para que nadie pueda inyectar
+   * cabeceras en el MIME.
+   */
+  function destinatarios() {
+    var crudo = ($('m-to') ? $('m-to').value : '').replace(/[\r\n]/g, ' ');
+    return crudo.split(/[,;\s]+/).map(function (s) { return s.trim(); }).filter(Boolean);
+  }
+
   function currentEmailParams() {
-    var d = state.data || {};
     return {
-      nombrePila:     $('m-saludo').value.trim() || d.nombrePila || d.cliente || '',
-      cliente:        d.cliente || '',
-      poliza:         d.poliza || '',
-      placa:          d.placa || '',
-      vehiculo:       d.vehiculo || '',
-      numComprobante: d.numComprobante || '',
-      montoTexto:     d.montoTexto || '',
-      periodoDesde:   d.periodoDesde || '',
-      periodoHasta:   d.periodoHasta || '',
-      fechaPago:      d.fechaPago || '',
-      notaAdicional:  $('m-nota').value
+      nombrePila: ($('m-saludo') ? $('m-saludo').value.trim() : '') || state.cliente.saludo || state.cliente.nombre || '',
+      cliente:    state.cliente.nombre || '',
+      recibos:    state.recibos.map(function (r) {
+        return {
+          poliza: r.data.poliza, placa: r.data.placa, vehiculo: r.data.vehiculo,
+          periodoDesde: r.data.periodoDesde, periodoHasta: r.data.periodoHasta,
+          montoTexto: r.data.montoTexto, monto: r.data.monto, asegurado: r.data.cliente
+        };
+      }),
+      numComprobante: state.recibos.length === 1 ? state.recibos[0].data.numComprobante : '',
+      fechaPago:      state.recibos.length ? state.recibos[0].data.fechaPago : '',
+      totalTexto:     state.recibos.length > 1 ? totalTexto() : '',
+      notaAdicional:  $('m-nota') ? $('m-nota').value : ''
     };
   }
 
@@ -337,10 +459,7 @@
     return p;
   }
 
-  /**
-   * Deja el enlace LARGO en el href: es el que vale si el acortador falla o si
-   * el clic no pasa por el handler (JS caído, "abrir en pestaña nueva").
-   */
+  /** Deja el enlace LARGO en el href: vale si el acortador falla o si el clic no pasa por el handler. */
   function refreshWaBtn() {
     var btn = $('btnWhatsApp');
     if (btn) btn.href = buildRenovacionWaUrl(waParams());
@@ -349,6 +468,7 @@
   /** Clic en "Avisar por WhatsApp": acorta la guía y recién ahí abre el chat. */
   function shareWa(ev) {
     ev.preventDefault();
+    state.waEnviado = true;
     // La pestaña se reserva ANTES del await: abrirla después de una llamada de
     // red ya no cuenta como gesto del usuario y el navegador la bloquea.
     var win = window.open('', '_blank');
@@ -365,12 +485,13 @@
     syncReview();
 
     if (!estadoOk()) {
-      showToast('Solo se pueden enviar comprobantes ya pagados.', 'error');
+      showToast('Solo se pueden enviar recibos ya pagados.', 'error');
       setStep(2); return;
     }
-    var to = $('m-to').value.trim();
-    if (!to || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) {
-      showToast('Ingresá un correo válido para el cliente.', 'error');
+    var para = destinatarios();
+    var mal = para.filter(function (c) { return !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c); });
+    if (!para.length || mal.length) {
+      showToast(mal.length ? ('Revisá este correo: ' + mal[0]) : 'Ingresá el correo del cliente.', 'error');
       $('m-to').focus(); return;
     }
     if (!state.files.length) {
@@ -391,11 +512,13 @@
       }
 
       var html = buildRenovacionEmail(currentEmailParams());
-      var subject = $('m-subject').value.trim() ||
-        ('✅ Su renovación está confirmada' + (state.data.poliza ? ' · Póliza ' + state.data.poliza : ''));
+      var subject = ($('m-subject').value.trim() || _asunto()).replace(/[\r\n]/g, ' ');
       var fromHeader = CFG.FROM_NAME ? ('"' + CFG.FROM_NAME + '" <' + CFG.FROM_EMAIL + '>') : CFG.FROM_EMAIL;
 
-      var raw = buildMIMEMulti({ to: to, from: fromHeader, subject: subject, html: html, attachments: attachments });
+      var raw = buildMIMEMulti({
+        to: para.join(', '),          // varios destinatarios en el mismo correo
+        from: fromHeader, subject: subject, html: html, attachments: attachments
+      });
 
       btn.textContent = 'Enviando…';
       await getToken();
@@ -410,10 +533,13 @@
         } else { throw err; }
       }
 
-      $('successMsg').textContent = 'El comprobante de renovación fue enviado a ' + to + '.';
+      $('successMsg').textContent = (state.recibos.length > 1
+        ? 'Los ' + state.recibos.length + ' comprobantes fueron enviados a '
+        : 'El comprobante de renovación fue enviado a ') + para.join(' y ') + '.';
 
       // Aviso por WhatsApp. Nada de esto puede tumbar el flujo: el correo YA salió.
       try {
+        state.waEnviado = false;
         var waIn = $('m-wa-cliente');
         if (waIn) waIn.value = '';
         refreshWaBtn();
@@ -422,7 +548,7 @@
       } catch (e) { console.warn('[renovacion] aviso WhatsApp:', e); }
 
       setStep(4);
-      showToast('✅ Comprobante enviado a ' + to, 'success');
+      showToast('✅ Enviado a ' + para.join(', '), 'success');
     } catch (e) {
       console.error(e);
       showToast('Error al enviar: ' + (e.message || e), 'error');
@@ -432,16 +558,46 @@
     }
   }
 
+  /**
+   * Salir de la pantalla de éxito. Si todavía no se avisó por WhatsApp, se
+   * pregunta —con opción de seguir igual, como pidió JC—: el botón borra el
+   * aviso y habría que escribirlo a mano.
+   */
+  function confirmarSalida() {
+    if (state.waEnviado) return true;
+    var wrap = $('waShareWrap');
+    if (!wrap || wrap.style.display === 'none') return true;
+    return window.confirm('Todavía no le avisaste al cliente por WhatsApp.\n\nSi continuás, ese aviso se pierde y habría que escribirlo a mano.\n\n¿Continuar igual?');
+  }
+
+  /** "Enviar otro recibo — mismo cliente": conserva a quién se le envía. */
+  function otroDelMismo() {
+    if (!confirmarSalida()) return;
+    limpiarCarga(true);
+    if ($('waShareWrap')) $('waShareWrap').style.display = 'none';
+    state.waEnviado = false;
+    if ($('m-nota')) $('m-nota').value = '';
+    if ($('m-wa-cliente')) $('m-wa-cliente').value = '';
+    // El asunto se vuelve a proponer con la póliza del recibo nuevo; el correo y
+    // el saludo del cliente se conservan.
+    var subj = $('m-subject'); if (subj) { subj.value = ''; delete subj.dataset.touched; }
+    showToast('Listo: cargá el otro recibo de ' + (state.cliente.saludo || 'este cliente') + '.', 'info');
+    setStep(1);
+  }
+
+  /** "Enviar a otro cliente": borra todo y empieza de cero. */
   function resetAll() {
-    limpiarCarga();
-    $('m-nota').value = '';
+    if (!confirmarSalida()) return;
+    limpiarCarga(false);
+    state.waEnviado = false;
+    if ($('m-nota')) $('m-nota').value = '';
     if ($('m-wa-cliente')) $('m-wa-cliente').value = '';
     if ($('waShareWrap')) $('waShareWrap').style.display = 'none';
-    // Los campos del correo vuelven a prellenarse solos con el próximo
-    // comprobante (ver fillCompose y la marca 'touched').
     ['m-to', 'm-subject', 'm-saludo'].forEach(function (id) {
       var el = $(id); if (el) { el.value = ''; delete el.dataset.touched; }
     });
+    if ($('f-cliente')) $('f-cliente').value = '';
+    if ($('f-saludo'))  $('f-saludo').value = '';
     setStep(1);
   }
 
@@ -473,7 +629,7 @@
     try {
       if (typeof isFirstTime === 'function' && isFirstTime()) {
         showToast('Configurá tu perfil de agente antes de enviar correos.', 'error');
-        var vol = $('btnSend'); if (vol) vol.disabled = true;
+        var bs = $('btnSend'); if (bs) bs.disabled = true;
         setTimeout(function () { location.href = '../'; }, 2500);
         return;
       }
@@ -495,17 +651,24 @@
 
     // "Volver" es el camino natural cuando el agente se equivocó de comprobante:
     // deja la carga en blanco para que el próximo PDF entre limpio.
-    $('btnBack2').addEventListener('click', function () { limpiarCarga(); setStep(1); });
+    $('btnBack2').addEventListener('click', function () { limpiarCarga(false); setStep(1); });
     $('btnNext2').addEventListener('click', function () {
       syncReview();
-      if (!estadoOk()) { showToast('Solo se pueden enviar comprobantes ya pagados.', 'error'); return; }
-      if (!$('f-correo').value.trim()) { showToast('Ingresá el correo del cliente.', 'error'); $('f-correo').focus(); return; }
+      if (!estadoOk()) { showToast('Solo se pueden enviar recibos ya pagados.', 'error'); return; }
       fillCompose();
       setStep(3);
     });
     $('btnBack3').addEventListener('click', function () { setStep(2); });
     $('btnSend').addEventListener('click', send);
-    $('btnReset').addEventListener('click', resetAll);
+    $('btnReset').addEventListener('click', otroDelMismo);
+    if ($('btnOtroCliente')) $('btnOtroCliente').addEventListener('click', resetAll);
+
+    // Al corregir el nombre del dueño del plan, se repinta el detalle (la nota
+    // "Asegurado:" de cada recibo depende de ese nombre).
+    ['f-cliente', 'f-saludo'].forEach(function (id) {
+      var el = $(id);
+      if (el) el.addEventListener('input', function () { syncCliente(); renderRecibos(); });
+    });
 
     var waIn = $('m-wa-cliente');
     if (waIn) waIn.addEventListener('input', function () { refreshWaBtn(); });
@@ -524,6 +687,8 @@
     });
 
     renderDocs();
+    renderRecibos();
+    renderEstado();   // deja "Continuar" bloqueado hasta que haya recibos pagados
     setStep(1);
   });
 })();

@@ -143,6 +143,73 @@ ok('multiagente-sep',    html2.indexOf('/?n=Pedro') !== -1);   // primer paráme
 ok('multiagente-sin-web-owner', html2.indexOf('segurosdelins.com') === -1);
 ok('multiagente-sin-lic-owner', html2.indexOf('08-1318') === -1);
 
+// ---------- VARIOS RECIBOS EN UN CORREO (JC, 10 ago 2026) ----------
+// Un cliente con dos pólizas, o un plan familiar con cinco. Un solo correo con
+// la lista y el total, en vez de cinco correos.
+var tresRecibos = [
+  { poliza: '0101AUT100000001', placa: 'BXY123', periodoDesde: '30/08/2026', periodoHasta: '30/11/2026', montoTexto: '₡92.555',  monto: 92555,  asegurado: 'Pérez Soto Ana Lucía' },
+  { poliza: '0101AUT200000002', placa: 'ZWT456', periodoDesde: '30/08/2026', periodoHasta: '30/11/2026', montoTexto: '₡78.300',  monto: 78300,  asegurado: 'Pérez Soto Ana Lucía' },
+  { poliza: '0101AUT300000003', placa: 'DEF789', periodoDesde: '30/08/2026', periodoHasta: '30/11/2026', montoTexto: '₡145.900', monto: 145900, asegurado: 'Pérez Soto Ana Lucía' }
+];
+var htmlMulti = buildRenovacionEmail({
+  nombrePila: 'Ana Lucía', cliente: 'Pérez Soto Ana Lucía',
+  recibos: tresRecibos, fechaPago: '10/08/2026'
+});
+
+ok('multi-plural-polizas',  /sus 3 pólizas de automóviles/.test(htmlMulti));
+ok('multi-plural-vehiculos', /sus vehículos continúan protegidos/.test(htmlMulti));
+ok('multi-plural-adjuntos', /Adjunto encontrará los comprobantes de pago oficiales del INS/.test(htmlMulti));
+ok('multi-total-label',     /Total pagado/.test(htmlMulti));
+ok('multi-total-sumado',    htmlMulti.indexOf('₡316.755') !== -1);   // 92.555 + 78.300 + 145.900
+ok('multi-cuenta-recibos',  /3 recibos/.test(htmlMulti));
+ok('multi-las-3-polizas',   htmlMulti.indexOf('0101AUT100000001') !== -1
+                            && htmlMulti.indexOf('0101AUT200000002') !== -1
+                            && htmlMulti.indexOf('0101AUT300000003') !== -1);
+ok('multi-las-3-placas',    htmlMulti.indexOf('BXY123') !== -1 && htmlMulti.indexOf('ZWT456') !== -1 && htmlMulti.indexOf('DEF789') !== -1);
+ok('multi-los-3-montos',    htmlMulti.indexOf('₡92.555') !== -1 && htmlMulti.indexOf('₡78.300') !== -1 && htmlMulti.indexOf('₡145.900') !== -1);
+ok('multi-fecha-pago',      htmlMulti.indexOf('10/08/2026') !== -1);
+// Mismo titular en todos: la columna "Asegurado" sobra y no se pinta.
+ok('multi-sin-col-asegurado', htmlMulti.indexOf('>Asegurado<') === -1);
+// Lo demás del correo NO cambia
+ok('multi-guia-evento',   /&iquest;Qu&eacute; hacer si ocurre un evento\?/.test(htmlMulti));
+ok('multi-cross-sell',    /Seguros de Viaje/.test(htmlMulti));
+ok('multi-sin-cobro',     !/pague antes|fecha l[ií]mite/i.test(htmlMulti));
+ok('multi-sin-undefined', !/undefined|NaN|null/.test(htmlMulti));
+
+// Total explícito de la app: manda sobre la suma automática.
+ok('multi-total-explicito', buildRenovacionEmail({ nombrePila: 'Ana', recibos: tresRecibos, totalTexto: '₡316.755' }).indexOf('₡316.755') !== -1);
+
+// PLAN FAMILIAR (D3 de JC): los recibos vienen a nombre de distintas personas.
+// El correo se dirige al DUEÑO DEL PLAN y la tabla dice de quién es cada póliza.
+var familiar = buildRenovacionEmail({
+  nombrePila: 'Carlos',           // dueño del plan, lo elige el agente
+  cliente: 'Ramírez Soto Carlos Andrés',
+  recibos: [
+    { poliza: '0101AUT100000001', placa: 'BXY123', montoTexto: '₡92.555', monto: 92555, asegurado: 'Ramírez Soto Carlos Andrés' },
+    { poliza: '0101AUT200000002', placa: 'ZWT456', montoTexto: '₡78.300', monto: 78300, asegurado: 'Mora Vega Lucía' }
+  ]
+});
+ok('familiar-saludo-dueno',  /Hola Carlos,/.test(familiar));
+ok('familiar-col-asegurado', familiar.indexOf('>Asegurado<') !== -1);
+ok('familiar-ambos-nombres', familiar.indexOf('Ramírez Soto Carlos Andrés') !== -1 && familiar.indexOf('Mora Vega Lucía') !== -1);
+ok('familiar-total',         familiar.indexOf('₡170.855') !== -1);
+
+// UN recibo pasado como array: el correo queda idéntico al de campos sueltos.
+var unoArray = buildRenovacionEmail({ nombrePila: 'Carlos Andrés', numComprobante: 'R202608108000001', fechaPago: '10/08/2026',
+  recibos: [{ poliza: '0101AUT100000001', placa: 'BXY123', vehiculo: 'TOYOTA YARIS 2019',
+              periodoDesde: '30/08/2026', periodoHasta: '30/11/2026', montoTexto: '₡92.555', monto: 92555 }] });
+ok('uno-array-singular',   /su póliza No\./.test(unoArray) && !/sus 2|sus 1 pólizas/.test(unoArray));
+ok('uno-array-monto-label', /Monto pagado/.test(unoArray) && !/Total pagado/.test(unoArray));
+ok('uno-array-comprobante', unoArray.indexOf('R202608108000001') !== -1);
+ok('uno-array-sin-tabla',   unoArray.indexOf('>Asegurado<') === -1);
+
+// WhatsApp con varias pólizas: dice cuántas, no nombra una sola.
+var waMulti = decodeURIComponent(buildRenovacionWaUrl({ nombrePila: 'Ana Lucía', recibos: tresRecibos }).split('text=')[1]);
+ok('wa-multi-plural',     /Sus 3 pólizas continúan activas y sus vehículos protegidos/.test(waMulti));
+ok('wa-multi-adjuntos',   /los comprobantes de pago oficiales del INS/.test(waMulti));
+ok('wa-multi-sin-una',    waMulti.indexOf('Su póliza 0101AUT100000001') === -1);
+ok('wa-multi-saludo',     waMulti.indexOf('¡Ana Lucía, su renovación está confirmada!') === 0);
+
 // ---------- El fallback al sitio del agente también se escapa ----------
 // CFG.WEBSITE entra a tres href (guía, Viaje, Estudiantil) cuando el agente no
 // tiene esas URLs configuradas; el perfil solo le quita el protocolo, así que
