@@ -73,7 +73,7 @@ Anclas verificadas contra 2 comprobantes reales (10 ago 2026):
 - `Nombre del asegurado:` → cliente en orden **APELLIDO APELLIDO NOMBRE(S)** → saludo = tercer token capitalizado (gotcha #19)
 - `Estado:` → **guard BLOQUEANTE**: si ≠ "Pagado", mensaje claro y no se permite enviar (D7)
 - Póliza: `/0(101|121)AUT\d+/`
-- **Placa**: entre paréntesis bajo el nº de póliza, con relleno variable (muestras reales: `00000BRJ665` → BRJ665; `PAR00ZZS111` → ZZS111). Limpiar relleno y tomar sufijo `[A-Z]{3}\d{3}`; si el formato es otro (placas numéricas viejas, CL, motos) → campo vacío para digitar, sin bloquear
+- **Placa**: entre paréntesis bajo el nº de póliza, con relleno variable (muestras reales: `00000BXY123` → BXY123; `PQR00ZWT456` → ZWT456). Limpiar relleno y tomar sufijo `[A-Z]{3}\d{3}`; si el formato es otro (placas numéricas viejas, CL, motos) → campo vacío para digitar, sin bloquear
 - Vigencia `Desde`/`Hasta` → **período pagado** (puede ser trimestral/semestral)
 - `Fecha de Pago:` → fecha
 - `TOTAL A PAGAR:` → monto (el PDF lo trae formato US `₡92,555.00`; mostrar en es-CR con el `fmt` de la casa)

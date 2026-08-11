@@ -143,6 +143,23 @@ ok('multiagente-sep',    html2.indexOf('/?n=Pedro') !== -1);   // primer paráme
 ok('multiagente-sin-web-owner', html2.indexOf('segurosdelins.com') === -1);
 ok('multiagente-sin-lic-owner', html2.indexOf('08-1318') === -1);
 
+// ---------- El fallback al sitio del agente también se escapa ----------
+// CFG.WEBSITE entra a tres href (guía, Viaje, Estudiantil) cuando el agente no
+// tiene esas URLs configuradas; el perfil solo le quita el protocolo, así que
+// comillas y '=' llegan intactos hasta acá.
+global.CFG.WEBSITE = 'malo.com" onmouseover="alert(1)';
+global.CFG.XSELL_VIAJE_URL = '';
+global.CFG.XSELL_ESTUDIANTIL_URL = '';
+global.CFG.ASSIST_URL = 'no-es-una-url';   // fuerza el fallback también en la guía
+var htmlEvilWeb = buildRenovacionEmail(base);
+ok('fallback-escapado',  htmlEvilWeb.indexOf('onmouseover="alert(1)"') === -1);
+ok('fallback-entidades', htmlEvilWeb.indexOf('malo.com&quot; onmouseover=&quot;alert(1)') !== -1);
+// Restaurar TODO lo que tocó este bloque: si queda un CFG envenenado, los tests
+// de abajo fallan por el vecino y no por su propio código.
+global.CFG.XSELL_VIAJE_URL = 'https://seguros-viajero.appsegurosdigitales.com/';
+global.CFG.ASSIST_URL      = 'https://appasistenciaseguroautos.netlify.app/';
+global.CFG.WEBSITE         = 'www.segurosdelins.com';
+
 // ---------- WhatsApp ----------
 global.CFG.FROM_NAME  = 'Juan Carlos Hernandez Vargas';
 global.CFG.PHONE      = '8822-1348';

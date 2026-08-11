@@ -22,8 +22,9 @@
   'use strict';
 
   var state = {
-    files: [],   // [{ file, name, size }]
-    data: {},    // lo que devuelve RenovacionParse.extractAll + lo que edite el agente
+    files: [],    // [{ file, name, size }]
+    data: {},     // lo que devuelve RenovacionParse.extractAll + lo que edite el agente
+    srcName: '',  // archivo del que salieron los datos (para saber si se quitó)
     step: 1
   };
 
@@ -65,6 +66,21 @@
     if (lab) lab.textContent = label || '';
   }
 
+  /**
+   * Deja la carga como recién abierta: sin archivos, sin datos y sin el aviso
+   * de estado del comprobante anterior.
+   */
+  function limpiarCarga() {
+    state.files = [];
+    state.data = {};
+    state.srcName = '';
+    if ($('fileInput'))  $('fileInput').value = '';
+    if ($('fileInput2')) $('fileInput2').value = '';
+    setProgress(0, '');
+    renderDocs();
+    renderEstado();
+  }
+
   // ----- Carga de archivos -----
   async function onFiles(fileList, doExtract) {
     // Array.from ANTES de cualquier await: input.files es una lista VIVA y se
@@ -74,6 +90,14 @@
       return /pdf$/i.test(f.name) || f.type === 'application/pdf';
     });
     if (!arr.length) { showToast('Seleccioná archivos PDF.', 'error'); return; }
+
+    // 🔴 Cargar por el paso 1 EMPIEZA DE CERO. Si solo se apilara, el agente que
+    // se equivoca de cliente y vuelve a cargar seguiría viendo los datos del PDF
+    // anterior (extractFromBest se queda con el primero que califique): el correo
+    // saldría con la póliza y el monto del cliente viejo, con los dos PDF
+    // adjuntos, y —lo peor— el guard D7 seguiría leyendo el "Pagado" del
+    // comprobante anterior, dejando pasar uno que no está pagado.
+    if (doExtract) limpiarCarga();
 
     for (var i = 0; i < arr.length; i++) {
       var f = arr[i];
@@ -95,18 +119,22 @@
   /** Extrae del primer PDF que parezca un Comprobante de Pago del INS. */
   async function extractFromBest() {
     setProgress(20, 'Leyendo el comprobante…');
-    var got = null, primero = null;
+    var got = null, gotName = '', primero = null, primeroName = '', comprobantes = 0;
     for (var i = 0; i < state.files.length; i++) {
       try {
         var text = await RenovacionParse.readPdfText(state.files[i].file);
         var d = RenovacionParse.extractAll(text);
-        if (!primero) primero = d;
-        if (d.esComprobante && (d.poliza || d.numComprobante)) { got = d; break; }
+        if (!primero) { primero = d; primeroName = state.files[i].name; }
+        if (d.esComprobante && (d.poliza || d.numComprobante)) {
+          comprobantes++;
+          if (!got) { got = d; gotName = state.files[i].name; }
+        }
       } catch (e) { /* sigue con el próximo */ }
     }
     setProgress(100, '');
 
     state.data = got || primero || {};
+    state.srcName = got ? gotName : (primero ? primeroName : '');
 
     if (!got && primero) {
       showToast('Este PDF no parece un Comprobante de Pago del INS — revisá los datos.', 'info');
@@ -116,9 +144,10 @@
     if (state.data.placaIncierta) {
       showToast('Revisá la placa: el comprobante la trae en un formato que no reconozco.', 'info');
     }
-    if (state.data.polizasEncontradas > 1) {
-      showToast('El comprobante trae ' + state.data.polizasEncontradas + ' pólizas. Revisá que los datos sean los de la que querés enviar.', 'info');
-    }
+    // Dos comprobantes distintos cargados a la vez: se usa el primero, pero el
+    // agente tiene que saberlo — si no, mandaría un correo con los datos de uno
+    // y los dos PDF adjuntos.
+    state.data.variosComprobantes = comprobantes > 1;
   }
 
   // ----- Vista 2: revisar -----
@@ -174,7 +203,8 @@
   function renderEstado() {
     var box = $('estadoBox');
     if (!box) return;
-    var est = String((state.data && state.data.estado) || '').trim();
+    var d = state.data || {};
+    var est = String(d.estado || '').trim();
 
     if (RenovacionParse.estaPagado(est)) {
       box.className = 'estado-box ok';
@@ -183,6 +213,9 @@
       box.className = 'estado-box bad';
       box.innerHTML = '<b>⛔ Este comprobante NO está pagado.</b> El INS reporta <b>Estado: ' + esc(est) +
         '</b>. Esta pantalla es solo para enviar recibos <b>ya pagados</b>: el correo le confirma al cliente que su pago fue aplicado, y no se puede afirmar eso todavía.';
+    } else if (!state.files.length) {
+      box.className = 'estado-box warn';
+      box.innerHTML = 'Cargá un comprobante para revisar su estado.';
     } else {
       box.className = 'estado-box warn';
       box.innerHTML = '<b>No pude leer el estado del comprobante.</b> Esta pantalla es solo para recibos <b>ya pagados</b>. ' +
@@ -190,6 +223,18 @@
         '<input type="checkbox" id="chkPagado" style="width:16px;height:16px;cursor:pointer;"> Confirmo que este recibo ya está pagado</label>';
       var c = $('chkPagado');
       if (c) c.addEventListener('change', function () { renderNext2(); });
+    }
+
+    // Avisos que tienen que quedar A LA VISTA mientras el agente revisa: un toast
+    // se va solo y este dato cambia lo que verá el cliente.
+    if (d.variosComprobantes) {
+      box.innerHTML += '<div style="margin-top:10px;padding-top:10px;border-top:1px solid currentColor;opacity:.9;">' +
+        '<b>⚠ Hay más de un comprobante cargado.</b> Los datos de abajo son los del primero, pero se adjuntan TODOS los PDF. ' +
+        'Quitá el que no corresponda en la lista de la derecha.</div>';
+    } else if (d.polizasEncontradas > 1) {
+      box.innerHTML += '<div style="margin-top:10px;padding-top:10px;border-top:1px solid currentColor;opacity:.9;">' +
+        '<b>⚠ Este comprobante cubre ' + esc(String(d.polizasEncontradas)) + ' pólizas.</b> Se tomaron los datos de la primera. ' +
+        'Verificá que la póliza, la placa y el monto sean los que querés enviar.</div>';
     }
     renderNext2();
   }
@@ -219,21 +264,43 @@
     }).join('');
     Array.prototype.forEach.call(ul.querySelectorAll('.doc-remove'), function (b) {
       b.addEventListener('click', function () {
-        state.files.splice(parseInt(b.getAttribute('data-idx'), 10), 1);
+        var quitado = state.files.splice(parseInt(b.getAttribute('data-idx'), 10), 1)[0];
+        // Si el que se quita es el PDF del que salieron los datos, los datos se
+        // van con él: dejarlos puestos permitiría enviar un correo con la póliza,
+        // el monto y el "Pagado" de un comprobante que ya no está adjunto.
+        if (quitado && quitado.name === state.srcName) {
+          state.data = {};
+          state.srcName = '';
+          fillReview();
+          showToast('Quitaste el comprobante del que leí los datos — cargá otro o completalos a mano.', 'info');
+        }
         renderDocs();
+        renderEstado();
         updateCount();
       });
     });
   }
 
   // ----- Vista 3: redactar -----
+  /**
+   * Prellena el paso 3. Solo pisa lo que el agente NO tocó: `fillCompose` corre
+   * en CADA "Continuar", así que sin la marca `touched` un viaje 3 → 2 → 3
+   * borraba en silencio el asunto o el destinatario que él había corregido.
+   */
   function fillCompose() {
     var d = state.data || {};
-    $('m-to').value      = d.correo || '';
-    $('m-subject').value = '✅ Su renovación está confirmada' + (d.poliza ? ' · Póliza ' + d.poliza : '');
-    $('m-saludo').value  = d.nombrePila || d.cliente || '';
+    _prefill('m-to', d.correo || '');
+    _prefill('m-subject', '✅ Su renovación está confirmada' + (d.poliza ? ' · Póliza ' + d.poliza : ''));
+    _prefill('m-saludo', d.nombrePila || d.cliente || '');
     updateCount();
     updatePreview();
+  }
+
+  function _prefill(id, valor) {
+    var el = $(id);
+    if (!el) return;
+    if (el.dataset.touched === '1') return;   // el agente lo editó: manda él
+    el.value = valor;
   }
 
   function updateCount() {
@@ -366,18 +433,15 @@
   }
 
   function resetAll() {
-    state.files = [];
-    state.data = {};
-    $('fileInput').value = '';
-    if ($('fileInput2')) $('fileInput2').value = '';
+    limpiarCarga();
     $('m-nota').value = '';
     if ($('m-wa-cliente')) $('m-wa-cliente').value = '';
     if ($('waShareWrap')) $('waShareWrap').style.display = 'none';
-    setProgress(0, '');
-    renderDocs();
-    // Repinta el aviso de estado con los datos ya vacíos: si no, el próximo
-    // comprobante arrancaría con el cartel del anterior a la vista.
-    renderEstado();
+    // Los campos del correo vuelven a prellenarse solos con el próximo
+    // comprobante (ver fillCompose y la marca 'touched').
+    ['m-to', 'm-subject', 'm-saludo'].forEach(function (id) {
+      var el = $(id); if (el) { el.value = ''; delete el.dataset.touched; }
+    });
     setStep(1);
   }
 
@@ -401,6 +465,20 @@
     // Perfil del agente (multi-agente). Sin esto el correo sale con la licencia
     // del owner aunque lo mande otro agente.
     try { if (typeof loadProfile === 'function') { var p = loadProfile(); if (p) applyProfile(p); } } catch (e) {}
+
+    // 🔴 Sin perfil configurado, CFG conserva los defaults del dueño y el correo
+    // saldría firmado con SU nombre y SU licencia SUGESE. La consola principal ya
+    // obliga a configurarlo (app.js abre el modal ⚙); esta sub-página no tiene ⚙,
+    // así que manda de vuelta al inicio a configurarlo.
+    try {
+      if (typeof isFirstTime === 'function' && isFirstTime()) {
+        showToast('Configurá tu perfil de agente antes de enviar correos.', 'error');
+        var vol = $('btnSend'); if (vol) vol.disabled = true;
+        setTimeout(function () { location.href = '../'; }, 2500);
+        return;
+      }
+    } catch (e) {}
+
     try { if (typeof initTokenClient === 'function') initTokenClient(); } catch (e) {}
 
     $('fileInput').addEventListener('change', function (e) {
@@ -415,7 +493,9 @@
     }
     wireDropZone();
 
-    $('btnBack2').addEventListener('click', function () { setStep(1); });
+    // "Volver" es el camino natural cuando el agente se equivocó de comprobante:
+    // deja la carga en blanco para que el próximo PDF entre limpio.
+    $('btnBack2').addEventListener('click', function () { limpiarCarga(); setStep(1); });
     $('btnNext2').addEventListener('click', function () {
       syncReview();
       if (!estadoOk()) { showToast('Solo se pueden enviar comprobantes ya pagados.', 'error'); return; }
@@ -436,6 +516,11 @@
     // Vista previa en vivo al editar el correo
     ['m-saludo', 'm-nota'].forEach(function (id) {
       var el = $(id); if (el) el.addEventListener('input', updatePreview);
+    });
+    // Marca los campos que tocó el agente para que fillCompose no los pise.
+    ['m-to', 'm-subject', 'm-saludo'].forEach(function (id) {
+      var el = $(id);
+      if (el) el.addEventListener('input', function () { el.dataset.touched = '1'; });
     });
 
     renderDocs();

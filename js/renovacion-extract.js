@@ -15,8 +15,8 @@
  *
  *  1. La PLACA viene dentro de un paréntesis, en un campo de ancho fijo con
  *     relleno a la izquierda que NO siempre son ceros: en las muestras reales
- *     aparecieron "(00000BRJ665)" y "(PAR00ZZS111)" — 11 caracteres las dos,
- *     con la placa real al final (BRJ665 / ZZS111). Se reconoce el patrón
+ *     aparecieron "(00000BXY123)" y "(PQR00ZWT456)" — 11 caracteres las dos,
+ *     con la placa real al final (BXY123 / ZWT456). Se reconoce el patrón
  *     AAA999 final; cualquier otro formato (placas numéricas viejas, CL, motos)
  *     se devuelve CRUDO con placaIncierta=true para que el agente lo corrija.
  *     No se inventa una placa que el PDF no dice con claridad.
@@ -78,7 +78,7 @@ var RenovacionParse = (function () {
     return m ? m[1].toUpperCase() : '';
   }
 
-  /** "Nombre del asegurado: SIBAJA HERNANDEZ RUTH MARY Tipo identificación: ..." */
+  /** "Nombre del asegurado: RAMIREZ SOTO CARLOS ANDRES Tipo identificación: ..." */
   function extractAsegurado(t) {
     var m = t.match(/Nombre del asegurado:\s*(.+?)\s*Tipo\s+identificaci[oó]n/i);
     if (!m) m = t.match(/Nombre del asegurado:\s*(.+?)\s*(?:Tipo|N[uú]mero)\b/i);
@@ -90,7 +90,7 @@ var RenovacionParse = (function () {
     return m ? titleCase(m[1]) : '';
   }
 
-  /** N.º de póliza: 0101AUT199304204 / 0121AUT... (mismo formato que la póliza activa). */
+  /** N.º de póliza: 0101AUT100000001 / 0121AUT... (mismo formato que la póliza activa). */
   function extractPoliza(t) {
     var m = t.match(/\b(0[0-9]{3}[A-Z]{3}[0-9]{6,})\b/i);
     return m ? m[1].toUpperCase() : '';
@@ -103,12 +103,40 @@ var RenovacionParse = (function () {
   }
 
   /**
-   * Placa: dentro del paréntesis que sigue al n.º de póliza, con relleno a la
+   * Recorta la LÍNEA DE DETALLE de la primera póliza: desde su n.º de póliza
+   * hasta el n.º de la póliza siguiente o hasta "TOTAL A PAGAR", lo que llegue
+   * antes.
+   *
+   * Es la pieza que mantiene coherente todo lo que se le muestra al cliente. Un
+   * comprobante puede cubrir VARIAS pólizas; si la placa se buscara en todo el
+   * documento y el monto se tomara del "TOTAL A PAGAR" (que es la SUMA de todas
+   * las líneas), el correo mezclaría la póliza de una línea con la placa de otra
+   * y con el total de todas. Todo lo específico de la póliza sale de este bloque.
+   */
+  function bloqueDetalle(t) {
+    var re = /\b0[0-9]{3}[A-Z]{3}[0-9]{6,}\b/gi, m, ini = -1, sig = -1;
+    while ((m = re.exec(t)) !== null) {
+      if (ini === -1) ini = m.index;
+      else { sig = m.index; break; }
+    }
+    if (ini === -1) return '';
+    var fin = sig !== -1 ? sig : t.length;
+    var tot = t.search(/TOTAL A PAGAR/i);
+    if (tot > ini && tot < fin) fin = tot;
+    return t.slice(ini, fin);
+  }
+
+  /**
+   * Placa: dentro del paréntesis de la línea de detalle, con relleno a la
    * izquierda. Devuelve { placa, incierta }.
+   *
+   * Se busca SOLO en el bloque de la póliza elegida: barrer el documento entero
+   * traía la placa de otra línea cuando la primera no seguía el patrón AAA999.
    */
   function extractPlaca(t) {
+    var ambito = bloqueDetalle(t) || t;
     var re = /\(([A-Z0-9]{5,})\)/g, m, cands = [];
-    while ((m = re.exec(t)) !== null) cands.push(m[1]);
+    while ((m = re.exec(ambito)) !== null) cands.push(m[1]);
 
     for (var i = 0; i < cands.length; i++) {
       var fin = cands[i].match(/([A-Z]{3}[0-9]{3})$/);      // AAA999 al final: el caso normal
@@ -121,15 +149,17 @@ var RenovacionParse = (function () {
   }
 
   /**
-   * Período PAGADO: las dos primeras fechas después del n.º de póliza
+   * Período PAGADO: las dos primeras fechas de la línea de detalle
    * ("... 30/08/2026 30/11/2026 11/09/2026 ..." → desde, hasta; la tercera es
    * la fecha límite de pago, que este correo no usa: el recibo ya está pagado).
    */
   function extractPeriodo(t) {
-    var ancla = t.search(/\b0[0-9]{3}[A-Z]{3}[0-9]{6,}\b/i);
-    if (ancla === -1) ancla = t.search(/DETALLE/i);
-    var trozo = ancla === -1 ? t : t.slice(ancla);
-    var fechas = trozo.match(/\b\d{2}\/\d{2}\/\d{4}\b/g) || [];
+    var ambito = bloqueDetalle(t);
+    if (!ambito) {
+      var ancla = t.search(/DETALLE/i);
+      ambito = ancla === -1 ? t : t.slice(ancla);
+    }
+    var fechas = ambito.match(/\b\d{2}\/\d{2}\/\d{4}\b/g) || [];
     return { desde: fechas[0] || '', hasta: fechas[1] || '' };
   }
 
@@ -172,7 +202,21 @@ var RenovacionParse = (function () {
     return simbolo + n.toLocaleString('de-DE', { minimumFractionDigits: dec, maximumFractionDigits: dec });
   }
 
+  /**
+   * Monto de LA PÓLIZA que se le va a nombrar al cliente.
+   *
+   * Con una sola póliza, "TOTAL A PAGAR" es esa misma línea y es el dato más
+   * confiable. Con VARIAS, el total es la suma de todas: usarlo pondría en el
+   * correo un monto que no corresponde a la póliza mencionada, así que se lee
+   * el monto de dentro de la línea de detalle.
+   */
   function extractMonto(t) {
+    var varias = contarPolizas(t) > 1;
+    if (varias) {
+      var bloque = bloqueDetalle(t);
+      var b = bloque && bloque.match(/[₡$]\s*([\d]{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?)/);
+      if (b) return parseMonto(b[1]);
+    }
     var m = t.match(/TOTAL A PAGAR:?\s*[₡$]?\s*([\d.,]+)/i);
     if (!m) m = t.match(/[₡$]\s*([\d]{1,3}(?:[.,]\d{3})*(?:[.,]\d{2})?)/);
     return m ? parseMonto(m[1]) : NaN;
@@ -220,6 +264,7 @@ var RenovacionParse = (function () {
     extractFechaPago: extractFechaPago,
     extractMoneda: extractMoneda,
     extractMonto: extractMonto,
+    bloqueDetalle: bloqueDetalle,
     parseMonto: parseMonto,
     fmtMonto: fmtMonto,
     contarPolizas: contarPolizas,

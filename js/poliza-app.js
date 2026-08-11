@@ -348,6 +348,20 @@
   document.addEventListener('DOMContentLoaded', function () {
     // Perfil del agente (multi-agente). Si no hay, se usan los defaults de CFG.
     try { if (typeof loadProfile === 'function') { var p = loadProfile(); if (p) applyProfile(p); } } catch (e) {}
+
+    // 🔴 Sin perfil configurado, CFG conserva los defaults del dueño y el correo
+    // saldría firmado con SU nombre y SU licencia SUGESE. La consola principal ya
+    // obliga a configurarlo (app.js abre el modal ⚙); esta sub-página no tiene ⚙,
+    // así que manda de vuelta al inicio a configurarlo.
+    try {
+      if (typeof isFirstTime === 'function' && isFirstTime()) {
+        showToast('Configurá tu perfil de agente antes de enviar correos.', 'error');
+        var bs = $('btnSend'); if (bs) bs.disabled = true;
+        setTimeout(function () { location.href = '../'; }, 2500);
+        return;
+      }
+    } catch (e) {}
+
     try { if (typeof initTokenClient === 'function') initTokenClient(); } catch (e) {}
 
     $('fileInput').addEventListener('change', function (e) {

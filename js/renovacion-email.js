@@ -65,7 +65,7 @@ function buildRenovacionWaUrl(params) {
   var placa  = String(p.placa || '').trim();
   var guia   = String(p.urlGuia || '').trim() || _renovAsistenciaUrl();
 
-  // "Su póliza 0101AUT… (placa BRJ665) continúa activa…". Sin número de póliza
+  // "Su póliza 0101AUT… (placa BXY123) continúa activa…". Sin número de póliza
   // la frase entera desaparece en vez de quedar colgando; sin placa se va solo
   // el paréntesis.
   var ident = '';
@@ -129,7 +129,9 @@ function buildRenovacionEmail(params) {
   var web      = String(CFG.WEBSITE == null ? '' : CFG.WEBSITE).replace(/^https?:\/\//i, '').trim();
   var logoUrl  = CFG.LOGO_URL   || 'https://cotizador.appsegurosdigitales.com/img/ins-logo.png';
 
-  var siteFallback = web ? ('https://' + web) : '';
+  // Escapado UNA vez: entra crudo a tres href (assistUrl / viajeUrl / estUrl) y
+  // el resto del archivo ya pasa todo por e() o _safe().
+  var siteFallback = web ? e('https://' + web) : '';
   // El botón de la guía lleva la URL LARGA a propósito: armar el correo no debe
   // depender de una llamada de red al acortador. El corto es cosa del WhatsApp,
   // donde el cliente ve la dirección cruda.
@@ -137,7 +139,7 @@ function buildRenovacionEmail(params) {
   var viajeUrl  = _safe(CFG.XSELL_VIAJE_URL) || siteFallback;
   var estUrl    = _safe(CFG.XSELL_ESTUDIANTIL_URL) || siteFallback;
 
-  // "su vehículo TOYOTA YARIS 2019 placa BRJ665" / "su vehículo placa BRJ665"
+  // "su vehículo TOYOTA YARIS 2019 placa BXY123" / "su vehículo placa BXY123"
   var vehFrase = 'su vehículo' +
     (vehiculo ? ' <b style="color:#0c2340;">' + e(vehiculo) + '</b>' : '') +
     (placa ? ' placa <b style="color:#0c2340;">' + e(placa) + '</b>' : '');

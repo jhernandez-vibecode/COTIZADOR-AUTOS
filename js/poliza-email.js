@@ -152,7 +152,9 @@ function buildPolizaActivaEmail(params) {
   // Links saneados (solo http/https). Si un cross-sell viene vacío, cae al sitio
   // del agente — PERO solo si el agente tiene web propia. Si no la tiene, queda ''
   // (el botón se oculta abajo) en lugar de arrastrar el sitio del owner.
-  var siteFallback = web ? ('https://' + web) : '';
+  // Escapado UNA vez: entra crudo a tres href (assistUrl / viajeUrl / estUrl) y
+  // el resto del archivo ya pasa todo por e() o _safe().
+  var siteFallback = web ? e('https://' + web) : '';
   // El botón de asistencia es el CTA central: nunca lo dejamos con href vacío
   // (ASSIST_URL trae un default real, así que en la práctica siempre resuelve).
   var assistUrl = e(_assistUrl()) || siteFallback || '#';

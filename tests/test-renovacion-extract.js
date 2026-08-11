@@ -60,7 +60,7 @@ eq('A.polizas',        a.polizasEncontradas, 1);
 
 // ---------- Muestra B: semestre, placa con relleno de LETRAS ----------
 // El campo es de ancho fijo y el relleno no siempre son ceros: en las muestras
-// reales apareció "(PAR00ZZS111)". La placa es el sufijo AAA999.
+// reales apareció "(PQR00ZWT456)". La placa es el sufijo AAA999.
 var b = R.extractAll(comprobante({
   num: 'R202608108000002', nombre: 'MORA VEGA LUCIA', poliza: '0101AUT200000002',
   placa: 'PQR00ZWT456', desde: '27/08/2026', hasta: '27/02/2027', limite: '10/09/2026',
@@ -101,9 +101,48 @@ eq('usd.moneda',     usd.moneda, 'USD');
 eq('usd.monto',      usd.monto, 1250);
 eq('usd.montoTexto', usd.montoTexto, '$1.250');
 
-// ---------- Comprobante con 2 pólizas: se avisa, no se adivina ----------
-var dos = comprobante() + ' 0101AUT300000003 Seguros Automotores - 01/09/2026 01/12/2026 12/09/2026 ₡50,000.00 (00000DEF456) Renovación';
-eq('dos-polizas', R.extractAll(dos).polizasEncontradas, 2);
+// ---------- Comprobante con 2 pólizas: todo sale de la MISMA línea ----------
+// El "TOTAL A PAGAR" es la SUMA de las dos lineas; usarlo aqui pondria en el
+// correo un monto que no corresponde a la poliza que se le nombra al cliente.
+var dosLineas = CAB +
+  'Comprobante de Pago Nº R202608108000003 Nombre del asegurado: MORA VEGA LUCIA ' +
+  'Tipo identificación: Cédula Física Nacional Estado: Pagado ' +
+  'Número de identificación 100000000 Moneda: Colones ' +
+  'Fecha de aviso 10/08/2026 Fecha de Pago: 10/08/2026 ' + COLS +
+  '0101AUT100000001 Seguros Automotores - 30/08/2026 30/11/2026 11/09/2026 ₡92,555.00 (00000BXY123) Renovación ' +
+  '0101AUT300000003 Seguros Automotores - 01/09/2026 01/12/2026 12/09/2026 ₡50,000.00 (00000DEF456) Renovación ' +
+  'TOTAL A PAGAR: ₡142,555.00' + PIE;
+var dos = R.extractAll(dosLineas);
+eq('dos-polizas-cuenta',  dos.polizasEncontradas, 2);
+eq('dos-polizas-poliza',  dos.poliza, '0101AUT100000001');   // la primera linea
+eq('dos-polizas-placa',   dos.placa,  'BXY123');             // placa de ESA linea, no de la otra
+eq('dos-polizas-monto',   dos.monto,  92555);                // NO el total 142.555
+eq('dos-polizas-desde',   dos.periodoDesde, '30/08/2026');
+eq('dos-polizas-hasta',   dos.periodoHasta, '30/11/2026');
+
+// Con UNA sola poliza el monto sigue saliendo de "TOTAL A PAGAR" (el dato mas
+// confiable del formulario).
+eq('una-poliza-usa-total', R.extractAll(comprobante({ monto: '92,555.00', montoTotal: '92,555.00' })).monto, 92555);
+
+// La placa NO se busca en todo el documento: si la linea elegida trae una placa
+// en formato raro, se devuelve ESA marcada como incierta, sin saltar a la de la
+// linea siguiente.
+var placaRaraPrimera = CAB +
+  'Comprobante de Pago Nº R202608108000004 Nombre del asegurado: MORA VEGA LUCIA ' +
+  'Tipo identificación: Cédula Física Nacional Estado: Pagado Moneda: Colones ' +
+  'Fecha de Pago: 10/08/2026 ' + COLS +
+  '0101AUT100000001 Seguros Automotores - 30/08/2026 30/11/2026 11/09/2026 ₡92,555.00 (0000CL612977) Renovación ' +
+  '0101AUT300000003 Seguros Automotores - 01/09/2026 01/12/2026 12/09/2026 ₡50,000.00 (00000DEF456) Renovación ' +
+  'TOTAL A PAGAR: ₡142,555.00' + PIE;
+var prp = R.extractAll(placaRaraPrimera);
+eq('placa-no-salta-de-linea', prp.placa, '0000CL612977');
+ok('placa-no-salta-marcada',  prp.placaIncierta === true);
+
+// bloqueDetalle: recorta desde la poliza hasta la siguiente / TOTAL A PAGAR
+var bloque = R.bloqueDetalle(dosLineas);
+ok('bloque-empieza-en-poliza', bloque.indexOf('0101AUT100000001') === 0);
+ok('bloque-no-trae-la-otra',   bloque.indexOf('0101AUT300000003') === -1);
+ok('bloque-no-trae-total',     bloque.indexOf('TOTAL A PAGAR') === -1);
 
 // ---------- No es un comprobante de pago ----------
 var otro = R.extractAll('CONDICIONES PARTICULARES Seguro Voluntario de Automóviles Póliza: 0101AUT999999999');

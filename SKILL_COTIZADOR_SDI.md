@@ -57,8 +57,8 @@ description: >
 >
 > ### El formulario del INS (INS-F-1011060), verificado contra 2 comprobantes reales
 > A4 595×842 (**no** Letter como la cotización), 1 página, **100% texto** — sin tablas-imagen. Dos trampas:
-> - **La placa viene con relleno de ancho fijo y NO siempre son ceros:** las muestras reales traían `(00000BRJ665)` y
->   `(PAR00ZZS111)` — 11 caracteres las dos, placa real al final. Se reconoce el sufijo `AAA999`; cualquier otro
+> - **La placa viene con relleno de ancho fijo y NO siempre son ceros:** las muestras reales traían `(00000BXY123)` y
+>   `(PQR00ZWT456)` — 11 caracteres las dos, placa real al final. Se reconoce el sufijo `AAA999`; cualquier otro
 >   formato (placas numéricas viejas, CL, motos) se devuelve **crudo con `placaIncierta=true`** y la app avisa. No se
 >   inventa un recorte.
 > - **El período del comprobante es el PERÍODO PAGADO, no el año-póliza:** las muestras traían un trimestre
@@ -82,7 +82,33 @@ description: >
 > claro (`popup_closed` / `popup_failed_to_open`) y un flag `listo` evita doble resolución. Beneficia a las **3**
 > pantallas de envío.
 >
-> ### Tests: 14 archivos / 396 checks
+> ### 🔴 Lo que cazó la revisión adversarial ANTES del push (9 hallazgos, 13 descartados)
+> Los tests estaban en verde y el módulo parecía listo. Un panel de 4 lentes con verificación adversarial encontró
+> esto, que ninguna prueba manual habría visto:
+> - **El bypass del guard D7 por apilado de archivos (ALTA).** `onFiles` apilaba siempre y `extractFromBest` se
+>   quedaba con el PRIMER PDF que calificara. Camino real: el agente carga el comprobante de A (Pagado), se da cuenta
+>   de que era otro cliente, toca "← Volver" y carga el de B (Pendiente) → seguía viendo los datos de A, la caja
+>   verde de A y **el guard dejaba pasar el comprobante de B**, que además viajaba adjunto. Arreglo: **cargar por el
+>   paso 1 empieza de cero** (`limpiarCarga()`), "← Volver" limpia, y quitar el PDF fuente de la lista borra los
+>   datos que salieron de él. **Regla general: si una pantalla sostiene un guard, el guard tiene que morir con el
+>   dato que lo justificaba.**
+> - **El monto no era el de la póliza que se nombra (ALTA).** `TOTAL A PAGAR` es la SUMA de las líneas; con un
+>   comprobante de 2 pólizas el correo mostraba póliza de la línea 1 y monto de todas. Ahora `bloqueDetalle()`
+>   recorta la línea elegida y de ahí salen placa, período y monto; `TOTAL A PAGAR` solo se usa con una sola póliza.
+>   La placa tampoco se busca ya en todo el documento (traía la de otra línea si la primera no era `AAA999`).
+> - **Datos de clientes reales en comentarios del código (ALTA).** Habían quedado el nombre de una asegurada, dos
+>   placas y dos números de póliza reales en comentarios de `renovacion-extract.js` / `renovacion-email.js`, más un
+>   placeholder con el nombre de pila real en el HTML. **Netlify sirve el JS tal cual, sin build ni minificación:
+>   eso era dato de cliente publicado.** Reemplazados por los inventados de los tests. Regla: los comprobantes
+>   reales no entran al repo **ni citados en un comentario**.
+> - **Ediciones del agente pisadas (MEDIA):** `fillCompose` corría en cada "Continuar" y borraba el asunto o el
+>   destinatario corregido al volver 3 → 2 → 3. Ahora respeta lo que el agente tocó (`dataset.touched`).
+> - **Sub-páginas sin guard de perfil (MEDIA):** sin perfil configurado, CFG conserva los defaults del dueño y el
+>   correo salía firmado con SU nombre y SU licencia SUGESE. La consola principal ya obligaba a configurarlo; las
+>   sub-páginas no tienen ⚙. Corregido en `/renovaciones/` **y en `/polizas-activas/`**, que tenía el mismo hueco.
+> - **`siteFallback` sin escapar (BAJA):** entraba crudo a tres `href`. Corregido en los dos módulos de correo.
+>
+> ### Tests: 14 archivos / 409 checks
 > `test-renovacion-extract.js` (51) y `test-renovacion-email.js` (78) son nuevos. Las fixtures reproducen la
 > estructura exacta del formulario con **datos inventados**: los comprobantes reales traen nombres y cédulas de
 > clientes y **no entran al repo**. La verificación contra los 2 PDF reales se corrió aparte, fuera del repo.
