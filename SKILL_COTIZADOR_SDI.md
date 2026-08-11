@@ -22,6 +22,32 @@ description: >
 > Hay una tercera copia espejo en `C:/Users/segur/Downloads/SKILL_COTIZADOR_SDI.md`
 > (⚠️ Downloads lo barren los limpiadores de disco — la del repo es la que manda).
 
+> ## ✅ NUEVO — 10 ago 2026 (tarde): varios recibos en un correo — el plan familiar
+> Tras el smoke ("todo ok"), JC preguntó lo que faltaba: *"qué pasa cuando es un cliente con dos recibos o un plan
+> familiar que a veces tienes hasta 5 o más recibos"*. Se verificó corriendo el código: la app leía **solo el primer
+> comprobante** — adjuntaba los 5 PDF pero el correo hablaba de una póliza y mostraba **₡92.555 de un total de
+> ₡316.755**. Ahora se cargan todos juntos y sale **un correo** con la tabla de recibos y el total.
+>
+> **Las 4 decisiones que cerró JC:**
+> - **D1 — un correo con todos, y a varios destinatarios.** El campo "Para" acepta correos separados por coma, para
+>   que en un plan familiar el mismo correo le llegue al esposo y a la esposa. Se **sanean CR/LF** antes del MIME.
+> - **D2 — o están todos pagados, o no se envía.** Literal: *"el envío de los recibos es solo cuando todos están
+>   pagados, no existe esa opción"*. El guard exige que TODOS digan Pagado; el que no, se nombra y hay que quitarlo.
+>   **No hay forma de forzarlo.**
+> - **D3 — titulares distintos NO es un error, es el plan familiar.** Los recibos vienen a nombre de esposo, esposa e
+>   hijos. No se bloquea ni se separa: el agente indica el **dueño del plan** (a quien se dirige el correo) y la tabla
+>   lleva columna **"Asegurado"**, que aparece solo cuando los titulares difieren.
+> - **D4 — al salir sin avisar por WhatsApp se pregunta**, con opción de continuar igual.
+>
+> **Pantalla:** la vista 2 pasó a "¿a quién se le envía?" (dueño del plan) + **lista de recibos**, cada uno con su
+> estado, sus campos editables y su ✕. Quitar un recibo **saca también su PDF** de los adjuntos —y al revés—, porque
+> mandar un comprobante que el correo no menciona confunde al cliente. El total se recalcula al corregir un monto.
+> **Vista 4 con tres botones:** 1 *Enviar otro recibo — mismo cliente* (conserva correo y saludo), 2 WhatsApp, y
+> aparte en gris *Enviar a otro cliente*.
+>
+> **Con UN recibo todo queda EXACTAMENTE como JC lo aprobó**: `buildRenovacionEmail` sigue aceptando los campos
+> sueltos además de `recibos:[]`, así que los 80 checks anteriores pasaron sin tocarlos. Tests: **437 checks**.
+>
 > ## ✅ NUEVO — 10 ago 2026: Módulo "Renovación confirmada" (`/renovaciones/`) — el tercer envío
 > JC: *"se me ocurrió agregarle una opción al cotizador, un módulo para enviarle al cliente por correo y después por
 > WA el recibo de renovación y un recordatorio de las asistencias vigentes así como el link de qué hacer en caso de
