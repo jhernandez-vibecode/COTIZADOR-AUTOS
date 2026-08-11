@@ -272,29 +272,33 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
         Póliza activa
       </a>
+      <a class="rail-item" href="renovaciones/" style="animation-delay:.10s">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16l-3-2-2 2-2-2-2 2-2-2Z"/><path d="M9 8h6"/><path d="M9 12h6"/></svg>
+        Renovación confirmada
+      </a>
 
       <div class="rail-sec">Mi control</div>
-      <button type="button" class="rail-item" id="btnStats" style="animation-delay:.10s">
+      <button type="button" class="rail-item" id="btnStats" style="animation-delay:.14s">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M7 15l3.5-4 3 2.5L20 7"/></svg>
         Estadísticas
       </button>
-      <button type="button" class="rail-item" id="btnHistory" style="animation-delay:.14s">
+      <button type="button" class="rail-item" id="btnHistory" style="animation-delay:.18s">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 8v4l3 2"/></svg>
         Historial
       </button>
 
       <div class="rail-sec">Consulta</div>
-      <a class="rail-item" href="cancelacion/" style="animation-delay:.18s">
+      <a class="rail-item" href="cancelacion/" style="animation-delay:.22s">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="2" width="16" height="20" rx="2"/><path d="M8 6h8"/><path d="M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15v3"/></svg>
         Cancelación anticipada
       </a>
-      <a class="rail-item" href="marcas-recargo/" target="_blank" rel="noopener" style="animation-delay:.22s">
+      <a class="rail-item" href="marcas-recargo/" target="_blank" rel="noopener" style="animation-delay:.26s">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h18M3 12h18M3 19h18"/><path d="M8 5v14"/></svg>
         Marcas con recargo <span class="rail-ext" aria-hidden="true">↗</span>
       </a>
 
       <div class="rail-sec">Cuenta</div>
-      <button type="button" class="rail-item" id="btnSettings" style="animation-delay:.26s">
+      <button type="button" class="rail-item" id="btnSettings" style="animation-delay:.30s">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1Z"/></svg>
         Configuración
       </button>
@@ -653,8 +657,10 @@
        toca la app se agrega una linea aca. -->
   <footer class="app-foot">
     <details>
-      <summary>Última actualización: 7 ago 2026 — la app estrena la imagen de Seguros Digitales SDI</summary>
+      <summary>Última actualización: 10 ago 2026 — nueva pantalla para enviar el comprobante de una renovación pagada</summary>
       <ul>
+        <li><b>10 ago 2026</b> — <b>Pantalla nueva: “Renovación confirmada”.</b> Cuando un cliente ya pagó la renovación, se arrastra el <b>comprobante de pago del INS</b> y la app lee sola el número de póliza, la placa, el período pagado y el monto. El correo que recibe el cliente no le cobra nada: le <b>confirma</b> que su pago se aplicó, le adjunta el comprobante y le deja lo que de verdad ocupa — qué hacer paso a paso si tiene un accidente o una avería, los teléfonos de emergencia y su guía a un clic. Al final aparece el botón para avisarle también por WhatsApp. Por seguridad, la pantalla <b>solo deja enviar comprobantes que digan “Pagado”</b>: así nunca se le confirma a un cliente un pago que todavía no entró.</li>
+        <li><b>10 ago 2026</b> — Si al autorizar Gmail se cierra la ventana de Google por error, la app ahora lo avisa y se puede reintentar. Antes se quedaba “pensando” para siempre y había que recargar.</li>
         <li><b>7 ago 2026</b> — <b>Letra nueva en toda la consola.</b> El logotipo estrena su propia tipografía y los títulos de las pantallas pasaron a acompañarla, así el logo y la app se leen como una sola cosa. Los montos y las placas ahora usan una letra de ancho fijo, para que queden alineados en columna y sean más fáciles de comparar de un vistazo.</li>
         <li><b>7 ago 2026</b> — <b>La app estrena la imagen de la marca.</b> Donde antes había un cuadradito con las letras “SDI” ahora está el <b>logotipo de verdad</b>, con su barra de cuatro colores corregida para que quede a la misma altura que las letras. El encabezado conserva su azul oscuro de siempre y ahora lleva abajo una línea con los cuatro colores de la marca. En la <b>guía que recibe el cliente</b> se corrigió el logotipo del pie, que por error decía “Seguros Digitales INS” — el logo del INS sigue arriba, como debe ser.</li>
         <li><b>7 ago 2026</b> — Ajustes al menú recién estrenado: si la ventana quedaba baja (pantalla chica o con el zoom subido), <b>Configuración se salía de la pantalla</b> y no había forma de llegar; ahora el menú se desplaza por dentro. Además se aclararon los textos del menú, que se leían muy tenues sobre el fondo azul oscuro —incluida la línea de tu licencia.</li>

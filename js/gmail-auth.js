@@ -40,7 +40,12 @@ function initTokenClient() {
   S.tokenClient = google.accounts.oauth2.initTokenClient({
     client_id: CFG.CLIENT_ID,
     scope:     CFG.GMAIL_SCOPE,
-    callback:  function () {} // se sobreescribe en getToken() para resolver la promesa
+    callback:  function () {},      // se sobreescribe en getToken() para resolver la promesa
+    // Sin error_callback, GIS NO avisa cuando el popup no llega a abrirse o el
+    // usuario lo cierra: `callback` nunca corre, la promesa de getToken() queda
+    // pendiente para siempre y la pantalla se queda "Enviando..." hasta que el
+    // agente recarga. Tambien se sobreescribe por solicitud.
+    error_callback: function () {}
   });
 
   return S.tokenClient;
@@ -60,14 +65,35 @@ function getToken() {
   initTokenClient();
 
   return new Promise(function (resolve, reject) {
+    // Una sola resolucion: si el popup se cierra DESPUES de conceder el token,
+    // los dos callbacks podrian dispararse.
+    var listo = false;
+
     // Sobrescribimos el callback dinamicamente para esta solicitud
     S.tokenClient.callback = function (response) {
+      if (listo) return;
+      listo = true;
       if (response.error) {
         reject(new Error('OAuth error: ' + response.error + (response.error_description ? ' - ' + response.error_description : '')));
         return;
       }
       S.accessToken = response.access_token;
       resolve(response.access_token);
+    };
+
+    // El popup no se abrio o el agente lo cerro sin autorizar. Sin esto la
+    // promesa nunca se resuelve NI se rechaza y la app queda colgada.
+    S.tokenClient.error_callback = function (err) {
+      if (listo) return;
+      listo = true;
+      var tipo = (err && err.type) || '';
+      reject(new Error(
+        tipo === 'popup_closed'
+          ? 'Se cerro la ventana de Google sin autorizar. Volve a intentarlo.'
+          : tipo === 'popup_failed_to_open'
+            ? 'El navegador bloqueo la ventana de Google. Permiti las ventanas emergentes de este sitio y reintenta.'
+            : 'No se pudo autorizar con Google' + (tipo ? ' (' + tipo + ')' : '') + '. Reintenta.'
+      ));
     };
 
     try {

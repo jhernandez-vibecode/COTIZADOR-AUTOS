@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Renovación confirmada — Cotizador SDI</title>
+
+  <link rel="icon" type="image/svg+xml" href="../img/favicon.svg" />
+
+  <!-- Fuentes (mismas que la app) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+
+  <!-- Estilos compartidos del cotizador (look "Nativo") -->
+  <link rel="stylesheet" href="../css/styles.css" />
+
+  <style>
+    /* Extras específicos del módulo de renovaciones */
+    .doc-list { margin: 0; padding: 0; list-style: none; }
+    .doc-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border: 1px solid var(--gray-200, #e5e7eb);
+      border-radius: 8px; margin-bottom: 8px; background: #fff;
+    }
+    .doc-ico { font-size: 18px; line-height: 1; }
+    .doc-meta { flex: 1; min-width: 0; }
+    .doc-name { font-size: 13px; font-weight: 600; color: var(--navy, #0c2340); word-break: break-word; }
+    .doc-size { font-size: 11px; color: var(--gray-500, #64748b); }
+    .doc-badge { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+    .doc-badge.up { background: #dbeafe; color: #1e40af; }
+    .doc-remove { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 18px; line-height: 1; padding: 2px 6px; border-radius: 6px; }
+    .doc-remove:hover { background: #fee2e2; }
+    .doc-empty { font-size: 13px; color: var(--gray-500, #64748b); text-align: center; padding: 18px 0; }
+    .preview-frame { width: 100%; height: 640px; border: 1px solid var(--gray-200, #e5e7eb); border-radius: 8px; background: #f5f5f5; }
+    .back-link { color: #fff; text-decoration: none; font-size: 13px; opacity: .8; display: inline-flex; align-items: center; gap: 6px; }
+    .back-link:hover { opacity: 1; }
+    .pol-note { font-size: 12px; color: var(--gray-500, #64748b); margin: -6px 0 14px; }
+
+    /* Aviso del estado del comprobante (guard D7: solo recibos ya pagados) */
+    .estado-box {
+      font-size: 13px; line-height: 1.55; border-radius: 10px;
+      padding: 12px 16px; margin-bottom: 16px; border: 1px solid;
+    }
+    .estado-box.ok   { background: #ecfdf5; border-color: #a7f3d0; color: #065f46; }
+    .estado-box.bad  { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+    .estado-box.warn { background: #fffbeb; border-color: #fcd34d; color: #78350f; }
+    .estado-box b    { color: inherit; }
+
+    /* Cifras y fechas del comprobante, en letra de ancho fijo: quedan alineadas
+       en columna y es más fácil cotejarlas contra el PDF. */
+    #f-monto, #f-desde, #f-hasta, #f-fpago, #f-poliza, #f-placa, #f-comprobante {
+      font-family: 'JetBrains Mono', Consolas, monospace;
+    }
+  </style>
+</head>
+<body class="page-renovacion">
+
+  <!-- ======================== HEADER ======================== -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand">
+        <svg class="brand-mark" viewBox="0 0 184 90" role="img" aria-label="Seguros Digitales SDI">
+        <path d="M36.076 74.656Q28.04 74.656 23.038 72.483Q18.036 70.31 15.535 66.456Q13.034 62.602000000000004 12.624 57.763999999999996H19.02Q19.266 61.7 21.644 64.119Q24.022 66.538 27.917 67.686Q31.812 68.834 36.486000000000004 68.834Q43.374 68.834 47.392 66.415Q51.410000000000004 63.996 51.410000000000004 59.24Q51.410000000000004 56.370000000000005 49.401 54.607Q47.392 52.843999999999994 44.071 51.696Q40.75 50.548 36.814 49.605000000000004Q32.878 48.662 28.901 47.596000000000004Q24.924 46.53 21.603 44.89Q18.282 43.25 16.273 40.667Q14.264 38.083999999999996 14.264 34.065999999999995Q14.264 27.424 19.389000000000003 23.241999999999997Q24.514000000000003 19.059999999999995 34.682 19.059999999999995Q41.897999999999996 19.059999999999995 46.572 21.232999999999997Q51.246 23.406 53.583 26.932Q55.92 30.458 56.166000000000004 34.558H49.852000000000004Q49.36 30.458 45.751999999999995 27.628999999999998Q42.144 24.799999999999997 34.682 24.799999999999997Q30.09 24.799999999999997 27.22 25.701999999999998Q24.35 26.604 22.833000000000002 28.038999999999998Q21.316000000000003 29.473999999999997 20.783 31.031999999999996Q20.25 32.589999999999996 20.25 33.984Q20.25 36.69 22.259 38.370999999999995Q24.268 40.052 27.589 41.159Q30.91 42.266 34.928 43.168Q38.946 44.07 42.923 45.177Q46.9 46.284 50.221000000000004 47.965Q53.542 49.646 55.551 52.269999999999996Q57.56 54.894 57.56 58.994Q57.56 66.538 51.82 70.59700000000001Q46.08 74.656 36.076 74.656ZM64.572 74.0V19.716H87.45Q92.28800000000001 19.716 96.757 21.561Q101.226 23.406 104.752 26.932Q108.27799999999999 30.458 110.328 35.459999999999994Q112.378 40.461999999999996 112.378 46.858000000000004Q112.378 53.254 110.328 58.256Q108.27799999999999 63.257999999999996 104.752 66.78399999999999Q101.226 70.31 96.757 72.155Q92.28800000000001 74.0 87.45 74.0ZM70.722 68.178H87.20400000000001Q93.02600000000001 68.178 97.29 65.226Q101.554 62.274 103.891 57.436Q106.22800000000001 52.598 106.22800000000001 46.858000000000004Q106.22800000000001 41.036 103.891 36.198Q101.554 31.36 97.29 28.448999999999998Q93.02600000000001 25.537999999999997 87.20400000000001 25.537999999999997H70.722ZM119.71799999999999 74.0V19.716H125.868V74.0Z" fill="#FFFFFF"/>
+
+        <g transform="translate(143.87, 19.06)">
+        <rect x="0" y="0.0" width="30.0" height="6.15" rx="1.5" fill="#0369A1"/>
+        <rect x="0" y="16.48" width="30.0" height="6.15" rx="1.5" fill="#0D9488"/>
+        <rect x="0" y="32.96" width="30.0" height="6.15" rx="1.5" fill="#EA580C"/>
+        <rect x="0" y="49.45" width="30.0" height="6.15" rx="1.5" fill="#C9A227"/>
+        </g>
+        </svg>
+        <div class="brand-sep"></div>
+        <div>
+          <div class="brand-title">Renovación confirmada</div>
+          <div class="brand-subtitle">Comprobante de pago al cliente</div>
+        </div>
+      </div>
+
+      <nav class="step-nav" id="stepNav">
+        <div class="step active" data-step="1"><div class="step-dot">1</div><span>Cargar comprobante</span></div>
+        <div class="step-sep"></div>
+        <div class="step" data-step="2"><div class="step-dot">2</div><span>Revisar datos</span></div>
+        <div class="step-sep"></div>
+        <div class="step" data-step="3"><div class="step-dot">3</div><span>Redactar correo</span></div>
+        <div class="step-sep"></div>
+        <div class="step" data-step="4"><div class="step-dot">4</div><span>Enviado</span></div>
+      </nav>
+
+      <div style="display:flex;align-items:center;gap:8px;">
+        <a href="../" class="back-link" title="Volver al cotizador">← Cotizador</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- ======================== VISTA 1 · CARGAR COMPROBANTE ======================== -->
+    <section class="view active" id="view1">
+      <div class="card">
+        <h2 class="card-title">1 · Cargar el comprobante de pago</h2>
+        <p class="pol-note">Arrastrá el <b>Comprobante de Pago</b> que emite el INS cuando el cliente ya pagó la renovación. Leo el número de póliza, la placa, el período pagado y el monto; el PDF se adjunta tal cual al correo.</p>
+
+        <label class="drop-zone" id="dropZone" for="fileInput">
+          <div class="drop-zone-icon">📄</div>
+          <div class="drop-zone-title">Arrastrá el PDF o hacé clic para seleccionar</div>
+          <div class="drop-zone-hint">Podés agregar otros documentos después, en el paso 2</div>
+          <input type="file" id="fileInput" accept="application/pdf" multiple />
+        </label>
+
+        <div class="progress" id="progressWrap"><div class="progress-bar" id="progressBar"></div></div>
+        <div class="progress-label" id="progressLabel"></div>
+      </div>
+    </section>
+
+    <!-- ======================== VISTA 2 · REVISAR DATOS ======================== -->
+    <section class="view" id="view2">
+      <div class="grid-2">
+
+        <!-- Datos extraídos (editables) -->
+        <div class="card">
+          <h2 class="card-title">2 · Datos del comprobante</h2>
+          <p class="pol-note">Revisá lo que leí del PDF y corregí lo que haga falta — todo es editable.</p>
+
+          <!-- Guard D7: esta pantalla es solo para recibos YA pagados -->
+          <div class="estado-box warn" id="estadoBox">Cargá un comprobante para revisar su estado.</div>
+
+          <div class="grid-2" style="gap:12px;">
+            <div class="form-row">
+              <label class="form-label">N° de comprobante</label>
+              <input class="form-control" id="f-comprobante" />
+            </div>
+            <div class="form-row">
+              <label class="form-label">N° de póliza</label>
+              <input class="form-control" id="f-poliza" />
+            </div>
+          </div>
+          <div class="form-row">
+            <label class="form-label">Nombre del cliente</label>
+            <input class="form-control" id="f-cliente" />
+          </div>
+          <div class="grid-2" style="gap:12px;">
+            <div class="form-row">
+              <label class="form-label">Nombre para el saludo</label>
+              <input class="form-control" id="f-saludo" placeholder="Ej: Ruth Mary" />
+            </div>
+            <div class="form-row">
+              <label class="form-label required">Correo del cliente</label>
+              <input class="form-control" id="f-correo" type="email" placeholder="correo@ejemplo.com" />
+            </div>
+          </div>
+          <div class="grid-2" style="gap:12px;">
+            <div class="form-row">
+              <label class="form-label">Vehículo <span style="font-weight:400;color:var(--gray-500);">(opcional)</span></label>
+              <input class="form-control" id="f-vehiculo" placeholder="MARCA MODELO AÑO" />
+            </div>
+            <div class="form-row">
+              <label class="form-label">Placa</label>
+              <input class="form-control" id="f-placa" />
+            </div>
+          </div>
+          <div class="grid-2" style="gap:12px;">
+            <div class="form-row">
+              <label class="form-label">Período pagado — desde</label>
+              <input class="form-control" id="f-desde" placeholder="dd/mm/aaaa" />
+            </div>
+            <div class="form-row">
+              <label class="form-label">Hasta</label>
+              <input class="form-control" id="f-hasta" placeholder="dd/mm/aaaa" />
+            </div>
+          </div>
+          <div class="grid-2" style="gap:12px;">
+            <div class="form-row">
+              <label class="form-label">Monto pagado</label>
+              <input class="form-control" id="f-monto" placeholder="₡0" />
+            </div>
+            <div class="form-row">
+              <label class="form-label">Fecha de pago</label>
+              <input class="form-control" id="f-fpago" placeholder="dd/mm/aaaa" />
+            </div>
+          </div>
+
+          <div class="btn-group">
+            <button class="btn btn-secondary" id="btnBack2">← Volver</button>
+            <button class="btn btn-primary" id="btnNext2">Continuar →</button>
+          </div>
+        </div>
+
+        <!-- Adjuntos -->
+        <div class="card">
+          <h2 class="card-title">Documentos a adjuntar</h2>
+          <p class="pol-note">El comprobante va adjunto tal cual lo emitió el INS. Podés sumar otro documento si hace falta.</p>
+          <ul class="doc-list" id="docList"></ul>
+          <label class="btn btn-secondary" for="fileInput2" style="cursor:pointer;display:inline-block;margin-top:4px;">+ Agregar más PDF</label>
+          <input type="file" id="fileInput2" accept="application/pdf" multiple hidden />
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ======================== VISTA 3 · REDACTAR CORREO ======================== -->
+    <section class="view" id="view3">
+      <div class="grid-2">
+
+        <div class="card">
+          <h2 class="card-title">3 · Configurar correo</h2>
+
+          <div class="form-row">
+            <label class="form-label">Para</label>
+            <input class="form-control" id="m-to" type="email" />
+          </div>
+          <div class="form-row">
+            <label class="form-label">Asunto</label>
+            <input class="form-control" id="m-subject" />
+          </div>
+          <div class="form-row">
+            <label class="form-label">Nombre en el saludo</label>
+            <input class="form-control" id="m-saludo" />
+          </div>
+          <div class="form-row">
+            <label class="form-label">Nota personal (opcional)</label>
+            <textarea class="form-control" id="m-nota" rows="3" placeholder="Mensaje adicional para el cliente..."></textarea>
+          </div>
+          <div class="form-row">
+            <span class="pill">📎 <span id="m-count">0</span> documento(s) adjunto(s)</span>
+          </div>
+
+          <button class="btn btn-send" id="btnSend">Autorizar Gmail y Enviar</button>
+
+          <div class="btn-group">
+            <button class="btn btn-secondary" id="btnBack3">← Volver</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2 class="card-title">Vista previa</h2>
+          <iframe id="preview" class="preview-frame" sandbox="allow-same-origin allow-popups"></iframe>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ======================== VISTA 4 · ÉXITO ======================== -->
+    <section class="view" id="view4">
+      <div class="card success-box">
+        <div class="success-icon">✓</div>
+        <div class="success-title">¡Comprobante enviado!</div>
+        <div class="success-msg" id="successMsg">El correo de renovación confirmada fue enviado exitosamente.</div>
+        <!-- ORDEN aprobado por JC el 10 ago 2026 (decisión D2): primero el correo
+             con el recibo, después el WhatsApp. Igual que /polizas-activas/ y al
+             revés que el cotizador, donde el WhatsApp va primero a propósito. -->
+        <div class="success-actions">
+          <button class="btn btn-primary btn-step" id="btnReset"><span class="btn-step-num">1</span> Enviar otro comprobante</button>
+          <div id="waShareWrap" style="display:none;flex-direction:column;gap:8px;text-align:left;">
+            <label class="form-label" for="m-wa-cliente" style="margin-bottom:0;">WhatsApp del cliente <span style="font-weight:400;color:var(--gray-500);">(opcional)</span></label>
+            <input class="form-control" id="m-wa-cliente" type="tel" inputmode="numeric" placeholder="8888-8888" autocomplete="off" />
+            <span style="font-size:11px;color:var(--gray-500);line-height:1.4;">Si lo ponés, el botón abre el chat directo del cliente con el aviso. Si lo dejás vacío, elegís el contacto dentro de WhatsApp.</span>
+            <a class="btn btn-send btn-step" id="btnWhatsApp" href="#" target="_blank" rel="noopener"
+               style="text-decoration:none;"><span class="btn-step-num">2</span> Avisar al cliente por WhatsApp</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ======================== LIBRERÍAS EXTERNAS ======================== -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <!-- ======================== CÓDIGO PROPIO (orden crítico) ======================== -->
+  <!-- poliza-extract y poliza-email se cargan porque el módulo REUSA sus piezas
+       probadas: los helpers de nombre y readPdfText (vía RenovacionParse) y la
+       ficha del agente en la guía de emergencias (polizaAsistenciaUrl). No se
+       duplica nada. -->
+  <script src="../js/toast.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/state.js"></script>
+  <script src="../js/agent-profile.js"></script>
+  <script src="../js/shortlink.js"></script>
+  <script src="../js/poliza-extract.js"></script>
+  <script src="../js/poliza-email.js"></script>
+  <script src="../js/renovacion-extract.js"></script>
+  <script src="../js/renovacion-email.js"></script>
+  <script src="../js/mime-builder.js"></script>
+  <script src="../js/gmail-auth.js"></script>
+  <script src="../js/renovacion-app.js"></script>
+
+  <script>
+    if (window.pdfjsLib) { pdfjsLib.GlobalWorkerOptions.workerSrc = CFG.PDFJS_WORKER; }
+  </script>
+
+</body>
+</html>

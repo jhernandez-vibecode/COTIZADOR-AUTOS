@@ -22,6 +22,71 @@ description: >
 > Hay una tercera copia espejo en `C:/Users/segur/Downloads/SKILL_COTIZADOR_SDI.md`
 > (⚠️ Downloads lo barren los limpiadores de disco — la del repo es la que manda).
 
+> ## ✅ NUEVO — 10 ago 2026: Módulo "Renovación confirmada" (`/renovaciones/`) — el tercer envío
+> JC: *"se me ocurrió agregarle una opción al cotizador, un módulo para enviarle al cliente por correo y después por
+> WA el recibo de renovación y un recordatorio de las asistencias vigentes así como el link de qué hacer en caso de
+> evento"*. Se presentaron mockups (regla del 6 ago) y **a mitad de la revisión JC corrigió el concepto**, que es lo
+> que ordena todo el módulo:
+>
+> ### 🔑 El recibo llega YA PAGADO ⇒ no es un correo de cobro
+> *"Es un recibo de renovación ya pagado, entonces es más bien un correo para transmitir confianza y seguridad en la
+> renovación, brindar información valiosa de qué hacer en caso de reclamos y coberturas de asistencia por ejemplo."*
+> La v1 (monto por pagar, fecha límite, formas de pago) se descartó entera. El correo **confirma** el pago, adjunta el
+> comprobante y dedica el centro a la **mini-guía de evento** (911 → inspector 800-800-8000 → asistencia 800-800-8001,
+> con la advertencia de no acordar con terceros) y a las asistencias que la renovación mantiene vivas. Cierra con
+> "Gracias por renovar su confianza". Los tests vigilan que NO reaparezca lenguaje de cobro (`NO-pague-antes`,
+> `NO-formas-pago`, `NO-monto-pendiente`).
+>
+> ### Las 7 decisiones que cerró JC
+> **D1** extracción directa del PDF con campos editables · **D2** vista 4 con 1 = Enviar otro comprobante, 2 = WhatsApp
+> (igual que Pólizas Activas, al revés que el cotizador) · **D3** fondo propio siguiendo el estándar de la casa
+> (`body.page-renovacion` crema `#fdf6ec`) · **D4** **cross-sell SÍ va siempre** — *"aunque es de confianza es un
+> contacto con gente que a veces solo le enviamos algo una vez al año o dos"* · **D5** nombre "Renovación confirmada" ·
+> **D6** "Nota de **su** agente" (usted) · **D7** guard de estado.
+> Ajustes suyos sobre el mockup: el "Adjunto encontrará…" en **párrafo aparte con aire** (no un bloque pegado) y el
+> **logotipo SDI del pie en la variante actualizada** (kit v1.2, barra de 4 colores, la misma que estrenó el header).
+>
+> ### 🔴 D7 — el guard de estado: solo recibos ya pagados
+> El correo AFIRMA que el pago fue aplicado. Enviarlo sobre un comprobante que no está pagado sería confirmarle al
+> cliente un pago inexistente, y quien responde es el agente con su licencia SUGESE. JC: *"Deja el Pagado, solo es para
+> enviar recibos que después de haberlos pagado"*. Implementado con **triple barrera** en `renovacion-app.js`:
+> el botón Continuar se deshabilita, `btnNext2` revalida y `send()` revalida otra vez (nadie llega al envío por un
+> atajo). El estado NO es editable en la vista 2 — sale del PDF y punto.
+> - dice "Pagado" → se envía · dice **otra cosa** → bloqueo sin escape · **no se pudo leer** → casilla explícita
+>   "Confirmo que este recibo ya está pagado" (el flujo no se muere por un PDF que el parser no entendió).
+>
+> ### El formulario del INS (INS-F-1011060), verificado contra 2 comprobantes reales
+> A4 595×842 (**no** Letter como la cotización), 1 página, **100% texto** — sin tablas-imagen. Dos trampas:
+> - **La placa viene con relleno de ancho fijo y NO siempre son ceros:** las muestras reales traían `(00000BRJ665)` y
+>   `(PAR00ZZS111)` — 11 caracteres las dos, placa real al final. Se reconoce el sufijo `AAA999`; cualquier otro
+>   formato (placas numéricas viejas, CL, motos) se devuelve **crudo con `placaIncierta=true`** y la app avisa. No se
+>   inventa un recorte.
+> - **El período del comprobante es el PERÍODO PAGADO, no el año-póliza:** las muestras traían un trimestre
+>   (30/08→30/11) y un semestre (27/08→27/02). El correo nunca dice "vigencia anual" (test `NO-vigencia-anual`).
+> - La 3ª fecha de la fila es la **fecha límite de pago** y NO se usa: el recibo ya está pagado. El parser toma solo
+>   las dos primeras (test `A.periodoHasta`).
+> - El PDF **no trae** marca/modelo ni correo del cliente → vehículo es opcional manual y el correo lo digita el agente.
+> - Montos: el INS escribe formato US (`92,555.00`). Se formatea con **'de-DE'** (es-CR separa miles con ESPACIO y el
+>   cliente lee "92 555" como si faltara algo) → `₡92.555`.
+>
+> ### Economía de código (lo pidió JC explícitamente)
+> ~1.100 líneas nuevas, **0 dependencias**, **0 cambios en la Netlify Function** (el tipo `/a` del acortador ya
+> existía). La sub-página **reusa** `poliza-extract.js` (normalize/titleCase/sugerirNombrePila/readPdfText vía
+> `RenovacionParse`) y `poliza-email.js` (`polizaAsistenciaUrl`/`polizaWaIntl`), así la ficha del agente y el saludo
+> no derivan en dos copias. Sin pdf-lib (el comprobante va tal cual) y sin history.js (v1 sin historial, igual que
+> Pólizas Activas). NO adjunta los documentos estándar: el cliente ya los recibió al emitirse la póliza.
+>
+> ### De paso: `gmail-auth.js` estrena `error_callback`
+> GIS no avisaba cuando el popup no abría o el agente lo cerraba: `callback` nunca corría, la promesa de `getToken()`
+> quedaba **pendiente para siempre** y la pantalla se quedaba "Enviando…" hasta recargar. Ahora rechaza con mensaje
+> claro (`popup_closed` / `popup_failed_to_open`) y un flag `listo` evita doble resolución. Beneficia a las **3**
+> pantallas de envío.
+>
+> ### Tests: 14 archivos / 396 checks
+> `test-renovacion-extract.js` (51) y `test-renovacion-email.js` (78) son nuevos. Las fixtures reproducen la
+> estructura exacta del formulario con **datos inventados**: los comprobantes reales traen nombres y cédulas de
+> clientes y **no entran al repo**. La verificación contra los 2 PDF reales se corrió aparte, fuera del repo.
+>
 > ## ✅ NUEVO — 7 ago 2026: Menú lateral "Consola" — los 6 accesos ahora con NOMBRE (commit `8ecb819`)
 > JC pidió rediseñar el menú "y ponerlas lateralmente con el nombre y un icono". Se le presentaron **dos mockups**
 > (A "Consola", oscura y compacta; B "Estación", clara y con descripciones) y eligió la **A**: *"Consola A por mucho"*.
