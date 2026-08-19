@@ -8,7 +8,13 @@
 // parte a la mitad; el cliente termina abriendo un link roto o el
 // explicador sin sus datos. Ahora el enlace es:
 //
-//     https://cotizador.appsegurosdigitales.com/g/K7M4PQ2XRB   (~54 chars)
+//     https://guia.appsegurosdigitales.com/g/K7M4PQ2XRB   (~49 chars)
+//
+// 19 ago 2026 - el host dejo de ser el del navegador del agente y pasa a
+// ser fijo (SHORTLINK_HOST en js/shortlink.js): al cliente le llegaba
+// "cotizador-...netlify.app" en el aviso de que hacer ante un accidente.
+// guia.appsegurosdigitales.com es un ALIAS de este mismo sitio, asi que los
+// ids viejos siguen resolviendo desde cualquiera de los hosts.
 //
 // 7 ago 2026 — el mismo problema en /polizas-activas/: el aviso de
 // "su poliza esta lista" manda el Centro de Asistencia con la ficha del

@@ -18,6 +18,30 @@
  * el agente comparta. El largo funciona igual, solo se ve feo.
  */
 
+/**
+ * Host que ve el CLIENTE en el enlace corto (19 ago 2026).
+ *
+ * Antes se armaba con location.origin, o sea con el dominio por el que
+ * hubiera entrado el agente: al cliente le llegaba
+ * "cotizador-segurosdigitalesins-sdi.netlify.app/a/..." dentro de un mensaje
+ * que le habla de que hacer ante un accidente. La palabra "cotizador" ahi no
+ * corresponde -- lo que va a abrir es una guia -- y el dominio de Netlify no
+ * le dice nada a nadie. Va FIJO: por donde entre el agente es asunto nuestro.
+ *
+ * Sirve las DOS rutas (/g la guia de la cotizacion y /a la de emergencias),
+ * por eso se llama "guia" y no "asistencia".
+ *
+ * OJO: tiene que ser un ALIAS DE ESTE MISMO SITIO en Netlify (Domain
+ * management -> Add domain alias), no otro sitio. De eso dependen dos cosas:
+ * que el POST de aca abajo siga siendo relativo (mismo origen, sin CORS ni
+ * preflight) y que el id guardado en los Blobs resuelva igual desde
+ * cualquiera de los hosts. Si se apunta a un host que no sea alias, los
+ * enlaces salen MUERTOS y el fallback de mas abajo NO lo cubre: para
+ * entonces la Function ya respondio 200 y el link parece bueno. Tocar esta
+ * constante solo despues de comprobar que el host responde.
+ */
+var SHORTLINK_HOST = 'https://guia.appsegurosdigitales.com';
+
 /** Tope de espera: la pestaña de WhatsApp ya esta abierta esperando esto. */
 var SHORTLINK_TIMEOUT_MS = 6000;
 var SHORTLINK_RE_ID = /^[A-Z2-9]{10}$/;
@@ -52,7 +76,7 @@ async function acortarEnlace(urlLarga, tipo) {
     if (!r.ok) throw new Error('HTTP ' + r.status);
     var data = await r.json();
     if (!data || !SHORTLINK_RE_ID.test(data.id || '')) throw new Error('id invalido');
-    return location.origin + ruta + '/' + data.id;
+    return SHORTLINK_HOST + ruta + '/' + data.id;
   } catch (e) {
     console.warn('[cotizador] no se pudo acortar el enlace; se comparte el largo', e);
     return larga;
@@ -61,5 +85,5 @@ async function acortarEnlace(urlLarga, tipo) {
 
 // Export para tests Node (sin romper el browser).
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { acortarEnlace: acortarEnlace };
+  module.exports = { acortarEnlace: acortarEnlace, SHORTLINK_HOST: SHORTLINK_HOST };
 }
