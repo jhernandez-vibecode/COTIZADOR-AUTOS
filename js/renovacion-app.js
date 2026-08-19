@@ -33,6 +33,9 @@
     recibos: [],   // comprobantes leídos: [{ srcName, data }] (data = RenovacionParse.extractAll)
     cliente: {},   // { nombre, saludo } del dueño del plan
     waEnviado: false,
+    canal: 'ambos',   // 'ambos' = correo + WhatsApp | 'wa' = solo WhatsApp
+    urlGuiaCorta: '', // alias /a de la guia, pedido una vez por sesion
+    pidiendoGuia: false,
     step: 1
   };
 
@@ -76,6 +79,10 @@
 
   /** Deja la carga como recién abierta. `conservarCliente` mantiene a quién se le envía. */
   function limpiarCarga(conservarCliente) {
+    // El canal vuelve SIEMPRE a correo+WhatsApp. Si quedara pegado en 'wa', al
+    // siguiente cliente -que si tiene correo- no le llegaria nada y el agente
+    // no se enteraria: el flujo terminaria igual, en la pantalla de exito.
+    setCanal('ambos');
     state.files = [];
     state.recibos = [];
     if (!conservarCliente) state.cliente = {};
@@ -428,6 +435,124 @@
     return crudo.split(/[,;\s]+/).map(function (s) { return s.trim(); }).filter(Boolean);
   }
 
+  // ==================== Canal del aviso (19 ago 2026) ====================
+  // Opción A aprobada por JC: hay clientes que se avisan SOLO por WhatsApp,
+  // porque no tienen correo o no lo usan. El canal se elige arriba del paso 3 y
+  // la pantalla se acomoda sola: los campos del correo llevan data-canal="correo"
+  // y los del aviso data-canal="wa".
+
+  function esSoloWa() { return state.canal === 'wa'; }
+
+  /**
+   * El alias corto de la guia se pide UNA sola vez y se guarda: el enlace /a
+   * depende solo de la ficha del agente -- no del cliente --, asi que es el
+   * mismo para todos los avisos y el servidor devuelve siempre el mismo id.
+   *
+   * Sirve para que la vista previa muestre el enlace QUE DE VERDAD SE MANDA.
+   * Sin esto previsualizaba la URL larga (~180 caracteres) y el mensaje salia
+   * con la corta: el agente veia una cosa y el cliente recibia otra.
+   */
+  function precargarGuiaCorta() {
+    if (state.urlGuiaCorta || state.pidiendoGuia) return;
+    state.pidiendoGuia = true;
+    acortarEnlace(_renovAsistenciaUrl(), 'a').then(function (corto) {
+      state.pidiendoGuia = false;
+      state.urlGuiaCorta = corto || '';
+      if (esSoloWa()) updatePreview();
+      refreshWaBtn();
+    }).catch(function () {
+      // Si falla, waParams deja urlGuia vacio y el mensaje cae al enlace largo:
+      // acortar nunca puede impedir que el agente avise.
+      state.pidiendoGuia = false;
+    });
+  }
+
+  /** Cambia el canal y acomoda el paso 3 completo (campos, boton y vista previa). */
+  function setCanal(canal) {
+    state.canal = canal === 'wa' ? 'wa' : 'ambos';
+    var wa = esSoloWa();
+
+    var ops = document.querySelectorAll('[data-canal-op]');
+    for (var i = 0; i < ops.length; i++) {
+      var on = ops[i].getAttribute('data-canal-op') === state.canal;
+      ops[i].classList.toggle('is-on', on);
+      ops[i].setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+
+    var zonas = document.querySelectorAll('[data-canal]');
+    for (var j = 0; j < zonas.length; j++) {
+      var soloCorreo = zonas[j].getAttribute('data-canal') === 'correo';
+      zonas[j].hidden = wa ? soloCorreo : !soloCorreo;
+    }
+
+    var btn = $('btnSend');
+    if (btn) btn.textContent = wa ? 'Preparar aviso por WhatsApp' : 'Autorizar Gmail y Enviar';
+
+    var bajarTxt = $('bajarPdfTxt');
+    if (bajarTxt) {
+      bajarTxt.textContent = state.files.length > 1
+        ? ('Descargar los ' + state.files.length + ' comprobantes')
+        : 'Descargar comprobante';
+    }
+
+    if (wa) precargarGuiaCorta();
+    updatePreview();
+  }
+
+  /**
+   * Deja el comprobante en la maquina para arrastrarlo al chat: WhatsApp no
+   * permite adjuntar archivos desde un enlace, asi que sin correo este es el
+   * unico camino por el que el cliente recibe su PDF.
+   */
+  function bajarComprobantes() {
+    if (!state.files.length) { showToast('No hay comprobante cargado.', 'error'); return; }
+    state.files.forEach(function (f, i) {
+      // Escalonadas: varias descargas en el mismo tick las bloquea el navegador.
+      setTimeout(function () {
+        var url = URL.createObjectURL(f.file);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = f.name;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 5000);
+      }, i * 400);
+    });
+    showToast(state.files.length > 1
+      ? ('Descargando ' + state.files.length + ' comprobantes…')
+      : 'Descargando el comprobante…', 'info');
+  }
+
+  /**
+   * Salida del paso 3 cuando NO hay correo: no se envia nada, se pasa derecho al
+   * aviso. El guard de estado ya corrio en send(), igual que en el camino largo.
+   */
+  function irAvisoWa() {
+    var pre = $('m-wa-pre');
+    var v4 = $('m-wa-cliente');
+    if (pre && v4) v4.value = pre.value;   // el telefono se digito en el paso 3
+
+    state.waEnviado = false;
+    refreshWaBtn();
+
+    var wrap = $('waShareWrap');
+    if (wrap) wrap.style.display = 'flex';
+    // Pedir el telefono otra vez seria pedir dos veces lo mismo.
+    var telWrap = $('waTelWrap');
+    if (telWrap) telWrap.hidden = true;
+
+    var t = $('successTitle');
+    if (t) t.textContent = '¡Renovación confirmada!';
+    var m = $('successMsg');
+    if (m) {
+      m.textContent = 'No se envió correo. Avisale por WhatsApp y adjuntale '
+        + (state.recibos.length > 1 ? 'los comprobantes' : 'el comprobante') + ' en el chat.';
+    }
+
+    setStep(4);
+  }
+
   function currentEmailParams() {
     return {
       nombrePila: ($('m-saludo') ? $('m-saludo').value.trim() : '') || state.cliente.saludo || state.cliente.nombre || '',
@@ -447,6 +572,12 @@
   }
 
   function updatePreview() {
+    // Previsualizar un correo que no se va a enviar seria enganar al agente.
+    if (esSoloWa()) {
+      var prev = $('waPrev');
+      if (prev) prev.textContent = buildRenovacionWaTexto(waParams());
+      return;
+    }
     var fr = $('preview');
     if (fr) fr.srcdoc = buildRenovacionEmail(currentEmailParams());
   }
@@ -454,8 +585,14 @@
   /** Datos del aviso por WhatsApp: los MISMOS del correo + el teléfono. */
   function waParams() {
     var p = currentEmailParams();
+    // En solo-WhatsApp el telefono se digita en el paso 3 (m-wa-pre); en el
+    // camino con correo, en la pantalla de exito (m-wa-cliente).
+    var pre = $('m-wa-pre');
     var waIn = $('m-wa-cliente');
-    p.telCliente = waIn ? waIn.value : '';
+    p.telCliente = (esSoloWa() && pre && pre.value.trim()) ? pre.value : (waIn ? waIn.value : '');
+    p.sinCorreo = esSoloWa();
+    // Vacio = todavia no llego el alias corto: buildRenovacionWaTexto cae al largo.
+    if (state.urlGuiaCorta) p.urlGuia = state.urlGuiaCorta;
     return p;
   }
 
@@ -488,15 +625,21 @@
       showToast('Solo se pueden enviar recibos ya pagados.', 'error');
       setStep(2); return;
     }
+    if (!state.files.length) {
+      showToast('Adjuntá el comprobante de pago.', 'error');
+      return;
+    }
+
+    // Solo WhatsApp: no hay correo que enviar. Se salta el envio y se pasa
+    // derecho al aviso -- pero DESPUES del guard de estado de arriba, que es el
+    // que impide confirmarle a un cliente un pago que no entro.
+    if (esSoloWa()) { irAvisoWa(); return; }
+
     var para = destinatarios();
     var mal = para.filter(function (c) { return !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c); });
     if (!para.length || mal.length) {
       showToast(mal.length ? ('Revisá este correo: ' + mal[0]) : 'Ingresá el correo del cliente.', 'error');
       $('m-to').focus(); return;
-    }
-    if (!state.files.length) {
-      showToast('Adjuntá el comprobante de pago.', 'error');
-      return;
     }
 
     var btn = $('btnSend');
@@ -533,6 +676,10 @@
         } else { throw err; }
       }
 
+      var t4 = $('successTitle');
+      if (t4) t4.textContent = '¡Comprobante enviado!';
+      var telWrap4 = $('waTelWrap');
+      if (telWrap4) telWrap4.hidden = false;
       $('successMsg').textContent = (state.recibos.length > 1
         ? 'Los ' + state.recibos.length + ' comprobantes fueron enviados a '
         : 'El comprobante de renovación fue enviado a ') + para.join(' y ') + '.';
@@ -575,6 +722,8 @@
     if (!confirmarSalida()) return;
     limpiarCarga(true);
     if ($('waShareWrap')) $('waShareWrap').style.display = 'none';
+    if ($('waTelWrap')) $('waTelWrap').hidden = false;
+    if ($('m-wa-pre')) $('m-wa-pre').value = '';
     state.waEnviado = false;
     if ($('m-nota')) $('m-nota').value = '';
     if ($('m-wa-cliente')) $('m-wa-cliente').value = '';
@@ -593,6 +742,8 @@
     if ($('m-nota')) $('m-nota').value = '';
     if ($('m-wa-cliente')) $('m-wa-cliente').value = '';
     if ($('waShareWrap')) $('waShareWrap').style.display = 'none';
+    if ($('waTelWrap')) $('waTelWrap').hidden = false;
+    if ($('m-wa-pre')) $('m-wa-pre').value = '';
     ['m-to', 'm-subject', 'm-saludo'].forEach(function (id) {
       var el = $(id); if (el) { el.value = ''; delete el.dataset.touched; }
     });
@@ -672,6 +823,18 @@
 
     var waIn = $('m-wa-cliente');
     if (waIn) waIn.addEventListener('input', function () { refreshWaBtn(); });
+
+    var sw = $('canalSw');
+    if (sw) sw.addEventListener('click', function (ev) {
+      var op = ev.target && ev.target.closest ? ev.target.closest('[data-canal-op]') : null;
+      if (op) setCanal(op.getAttribute('data-canal-op'));
+    });
+
+    var bajar = $('btnBajarPdf');
+    if (bajar) bajar.addEventListener('click', bajarComprobantes);
+
+    var waPre = $('m-wa-pre');
+    if (waPre) waPre.addEventListener('input', function () { updatePreview(); refreshWaBtn(); });
 
     var waBtn = $('btnWhatsApp');
     if (waBtn) waBtn.addEventListener('click', shareWa);

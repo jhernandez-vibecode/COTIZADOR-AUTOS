@@ -276,6 +276,35 @@ ok('corto-fallback-nulo',  msgDe(Object.assign({ urlGuia: null }, waBase)).index
 // El correo lleva la URL LARGA a propósito: armarlo no puede depender de la red.
 ok('correo-usa-larga', html.indexOf('appasistenciaseguroautos.netlify.app') !== -1);
 
+// ---------- SOLO WhatsApp: el mensaje no puede inventar un correo (19 ago 2026) ----------
+// Opción A aprobada por JC: hay clientes que se avisan solo por WhatsApp. Si el
+// texto siguiera diciendo "le acabo de enviar a su correo", el cliente esperaria
+// un correo que no existe — y con él, su comprobante.
+var CORREO_FRASE = 'Le acabo de enviar a su correo';
+var soloWa  = msgDe(Object.assign({ sinCorreo: true }, waBase));
+var conMail = msgDe(waBase);
+
+ok('sinwa-no-miente',   soloWa.indexOf(CORREO_FRASE) === -1);
+ok('sinwa-comparte',    soloWa.indexOf('Aquí mismo le comparto el comprobante de pago oficial del INS.') !== -1);
+ok('sinwa-mismo-saludo', soloWa.indexOf('¡Carlos, su renovación está confirmada!') === 0);
+ok('sinwa-guia',        soloWa.indexOf('appasistenciaseguroautos.netlify.app') !== -1 || soloWa.indexOf('/a/') !== -1);
+ok('sinwa-cierre',      soloWa.indexOf('Gracias por renovar su confianza') !== -1);
+// La poliza va ANTES del comprobante: sin envio, lo que confirma la renovacion
+// es la póliza activa.
+ok('sinwa-orden',       soloWa.indexOf('continúa activa') < soloWa.indexOf('Aquí mismo le comparto'));
+
+// Lo aprobado el 10 ago no se toca: por default (con correo) el texto es el de siempre.
+ok('conmail-intacto',   conMail.indexOf(CORREO_FRASE) !== -1);
+ok('conmail-sin-aqui',  conMail.indexOf('Aquí mismo le comparto') === -1);
+
+// Plural con varios recibos, en las dos redacciones.
+var multiWa = msgDe({ nombrePila: 'Ana Lucía', recibos: tresRecibos, sinCorreo: true });
+ok('sinwa-plural',      multiWa.indexOf('Aquí mismo le comparto los comprobantes de pago oficiales del INS.') !== -1);
+ok('sinwa-plural-3',    multiWa.indexOf('Sus 3 pólizas continúan activas') !== -1);
+
+// El texto y la URL salen de la misma fuente: dos copias derivarian.
+ok('texto-igual-url',   _re.buildRenovacionWaTexto(waBase) === conMail);
+
 console.log('   mensaje WhatsApp: ' + waMsg.length + ' chars con el link largo → ' + msgCorto.length + ' con el corto');
 console.log('\nrenovacion-email: ' + pass + ' OK, ' + fail + ' FAIL');
 process.exit(fail ? 1 : 0);

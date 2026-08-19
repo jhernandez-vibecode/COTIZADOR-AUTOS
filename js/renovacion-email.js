@@ -74,7 +74,8 @@ function _renovWaIntl(v) {
 /**
  * URL de WhatsApp para avisarle al cliente que su renovación quedó confirmada.
  *
- * SIEMPRE web.whatsapp.com/send/ — wa.me corrompe los emojis del mensaje.
+ * Con `sinCorreo` el texto NO afirma que se mandó un correo: ese correo no
+ * existe y el cliente lo esperaría con su comprobante adentro.
  * Con teléfono abre el chat directo; sin teléfono, WhatsApp abre el selector de
  * contactos del agente.
  *
@@ -86,7 +87,7 @@ function _renovWaIntl(v) {
  * @param {object} params - { nombrePila, poliza, placa, telCliente, urlGuia }
  * @returns {string}
  */
-function buildRenovacionWaUrl(params) {
+function buildRenovacionWaTexto(params) {
   var p = params || {};
   var saludo = String(p.nombrePila || '').trim();
   var lista  = _renovRecibos(p);
@@ -111,19 +112,42 @@ function buildRenovacionWaUrl(params) {
     }
   }
 
+  // El plural del comprobante se arma una sola vez: lo usan las dos redacciones.
+  var comprobantes = n > 1
+    ? 'los comprobantes de pago oficiales del INS'
+    : 'el comprobante de pago oficial del INS';
+
+  // SIN CORREO el mensaje NO puede decir "le acabo de enviar a su correo": ese
+  // correo no existe y el cliente lo esperaría con su comprobante adentro. El
+  // orden se invierte a propósito — primero la póliza, después el comprobante —
+  // porque lo que confirma la renovación pasa a ser la póliza activa y no el
+  // envío. WhatsApp no deja adjuntar archivos desde un enlace, así que el PDF lo
+  // arrastra el agente al chat y la pantalla se lo deja descargado para eso.
+  var cuerpo = p.sinCorreo
+    ? ident + 'Aquí mismo le comparto ' + comprobantes + '.\n'
+    : 'Le acabo de enviar a su correo ' + comprobantes + '.\n' + ident;
+
   var msg =
     '¡' + (saludo ? saludo + ', su' : 'Su') + ' renovación está confirmada! ✅🚗\n\n' +
-    'Le acabo de enviar a su correo ' +
-      (n > 1 ? 'los comprobantes de pago oficiales del INS' : 'el comprobante de pago oficial del INS') + '.\n' +
-    ident + '\n' +
+    cuerpo + '\n' +
     'Recuerde: ante un accidente o avería, repórtelo de inmediato. En esta guía tiene los pasos a seguir y los números de asistencia 24/7 a un clic:\n\n' +
     (guia ? '👉 ' + guia + '\n\n' : '') +
     'Gracias por renovar su confianza. Estoy para servirle. 🛡️';
 
+  return msg;
+}
+
+/**
+ * El mismo mensaje, ya envuelto en la URL que abre el chat.
+ *
+ * SIEMPRE web.whatsapp.com/send/ -- wa.me corrompe los emojis.
+ */
+function buildRenovacionWaUrl(params) {
+  var p = params || {};
   var phone = _renovWaIntl(p.telCliente);
   return 'https://web.whatsapp.com/send/?'
     + (phone ? 'phone=' + phone + '&' : '')
-    + 'text=' + encodeURIComponent(msg);
+    + 'text=' + encodeURIComponent(buildRenovacionWaTexto(p));
 }
 
 function buildRenovacionEmail(params) {
@@ -442,6 +466,7 @@ function buildRenovacionEmail(params) {
 // Export para tests Node (sin romper el browser).
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
+    buildRenovacionWaTexto: buildRenovacionWaTexto,
     buildRenovacionEmail: buildRenovacionEmail,
     buildRenovacionWaUrl: buildRenovacionWaUrl
   };

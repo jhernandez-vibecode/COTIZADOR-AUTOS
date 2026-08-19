@@ -338,6 +338,44 @@ ya no existe en `C:/Users/segur/.claude/skills/`).
 
 ## Decisiones recientes
 
+### 19 agosto 2026 — Renovaciones: avisar SOLO por WhatsApp (opción A)
+
+**Lo que pedía JC:** *"a un cliente solo se lo tengo que mandar por wa, actualmente
+para que se habilite la opción primero hay que mandar el correo"*. El botón de
+WhatsApp vivía en la vista 4, a la que solo se llega con `send()` exitoso.
+
+**Lo que decidió la forma de la solución** (salió de leer el código antes de
+dibujar): el comprobante del INS **viaja adjunto al correo**, y WhatsApp no deja
+adjuntar archivos desde un enlace. Sin correo el cliente no recibe el PDF por
+ningún lado — así que la pantalla tiene que dejarlo **descargado** para que el
+agente lo arrastre al chat. Y el mensaje afirmaba "Le acabo de enviar a su correo
+el comprobante": mandarlo tal cual habría sido una mentira al cliente.
+
+**Aprobado sobre mockups navegables** (3 opciones de selector + 2 redacciones del
+mensaje). JC eligió **A** (selector de canal arriba del paso 3) y se implementó
+con la redacción 1 ("Aquí mismo le comparto el comprobante").
+
+**Los tres cuidados que hacen que esto sea seguro:**
+1. **`limpiarCarga()` devuelve el canal a `'ambos'`.** Un modo pegado dejaría al
+   siguiente cliente —que SÍ tiene correo— sin recibir nada, y el flujo
+   terminaría igual en la pantalla de éxito: nadie se entera del error.
+2. **El guard D7 corre ANTES de bifurcar** en `send()`, así que el camino sin
+   correo pasa por el mismo control de "Pagado". Verificado con clic real en el
+   navegador: sin recibos pagados rebota al paso 2.
+3. **`[hidden] { display: none !important; }`**, porque `.wa-nota` es flex y el
+   display le gana al atributo (trampa ya conocida del proyecto).
+
+**También:** `buildRenovacionWaUrl` se partió en `buildRenovacionWaTexto` (el
+texto) + el envoltorio de la URL, para que la vista previa del paso 3 no tenga su
+propia copia del mensaje; y el alias corto `/a` se pide **una vez por sesión** y se
+cachea, porque depende solo de la ficha del agente — sin eso la vista previa
+mostraba el enlace largo y el mensaje salía con el corto.
+
+**Alcance:** solo `/renovaciones/`. `/polizas-activas/` y el cotizador tienen el
+mismo problema y los mismos textos que habría que corregir; JC pidió empezar por
+una pantalla. Tests 14/14, +11 checks. Tag `pre-solo-wa-19ago`.
+
+
 ### 19 agosto 2026 — El enlace corto estrena host propio: guia.appsegurosdigitales.com
 
 **El problema (lo reportó JC con una captura de WhatsApp):** el aviso de
