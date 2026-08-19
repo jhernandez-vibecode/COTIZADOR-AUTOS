@@ -338,6 +338,50 @@ ya no existe en `C:/Users/segur/.claude/skills/`).
 
 ## Decisiones recientes
 
+### 19 agosto 2026 — El enlace corto estrena host propio: guia.appsegurosdigitales.com
+
+**El problema (lo reportó JC con una captura de WhatsApp):** el aviso de
+"renovación confirmada" le llegaba al cliente con el enlace
+`https://cotizador-segurosdigitalesins-sdi.netlify.app/a/VUMLAFUPLK`. Dos
+cosas mal: la palabra "cotizador" no corresponde en un mensaje que le explica
+qué hacer ante un accidente, y el dominio de Netlify no le dice nada a nadie.
+
+**Causa:** `acortarEnlace` (js/shortlink.js) devolvía
+`location.origin + ruta + '/' + id`, o sea el dominio por el que hubiera
+entrado el agente. No estaba roto: reflejaba la barra de direcciones.
+
+**Arreglo:** constante `SHORTLINK_HOST = 'https://guia.appsegurosdigitales.com'`,
+fija. Sirve las dos rutas (`/g` guía de la cotización y `/a` guía de
+emergencias), por eso "guia" y no "asistencia". El enlace bajó de **66 a 49
+caracteres**. Commit `4dab2c3`, tag `pre-host-guia-19ago`.
+
+**Infra (hecha en la consola de Netlify):** `guia.appsegurosdigitales.com`
+agregado como **domain alias** del mismo sitio; `cotizador.appsegurosdigitales.com`
+sigue siendo el primary y no se tocó. El DNS ya era de Netlify (NS1), así que
+el registro lo creó solo. El certificado **no** hubo que renovarlo: es wildcard
+`*.appsegurosdigitales.com`. El alias sirve **directo**, sin 301 al primario.
+
+**🔴 La trampa que casi lo arruina — vale para cualquier proyecto:** apenas
+creado el alias, la raíz daba **200** pero `/a/:id` y `/g/:id` daban **500**,
+mientras los hosts viejos daban 302. En los logs de la Function las peticiones
+al host nuevo **no aparecían** (el edge las cortaba antes) y sus *Endpoints*
+figuraban solo bajo el dominio primario: **el deploy activo se construyó
+cuando el alias no existía**. Se resolvió con **Trigger deploy → Deploy
+project** del mismo commit. Moraleja: *"la página carga" no prueba que la
+Function esté enganchada* — al agregar un dominio hay que probar la RUTA de la
+Function, no la raíz. Y por eso el código se pusheó **después** de verificar
+el host: al revés, los enlaces salen muertos y el fallback no lo cubre (la
+Function ya respondió 200 y el link parece bueno).
+
+**Verificado en producción:** 302 con el destino correcto en los **tres** hosts
+(los enlaces ya enviados no se rompieron), `/g` con id inexistente da 404, y el
+ciclo completo POST+GET devolvió `{"id":"VUMLAFUPLK","reusado":true}` — el
+mismo id de siempre, porque en `/a` el alias depende solo de la ficha del
+agente. Tests: 14/14 en verde, +4 checks nuevos en `test-shortlink.js` (el mock
+arranca desde el dominio "feo" para probar que `location.origin` ya no se
+cuela).
+
+
 ### 28 mayo 2026 — Seccion 4 explicador: solo fila del cliente + etiqueta correcta
 
 **Fix 1 — Mostrar solo la opcion que corresponde al cliente:**
