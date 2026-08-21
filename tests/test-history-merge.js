@@ -20,6 +20,12 @@ global.console = console;
 const src = fs.readFileSync(path.join(__dirname, '..', 'js', 'history.js'), 'utf8');
 eval(src);
 
+// `const` declarado dentro de un eval directo NO se filtra a este scope (las
+// `function` sí), así que el tope se lee del fuente. De paso, el test mira el
+// valor REAL del archivo y no una copia que podría quedar desactualizada.
+const HISTORY_MAX = Number((src.match(/const HISTORY_MAX = (\d+)/) || [])[1]);
+if (!HISTORY_MAX) { console.error('✗ no se pudo leer HISTORY_MAX de history.js'); process.exit(1); }
+
 let pass = 0, fail = 0;
 function test(name, fn) {
   try { fn(); console.log('✓', name); pass++; }
@@ -81,10 +87,34 @@ test('entradas legacy SIN id: no se duplican si son la misma (firma date+placa+e
   eq(m.length, 1, 'misma firma → una sola');
 });
 
-test('tope HISTORY_MAX (100) se respeta al fusionar', () => {
+test('tope HISTORY_MAX por defecto se respeta al fusionar', () => {
   const big = [];
-  for (let i = 0; i < 120; i++) big.push(entry({ id: 'x' + i, date: '2026-07-01T10:00:00.000Z' }));
-  eq(mergeHistories(big, []).length, 100, 'recorta a 100');
+  for (let i = 0; i < HISTORY_MAX + 20; i++) big.push(entry({ id: 'x' + i, date: '2026-07-01T10:00:00.000Z' }));
+  eq(mergeHistories(big, []).length, HISTORY_MAX, 'recorta al tope del navegador');
+});
+
+// 🔴 EL TEST QUE FALTABA EN AGOSTO 2026. Sin él, nada impedía que el respaldo
+// subiera a Drive la lista ya recortada del navegador: así se borró julio.
+test('mergeHistories con Infinity NO recorta (es lo que va a Drive)', () => {
+  const big = [];
+  for (let i = 0; i < HISTORY_MAX + 350; i++) big.push(entry({ id: 'z' + i, date: '2026-07-01T10:00:00.000Z' }));
+  eq(mergeHistories(big, [], Infinity).length, HISTORY_MAX + 350, 'conserva todo');
+});
+
+test('el respaldo conserva lo que el navegador ya soltó (caso julio 2026)', () => {
+  // Drive tiene julio; el navegador ya lo perdió por el tope y solo tiene agosto.
+  const julio  = [];
+  const agosto = [];
+  for (let i = 0; i < 40; i++)  julio.push(entry({ id: 'jul' + i, date: '2026-07-15T10:00:00.000Z' }));
+  for (let i = 0; i < HISTORY_MAX; i++) agosto.push(entry({ id: 'ago' + i, date: '2026-08-15T10:00:00.000Z' }));
+
+  const aDrive = mergeHistories(agosto, julio, Infinity);   // lo que sube driveBackup
+  eq(aDrive.length, HISTORY_MAX + 40, 'Drive acumula agosto + julio');
+  eq(aDrive.some(e => e.id === 'jul0'), true, 'julio sigue en el respaldo');
+
+  // Y con el tope del navegador (lo viejo se ve en Drive, no acá) julio no se sube recortado.
+  const aLocal = mergeHistories(agosto, julio);
+  eq(aLocal.length, HISTORY_MAX, 'el navegador sí recorta');
 });
 
 test('robustez: argumentos no-array no rompen', () => {
@@ -100,9 +130,21 @@ test('replaceHistory guarda y loadHistory lo lee de vuelta', () => {
 
 test('replaceHistory recorta a HISTORY_MAX', () => {
   const big = [];
-  for (let i = 0; i < 130; i++) big.push(entry({ id: 'y' + i }));
+  for (let i = 0; i < HISTORY_MAX + 30; i++) big.push(entry({ id: 'y' + i }));
   replaceHistory(big);
-  eq(loadHistory().length, 100, 'guardó máximo 100');
+  eq(loadHistory().length, HISTORY_MAX, 'guardó máximo HISTORY_MAX');
+});
+
+test('replaceHistory con Infinity guarda todo (restauración desde Drive)', () => {
+  const big = [];
+  for (let i = 0; i < HISTORY_MAX + 30; i++) big.push(entry({ id: 'w' + i }));
+  replaceHistory(big, Infinity);
+  eq(loadHistory().length, HISTORY_MAX + 30, 'sin recorte');
+});
+
+test('el tope del navegador es holgado (>=2000): 100 fue lo que borró julio', () => {
+  if (HISTORY_MAX < 2000) throw new Error('HISTORY_MAX bajó a ' + HISTORY_MAX);
+  eq(true, true, 'tope holgado');
 });
 
 console.log(`\n${pass} pasaron, ${fail} fallaron`);

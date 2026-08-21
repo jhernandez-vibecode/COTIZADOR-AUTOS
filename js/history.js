@@ -55,7 +55,23 @@
  */
 
 const HISTORY_KEY = 'cotizador_sdi_history_v1';
-const HISTORY_MAX = 100;
+
+/**
+ * Tope de cotizaciones que se guardan EN EL NAVEGADOR.
+ *
+ * \🔴 ESTE TOPE NO SE APLICA AL RESPALDO DE DRIVE, Y NO PUEDE VOLVER A
+ * APLICARSE. Hasta el 21 ago 2026 valia 100 y lo respetaban tambien
+ * mergeHistories y driveBackup: al pasar de 100 cotizaciones, el respaldo
+ * automatico fusionaba, recortaba la union y SUBIA ESA LISTA RECORTADA a
+ * Drive — o sea, la red de seguridad borraba el respaldo. Asi desaparecio
+ * julio 2026 y por eso "Restaurar de Drive" no hacia nada: Drive ya traia
+ * las mismas 100 que el navegador. El respaldo es ACUMULATIVO y sin tope.
+ *
+ * 2000 entradas rondan 1,3 MB de los ~5 MB que da localStorage, y a razon
+ * de 1-2 cotizaciones por dia son mas de 3 anios. Si aun asi la cuota se
+ * llena, _persistHistory recorta lo mas viejo del navegador — nunca de Drive.
+ */
+const HISTORY_MAX = 2000;
 
 /**
  * Lee el historial guardado. Devuelve [] ante cualquier problema.
@@ -83,10 +99,43 @@ function saveHistoryEntry(entry) {
     const arr = loadHistory();
     arr.unshift(entry);
     if (arr.length > HISTORY_MAX) arr.length = HISTORY_MAX;
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(arr));
+    _persistHistory(arr);
     _afterHistoryChange();
   } catch (e) {
     console.warn('[history] no se pudo guardar la entrada:', e);
+  }
+}
+
+/**
+ * Guarda la lista en localStorage aguantando la cuota llena. Si el navegador
+ * no acepta el tamanio, recorta las entradas MAS VIEJAS por mitades hasta que
+ * entre, en vez de perder la escritura entera en silencio (que era lo que
+ * pasaba antes: un envio nuevo simplemente no quedaba registrado).
+ *
+ * Lo que se recorta aca se pierde SOLO en este navegador: el respaldo de Drive
+ * no tiene tope y lo conserva, asi que se recupera con "Restaurar de Drive".
+ *
+ * @param {Array<object>} list
+ * @returns {Array<object>} la lista efectivamente guardada
+ */
+function _persistHistory(list) {
+  const arr = Array.isArray(list) ? list : [];
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(arr));
+    return arr;
+  } catch (e) {
+    console.warn('[history] localStorage no acepta el tamanio, recortando lo mas viejo:', e);
+    let n = arr.length;
+    while (n > 1) {
+      n = Math.floor(n / 2);
+      const corte = arr.slice(0, n);
+      try {
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(corte));
+        console.warn('[history] guardadas ' + n + ' de ' + arr.length + ' (el resto sigue en Drive).');
+        return corte;
+      } catch (e2) { /* sigue sin entrar: probamos con la mitad */ }
+    }
+    return arr;
   }
 }
 
@@ -625,17 +674,22 @@ function _dateStamp(e) {
  * Fusiona dos historiales SIN perder datos. Unión por identidad de entrada; si
  * la misma entrada aparece en ambos lados, gana la de `updatedAt` más reciente
  * (así el estado agendada/concretada más nuevo prevalece). El resultado queda
- * ordenado por fecha de envío (más reciente primero) y recortado a HISTORY_MAX.
+ * ordenado por fecha de envío (más reciente primero).
  *
  * Casos que cubre:
  *   - Restaurar tras limpiar el navegador: local vacío + Drive lleno → Drive.
  *   - Dos computadoras: unión de ambas, conservando el estado más avanzado.
  *
+ * 🔴 El tope `cap` es OPCIONAL y sirve solo para lo que se guarda en el
+ * NAVEGADOR. Lo que va a Drive se fusiona con `Infinity` (ver driveBackup):
+ * recortar la unión antes de subirla fue lo que borró julio 2026.
+ *
  * @param {Array<object>} a
  * @param {Array<object>} b
+ * @param {number} [cap=HISTORY_MAX] - tope del resultado; Infinity = sin tope
  * @returns {Array<object>}
  */
-function mergeHistories(a, b) {
+function mergeHistories(a, b, cap) {
   const map = {};
   const add = function (e) {
     if (!e) return;
@@ -647,21 +701,25 @@ function mergeHistories(a, b) {
   (Array.isArray(b) ? b : []).forEach(add);
   const out = Object.keys(map).map(function (k) { return map[k]; });
   out.sort(function (x, y) { return _dateStamp(y) - _dateStamp(x); });
-  if (out.length > HISTORY_MAX) out.length = HISTORY_MAX;
+  const tope = (cap === undefined) ? HISTORY_MAX : cap;
+  if (tope && out.length > tope) out.length = tope;
   return out;
 }
 
 /**
  * Reemplaza TODO el historial guardado por el array dado (ya fusionado).
- * Lo usa la restauración desde Drive. Recorta a HISTORY_MAX. Nunca lanza.
+ * Lo usa la restauración desde Drive. Recorta a `cap` (por defecto
+ * HISTORY_MAX) porque es lo que va al NAVEGADOR. Nunca lanza.
  * NO dispara respaldo (evita un bucle: se restaura, no se vuelve a subir aquí).
  * @param {Array<object>} arr
+ * @param {number} [cap=HISTORY_MAX] - tope; Infinity = guardar todo
  * @returns {boolean} true si se guardó
  */
-function replaceHistory(arr) {
+function replaceHistory(arr, cap) {
   try {
-    const list = (Array.isArray(arr) ? arr : []).slice(0, HISTORY_MAX);
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+    const tope = (cap === undefined) ? HISTORY_MAX : cap;
+    const list = (Array.isArray(arr) ? arr : []).slice(0, tope);
+    _persistHistory(list);
     return true;
   } catch (e) {
     console.warn('[history] no se pudo reemplazar el historial:', e);

@@ -360,7 +360,7 @@ async function driveSyncNow() {
     _refreshOpenLists();
     paintRailAgent();
     const n = (res && res.found) ? res.merged : loadHistory().length;
-    showToast('Respaldo activado. Tu control quedó guardado en tu Google Drive (' + n + ' cotización' + (n === 1 ? '' : 'es') + ').', 'success');
+    showToast('Respaldo activado. Tu control quedó guardado en tu Google Drive (' + n + (n === 1 ? ' cotización' : ' cotizaciones') + ').', 'success');
   } catch (e) {
     console.error('[drive] sync:', e);
     showToast('No se pudo sincronizar con Drive: ' + e.message, 'error');

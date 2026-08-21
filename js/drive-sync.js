@@ -22,8 +22,8 @@
  * API pública (la usa app.js):
  *   - driveBackupEnabled()  -> bool
  *   - driveLastBackup()     -> string ISO (o '')
- *   - driveSync()           -> Promise<{found, merged, restored, profileRestored}>  (interactivo)
- *   - driveRestore([token]) -> Promise<{found, merged, restored, profileRestored}>
+ *   - driveSync()           -> Promise<{found, merged, restored, total, profileRestored}>  (interactivo)
+ *   - driveRestore([token]) -> Promise<{found, merged, restored, total, profileRestored}>
  *   - driveBackup([token])  -> Promise<true>
  *   - scheduleDriveBackup() -> void  (auto-respaldo debounced; silencioso)
  *   - driveResetAuto()      -> void  (reactiva el auto-respaldo tras un fallo)
@@ -198,22 +198,61 @@ function _drivePayload(historyArr) {
  */
 async function driveBackup(token) {
   const t  = token || await getDriveToken();
-  let hist = ensureHistoryIds();
+  const local = ensureHistoryIds();
+  let paraDrive = local;
+  let remoto    = null;
   const id = await _driveFindBackupId(t);
   if (id) {
     try {
       const remote = await _driveReadJson(t, id);
+      remoto = remote;
       if (remote && Array.isArray(remote.history)) {
-        hist = mergeHistories(hist, remote.history);
-        replaceHistory(hist);  // local queda con la unión también
+        // 🔴 SIN TOPE (Infinity). El respaldo de Drive es ACUMULATIVO: guarda
+        // todo lo que existió alguna vez, aunque el navegador solo muestre las
+        // últimas HISTORY_MAX. Fusionar con el tope del navegador y subir ESA
+        // lista recortada fue lo que borró julio 2026 — el respaldo automático
+        // pisaba en Drive las cotizaciones que el navegador ya había soltado.
+        // Si algún día vuelve a aparecer un tope en esta línea, es el mismo bug.
+        paraDrive = mergeHistories(local, remote.history, Infinity);
+        replaceHistory(paraDrive);  // el navegador se queda con las más recientes
       }
     } catch (e) {
       console.warn('[drive] no se pudo leer el respaldo previo, se sube lo local:', e);
     }
   }
-  await _driveWrite(t, _drivePayload(hist));
+  // Si Drive ya tiene exactamente esto, NO se reescribe. Cada escritura crea
+  // una versión nueva del archivo, y Google conserva un número limitado de
+  // versiones: escribir de gusto va empujando las viejas hacia el borrado, que
+  // son justamente las que permiten rescatar algo si algún día se pierde. De
+  // paso ahorra red. `savedAt` cambia siempre, así que se comparan los datos.
+  if (remoto && _mismoContenido(remoto, paraDrive)) {
+    _setDriveLastBackup(new Date().toISOString());
+    return true;
+  }
+
+  await _driveWrite(t, _drivePayload(paraDrive));
   _setDriveLastBackup(new Date().toISOString());
   return true;
+}
+
+/**
+ * ¿El respaldo que hay en Drive ya es igual a lo que íbamos a subir?
+ * Compara historial y perfil; ignora los metadatos (savedAt y demás).
+ * Ante la duda devuelve false: mejor escribir de más que perder un cambio.
+ * @param {object} remoto - el JSON leído de Drive
+ * @param {Array<object>} historial - lo que se subiría
+ * @returns {boolean}
+ */
+function _mismoContenido(remoto, historial) {
+  try {
+    if (!remoto || !Array.isArray(remoto.history)) return false;
+    if (remoto.history.length !== historial.length) return false;
+    const perfil = (typeof loadProfile === 'function') ? loadProfile() : null;
+    return JSON.stringify(remoto.history) === JSON.stringify(historial)
+        && JSON.stringify(remoto.profile || null) === JSON.stringify(perfil || null);
+  } catch (e) {
+    return false;
+  }
 }
 
 /**
@@ -230,8 +269,11 @@ async function driveRestore(token) {
 
   const data     = await _driveReadJson(t, id);
   const incoming = (data && Array.isArray(data.history)) ? data.history : [];
-  const merged   = mergeHistories(loadHistory(), incoming);
+  // Se fusiona SIN tope y el recorte al tope del navegador lo hace
+  // replaceHistory: así lo que no entre acá sigue vivo en Drive.
+  const merged   = mergeHistories(loadHistory(), incoming, Infinity);
   replaceHistory(merged);
+  const enLocal  = loadHistory().length;
 
   // Perfil: solo se restaura si el navegador NO tiene uno (no piso al agente actual).
   let profileRestored = false;
@@ -245,7 +287,9 @@ async function driveRestore(token) {
     }
   } catch (e) { console.warn('[drive] no se pudo restaurar el perfil:', e); }
 
-  return { found: true, restored: incoming.length, merged: merged.length, profileRestored: profileRestored };
+  // `merged` = lo que quedó EN ESTE NAVEGADOR (lo que verá en 🕘 y 📊);
+  // `total` = lo que hay en el respaldo, que puede ser más.
+  return { found: true, restored: incoming.length, merged: enLocal, total: merged.length, profileRestored: profileRestored };
 }
 
 /**
@@ -282,4 +326,58 @@ function scheduleDriveBackup() {
       _driveAutoOff = true;  // no reintentar en bucle; se reactiva al sincronizar
     });
   }, 2500);
+}
+
+// ---------------------------------------------------------------------
+// VERSIONES ANTERIORES DEL RESPALDO (rescate) — 21 ago 2026
+//
+// Google Drive guarda versiones previas de cada archivo. Sirven para
+// recuperar cotizaciones que el respaldo llegó a pisar: hasta hoy, el
+// auto-respaldo subía la lista ya recortada al tope del navegador, así que
+// una cotización vieja podía existir SOLO en una versión anterior.
+//
+// El bug de raíz está corregido (el respaldo ya no recorta nada), pero estas
+// funciones se quedan: son la red de seguridad para cualquier pérdida futura
+// y no le cuestan nada a la app: nadie las llama todavía (las usará la
+// pantalla de rescate, que está en la rama feat/rescate-versiones).
+//
+// Son de SOLO LECTURA sobre Drive. Nada de esto borra ni sobrescribe.
+// ---------------------------------------------------------------------
+
+/**
+ * Lista las versiones anteriores del archivo de respaldo, de la más reciente
+ * a la más vieja. Devuelve [] si no hay respaldo todavía.
+ * @param {string} [token]
+ * @returns {Promise<{fileId:string|null, revisions:Array<{id,modifiedTime,size}>}>}
+ */
+async function driveListRevisions(token) {
+  const t  = token || await getDriveToken();
+  const id = await _driveFindBackupId(t);
+  if (!id) return { fileId: null, revisions: [] };
+
+  const url = CFG.DRIVE_FILES_URL + '/' + id + '/revisions'
+    + '?pageSize=1000&fields=' + encodeURIComponent('revisions(id,modifiedTime,size)');
+  const r = await fetch(url, { headers: { 'Authorization': 'Bearer ' + t } });
+  if (!r.ok) throw await _driveErr(r);
+  const j = await r.json();
+  const revs = (j.revisions || []).slice().sort(function (a, b) {
+    return Date.parse(b.modifiedTime || '') - Date.parse(a.modifiedTime || '');
+  });
+  return { fileId: id, revisions: revs };
+}
+
+/**
+ * Descarga el contenido de UNA versión anterior. No toca nada local.
+ * @param {string} token
+ * @param {string} fileId
+ * @param {string} revisionId
+ * @returns {Promise<object>} el JSON del respaldo de esa fecha
+ */
+async function driveReadRevision(token, fileId, revisionId) {
+  const r = await fetch(
+    CFG.DRIVE_FILES_URL + '/' + fileId + '/revisions/' + revisionId + '?alt=media',
+    { headers: { 'Authorization': 'Bearer ' + token } }
+  );
+  if (!r.ok) throw await _driveErr(r);
+  return await r.json();
 }
