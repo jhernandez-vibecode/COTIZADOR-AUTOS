@@ -22,6 +22,61 @@ description: >
 > Hay una tercera copia espejo en `C:/Users/segur/Downloads/SKILL_COTIZADOR_SDI.md`
 > (⚠️ Downloads lo barren los limpiadores de disco — la del repo es la que manda).
 
+> ## 🔴 NUEVO — 21 ago 2026: el respaldo borraba el historial viejo (julio 2026)
+>
+> **Reporte de JC:** *"otra vez se borro parte del historial y al restaurar el respaldo no hace
+> nada, se borro el historial de julio"*. En 📊: **Enviadas 100** y **un solo mes** en POR MES
+> (Ago 2026). Junio y julio no estaban recortados — habian desaparecido enteros.
+>
+> **Root cause.** `HISTORY_MAX = 100` no era el tope del navegador: lo aplicaban las tres capas.
+> `saveHistoryEntry` soltaba la mas vieja (history.js:85), `mergeHistories` recortaba **la union**
+> local+Drive (history.js:650) y `driveBackup` subia **esa lista recortada** a Drive
+> (drive-sync.js:207), pisando el respaldo que si tenia julio. Por eso los dos sintomas juntos: se
+> pierde lo viejo Y restaurar no devuelve nada, porque Drive trae las mismas 100 que el navegador.
+> **La red de seguridad era la que borraba la red.** El test de entonces
+> (`'tope HISTORY_MAX (100) se respeta al fusionar'`) daba verde: codificaba el bug como correcto.
+>
+> **Fix — commit `c3bb472`, tag de rollback `pre-tope-historial-21ago`, EN PRODUCCION (verificado
+> por curl: `const HISTORY_MAX = 2000` servido en cotizador.appsegurosdigitales.com).**
+> - `HISTORY_MAX = 2000`, tope **SOLO del navegador** (~1,3 MB de los ~5 MB de localStorage; a
+>   1-2 cotizaciones/dia son mas de 3 anios). JC hizo 100 en lo que va de agosto.
+> - `mergeHistories(a, b, cap)` / `replaceHistory(arr, cap)`: a Drive se fusiona con **`Infinity`**.
+>   El respaldo es **ACUMULATIVO** — guarda todo lo que existio, aunque el navegador muestre menos.
+> - `_persistHistory(list)`: ante cuota llena recorta lo mas viejo por mitades en vez de perder la
+>   escritura entera en silencio (antes un envio nuevo podia no quedar registrado).
+> - `driveBackup` **no reescribe si Drive ya tiene lo mismo** (`_mismoContenido`, compara history +
+>   profile e ignora `savedAt`). Cada escritura crea una version del archivo y Google conserva un
+>   numero limitado: escribir de gusto empuja al borrado las versiones viejas, que son las unicas
+>   que permiten rescatar algo perdido. Verificado en navegador que SI escribe cuando el agente
+>   marca una cotizacion como concretada (el caso que no puede fallar).
+> - `driveRestore` devuelve `merged` (lo que quedo en el navegador) y `total` (lo que hay en Drive).
+> - Tests 15/15; los que faltaban: **`mergeHistories con Infinity NO recorta`** y `el respaldo
+>   conserva lo que el navegador ya solto`. El test lee `HISTORY_MAX` **del fuente**: una `const`
+>   dentro de un `eval` directo NO se filtra al scope del test (las `function` si — por eso
+>   `mergeHistories` se veia y `HISTORY_MAX` no). Suite completa: 14 archivos, 456 checks.
+> - De paso: `'cotización' + (n===1?'':'es')` daba **"cotizaciónes"**; el plural pierde la tilde.
+>   Estaba tambien en el toast de app.js ya publicado.
+>
+> **🔴 LECCION TRANSVERSAL:** un tope de almacenamiento **local** jamas puede viajar al respaldo.
+> Cuando el backup sube una lista podada por el limite del navegador, deja de ser respaldo y se
+> vuelve un destructor con retardo. **Los otros cotizadores con historial en localStorage no se
+> revisaron: si alguno respalda con merge + cap, tiene este mismo bug.**
+>
+> **Recuperar lo ya perdido — rama `feat/rescate-versiones`, SIN MERGEAR.** El fix detiene la
+> perdida hacia adelante pero no devuelve lo que el respaldo ya piso: eso solo vive en las
+> **versiones anteriores** del archivo en Drive (`files/{id}/revisions`, alcanzables con el scope
+> `drive.appdata` que la app ya tiene). `driveListRevisions` / `driveReadRevision` **ya estan en
+> main** y hoy no las llama nadie. La pantalla `/rescate/` + `js/rescate.js` (rama) las lee todas,
+> fusiona lo que falte conservando estados, es idempotente y aguanta los 3 casos de fallo (sin
+> respaldo / sin versiones / Drive caido). Verificada en navegador con datos INVENTADOS — los
+> comprobantes y clientes reales no entran al repo. **JC eligio publicar primero solo el arreglo**
+> y revisar la pantalla aparte: no mergear sin su OK. ⏳ Google purga versiones viejas con el
+> tiempo y con cada escritura: cuanto mas tarde, menos chance de rescatar julio. Plan B: reconstruir
+> desde los correos enviados del Gmail del agente (sin los estados de seguimiento).
+>
+> **Pendiente viejo que salio a la luz:** el boton 🗑 de la 📊 **no borra de Drive** —
+> `mergeHistories` es union, asi que la entrada vuelve al restaurar. No lo introdujo este fix.
+
 > ## ✅ NUEVO — 10 ago 2026 (tarde): varios recibos en un correo — el plan familiar
 > Tras el smoke ("todo ok"), JC preguntó lo que faltaba: *"qué pasa cuando es un cliente con dos recibos o un plan
 > familiar que a veces tienes hasta 5 o más recibos"*. Se verificó corriendo el código: la app leía **solo el primer
