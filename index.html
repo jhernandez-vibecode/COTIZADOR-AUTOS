@@ -145,6 +145,10 @@
             <button class="btn btn-primary" id="btnDriveSync" type="button">Sincronizar ahora</button>
             <button class="btn btn-secondary" id="btnDriveRestore" type="button">Restaurar de Drive</button>
           </div>
+          <p style="margin:10px 0 0;font-size:11px;color:var(--gray-500,#64748b);">
+            ¿Te faltan cotizaciones de meses anteriores?
+            <a href="rescate/" style="color:var(--blue,#0369A1);font-weight:600;">Recuperarlas de una versión anterior del respaldo →</a>
+          </p>
         </div>
 
         <div class="modal-info">
@@ -657,8 +661,9 @@
        toca la app se agrega una linea aca. -->
   <footer class="app-foot">
     <details>
-      <summary>Última actualización: 21 ago 2026 — el control ya no borra las cotizaciones de meses anteriores</summary>
+      <summary>Última actualización: 21 ago 2026 — el control ya no borra cotizaciones viejas, y se pueden recuperar las de meses anteriores</summary>
       <ul>
+        <li><b>21 ago 2026</b> — <b>Pantalla nueva: “Recuperar cotizaciones”.</b> Google Drive guarda <b>versiones anteriores</b> de su respaldo, como el historial de un documento. Desde <b>Configuración → Respaldo en Google Drive</b> hay un enlace para revisarlas todas y recuperar las cotizaciones que ya no aparecen en el control — con los estados que tenían (agendada, concretada). Solo <b>suma</b> lo que falte: no borra ni cambia ninguna de las que ya están.</li>
         <li><b>21 ago 2026</b> — <b>El control ya no borra las cotizaciones viejas.</b> El historial y las estadísticas guardaban un máximo de <b>100 cotizaciones</b>: al pasar de ahí, la más antigua se caía de la lista y, peor todavía, el respaldo automático subía a Google Drive esa misma lista recortada. Por eso desaparecieron las cotizaciones de julio y por eso “Restaurar de Drive” no devolvía nada — el respaldo ya venía sin ellas. <b>Corregido:</b> el respaldo de Drive ahora es <b>acumulativo</b> (guarda todo lo que ha existido, sin tope) y el navegador pasó de 100 a <b>2.000</b> cotizaciones, que a su ritmo son años de trabajo. Nada de esto cambia cómo se cotiza ni cómo se envía.</li>
         <li><b>19 ago 2026</b> — <b>Renovaciones: avisar solo por WhatsApp.</b> Hay clientes que no tienen correo o no lo usan. En el paso 3 de <b>Renovación confirmada</b> ahora se elige entre <b>Correo + WhatsApp</b> (como siempre) o <b>Solo WhatsApp</b>. Al elegir solo WhatsApp desaparecen los campos del correo, el mensaje deja de decir “le acabo de enviar a su correo” —que no sería cierto— y pasa a decir que usted le comparte el comprobante por ahí mismo; en la misma pantalla hay un botón para <b>descargar el comprobante</b> y adjuntarlo en el chat, porque WhatsApp no permite mandarlo solo con un enlace. La vista previa muestra el mensaje tal como le va a llegar al cliente. Dos cuidados: el envío <b>sigue bloqueado si el comprobante no dice “Pagado”</b>, y al cargar un comprobante nuevo la pantalla <b>vuelve sola a Correo + WhatsApp</b>, para que a un cliente que sí tiene correo no se le deje de enviar por descuido.</li>
         <li><b>19 ago 2026</b> — <b>El enlace que recibe el cliente ya no dice “cotizador”.</b> Los dos enlaces que se comparten por WhatsApp —la guía de la cotización y la guía de qué hacer ante un accidente o una avería— ahora salen desde <b>guia.appsegurosdigitales.com</b>. Antes llevaban la dirección larga de Netlify y empezaban con la palabra “cotizador”, que a un cliente que acaba de renovar no le dice nada. Además quedan más cortos. <b>Los enlaces que ya envió siguen funcionando igual</b>, no hay que reenviar nada.</li>

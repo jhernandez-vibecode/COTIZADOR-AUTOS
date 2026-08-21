@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recuperar cotizaciones — Cotizador SDI</title>
+
+  <link rel="icon" type="image/svg+xml" href="../img/favicon.svg" />
+
+  <!-- Fuentes (mismas que la app) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+
+  <!-- Estilos compartidos del cotizador -->
+  <link rel="stylesheet" href="../css/styles.css" />
+
+  <style>
+    /* Extras propios de la página de rescate. Van acá y NO en css/styles.css
+       porque esa hoja la cargan todas las pantallas del cotizador. */
+
+    /* 🔴 Obligatorio: el atributo [hidden] NO puede con un display explícito.
+       .res-prog es flex y .btn es inline-flex, así que sin esta regla el
+       spinner y el botón de recuperar se verían desde el arranque. */
+    [hidden] { display: none !important; }
+    .back-link { color: #fff; text-decoration: none; font-size: 13px; opacity: .8; display: inline-flex; align-items: center; gap: 6px; }
+    .back-link:hover { opacity: 1; }
+
+    .res-lead { font-size: 14px; color: var(--gray-600, #475569); line-height: 1.65; margin: 0 0 14px; }
+    .res-lead strong { color: var(--navy, #0c2340); }
+
+    .res-cifra { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+    .res-num { font-family: 'Poppins', sans-serif; font-size: 34px; font-weight: 700; color: var(--navy, #0c2340); line-height: 1; }
+    .res-num.ok { color: #15803d; }
+    .res-lbl { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--gray-500, #64748b); }
+    .res-meses { font-size: 13px; color: var(--gray-600, #475569); margin-top: 8px; word-break: break-word; }
+
+    .res-box { border-radius: 10px; padding: 14px 16px; margin: 0 0 14px; font-size: 14px; line-height: 1.6; }
+    .res-box.info  { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a5f; }
+    .res-box.good  { background: #f0fdf4; border: 1px solid #bbf7d0; color: #14532d; }
+    .res-box.plain { background: var(--gray-50, #f8fafc); border: 1px solid var(--gray-200, #e5e7eb); color: var(--gray-600, #475569); }
+
+    .res-prog { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--navy, #0c2340); font-weight: 600; padding: 12px 0; }
+    .res-spin { width: 18px; height: 18px; border: 3px solid #dbeafe; border-top-color: #0369A1; border-radius: 50%; animation: resspin .8s linear infinite; flex: none; }
+    @keyframes resspin { to { transform: rotate(360deg); } }
+
+    .res-tabla { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .res-tabla th { text-align: left; font-size: 11px; letter-spacing: .05em; text-transform: uppercase; color: var(--gray-500, #64748b); border-bottom: 2px solid var(--gray-200, #e5e7eb); padding: 8px 10px; }
+    .res-tabla td { border-bottom: 1px solid var(--gray-100, #f1f5f9); padding: 8px 10px; color: var(--gray-700, #334155); vertical-align: top; }
+    .res-tabla td.num { font-family: 'JetBrains Mono', monospace; font-weight: 500; text-align: right; white-space: nowrap; }
+    .res-tabla td.warn { color: #b45309; }
+    .res-scroll { max-height: 340px; overflow-y: auto; overflow-x: auto; border: 1px solid var(--gray-200, #e5e7eb); border-radius: 8px; }
+
+    .res-detalle > summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--navy, #0c2340); padding: 10px 0; list-style: none; }
+    .res-detalle > summary::-webkit-details-marker { display: none; }
+    .res-detalle > summary::before { content: '▸ '; color: var(--gray-500, #64748b); }
+    .res-detalle[open] > summary::before { content: '▾ '; }
+
+    .res-nota { font-size: 12px; color: var(--gray-500, #64748b); line-height: 1.6; margin-top: 10px; }
+  </style>
+</head>
+<body class="page-rescate">
+
+  <!-- ======================== HEADER ======================== -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand">
+        <svg class="brand-mark" viewBox="0 0 184 90" role="img" aria-label="Seguros Digitales SDI">
+        <path d="M36.076 74.656Q28.04 74.656 23.038 72.483Q18.036 70.31 15.535 66.456Q13.034 62.602000000000004 12.624 57.763999999999996H19.02Q19.266 61.7 21.644 64.119Q24.022 66.538 27.917 67.686Q31.812 68.834 36.486000000000004 68.834Q43.374 68.834 47.392 66.415Q51.410000000000004 63.996 51.410000000000004 59.24Q51.410000000000004 56.370000000000005 49.401 54.607Q47.392 52.843999999999994 44.071 51.696Q40.75 50.548 36.814 49.605000000000004Q32.878 48.662 28.901 47.596000000000004Q24.924 46.53 21.603 44.89Q18.282 43.25 16.273 40.667Q14.264 38.083999999999996 14.264 34.065999999999995Q14.264 27.424 19.389000000000003 23.241999999999997Q24.514000000000003 19.059999999999995 34.682 19.059999999999995Q41.897999999999996 19.059999999999995 46.572 21.232999999999997Q51.246 23.406 53.583 26.932Q55.92 30.458 56.166000000000004 34.558H49.852000000000004Q49.36 30.458 45.751999999999995 27.628999999999998Q42.144 24.799999999999997 34.682 24.799999999999997Q30.09 24.799999999999997 27.22 25.701999999999998Q24.35 26.604 22.833000000000002 28.038999999999998Q21.316000000000003 29.473999999999997 20.783 31.031999999999996Q20.25 32.589999999999996 20.25 33.984Q20.25 36.69 22.259 38.370999999999995Q24.268 40.052 27.589 41.159Q30.91 42.266 34.928 43.168Q38.946 44.07 42.923 45.177Q46.9 46.284 50.221000000000004 47.965Q53.542 49.646 55.551 52.269999999999996Q57.56 54.894 57.56 58.994Q57.56 66.538 51.82 70.59700000000001Q46.08 74.656 36.076 74.656ZM64.572 74.0V19.716H87.45Q92.28800000000001 19.716 96.757 21.561Q101.226 23.406 104.752 26.932Q108.27799999999999 30.458 110.328 35.459999999999994Q112.378 40.461999999999996 112.378 46.858000000000004Q112.378 53.254 110.328 58.256Q108.27799999999999 63.257999999999996 104.752 66.78399999999999Q101.226 70.31 96.757 72.155Q92.28800000000001 74.0 87.45 74.0ZM70.722 68.178H87.20400000000001Q93.02600000000001 68.178 97.29 65.226Q101.554 62.274 103.891 57.436Q106.22800000000001 52.598 106.22800000000001 46.858000000000004Q106.22800000000001 41.036 103.891 36.198Q101.554 31.36 97.29 28.448999999999998Q93.02600000000001 25.537999999999997 87.20400000000001 25.537999999999997H70.722ZM119.71799999999999 74.0V19.716H125.868V74.0Z" fill="#FFFFFF"/>
+
+        <g transform="translate(143.87, 19.06)">
+        <rect x="0" y="0.0" width="30.0" height="6.15" rx="1.5" fill="#0369A1"/>
+        <rect x="0" y="16.48" width="30.0" height="6.15" rx="1.5" fill="#0D9488"/>
+        <rect x="0" y="32.96" width="30.0" height="6.15" rx="1.5" fill="#EA580C"/>
+        <rect x="0" y="49.45" width="30.0" height="6.15" rx="1.5" fill="#C9A227"/>
+        </g>
+        </svg>
+        <div class="brand-sep"></div>
+        <div>
+          <div class="brand-title">Recuperar cotizaciones</div>
+          <div class="brand-subtitle">Versiones anteriores de tu respaldo</div>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:8px;">
+        <a href="../" class="back-link" title="Volver al cotizador">← Cotizador</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" style="max-width:820px;">
+
+    <!-- Qué es esto -->
+    <section class="card">
+      <h2 class="card-title">¿Qué hace esta página?</h2>
+      <p class="res-lead">
+        Google Drive guarda <strong>versiones anteriores</strong> de tu respaldo, como el historial
+        de un documento. Esta página las revisa una por una y recupera las cotizaciones que ya no
+        aparecen en tu control.
+      </p>
+      <div class="res-box plain">
+        Solo <strong>lee</strong> tu respaldo y <strong>suma</strong> lo que falte.
+        Nunca borra ni cambia una cotización que ya tengás.
+      </div>
+    </section>
+
+    <!-- Estado actual -->
+    <section class="card">
+      <h2 class="card-title">Tu control ahora</h2>
+      <div class="res-cifra">
+        <span class="res-num" id="actualNum">0</span>
+        <span class="res-lbl">cotizaciones en este navegador</span>
+      </div>
+      <div class="res-meses" id="actualMeses">—</div>
+    </section>
+
+    <!-- Buscar -->
+    <section class="card">
+      <h2 class="card-title">Buscar en las versiones anteriores</h2>
+      <p class="res-lead">
+        Google va a pedirte permiso para entrar a tu Drive. Es el mismo permiso que usa el respaldo
+        de siempre.
+      </p>
+      <button class="btn btn-primary" id="btnBuscar">🔍 Buscar versiones anteriores</button>
+
+      <div class="res-prog" id="progreso" hidden>
+        <div class="res-spin"></div>
+        <span id="progresoTxt">Buscando…</span>
+      </div>
+
+      <div class="res-box info" id="vacio" hidden>
+        <span id="vacioTxt"></span>
+      </div>
+    </section>
+
+    <!-- Resultado -->
+    <section class="card" id="resultado" hidden>
+      <h2 class="card-title">Lo que encontré</h2>
+
+      <div class="res-cifra">
+        <span class="res-num ok" id="recNum">0</span>
+        <span class="res-lbl">cotizaciones que no tenés</span>
+      </div>
+      <div class="res-meses" id="recMeses">—</div>
+
+      <p class="res-lead" style="margin-top:16px;">
+        Sumando todo, tu control quedaría con <strong id="totalNum">0</strong> cotizaciones.
+      </p>
+
+      <button class="btn btn-primary" id="btnRecuperar" hidden>Recuperar</button>
+      <p class="res-nota" id="recMsg"></p>
+
+      <div class="res-box good" id="exito" hidden style="margin-top:14px;">
+        <span id="exitoTxt"></span>
+      </div>
+
+      <details class="res-detalle" style="margin-top:14px;">
+        <summary>Ver las <span id="versionesNum">0</span> versiones que revisé</summary>
+        <div class="res-scroll">
+          <table class="res-tabla">
+            <thead>
+              <tr><th>Fecha de la versión</th><th style="text-align:right;">Cotiz.</th><th>Meses que incluye</th></tr>
+            </thead>
+            <tbody id="tablaVersiones"></tbody>
+          </table>
+        </div>
+        <p class="res-nota">
+          Google conserva las versiones por tiempo limitado, así que las más viejas pueden ya no estar.
+        </p>
+      </details>
+    </section>
+
+  </main>
+
+  <!-- ======================== LIBRERÍAS EXTERNAS ======================== -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <!-- ======================== CÓDIGO PROPIO (orden crítico) ======================== -->
+  <script src="../js/toast.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/state.js"></script>
+  <script src="../js/agent-profile.js"></script>
+  <script src="../js/history.js"></script>
+  <script src="../js/drive-sync.js"></script>
+  <script src="../js/rescate.js"></script>
+
+</body>
+</html>

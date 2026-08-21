@@ -52,6 +52,7 @@ body {
 body.page-cotizar   { background: #edf6f0; }
 body.page-poliza    { background: #ebf2fc; }
 body.page-renovacion { background: #fdf6ec; }
+body.page-rescate   { background: #f4f2fa; }
 
 /* SISTEMA TIPOGRAFICO SDI (7 ago 2026, aprobado por JC). Cada letra un trabajo:
      Questrial  -> SOLO el logotipo (tiene un unico peso: alcanza para una marca,
