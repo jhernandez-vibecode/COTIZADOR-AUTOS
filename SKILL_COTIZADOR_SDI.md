@@ -13,6 +13,34 @@ description: >
 
 # Cotizador SDI — Checkpoint extendido (historico largo)
 
+## 25 ago 2026 (3) — la guia mostraba coberturas no cotizadas (`04c69d9`)
+
+Lo cazo JC probando con una cotizacion real: **el correo mostraba cinco coberturas y `/explicacion/`
+mostraba seis**, incluidas COLISION, ROBO y RIESGOS ADICIONALES que ese cliente no habia cotizado, y
+con montos calculados sobre su valor asegurado, que se leen como reales. La guia tenia sus seis
+tarjetas escritas a mano y las mostraba siempre; el correo ya se cuidaba de no hacerlo. Las dos van
+firmadas con la licencia SUGESE del agente.
+
+Se resolvio pasando las coberturas por el enlace: **param `cb`**, formato `A-300000000.B-15000000.C.G.M`
+(codigo y, tras un guion, el monto cuando el PDF lo trae). `aplicarCoberturas()` borra las tarjetas que
+no vengan, pone el monto real y **corrige la mencion del monto DENTRO del detalle** de cada tarjeta:
+el detalle lo repite con palabras ("hasta 300 millones") y si solo se cambia la cifra de arriba, queda
+mintiendo.
+
+🔴 **Sin el parametro no se toca nada:** los correos ya enviados no lo llevan y esos clientes tienen
+que seguir viendo la guia igual. Un `cb` ilegible tampoco la deja en blanco.
+
+El test compara **lo que muestra el correo contra lo que recibe la guia**, para que no se vuelvan a
+separar. Verificado ademas de punta a punta en el navegador: el correo arma el enlace, la guia lo abre.
+
+De paso: la guia usaba `toLocaleString('es-CR')`, que separa los miles con ESPACIO (`18 000 000`),
+mientras los montos escritos a mano usaban coma. Todo unificado a punto, como el correo.
+
+**Queda pendiente:** las secciones 3 (deducible) y 4 (repuestos) del explicador siguen fijas. A un
+cliente sin D, F ni H se le sigue explicando el deducible de esas coberturas. No promete un monto, pero
+habla de algo que no tiene. 🔴 Ojo al tocarlo: la sticky-nav tiene 5 dots fijos y el contador dice
+"1 / 5"; ocultar una seccion sin ocultar su dot rompe la navegacion.
+
 ## 25 ago 2026 (2) — las coberturas del PDF en el correo (`c1721f0`)
 
 El cuerpo dejo las tres frases genericas y pasa a mostrar LAS COBERTURAS QUE TRAE ESA COTIZACION,
