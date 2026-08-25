@@ -111,6 +111,10 @@ async function extractData(arrayBuffer) {
   // explicador muestra su monto por defecto (comportamiento previo).
   data.dedDFH = _parseDeducibleDFH(data.deductibles);
 
+  // Detalle de coberturas: lo que el cliente contrato, con su monto. Cruza de
+  // la pagina 1 a la 2, por eso recibe las dos.
+  data.coberturas = _parseCoberturas(rows1, rows2);
+
   // ===== Validacion final =====
   if (!data.quoteNum) {
     throw new Error('No se encontro el numero de cotizacion (formato ASINS-XXX-XXXXX).');
@@ -452,9 +456,93 @@ function _parsePaymentMatrix(rows, sustRepos) {
   };
 }
 
+// =====================================================================
+// DETALLE DE COBERTURAS (25 ago 2026)
+// =====================================================================
+
+/**
+ * Lee el bloque "DETALLE DE COBERTURAS" del PDF del INS.
+ *
+ * Dos cosas que hay que saber antes de tocar esto:
+ *
+ *  1. EL BLOQUE CRUZA DE LA PAGINA 1 A LA 2. Arranca en la pagina 1 y las
+ *     ultimas coberturas (tipicamente N e IDD) quedan arriba de la pagina 2.
+ *     Un parser que lea solo la pagina 1 se las pierde en silencio.
+ *
+ *  2. EL JUEGO DE COBERTURAS CAMBIA entre cotizaciones. En 25 PDF reales
+ *     aparecieron tres: A-B-C-D-F-G-H-IDD-M-N (el corriente), uno con K
+ *     (transporte alternativo) y uno sin H. Por eso NO se puede fijar una
+ *     lista: hay que devolver lo que trae cada PDF y nada mas. Si el correo
+ *     mostrara una lista fija, a un cliente sin D ni H le prometeria
+ *     colision y vuelco que no contrato.
+ *
+ * Formato de cada cobertura en el PDF:
+ *     A  Responsabilidad Civil Extracontractual por        41,159.00
+ *        Lesion y/o Muerte de Personas          <- la descripcion sigue
+ *        Monto por persona: 200,000,000.00      <- 0..n montos
+ *        Monto por accidente: 300,000,000.00
+ *
+ * @param {Array} rows1 - filas de la pagina 1 (de _groupByY)
+ * @param {Array} rows2 - filas de la pagina 2
+ * @returns {Array<{cod:string,desc:string,prima:string,montos:Array<{etiqueta:string,valor:string}>}>}
+ *          vacio si el PDF no trae el bloque (no es motivo para fallar: el
+ *          correo simplemente no muestra la lista)
+ */
+function _parseCoberturas(rows1, rows2) {
+  const RE_COD   = /^(IDD|[A-Z])\s+(.+?)\s+([\d.,]+\.\d{2})$/;
+  const RE_MONTO = /^(.+?):\s*([\d.,]+\.\d{2})$/;
+  // Lo que marca que el bloque termino. El titulo del bloque siguiente es
+  // "Detalle de Deducibles" — pero OJO: el formulario del INS lo trae con una
+  // errata, "Detalle de Deduciles", sin la b. Por eso el patron corta en
+  // "Deduc" y no en la palabra completa: escrita bien no coincidiria con
+  // ningun PDF real. Sin este corte, el titulo se cuela dentro de la
+  // descripcion de la IDD, que es la ultima cobertura de la lista.
+  const RE_FIN = /^(Cobertura\s|FORMA DE PAGO|Detalle\s+de\s+Deduc|Deducible\b|TOTAL\b|Prima\s+total)/i;
+  // Cola que queda pegada a la descripcion cuando el PDF corta la linea.
+  const RE_COLA = /\s*(Detalle\s+de\s+Deduc.*)$/i;
+
+  const out = [];
+  let dentro = false;
+  let actual = null;
+  const cerrar = function () {
+    if (!actual) return;
+    actual.desc = actual.desc.replace(RE_COLA, '').trim();
+    out.push(actual);
+    actual = null;
+  };
+
+  const paginas = [rows1 || [], rows2 || []];
+  for (let p = 0; p < paginas.length; p++) {
+    for (const row of paginas[p]) {
+      const txt = row.items.map(function (i) { return i.t; }).join(' ').replace(/\s+/g, ' ').trim();
+      if (!txt) continue;
+
+      if (/DETALLE\s+DE\s+COBERTURAS/i.test(txt)) { dentro = true; continue; }
+      if (!dentro) continue;
+      if (/^C[OÓ]DIGO\s+DESCRIPCI[OÓ]N/i.test(txt)) continue;   // encabezado de la tabla
+      if (RE_FIN.test(txt)) { cerrar(); dentro = false; break; }
+
+      const mc = RE_COD.exec(txt);
+      if (mc) { cerrar(); actual = { cod: mc[1], desc: mc[2].trim(), prima: mc[3], montos: [] }; continue; }
+      if (!actual) continue;
+
+      const mm = RE_MONTO.exec(txt);
+      // "¿Cuenta con dispositivo de seguridad?: No" no es un monto
+      if (mm && !/^\s*¿/.test(mm[1])) { actual.montos.push({ etiqueta: mm[1].trim(), valor: mm[2] }); continue; }
+      // si no es monto ni codigo, es la continuacion de la descripcion
+      if (!/:/.test(txt)) actual.desc = (actual.desc + ' ' + txt).replace(/\s+/g, ' ').trim();
+    }
+    // el bloque sigue en la pagina 2 solo si no se cerro en la 1
+    if (!dentro && p === 0 && !out.length) break;
+  }
+  cerrar();
+  return out;
+}
+
 // Export para tests node (guardado: en el browser no existe module).
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
+    _parseCoberturas: _parseCoberturas,
     _parsePaymentMatrix: _parsePaymentMatrix,
     selectPriceColumn: selectPriceColumn,
     pricesForColumn: pricesForColumn,

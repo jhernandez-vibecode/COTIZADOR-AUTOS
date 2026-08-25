@@ -153,6 +153,63 @@ function buildEmail(params) {
     };
   })();
 
+  // Lo que cubre la cotizacion. Sale del PDF y por eso cambia en cada una:
+  // hay cotizaciones sin D ni H, otras con K. Si el PDF no trae el detalle
+  // —o es de antes de que se leyera— el correo conserva los 3 beneficios de
+  // siempre y no se rompe nada.
+  const coberturasHtml = (typeof _bloqueCoberturas === 'function')
+    ? _bloqueCoberturas({
+        filas: _filasCoberturas(p.coberturas, p.deducibles),
+        notaDeducible: (p.deducibles || []).join(' '),
+        fontFam: fontFam
+      })
+    : '';
+  const beneficiosHtml = `        <!-- 5. BENEFICIOS OUTCOME (Full → Cero deducible → Asistencia) -->
+        <tr><td style="padding:26px 32px 0;">
+          <h2 style="margin:0 0 14px;font-family:${fontFam};font-size:14px;font-weight:700;color:#0c4a6e;text-transform:uppercase;letter-spacing:0.05em;border-bottom:2px solid #0369a1;padding-bottom:8px;">3 beneficios clave de tu cobertura</h2>
+
+          <!-- Benefit 1: Full Cobertura -->
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8fafc;border:1px solid #e0e7ef;border-radius:10px;margin-bottom:8px;">
+            <tr>
+              <td width="48" valign="top" style="padding:14px 0 14px 16px;">
+                <table cellpadding="0" cellspacing="0" border="0"><tr><td style="background:#0369a1;color:#ffffff;width:36px;height:36px;border-radius:50%;text-align:center;font-size:18px;font-weight:bold;line-height:36px;">+</td></tr></table>
+              </td>
+              <td valign="top" style="padding:14px 16px 14px 12px;">
+                <p style="margin:0 0 2px;font-family:${fontFam};font-weight:700;color:#0c4a6e;font-size:14px;">Full Cobertura</p>
+                <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Da&ntilde;os a personas, propiedad, colisi&oacute;n, robo, gastos m&eacute;dicos y riesgos naturales &mdash; todas las letras del INS protegi&eacute;ndote.</p>
+              </td>
+            </tr>
+          </table>
+
+          <!-- Benefit 2: Cero deducible -->
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8fafc;border:1px solid #e0e7ef;border-radius:10px;margin-bottom:8px;">
+            <tr>
+              <td width="48" valign="top" style="padding:14px 0 14px 16px;">
+                <table cellpadding="0" cellspacing="0" border="0"><tr><td style="background:#047857;color:#ffffff;width:36px;height:36px;border-radius:50%;text-align:center;font-size:18px;font-weight:bold;line-height:36px;">&#10003;</td></tr></table>
+              </td>
+              <td valign="top" style="padding:14px 16px 14px 12px;">
+                <p style="margin:0 0 2px;font-family:${fontFam};font-weight:700;color:#0c4a6e;font-size:14px;">${benefit2.title}</p>
+                <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">${benefit2.text}</p>
+              </td>
+            </tr>
+          </table>
+
+          <!-- Benefit 3: Asistencia -->
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8fafc;border:1px solid #e0e7ef;border-radius:10px;">
+            <tr>
+              <td width="48" valign="top" style="padding:14px 0 14px 16px;">
+                <table cellpadding="0" cellspacing="0" border="0"><tr><td style="background:#f59e0b;color:#ffffff;width:36px;height:36px;border-radius:50%;text-align:center;font-size:18px;font-weight:bold;line-height:36px;">&#9733;</td></tr></table>
+              </td>
+              <td valign="top" style="padding:14px 16px 14px 12px;">
+                <p style="margin:0 0 2px;font-family:${fontFam};font-weight:700;color:#0c4a6e;font-size:14px;">Asistencia 24/7 en carretera</p>
+                <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Gr&uacute;a, cerrajero, paso de corriente, combustible, llanta &mdash; desde cualquier lugar, a cualquier hora.</p>
+              </td>
+            </tr>
+          </table>
+        </td></tr>
+
+`;
+
   // ============ HTML COMPLETO ============
   return `<!DOCTYPE html>
 <html lang="es">
@@ -202,49 +259,8 @@ function buildEmail(params) {
           </table>
         </td></tr>
 
-        <!-- 5. BENEFICIOS OUTCOME (Full → Cero deducible → Asistencia) -->
-        <tr><td style="padding:26px 32px 0;">
-          <h2 style="margin:0 0 14px;font-family:${fontFam};font-size:14px;font-weight:700;color:#0c4a6e;text-transform:uppercase;letter-spacing:0.05em;border-bottom:2px solid #0369a1;padding-bottom:8px;">3 beneficios clave de tu cobertura</h2>
-
-          <!-- Benefit 1: Full Cobertura -->
-          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8fafc;border:1px solid #e0e7ef;border-radius:10px;margin-bottom:8px;">
-            <tr>
-              <td width="48" valign="top" style="padding:14px 0 14px 16px;">
-                <table cellpadding="0" cellspacing="0" border="0"><tr><td style="background:#0369a1;color:#ffffff;width:36px;height:36px;border-radius:50%;text-align:center;font-size:18px;font-weight:bold;line-height:36px;">+</td></tr></table>
-              </td>
-              <td valign="top" style="padding:14px 16px 14px 12px;">
-                <p style="margin:0 0 2px;font-family:${fontFam};font-weight:700;color:#0c4a6e;font-size:14px;">Full Cobertura</p>
-                <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Da&ntilde;os a personas, propiedad, colisi&oacute;n, robo, gastos m&eacute;dicos y riesgos naturales &mdash; todas las letras del INS protegi&eacute;ndote.</p>
-              </td>
-            </tr>
-          </table>
-
-          <!-- Benefit 2: Cero deducible -->
-          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8fafc;border:1px solid #e0e7ef;border-radius:10px;margin-bottom:8px;">
-            <tr>
-              <td width="48" valign="top" style="padding:14px 0 14px 16px;">
-                <table cellpadding="0" cellspacing="0" border="0"><tr><td style="background:#047857;color:#ffffff;width:36px;height:36px;border-radius:50%;text-align:center;font-size:18px;font-weight:bold;line-height:36px;">&#10003;</td></tr></table>
-              </td>
-              <td valign="top" style="padding:14px 16px 14px 12px;">
-                <p style="margin:0 0 2px;font-family:${fontFam};font-weight:700;color:#0c4a6e;font-size:14px;">${benefit2.title}</p>
-                <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">${benefit2.text}</p>
-              </td>
-            </tr>
-          </table>
-
-          <!-- Benefit 3: Asistencia -->
-          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8fafc;border:1px solid #e0e7ef;border-radius:10px;">
-            <tr>
-              <td width="48" valign="top" style="padding:14px 0 14px 16px;">
-                <table cellpadding="0" cellspacing="0" border="0"><tr><td style="background:#f59e0b;color:#ffffff;width:36px;height:36px;border-radius:50%;text-align:center;font-size:18px;font-weight:bold;line-height:36px;">&#9733;</td></tr></table>
-              </td>
-              <td valign="top" style="padding:14px 16px 14px 12px;">
-                <p style="margin:0 0 2px;font-family:${fontFam};font-weight:700;color:#0c4a6e;font-size:14px;">Asistencia 24/7 en carretera</p>
-                <p style="margin:0;font-size:12px;color:#475569;line-height:1.5;">Gr&uacute;a, cerrajero, paso de corriente, combustible, llanta &mdash; desde cualquier lugar, a cualquier hora.</p>
-              </td>
-            </tr>
-          </table>
-        </td></tr>
+        <!-- 5. LO QUE CUBRE: la lista del PDF, o los 3 beneficios si no vino -->
+        ${coberturasHtml || beneficiosHtml}
 
         <!-- 6. FORMAS DE PAGO (trimestral, semestral, anual; el anual en verde) -->
         ${_bloquePagos({ prices: prices, fontFam: fontFam })}

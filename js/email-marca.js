@@ -38,6 +38,20 @@ const SDI_ROJO_CL = '#b91c1c'; // placa de carga liviana: 6,47:1 en los dos sent
 const SDI_GRIS = '#64748b';
 const SDI_LINEA = '#e6edf5';
 
+/* Paleta SDI PURA para los chips de cobertura, en la jerarquia del filete:
+   azul lo que mas pesa, dorado la firma. El fondo es el color tal cual del
+   manual; lo que cambia es la letra, porque no todos admiten la misma:
+     azul + blanca 5,93:1    teal + oscura 4,95:1
+     naranja + oscura 5,21:1  dorado + oscura 7,67:1
+   (con letra blanca el dorado cae a 2,42:1 — ilegible). Medido, no a ojo. */
+const SDI_TINTA = '#1a1204';
+const SDI_TONOS = {
+  azul:   { fondo: '#0369A1', texto: '#ffffff',  barra: '#0369A1' },
+  teal:   { fondo: '#0D9488', texto: SDI_TINTA,  barra: '#0D9488' },
+  narnja: { fondo: '#EA580C', texto: SDI_TINTA,  barra: '#EA580C' },
+  dorado: { fondo: '#C9A227', texto: SDI_TINTA,  barra: '#C9A227' }
+};
+
 /**
  * Filete de marca bajo el encabezado: cuatro celdas de color, 60/25/10/5.
  * No es un degradado a proposito — Outlook no los soporta.
@@ -220,7 +234,8 @@ function _pieSDI(o) {
   };
   const logo = o.logo || SDI_LOGO_POR_DEFECTO;
   return '        <tr><td bgcolor="' + SDI_NAVY + '" style="background:' + SDI_NAVY + ';color:#cbd5e1;padding:30px 32px 26px;text-align:center;">\n' +
-    '          <img src="' + _escMarca(logo) + '" alt="Seguros Digitales SDI" width="168" style="display:block;margin:0 auto;border:0;outline:none;text-decoration:none;width:168px;height:auto;" />\n' +
+    // 120 px sobre un correo de 600: el pie firma, no compite con el contenido.
+    '          <img src="' + _escMarca(logo) + '" alt="Seguros Digitales SDI" width="120" style="display:block;margin:0 auto;border:0;outline:none;text-decoration:none;width:120px;height:auto;" />\n' +
     '          <p style="margin:18px 0 0;font-size:12px;">' +
       '<a href="mailto:' + _escMarca(o.correo) + '" style="color:#7dd3fc;text-decoration:none;font-weight:600;">' + _escMarca(o.correo) + '</a>' +
       (o.web ? ' &middot; <a href="https://' + _escMarca(o.web) + '" style="color:#7dd3fc;text-decoration:none;font-weight:600;">' + _escMarca(o.web) + '</a>' : '') +
@@ -234,12 +249,228 @@ function _pieSDI(o) {
     '        </td></tr>';
 }
 
+
+/* =====================================================================
+ * LISTA DE COBERTURAS DEL CORREO (25 ago 2026)
+ * Se arma con lo que el parser saco del PDF y NADA MAS: el juego de
+ * coberturas cambia de una cotizacion a otra (hay cotizaciones sin D ni
+ * H, otras con K). Una lista fija le prometeria al cliente coberturas
+ * que no contrato, firmadas con la licencia SUGESE del agente.
+ * ===================================================================== */
+
+/**
+ * Como se le presenta cada cobertura al cliente. El codigo y el monto salen
+ * del PDF; esto es solo el nombre en lenguaje llano y en que grupo va.
+ * Los nombres oficiales estan verificados contra las Condiciones Generales
+ * (docs/fuentes-ins/REGLAS-INS-VERIFICADAS.md).
+ */
+var SDI_COBERTURAS = {
+  A:   { nombre: 'Daños a personas',             grupo: 1, tono: 'azul',
+         que: 'Si causás un accidente con lesiones o muerte de terceros.' },
+  B:   { nombre: 'Servicios médicos familiares', grupo: 1, tono: 'azul',
+         que: 'Atención tuya y de tu familia dentro del vehículo.' },
+  C:   { nombre: 'Daños a propiedad ajena',      grupo: 1, tono: 'azul',
+         que: 'Otro vehículo, un muro, un poste, una casa.' },
+  D:   { nombre: 'Colisión y vuelco',            grupo: 2, tono: 'teal',
+         que: 'Tu propio vehículo cuando chocás o volcás, vidrios incluidos.' },
+  F:   { nombre: 'Robo y hurto',                 grupo: 2, tono: 'teal',
+         que: 'Robo total o parcial, tentativa y uso indebido del vehículo.' },
+  H:   { nombre: 'Riesgos adicionales',          grupo: 2, tono: 'teal',
+         que: 'Inundación, terremoto, vandalismo, incendio, caída de objetos.' },
+  G:   { nombre: 'Asistencia 24/7 en carretera', grupo: 3, tono: 'narnja', incluida: true,
+         que: 'Grúa, cerrajero, paso de corriente, combustible y cambio de llanta.' },
+  M:   { nombre: 'Asistencia extendida',         grupo: 3, tono: 'narnja', incluida: true,
+         que: 'Cobertura ampliada de la asistencia en carretera.' },
+  K:   { nombre: 'Transporte alternativo',       grupo: 3, tono: 'narnja',
+         que: 'Mientras tu vehículo está en el taller.' },
+  E:   { nombre: 'Gastos legales',               grupo: 3, tono: 'narnja',
+         que: 'Reintegro de gastos legales por un evento cubierto.' },
+  N:   { nombre: 'Exención del deducible',       grupo: 3, tono: 'dorado', incluida: true,
+         que: 'No pagás el deducible en la cobertura que la lleva.' },
+  IDD: { nombre: 'Respaldo del deducible',       grupo: 3, tono: 'dorado',
+         que: 'El INS te reintegra el deducible en hasta 2 eventos al año.' }
+};
+var SDI_GRUPOS = {
+  1: 'Si el daño se lo causás a alguien más',
+  2: 'Si el daño es a tu vehículo',
+  3: 'Servicios que ya vienen incluidos'
+};
+/** Pares que se muestran en una sola fila SI vienen los dos. */
+var SDI_PARES = [['G', 'M'], ['N', 'IDD']];
+
+/** "1,234,567.00" -> "1.234.567". Se usa de-DE: es-CR separa los miles con espacio. */
+function _montoCR(v) {
+  var n = parseFloat(String(v == null ? '' : v).replace(/,/g, ''));
+  return isFinite(n) ? Math.round(n).toLocaleString('de-DE') : '';
+}
+
+/**
+ * De que deducible habla cada cobertura, segun las lineas que trae el PDF
+ * ("Cobertura C: Deducible Ordinario del 20% - ¢150,000 o $250").
+ * @param {string[]} deducibles - lineas crudas del PDF
+ * @returns {object} { C: 'deducible 20% · mín ₡150.000', D: '...', ... }
+ */
+function _deduciblePorCobertura(deducibles) {
+  var mapa = {};
+  (deducibles || []).forEach(function (linea) {
+    var m = /^Coberturas?\s+([A-Z][A-Z,\s.Yy]*?)\s*:\s*(.+)$/.exec(String(linea).trim());
+    if (!m) return;
+    var letras = m[1].toUpperCase().replace(/\s*Y\s*/g, ',').split(/[,\s.]+/).filter(Boolean);
+    var resto = m[2];
+    var pct = /(\d+)\s*%/.exec(resto);
+    var mon = /[¢₡]\s*([\d,.]+)/.exec(resto);
+    var texto;
+    if (pct && mon) texto = 'deducible ' + pct[1] + '% · mín ₡' + _montoCR(mon[1]);
+    else if (mon)   texto = 'deducible ₡' + _montoCR(mon[1]);
+    else            texto = 'con deducible';
+    letras.forEach(function (L) { if (/^[A-Z]+$/.test(L)) mapa[L] = texto; });
+  });
+  return mapa;
+}
+
+/**
+ * Convierte lo que saco el parser en las filas que se pintan en el correo.
+ * @param {Array} coberturas - de data.coberturas
+ * @param {string[]} deducibles - de data.deductibles
+ * @returns {Array} filas listas para _bloqueCoberturas
+ */
+function _filasCoberturas(coberturas, deducibles) {
+  var ded = _deduciblePorCobertura(deducibles);
+  var porCod = {};
+  (coberturas || []).forEach(function (c) { porCod[c.cod] = c; });
+
+  // los pares se funden en una sola fila si vienen los dos
+  var fundido = {};
+  SDI_PARES.forEach(function (par) {
+    if (porCod[par[0]] && porCod[par[1]]) fundido[par[1]] = par[0];
+  });
+
+  var filas = [];
+  (coberturas || []).forEach(function (c) {
+    if (fundido[c.cod]) return;                       // ya se muestra con su pareja
+    var info = SDI_COBERTURAS[c.cod];
+    var cod = c.cod;
+    SDI_PARES.forEach(function (par) {
+      if (par[0] !== c.cod || !porCod[par[1]]) return;
+      cod = par[0] + ' · ' + par[1];
+      // En una fila fusionada manda la ficha del que trae el monto. Sin esto,
+      // N + IDD decia "Incluida" y se perdia lo que de verdad le importa al
+      // cliente: cuanto le reintegra el INS del deducible.
+      var pareja = porCod[par[1]];
+      if ((!c.montos || !c.montos.length) && pareja.montos && pareja.montos.length) {
+        c = pareja;
+        info = SDI_COBERTURAS[par[1]] || info;
+      }
+    });
+
+    // El monto es el que traiga el PDF. Si hay varios (A trae "por persona" y
+    // "por accidente") se muestra el ultimo, que es el techo del evento.
+    var monto = '', nota = '';
+    if (c.montos && c.montos.length) {
+      var elegido = c.montos[c.montos.length - 1];
+      monto = '₡' + _montoCR(elegido.valor);
+      var et = elegido.etiqueta.toLowerCase().replace(/^monto\s+/i, '');
+      if (et !== 'asegurado' && et !== 'cubierto') nota = et;
+    } else if (info && info.incluida) {
+      monto = 'Incluida';
+    }
+    // el deducible pisa la nota: es lo que mas le importa al cliente
+    if (ded[c.cod]) nota = ded[c.cod];
+    else if (info && info.incluida && !nota) nota = 'sin costo por evento';
+    else if (!nota && (c.cod === 'A' || c.cod === 'B')) nota = 'sin deducible';
+
+    filas.push({
+      cod: cod,
+      // sin ficha propia se usa la descripcion del PDF, nunca un invento
+      nombre: (info && info.nombre) || c.desc || ('Cobertura ' + c.cod),
+      que: (info && info.que) || '',
+      grupoN: (info && info.grupo) || 3,
+      grupo: SDI_GRUPOS[(info && info.grupo) || 3],
+      tono: (info && info.tono) || 'azul',
+      monto: monto,
+      nota: nota,
+      incluida: !!(info && info.incluida)
+    });
+  });
+
+  // por grupo, conservando el orden del PDF dentro de cada uno
+  return filas.map(function (f, i) { f._i = i; return f; })
+    .sort(function (a, b) { return (a.grupoN - b.grupoN) || (a._i - b._i); });
+}
+
+/** Cuenta en palabras, para la bajada ("Estas son las ocho coberturas..."). */
+function _enPalabras(n) {
+  var p = ['cero', 'una', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho',
+           'nueve', 'diez', 'once', 'doce', 'trece', 'catorce', 'quince'];
+  return p[n] || String(n);
+}
+
+/**
+ * El bloque de coberturas del correo.
+ * @param {object} o - {filas, notaDeducible, fontFam}
+ * @returns {string} '' si no hay filas — el correo entonces no lo muestra
+ */
+function _bloqueCoberturas(o) {
+  var filas = (o && o.filas) || [];
+  if (!filas.length) return '';
+  var ff = o.fontFam;
+
+  var chip = function (cod, tono) {
+    var t = SDI_TONOS[tono] || SDI_TONOS.azul;
+    return '<span style="display:inline-block;min-width:22px;padding:3px 7px;background:' + t.fondo +
+      ';border-radius:5px;font-family:' + ff + ';font-size:10.5px;font-weight:700;color:' + t.texto +
+      ';text-align:center;line-height:1.25;white-space:nowrap;">' + _escMarca(cod) + '</span>';
+  };
+  var subtitulo = function (texto, tono) {
+    var c = (SDI_TONOS[tono] || SDI_TONOS.azul).barra;
+    return '<tr><td colspan="3" style="padding:17px 0 7px;">' +
+      '<table cellpadding="0" cellspacing="0" border="0"><tr>' +
+      '<td width="16" style="padding-right:7px;"><table cellpadding="0" cellspacing="0" border="0" width="16">' +
+      '<tr><td bgcolor="' + c + '" style="background:' + c + ';height:3px;line-height:3px;font-size:0;border-radius:2px;">&nbsp;</td></tr>' +
+      '</table></td><td><p style="margin:0;font-size:10px;font-weight:700;color:' + SDI_GRIS +
+      ';text-transform:uppercase;letter-spacing:0.09em;">' + _escMarca(texto) + '</p></td></tr></table></td></tr>';
+  };
+
+  var cuerpo = '', grupoAnterior = null, primera = true;
+  filas.forEach(function (f) {
+    if (f.grupo !== grupoAnterior) { cuerpo += subtitulo(f.grupo, f.tono); grupoAnterior = f.grupo; primera = true; }
+    var borde = primera ? '' : 'border-top:1px solid ' + SDI_LINEA + ';';
+    primera = false;
+    cuerpo += '<tr>' +
+      '<td width="58" valign="top" style="padding:11px 0;' + borde + '">' + chip(f.cod, f.tono) + '</td>' +
+      '<td valign="top" style="padding:11px 10px 11px 0;' + borde + '">' +
+        '<p style="margin:0;font-size:13px;font-weight:700;color:' + SDI_NAVY + ';line-height:1.35;">' + _escMarca(f.nombre) + '</p>' +
+        (f.que ? '<p style="margin:3px 0 0;font-size:11.5px;color:' + SDI_GRIS + ';line-height:1.45;">' + _escMarca(f.que) + '</p>' : '') +
+      '</td>' +
+      '<td align="right" valign="top" style="padding:11px 0;' + borde + 'white-space:nowrap;">' +
+        (f.monto ? '<p style="margin:0;font-size:13px;font-weight:700;color:' + (f.incluida ? SDI_VERDE : SDI_NAVY) + ';line-height:1.35;">' + _escMarca(f.monto) + '</p>' : '') +
+        (f.nota ? '<p style="margin:3px 0 0;font-size:10.5px;color:' + SDI_GRIS + ';line-height:1.4;">' + _escMarca(f.nota) + '</p>' : '') +
+      '</td></tr>';
+  });
+
+  return '        <tr><td style="padding:26px 32px 0;">\n' +
+    '          <h2 style="margin:0 0 6px;font-family:' + ff + ';font-size:14px;font-weight:700;color:#0c4a6e;' +
+      'text-transform:uppercase;letter-spacing:0.05em;border-bottom:2px solid #0369a1;padding-bottom:8px;">Lo que cubre esta cotizaci&oacute;n</h2>\n' +
+    '          <p style="margin:10px 0 2px;font-size:12px;color:' + SDI_GRIS + ';line-height:1.5;">Estas son las ' +
+      _enPalabras(filas.length) + ' coberturas que trae tu cotizaci&oacute;n, con el monto de cada una.</p>\n' +
+    '          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">' + cuerpo + '</table>\n' +
+    (o.notaDeducible
+      ? '          <p style="margin:14px 0 0;padding:10px 12px;background:#f8fafc;border:1px solid ' + SDI_LINEA +
+        ';border-radius:6px;font-size:11px;color:' + SDI_GRIS + ';line-height:1.55;"><b style="color:' + SDI_NAVY +
+        ';">Deducibles de esta cotizaci&oacute;n:</b> ' + _escMarca(o.notaDeducible) + '</p>\n'
+      : '') +
+    '        </td></tr>';
+}
+
 // Export para los tests con Node (sin romper el navegador).
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     _fileteSDI: _fileteSDI, _analizarPlaca: _analizarPlaca, _placaEsRelleno: _placaEsRelleno,
     _tarjetaVehiculo: _tarjetaVehiculo, _bloqueSobrio: _bloqueSobrio, _pieSDI: _pieSDI,
     _ahorroAnual: _ahorroAnual, _bloquePagos: _bloquePagos,
+    _bloqueCoberturas: _bloqueCoberturas, _filasCoberturas: _filasCoberturas,
+    _deduciblePorCobertura: _deduciblePorCobertura, _montoCR: _montoCR, _enPalabras: _enPalabras,
+    SDI_TONOS: SDI_TONOS, SDI_COBERTURAS: SDI_COBERTURAS,
     SDI_NAVY: SDI_NAVY, SDI_VERDE: SDI_VERDE, SDI_ROJO_CL: SDI_ROJO_CL, SDI_COLORES: SDI_COLORES
   };
 }

@@ -1384,7 +1384,12 @@ function updatePreview() {
     vehicleType:   _isElectricChecked() ? 'electric' : S.data.vehicleType,
     origenAsia:    _isAsiaChecked(),
     altaGama:      _isGamaChecked(),
-    dedDFH:        S.data.dedDFH
+    dedDFH:        S.data.dedDFH,
+    // Lo que cubre la cotizacion, tal como viene del PDF. El juego de
+    // coberturas cambia en cada una: una lista fija le prometeria al
+    // cliente algo que no contrato.
+    coberturas:    S.data.coberturas,
+    deducibles:    S.data.deductibles
   });
 
   const preview = document.getElementById('preview');
@@ -1434,7 +1439,12 @@ async function handleSend() {
       vehicleType:   _isElectricChecked() ? 'electric' : S.data.vehicleType,
       origenAsia:    _isAsiaChecked(),
       altaGama:      _isGamaChecked(),
-      dedDFH:        S.data.dedDFH
+      dedDFH:        S.data.dedDFH,
+      // Lo que cubre la cotizacion, tal como viene del PDF. El juego de
+      // coberturas cambia en cada una: una lista fija le prometeria al
+      // cliente algo que no contrato.
+      coberturas:    S.data.coberturas,
+      deducibles:    S.data.deductibles
     });
 
     const toAddr  = document.getElementById('m-to').value.trim();
