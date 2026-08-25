@@ -13,6 +13,40 @@ description: >
 
 # Cotizador SDI — Checkpoint extendido (historico largo)
 
+## 25 ago 2026 (2) — las coberturas del PDF en el correo (`c1721f0`)
+
+El cuerpo dejo las tres frases genericas y pasa a mostrar LAS COBERTURAS QUE TRAE ESA COTIZACION,
+con el monto y el deducible de cada una.
+
+**Por que no puede ser una lista fija.** Medido sobre 25 cotizaciones reales: tres juegos distintos
+(A-B-C-D-F-G-H-IDD-M-N en 23 de 25, uno con K, uno sin H) y el deducible de D/F/H entre 400.000 y
+500.000. Una lista fija le prometeria a un cliente sin D ni H colision y vuelco que no contrato,
+firmado con la licencia SUGESE del agente.
+
+**Las dos trampas del PDF:**
+
+1. El bloque `DETALLE DE COBERTURAS` **cruza de la pagina 1 a la 2** (N e IDD quedan del otro lado).
+   El primer analisis leyo solo la pagina 1 y concluyo que las cotizaciones no traen IDD — era falso.
+2. El formulario del INS **trae una errata**: el titulo del bloque siguiente dice "Detalle de
+   Deduciles", sin la b. Es el terminador del parser; escrito bien no coincide con ningun PDF real y
+   el titulo se cuela dentro de la descripcion de la IDD.
+
+**Reparto:** `_parseCoberturas` (pdf-extract.js) devuelve lo crudo; `_filasCoberturas` y
+`_bloqueCoberturas` (email-marca.js) lo traducen a la tabla del correo; app.js lo pasa en los dos
+llamados a buildEmail. `G`+`M` y `N`+`IDD` se funden en una fila y **manda la ficha del que trae el
+monto** — sin eso, N+IDD decia "Incluida" y se perdia cuanto reintegra el INS.
+
+**Degradacion:** sin `data.coberturas` el correo conserva los tres beneficios de siempre, asi que los
+envios anteriores no se rompen.
+
+**Root cause de la jornada:** el smoke con PDF.js real dio coberturas vacias y parecia un bug del
+parser. Era **cache del navegador**: la funcion ni existia en la pagina cargada. Se supo por
+comprobar `typeof _parseCoberturas` antes de tocar nada.
+
+**Verificacion:** el parser contra 14 cotizaciones reales (0 problemas) y de punta a punta en el
+navegador con PDF.js sobre un PDF real: las 10 coberturas con sus montos. 16 archivos de test en
+verde, con `test-coberturas.js` nuevo (36 checks).
+
 ## 25 ago 2026 — la marca SDI en los tres correos (`f666ba0`, tag `pre-correo-v2-25ago`)
 
 Arranco con "agregá las lineas de colores SDI al borde del encabezado" y termino tocando los tres correos.
