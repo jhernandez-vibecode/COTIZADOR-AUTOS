@@ -217,3 +217,81 @@ ok('un texto raro del PDF se escapa', raro.indexOf('<img') === -1 && raro.indexO
 
 console.log('\ncoberturas (todo): ' + pass + ' OK, ' + fail + ' FAIL');
 if (fail) process.exit(1);
+
+// ===== 🔴 El correo y la guia tienen que decir LO MISMO =====
+// Paso una vez: el correo mostraba cinco coberturas y la guia seis, con
+// colision, robo y riesgos adicionales que el cliente no habia cotizado, y con
+// montos calculados sobre su valor asegurado que se leen como reales.
+console.log('\n-- el correo y la guia no se contradicen --');
+
+global.CFG = {
+  GUIDE_URL: 'https://ejemplo.test/explicacion/', FROM_NAME: 'Agente', LICENSE: '00-0000',
+  WEBSITE: 'www.ejemplo.test', AGENDA_URL: 'https://ejemplo.test/cita', LOGO_URL: 'x',
+  LOGO_SDI_URL: 'x', FROM_EMAIL: 'a@b.test', PHONE: '0000-0000'
+};
+var _fs = require('fs'), _path = require('path');
+Object.keys(M).forEach(function (k) { global[k] = M[k]; });
+eval(_fs.readFileSync(_path.join(__dirname, '..', 'js', 'email-template.js'), 'utf8'));
+
+function codigosDelCorreo(html) {
+  var out = [];
+  (html.match(/>([A-Z]{1,3}(?: &#183; [A-Z]{1,3})?)<\/span>/g) || []).forEach(function (m) {
+    m.replace(/>|<\/span>/g, '').split(' &#183; ').forEach(function (c) {
+      if (/^[A-Z]{1,3}$/.test(c.trim())) out.push(c.trim());
+    });
+  });
+  return out;
+}
+function codigosDelEnlace(html) {
+  var m = /[?&]cb=([^&"']+)/.exec(html);
+  if (!m) return null;
+  return decodeURIComponent(m[1]).split('.').map(function (t) { return t.split('-')[0]; });
+}
+
+var COT = { nombre: 'Ana', vehiculo: 'X', plate: 'BXY123', valor: '18,000,000.00', prices: {}, sustRepos: '' };
+
+// El caso de JC: cotizacion SIN colision, SIN robo y SIN riesgos adicionales
+var SIN_DFH = [
+  { cod: 'A', desc: 'RC', montos: [{ etiqueta: 'Monto por accidente', valor: '300,000,000.00' }] },
+  { cod: 'B', desc: 'Med', montos: [{ etiqueta: 'Monto cubierto', valor: '15,000,000.00' }] },
+  { cod: 'C', desc: 'RC D', montos: [{ etiqueta: 'Monto asegurado', valor: '100,000,000.00' }] },
+  { cod: 'G', desc: 'Multi', montos: [] },
+  { cod: 'M', desc: 'Multi ext', montos: [] },
+  { cod: 'N', desc: 'Exención deducible Coberturas C', montos: [] }
+];
+var htmlSin = buildEmail(Object.assign({ coberturas: SIN_DFH }, COT));
+var enlaceSin = codigosDelEnlace(htmlSin);
+
+ok('el enlace de la guia lleva las coberturas', enlaceSin !== null);
+ok('la guia recibe las MISMAS que el correo',
+   JSON.stringify(enlaceSin) === JSON.stringify(SIN_DFH.map(function (c) { return c.cod; })));
+ok('sin colision cotizada, la guia no la recibe', enlaceSin.indexOf('D') === -1);
+ok('sin robo cotizado, la guia no lo recibe', enlaceSin.indexOf('F') === -1);
+ok('sin riesgos adicionales, la guia no los recibe', enlaceSin.indexOf('H') === -1);
+ok('el correo tampoco los muestra',
+   htmlSin.indexOf('Colisión y vuelco') === -1 && htmlSin.indexOf('Riesgos adicionales') === -1);
+ok('los montos viajan a la guia',
+   /cb=A-300000000/.test(htmlSin) && htmlSin.indexOf('B-15000000') !== -1);
+
+// Con el paquete completo tienen que ir las diez
+var COMPLETO = SIN_DFH.concat([
+  { cod: 'D', desc: 'Colision', montos: [{ etiqueta: 'Monto asegurado', valor: '18,000,000.00' }] },
+  { cod: 'F', desc: 'Robo', montos: [] },
+  { cod: 'H', desc: 'Riesgos', montos: [{ etiqueta: 'Monto asegurado', valor: '18,000,000.00' }] }
+]);
+var enlaceCom = codigosDelEnlace(buildEmail(Object.assign({ coberturas: COMPLETO }, COT)));
+ok('con el paquete completo van todas', enlaceCom.length === COMPLETO.length);
+ok('y ahi si van D, F y H',
+   enlaceCom.indexOf('D') !== -1 && enlaceCom.indexOf('F') !== -1 && enlaceCom.indexOf('H') !== -1);
+
+// 🔴 Un correo sin coberturas NO debe mandar el parametro: los enlaces ya
+// enviados no lo llevan y la guia tiene que seguir mostrandose como siempre.
+ok('sin coberturas no se manda el parametro', codigosDelEnlace(buildEmail(COT)) === null);
+ok('codificar sin nada devuelve vacio',
+   _codificarCoberturas([]) === '' && _codificarCoberturas() === '' && _codificarCoberturas(null) === '');
+ok('un codigo raro no ensucia el enlace', _codificarCoberturas([{ cod: 'A b/c', montos: [] }]) === 'ABC');
+ok('un monto que no es numero se ignora',
+   _codificarCoberturas([{ cod: 'A', montos: [{ etiqueta: 'x', valor: 'abc' }] }]) === 'A');
+
+console.log('\ncoberturas (todo): ' + pass + ' OK, ' + fail + ' FAIL');
+if (fail) process.exit(1);

@@ -116,7 +116,9 @@ function buildEmail(params) {
     valor:         p.valor,
     sustReposCode: _sustReposToCode(p.sustRepos),
     dedDFH:        p.dedDFH,
-    prices:        prices
+    prices:        prices,
+    // Para que la guia muestre LAS MISMAS coberturas que este correo.
+    coberturas:    p.coberturas
   });
 
   // Familia de fuentes con fallback (Outlook ignora Google Fonts → cae a Helvetica)
@@ -483,6 +485,33 @@ function _escape(s) {
  * @param {object} [extras.prices]        - { anual, semestral, trimestral } strings ya extraídos del PDF
  * @returns {string} URL del explicador con query params
  */
+/**
+ * Empaqueta las coberturas para el URL de la guia.
+ *
+ * 🔴 Sin esto, la guia y el correo se contradicen: la guia trae seis
+ * coberturas escritas a mano y le mostraria al cliente colision, robo o
+ * riesgos adicionales aunque no los haya cotizado — con montos calculados
+ * sobre el valor asegurado, que parecen reales. Es lo que el correo se cuida
+ * de no hacer, y tiene que valer para los dos.
+ *
+ * @param {Array} coberturas - de data.coberturas
+ * @returns {string} "A-300000000.B-15000000.C.G.M" o '' si no hay
+ */
+function _codificarCoberturas(coberturas) {
+  if (!Array.isArray(coberturas) || !coberturas.length) return '';
+  return coberturas.map(function (c) {
+    const cod = String(c && c.cod ? c.cod : '').toUpperCase().replace(/[^A-Z]/g, '');
+    if (!cod) return '';
+    let monto = '';
+    if (c.montos && c.montos.length) {
+      // el ultimo es el techo del evento (A trae "por persona" y "por accidente")
+      const v = String(c.montos[c.montos.length - 1].valor || '').replace(/,/g, '').replace(/\.\d+$/, '');
+      if (/^\d+$/.test(v) && Number(v) > 0) monto = '-' + v;
+    }
+    return cod + monto;
+  }).filter(Boolean).join('.');
+}
+
 function _buildGuideUrl(extras) {
   const base = CFG.GUIDE_URL;
   const params = [];
@@ -523,6 +552,12 @@ function _buildGuideUrl(extras) {
     add('ps', num(x.prices.semestral));
     add('pt', num(x.prices.trimestral));
   }
+  // cb: las coberturas que trae ESTA cotizacion, para que la guia muestre las
+  // mismas que el correo. Sin esto la guia enseñaba sus seis fijas y le podia
+  // prometer al cliente colision o robo que no contrato.
+  // Formato: "A-300000000.B-15000000.C.G.M" — codigo, y el monto detras de un
+  // guion cuando el PDF lo trae. El punto y el guion no se escapan en un URL.
+  add('cb', _codificarCoberturas(x.coberturas));
 
   if (params.length === 0) return base;
   const sep = base.indexOf('?') === -1 ? '?' : '&';
