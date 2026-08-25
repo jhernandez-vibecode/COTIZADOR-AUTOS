@@ -174,3 +174,17 @@ ok('sin argumentos no lanza', M._notaDeducibles() === '');
 
 console.log('\ncoberturas (con la nota): ' + pass + ' OK, ' + fail + ' FAIL');
 if (fail) process.exit(1);
+
+// 🔴 La nota YA viene como HTML: si el bloque la vuelve a escapar, el cliente
+// lee "m&iacute;nimo &#8353;150.000" en crudo. Paso una vez.
+console.log('\n-- la nota no se escapa dos veces --');
+var htmlNota = M._bloqueCoberturas({ filas: f, notaDeducible: M._notaDeducibles(DED, cob), fontFam: 'Arial' });
+ok('no se ve el escape doble', htmlNota.indexOf('&amp;#8353;') === -1 && htmlNota.indexOf('&amp;iacute;') === -1);
+ok('el simbolo de colones llega como entidad viva', htmlNota.indexOf('&#8353;150.000') !== -1);
+ok('las tildes llegan vivas', htmlNota.indexOf('m&iacute;nimo') !== -1);
+// pero lo que sale del PDF con formato raro SI tiene que escaparse
+var raro = M._notaDeducibles(['Cobertura C: <img src=x onerror=alert(1)>'], []);
+ok('un texto raro del PDF se escapa', raro.indexOf('<img') === -1 && raro.indexOf('&lt;img') !== -1);
+
+console.log('\ncoberturas (todo): ' + pass + ' OK, ' + fail + ' FAIL');
+if (fail) process.exit(1);

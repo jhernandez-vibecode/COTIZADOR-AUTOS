@@ -456,8 +456,11 @@ function _bloqueCoberturas(o) {
     '          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">' + cuerpo + '</table>\n' +
     (o.notaDeducible
       ? '          <p style="margin:14px 0 0;padding:10px 12px;background:#f8fafc;border:1px solid ' + SDI_LINEA +
+        // La nota YA viene como HTML (la arma _notaDeducibles, que escapa por
+        // su cuenta lo que sale del PDF). Volver a escaparla aqui hacia que el
+        // cliente leyera "m&iacute;nimo &#8353;150.000" en crudo.
         ';border-radius:6px;font-size:11px;color:' + SDI_GRIS + ';line-height:1.55;"><b style="color:' + SDI_NAVY +
-        ';">Deducibles de esta cotizaci&oacute;n:</b> ' + _escMarca(o.notaDeducible) + '</p>\n'
+        ';">Deducibles de esta cotizaci&oacute;n:</b> ' + o.notaDeducible + '</p>\n'
       : '') +
     '        </td></tr>';
 }
@@ -538,7 +541,10 @@ function _notaDeducibles(deducibles, coberturas) {
     } else if (isFinite(minimo)) {
       cuerpo = 'deducible ' + (tipoTxt ? tipoTxt + ' ' : '') + 'de &#8353;' + minimo.toLocaleString('de-DE');
     } else {
-      cuerpo = resto;   // formato inesperado: se muestra tal cual, sin inventar
+      // formato inesperado: se muestra tal cual, sin inventar. Se escapa
+      // porque sale del PDF y esta funcion devuelve HTML que no se vuelve a
+      // escapar aguas abajo.
+      cuerpo = _escMarca(resto);
     }
     var texto = etiqueta + ': ' + cuerpo + '.';
 
