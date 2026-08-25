@@ -191,6 +191,11 @@ ok('sin argumentos no lanza', M._notaDeducibles().length === 0);
 console.log('\n-- los cuadros --');
 var cuadros = M._cuadrosDeducibles(partes, 'Arial');
 ok('son dos cuadros', (cuadros.match(/<td width="50%"/g) || []).length === 2);
+// Sin titulo, los cuadros salen despues de la lista de coberturas y nadie sabe
+// que hablan del deducible.
+ok('llevan titulo, para que se sepa de que hablan',
+   cuadros.indexOf('El deducible') !== -1 && cuadros.indexOf('pon&eacute;s vos') !== -1);
+ok('el titulo explica que es el deducible', cuadros.indexOf('parte del da&ntilde;o que asum') !== -1);
 ok('con el mismo tratamiento que las celdas de pago',
    cuadros.indexOf('border:1px solid #e0e7ef') !== -1 && cuadros.indexOf('border-radius:10px') !== -1);
 ok('con uno solo ocupa todo el ancho',

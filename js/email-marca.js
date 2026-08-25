@@ -616,8 +616,18 @@ function _cuadrosDeducibles(partes, fontFam) {
     '</td>';
   };
 
-  return '          <table width="100%" cellpadding="0" cellspacing="0" border="0" ' +
-    'style="border-collapse:separate;border-spacing:6px 0;margin-top:16px;"><tr>' +
+  // Sin titulo, los cuadros aparecen despues de la lista de coberturas y nadie
+  // sabe que hablan del deducible. El titulo lo dice en el idioma del cliente:
+  // no "deducible" a secas, sino que es lo que le toca poner a el.
+  var titulo =
+    '          <p style="margin:22px 0 2px;font-family:' + fontFam + ';font-size:13px;font-weight:700;' +
+      'color:' + SDI_NAVY + ';line-height:1.35;">El deducible: cu&aacute;nto pon&eacute;s vos si hay un evento</p>\n' +
+    '          <p style="margin:0 0 4px;font-size:11.5px;color:' + SDI_GRIS + ';line-height:1.5;">' +
+      'Es la parte del da&ntilde;o que asum&iacute;s vos. Cambia seg&uacute;n a qui&eacute;n se le hizo el da&ntilde;o.</p>\n';
+
+  return titulo +
+    '          <table width="100%" cellpadding="0" cellspacing="0" border="0" ' +
+    'style="border-collapse:separate;border-spacing:6px 0;margin-top:8px;"><tr>' +
     lista.map(celda).join('') + '</tr></table>\n';
 }
 
