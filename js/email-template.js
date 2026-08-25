@@ -160,7 +160,7 @@ function buildEmail(params) {
   const coberturasHtml = (typeof _bloqueCoberturas === 'function')
     ? _bloqueCoberturas({
         filas: _filasCoberturas(p.coberturas, p.deducibles),
-        notaDeducible: (p.deducibles || []).join(' '),
+        notaDeducible: _notaDeducibles(p.deducibles, p.coberturas),
         fontFam: fontFam
       })
     : '';

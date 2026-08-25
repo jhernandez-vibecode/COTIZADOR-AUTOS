@@ -265,7 +265,7 @@ function _pieSDI(o) {
  * (docs/fuentes-ins/REGLAS-INS-VERIFICADAS.md).
  */
 var SDI_COBERTURAS = {
-  A:   { nombre: 'Daños a personas',             grupo: 1, tono: 'azul',
+  A:   { nombre: 'Lesiones a personas',          grupo: 1, tono: 'azul',
          que: 'Si causás un accidente con lesiones o muerte de terceros.' },
   B:   { nombre: 'Servicios médicos familiares', grupo: 1, tono: 'azul',
          que: 'Atención tuya y de tu familia dentro del vehículo.' },
@@ -462,13 +462,111 @@ function _bloqueCoberturas(o) {
     '        </td></tr>';
 }
 
+
+/**
+ * La nota de deducibles, explicada.
+ *
+ * Antes se copiaba la linea del PDF tal cual. Ahora se explica lo que esa
+ * linea significa PARA ESTE CLIENTE, que es lo que de verdad quiere saber:
+ * cuando paga y cuando no.
+ *
+ * 🔴 La explicacion es CONDICIONAL. La parte de "se cubre al 100%" solo se
+ * escribe si la cotizacion trae la cobertura que lo hace posible (N para la
+ * exencion, IDD para el reintegro). Si no la trae, se queda solo el deducible
+ * pelado: decirle a alguien que tiene una cobertura que no contrato seria
+ * prometerle algo que la poliza no respalda.
+ *
+ * 🔴 El corte de ₡750.000 NO es un numero fijo: es el minimo dividido por el
+ * porcentaje (150.000 / 0,20). Es el punto donde el 20% del dano supera al
+ * minimo. Si el INS cambia los montos, se recalcula solo.
+ *
+ * Se quitan las referencias en dolares ("o $250"): el cliente paga en colones.
+ *
+ * @param {string[]} deducibles - lineas crudas del PDF
+ * @param {Array} coberturas - las de _parseCoberturas, para saber si hay N/IDD
+ * @returns {string} '' si no hay nada que explicar
+ */
+function _notaDeducibles(deducibles, coberturas) {
+  var cods = {};
+  (coberturas || []).forEach(function (c) { cods[c.cod] = c; });
+
+  // ¿Sobre que cobertura aplica la exencion N? El PDF lo dice en su
+  // descripcion ("Exencion deducible Coberturas C").
+  var exentas = {};
+  if (cods.N) {
+    var m = /Coberturas?\s+([A-Z][A-Z,\s.Yy]*)$/.exec(cods.N.desc || '');
+    var letras = m ? m[1] : 'C';
+    letras.toUpperCase().replace(/\s*Y\s*/g, ',').split(/[,\s.]+/).forEach(function (L) {
+      if (/^[A-Z]$/.test(L)) exentas[L] = true;
+    });
+  }
+  // El monto que reintegra la IDD, si viene
+  var montoIDD = '';
+  if (cods.IDD && cods.IDD.montos && cods.IDD.montos.length) {
+    montoIDD = _montoCR(cods.IDD.montos[cods.IDD.montos.length - 1].valor);
+  }
+
+  var partes = [];
+  (deducibles || []).forEach(function (linea) {
+    var t = String(linea).trim();
+    var m = /^Coberturas?\s+([A-Z][A-Z,\s.Yy]*?)\s*:\s*(.+)$/.exec(t);
+    if (!m) return;
+
+    var letras = m[1].toUpperCase().replace(/\s*Y\s*/g, ',').split(/[,\s.]+/).filter(function (L) {
+      return /^[A-Z]$/.test(L);
+    });
+    var resto = m[2].replace(/\s*o\s*\$[\d,.]+/gi, '').trim();   // fuera los dolares
+
+    var pct = /(\d+)\s*%/.exec(resto);
+    var mon = /[¢₡]\s*([\d,.]+)/.exec(resto);
+    // el PDF trae el monto en formato US ("150,000"); se quitan separadores
+    var minimo = mon ? parseFloat(String(mon[1]).replace(/[.,]/g, '')) : NaN;
+
+    var etiqueta = 'Cobertura' + (letras.length > 1 ? 's' : '') + ' ' +
+      (letras.length > 1 ? letras.slice(0, -1).join(', ') + ' y ' + letras[letras.length - 1] : letras[0]);
+
+    // Se reescribe en vez de copiar el crudo del PDF: asi el simbolo y los
+    // miles quedan iguales en toda la nota (el PDF usa "¢150,000" y el resto
+    // del correo "₡150.000"). Los DATOS no se tocan: el tipo de deducible
+    // ("Ordinario", "fijo") y los numeros son los del documento.
+    var tipo = /Deducible\s+([A-Za-zÁ-úá-ú]+)/i.exec(resto);
+    var tipoTxt = tipo ? tipo[1].toLowerCase() : '';
+    var cuerpo;
+    if (pct && isFinite(minimo)) {
+      cuerpo = 'deducible ' + (tipoTxt ? tipoTxt + ' ' : '') + 'del ' + pct[1] +
+               '%, m&iacute;nimo &#8353;' + minimo.toLocaleString('de-DE');
+    } else if (isFinite(minimo)) {
+      cuerpo = 'deducible ' + (tipoTxt ? tipoTxt + ' ' : '') + 'de &#8353;' + minimo.toLocaleString('de-DE');
+    } else {
+      cuerpo = resto;   // formato inesperado: se muestra tal cual, sin inventar
+    }
+    var texto = etiqueta + ': ' + cuerpo + '.';
+
+    // ¿Alguna de estas coberturas esta exenta por la N?
+    var hayExenta = letras.some(function (L) { return exentas[L]; });
+    if (hayExenta && pct && isFinite(minimo) && minimo > 0) {
+      var corte = Math.round(minimo / (parseFloat(pct[1]) / 100));
+      texto += ' Como ten&eacute;s la cobertura N, los da&ntilde;os mayores a &#8353;' + corte.toLocaleString('de-DE') +
+        ' se cubren al 100%; si el da&ntilde;o es menor, aplica el deducible de &#8353;' + minimo.toLocaleString('de-DE') + '.';
+    }
+    // ¿La IDD respalda estas coberturas? (la IDD aplica al deducible fijo)
+    if (cods.IDD && !hayExenta) {
+      texto += ' Como ten&eacute;s la cobertura IDD, se cubre al 100% en dos eventos al a&ntilde;o' +
+        (montoIDD ? ', hasta &#8353;' + montoIDD : '') + '.';
+    }
+    partes.push(texto);
+  });
+
+  return partes.join(' ');
+}
+
 // Export para los tests con Node (sin romper el navegador).
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     _fileteSDI: _fileteSDI, _analizarPlaca: _analizarPlaca, _placaEsRelleno: _placaEsRelleno,
     _tarjetaVehiculo: _tarjetaVehiculo, _bloqueSobrio: _bloqueSobrio, _pieSDI: _pieSDI,
     _ahorroAnual: _ahorroAnual, _bloquePagos: _bloquePagos,
-    _bloqueCoberturas: _bloqueCoberturas, _filasCoberturas: _filasCoberturas,
+    _bloqueCoberturas: _bloqueCoberturas, _filasCoberturas: _filasCoberturas, _notaDeducibles: _notaDeducibles,
     _deduciblePorCobertura: _deduciblePorCobertura, _montoCR: _montoCR, _enPalabras: _enPalabras,
     SDI_TONOS: SDI_TONOS, SDI_COBERTURAS: SDI_COBERTURAS,
     SDI_NAVY: SDI_NAVY, SDI_VERDE: SDI_VERDE, SDI_ROJO_CL: SDI_ROJO_CL, SDI_COLORES: SDI_COLORES

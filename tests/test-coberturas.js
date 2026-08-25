@@ -124,7 +124,7 @@ ok('G y M se muestran en una sola fila', f.some(function (x) { return x.cod === 
 ok('N e IDD tambien', f.some(function (x) { return x.cod === 'N · IDD'; }));
 ok('quedan ocho filas de las diez coberturas', f.length === 8);
 ok('los nombres van en lenguaje llano',
-   f.some(function (x) { return x.nombre === 'Daños a personas'; }) &&
+   f.some(function (x) { return x.nombre === 'Lesiones a personas'; }) &&
    f.some(function (x) { return x.nombre === 'Colisión y vuelco'; }));
 ok('el monto sale del PDF', f[0].monto === '₡300.000.000');
 ok('el deducible aparece en su fila',
@@ -143,12 +143,34 @@ ok('G sin su pareja M va sola', fr.some(function (x) { return x.cod === 'G'; }))
 console.log('\n-- el bloque HTML --');
 var html = M._bloqueCoberturas({ filas: f, notaDeducible: DED.join(' '), fontFam: 'Arial' });
 ok('dice cuantas coberturas son', html.indexOf('Estas son las ocho coberturas') !== -1);
-ok('lleva la nota de deducibles literal del PDF', html.indexOf('Deducible fijo - ¢400.000') !== -1 || html.indexOf('¢400,000') !== -1);
+ok('lleva la nota de deducibles que se le pase', html.indexOf('Deducible fijo') !== -1);
 ok('los chips llevan el color puro del manual',
    ['#0369A1', '#0D9488', '#EA580C', '#C9A227'].every(function (c) { return html.indexOf('background:' + c) !== -1; }));
 ok('sin barra de color a la izquierda', (html.match(/border-left:\d+px solid/g) || []).length === 0);
 ok('sin filas devuelve vacio, no un bloque hueco', M._bloqueCoberturas({ filas: [] }) === '');
 ok('sin argumentos no lanza', M._bloqueCoberturas() === '');
 
-console.log('\ncoberturas: ' + pass + ' OK, ' + fail + ' FAIL');
+// ===== La nota de deducibles, explicada (25 ago 2026) =====
+console.log('\n-- la nota de deducibles --');
+var conNIDD = M._notaDeducibles(DED, cob);
+ok('reescribe el deducible con el simbolo y los miles del correo',
+   conNIDD.indexOf('deducible ordinario del 20%') !== -1 && conNIDD.indexOf('&#8353;150.000') !== -1);
+ok('quita la referencia en dolares', !/\$\d/.test(conNIDD));
+ok('no deja el simbolo del PDF', conNIDD.indexOf('¢') === -1);
+ok('explica lo que hace la N', conNIDD.indexOf('cobertura N') !== -1 && conNIDD.indexOf('se cubren al 100%') !== -1);
+ok('explica lo que hace la IDD', conNIDD.indexOf('cobertura IDD') !== -1 && conNIDD.indexOf('dos eventos al a') !== -1);
+// 150.000 / 0,20 = 750.000. NO es un numero fijo.
+ok('calcula el corte a partir del minimo y el porcentaje', conNIDD.indexOf('750.000') !== -1);
+ok('con otro minimo el corte cambia',
+   M._notaDeducibles(['Cobertura C: Deducible Ordinario del 20% - ¢200,000 o $330'], cob).indexOf('1.000.000') !== -1);
+
+// 🔴 Lo mas importante: sin la cobertura no se promete nada.
+var sinNada = M._notaDeducibles(DED, [{ cod: 'A', desc: 'RC', montos: [] }]);
+ok('SIN la N no dice que se cubre al 100%', sinNada.indexOf('100%') === -1);
+ok('SIN la IDD no habla de dos eventos', sinNada.indexOf('dos eventos') === -1);
+ok('SIN nada igual muestra el deducible', sinNada.indexOf('deducible ordinario del 20%') !== -1);
+ok('sin lineas devuelve vacio', M._notaDeducibles([], cob) === '');
+ok('sin argumentos no lanza', M._notaDeducibles() === '');
+
+console.log('\ncoberturas (con la nota): ' + pass + ' OK, ' + fail + ' FAIL');
 if (fail) process.exit(1);
