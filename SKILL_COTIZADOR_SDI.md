@@ -13,6 +13,43 @@ description: >
 
 # Cotizador SDI — Checkpoint extendido (historico largo)
 
+## 25 ago 2026 — la marca SDI en los tres correos (`f666ba0`, tag `pre-correo-v2-25ago`)
+
+Arranco con "agregá las lineas de colores SDI al borde del encabezado" y termino tocando los tres correos.
+
+**Lo nuevo:** `js/email-marca.js`, modulo compartido por los tres correos (filete, chapa de la placa, tarjeta del
+vehiculo, bloque sobrio, pie, formas de pago, calculo del ahorro). Se carga ANTES de `email-template.js` /
+`poliza-email.js` / `renovacion-email.js` en las 3 paginas. Existe para que la marca no derive en tres copias.
+Test propio: `tests/test-email-marca.js`, 45 checks.
+
+**El logotipo del pie paso a ser IMAGEN** (`img/sdi-logo-email.png`, 384x163, 8,6 KB). Antes se recreaba con tablas,
+pero eso nunca fue el logo: la tipografia del kit esta **vectorizada** (`04-sdi-logo-negativo.svg` = 2 paths + 4
+rects, cero `<text>`) y en correo las fuentes web no cargan, asi que el "SDI" hecho con texto se veia en Arial.
+Se rasterizo del SVG oficial con Chrome headless y `--default-background-color=00000000`.
+
+**Root causes y trampas de la jornada:**
+- `buildEmail` uso al principio las constantes `SDI_*` de `email-marca.js` y reventaba con `SDI_VERDE is not
+  defined` en el test. En el navegador las `const` de script se comparten y habria funcionado, pero es fragil y no
+  se puede testear: los colores quedaron **literales** en `email-template.js`.
+- El relleno `000111` del cero kilometros **viajaba al explicador** por el param `p=` aunque el correo ya no lo
+  imprimia. Se corta en `_buildGuideUrl`.
+- Las tildes no eran un descuido: **todo `email-template.js` las evitaba a proposito**. Se comprobo que no habia
+  razon tecnica (el MIME cierra con `btoa(unescape(encodeURIComponent(...)))`, que codifica UTF-8 bien).
+- `renovacion-email.js` usaba **Poppins** en los titulos y en su `<link>` de fuentes. No es tipografia de SDI.
+- La licencia SUGESE del pie estaba en `#64748b` sobre navy = **3,32:1**. Mismo problema que se corrigio en el rail
+  el 7 ago y que habia quedado vivo en el correo.
+- Cuatro tests se cayeron y **los cuatro eran tests desactualizados por cambios intencionales**, no bugs: el texto
+  de repuestos, el logo de 4 colores del pie, y dos que no cargaban `email-marca.js`. Ninguno tapaba un problema
+  real — pero dos fallas de `undefined` en renovacion **si** cazaron un bug de verdad (`CFG.LOGO_SDI_URL` sin
+  definir en el CFG de prueba), que se resolvio con un respaldo en `_pieSDI`.
+
+**Verificacion:** 15 archivos de test en verde; smoke en localhost con las 3 paginas (los 3 modales abren con clic
+real, los 3 correos se arman sin lanzar) y verificacion en produccion tras el deploy.
+
+**Lo que quedo pendiente y es lo mas grande:** la lista de coberturas leida del PDF y el explicador dinamico.
+Diseñado y aprobado en mockup, sin implementar. Ver "Pendientes" en el router.
+
+
 > **Cual leer primero.** El **router vigente** es el skill de usuario
 > `C:/Users/segur/.claude/skills/especialista-cotizador-autos-sdi/SKILL.md`
 > (`/especialista-cotizador-autos-sdi`): estado actual, reglas, gotchas y pendientes.
