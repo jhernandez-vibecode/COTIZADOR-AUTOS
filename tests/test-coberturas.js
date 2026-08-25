@@ -150,30 +150,54 @@ ok('sin barra de color a la izquierda', (html.match(/border-left:\d+px solid/g) 
 ok('sin filas devuelve vacio, no un bloque hueco', M._bloqueCoberturas({ filas: [] }) === '');
 ok('sin argumentos no lanza', M._bloqueCoberturas() === '');
 
-// ===== La nota de deducibles, explicada (25 ago 2026) =====
+// ===== La nota de deducibles, en cuadros (25 ago 2026) =====
+// Devuelve las partes por separado para poder pintarlas en dos cuadros,
+// uno para el dano a un tercero y otro para el dano al propio vehiculo.
 console.log('\n-- la nota de deducibles --');
-var conNIDD = M._notaDeducibles(DED, cob);
+var partes = M._notaDeducibles(DED, cob);
+var todo = JSON.stringify(partes);
+ok('devuelve una parte por linea de deducible', partes.length === 2);
+ok('la primera es la del tercero', partes[0].etiqueta === 'Cobertura C');
+ok('la segunda agrupa D, F y H', partes[1].etiqueta === 'Coberturas D, F y H');
+ok('cada una dice de que habla',
+   partes[0].deQue.indexOf('tercero') !== -1 && partes[1].deQue.indexOf('veh') !== -1);
 ok('reescribe el deducible con el simbolo y los miles del correo',
-   conNIDD.indexOf('deducible ordinario del 20%') !== -1 && conNIDD.indexOf('&#8353;150.000') !== -1);
-ok('quita la referencia en dolares', !/\$\d/.test(conNIDD));
-ok('no deja el simbolo del PDF', conNIDD.indexOf('¢') === -1);
-ok('explica lo que hace la N', conNIDD.indexOf('cobertura N') !== -1 && conNIDD.indexOf('se cubren al 100%') !== -1);
-ok('explica lo que hace la IDD', conNIDD.indexOf('cobertura IDD') !== -1 && conNIDD.indexOf('dos eventos al a') !== -1);
+   partes[0].deducible.indexOf('deducible ordinario del 20%') !== -1 &&
+   partes[0].deducible.indexOf('&#8353;150.000') !== -1);
+ok('quita la referencia en dolares', !/\$\d/.test(todo));
+ok('no deja el simbolo del PDF', todo.indexOf('¢') === -1);
+ok('explica lo que hace la N',
+   partes[0].explicacion.indexOf('cobertura <b>N</b>') !== -1 &&
+   partes[0].explicacion.indexOf('100%') !== -1);
+ok('explica lo que hace la IDD',
+   partes[1].explicacion.indexOf('cobertura <b>IDD</b>') !== -1 &&
+   partes[1].explicacion.indexOf('dos eventos al a') !== -1);
 // 150.000 / 0,20 = 750.000. NO es un numero fijo.
-ok('calcula el corte a partir del minimo y el porcentaje', conNIDD.indexOf('750.000') !== -1);
+ok('calcula el corte a partir del minimo y el porcentaje',
+   partes[0].explicacion.indexOf('750.000') !== -1);
 ok('con otro minimo el corte cambia',
-   M._notaDeducibles(['Cobertura C: Deducible Ordinario del 20% - ¢200,000 o $330'], cob).indexOf('1.000.000') !== -1);
+   M._notaDeducibles(['Cobertura C: Deducible Ordinario del 20% - ¢200,000 o $330'], cob)[0]
+    .explicacion.indexOf('1.000.000') !== -1);
 
 // 🔴 Lo mas importante: sin la cobertura no se promete nada.
 var sinNada = M._notaDeducibles(DED, [{ cod: 'A', desc: 'RC', montos: [] }]);
-ok('SIN la N no dice que se cubre al 100%', sinNada.indexOf('100%') === -1);
-ok('SIN la IDD no habla de dos eventos', sinNada.indexOf('dos eventos') === -1);
-ok('SIN nada igual muestra el deducible', sinNada.indexOf('deducible ordinario del 20%') !== -1);
-ok('sin lineas devuelve vacio', M._notaDeducibles([], cob) === '');
-ok('sin argumentos no lanza', M._notaDeducibles() === '');
+ok('SIN la N no dice que se cubre al 100%', sinNada[0].explicacion === '');
+ok('SIN la IDD no habla de dos eventos', sinNada[1].explicacion === '');
+ok('SIN nada igual muestra el deducible',
+   sinNada[0].deducible.indexOf('deducible ordinario del 20%') !== -1);
+ok('sin lineas devuelve vacio', M._notaDeducibles([], cob).length === 0);
+ok('sin argumentos no lanza', M._notaDeducibles().length === 0);
 
-console.log('\ncoberturas (con la nota): ' + pass + ' OK, ' + fail + ' FAIL');
-if (fail) process.exit(1);
+console.log('\n-- los cuadros --');
+var cuadros = M._cuadrosDeducibles(partes, 'Arial');
+ok('son dos cuadros', (cuadros.match(/<td width="50%"/g) || []).length === 2);
+ok('con el mismo tratamiento que las celdas de pago',
+   cuadros.indexOf('border:1px solid #e0e7ef') !== -1 && cuadros.indexOf('border-radius:10px') !== -1);
+ok('con uno solo ocupa todo el ancho',
+   M._cuadrosDeducibles([partes[0]], 'Arial').indexOf('width="100%"') !== -1);
+ok('sin partes no deja un cuadro vacio',
+   M._cuadrosDeducibles([], 'Arial') === '' && M._cuadrosDeducibles() === '');
+ok('sin barra de color a la izquierda', (cuadros.match(/border-left:\d+px solid/g) || []).length === 0);
 
 // 🔴 La nota YA viene como HTML: si el bloque la vuelve a escapar, el cliente
 // lee "m&iacute;nimo &#8353;150.000" en crudo. Paso una vez.
@@ -183,7 +207,7 @@ ok('no se ve el escape doble', htmlNota.indexOf('&amp;#8353;') === -1 && htmlNot
 ok('el simbolo de colones llega como entidad viva', htmlNota.indexOf('&#8353;150.000') !== -1);
 ok('las tildes llegan vivas', htmlNota.indexOf('m&iacute;nimo') !== -1);
 // pero lo que sale del PDF con formato raro SI tiene que escaparse
-var raro = M._notaDeducibles(['Cobertura C: <img src=x onerror=alert(1)>'], []);
+var raro = JSON.stringify(M._notaDeducibles(['Cobertura C: <img src=x onerror=alert(1)>'], []));
 ok('un texto raro del PDF se escapa', raro.indexOf('<img') === -1 && raro.indexOf('&lt;img') !== -1);
 
 console.log('\ncoberturas (todo): ' + pass + ' OK, ' + fail + ' FAIL');

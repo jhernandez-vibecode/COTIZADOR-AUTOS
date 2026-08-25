@@ -454,14 +454,17 @@ function _bloqueCoberturas(o) {
     '          <p style="margin:10px 0 2px;font-size:12px;color:' + SDI_GRIS + ';line-height:1.5;">Estas son las ' +
       _enPalabras(filas.length) + ' coberturas que trae tu cotizaci&oacute;n, con el monto de cada una.</p>\n' +
     '          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">' + cuerpo + '</table>\n' +
-    (o.notaDeducible
-      ? '          <p style="margin:14px 0 0;padding:10px 12px;background:#f8fafc;border:1px solid ' + SDI_LINEA +
-        // La nota YA viene como HTML (la arma _notaDeducibles, que escapa por
-        // su cuenta lo que sale del PDF). Volver a escaparla aqui hacia que el
-        // cliente leyera "m&iacute;nimo &#8353;150.000" en crudo.
-        ';border-radius:6px;font-size:11px;color:' + SDI_GRIS + ';line-height:1.55;"><b style="color:' + SDI_NAVY +
-        ';">Deducibles de esta cotizaci&oacute;n:</b> ' + o.notaDeducible + '</p>\n'
-      : '') +
+    // Los deducibles van en CUADROS, con el mismo tratamiento que las celdas
+    // de las formas de pago. _notaDeducibles devuelve un array; si llega un
+    // texto suelto se pinta como antes, para no romper a quien lo llame asi.
+    // La nota ya viene como HTML y no se vuelve a escapar: hacerlo dejaba al
+    // cliente leyendo "m&iacute;nimo &#8353;150.000" en crudo.
+    (Array.isArray(o.notaDeducible)
+      ? _cuadrosDeducibles(o.notaDeducible, ff)
+      : (o.notaDeducible
+          ? '          <p style="margin:14px 0 0;padding:10px 12px;background:#f8fafc;border:1px solid ' + SDI_LINEA +
+            ';border-radius:6px;font-size:11px;color:' + SDI_GRIS + ';line-height:1.55;">' + o.notaDeducible + '</p>\n'
+          : '')) +
     '        </td></tr>';
 }
 
@@ -487,7 +490,8 @@ function _bloqueCoberturas(o) {
  *
  * @param {string[]} deducibles - lineas crudas del PDF
  * @param {Array} coberturas - las de _parseCoberturas, para saber si hay N/IDD
- * @returns {string} '' si no hay nada que explicar
+ * @returns {Array<{etiqueta:string,deQue:string,deducible:string,explicacion:string}>}
+ *          una entrada por linea de deducible; vacio si no hay nada que explicar
  */
 function _notaDeducibles(deducibles, coberturas) {
   var cods = {};
@@ -546,24 +550,75 @@ function _notaDeducibles(deducibles, coberturas) {
       // escapar aguas abajo.
       cuerpo = _escMarca(resto);
     }
-    var texto = etiqueta + ': ' + cuerpo + '.';
+    // Un rotulo corto que diga de que habla el cuadro, sin tecnicismos.
+    var deQue = letras.indexOf('C') !== -1 && letras.length === 1
+      ? 'Si el da&ntilde;o es a un tercero'
+      : (letras.indexOf('D') !== -1 || letras.indexOf('F') !== -1 || letras.indexOf('H') !== -1)
+        ? 'Si el da&ntilde;o es a tu veh&iacute;culo'
+        : '';
 
+    var explicacion = '';
     // ¿Alguna de estas coberturas esta exenta por la N?
     var hayExenta = letras.some(function (L) { return exentas[L]; });
     if (hayExenta && pct && isFinite(minimo) && minimo > 0) {
       var corte = Math.round(minimo / (parseFloat(pct[1]) / 100));
-      texto += ' Como ten&eacute;s la cobertura N, los da&ntilde;os mayores a &#8353;' + corte.toLocaleString('de-DE') +
-        ' se cubren al 100%; si el da&ntilde;o es menor, aplica el deducible de &#8353;' + minimo.toLocaleString('de-DE') + '.';
+      explicacion = 'Como ten&eacute;s la cobertura <b>N</b>, los da&ntilde;os mayores a &#8353;' +
+        corte.toLocaleString('de-DE') + ' se cubren al <b>100%</b>. Si el da&ntilde;o es menor, aplica el deducible de &#8353;' +
+        minimo.toLocaleString('de-DE') + '.';
     }
     // ¿La IDD respalda estas coberturas? (la IDD aplica al deducible fijo)
     if (cods.IDD && !hayExenta) {
-      texto += ' Como ten&eacute;s la cobertura IDD, se cubre al 100% en dos eventos al a&ntilde;o' +
+      explicacion = 'Como ten&eacute;s la cobertura <b>IDD</b>, se cubre al <b>100%</b> en dos eventos al a&ntilde;o' +
         (montoIDD ? ', hasta &#8353;' + montoIDD : '') + '.';
     }
-    partes.push(texto);
+
+    partes.push({ etiqueta: etiqueta, deQue: deQue, deducible: cuerpo, explicacion: explicacion });
   });
 
-  return partes.join(' ');
+  return partes;
+}
+
+
+/**
+ * Los deducibles en cuadros, no en un parrafo.
+ *
+ * Mismo tratamiento que las celdas de las formas de pago (fondo blanco, borde
+ * de 1 px, esquinas redondeadas) para que el correo se lea como una sola
+ * pieza. Uno por cada linea de deducible del PDF: en la practica, uno para el
+ * dano a un tercero y otro para el dano al propio vehiculo.
+ *
+ * Con un solo cuadro ocupa todo el ancho; con dos van lado a lado.
+ *
+ * @param {Array} partes - lo que devuelve _notaDeducibles
+ * @param {string} fontFam
+ * @returns {string} '' si no hay nada que mostrar
+ */
+function _cuadrosDeducibles(partes, fontFam) {
+  var lista = partes || [];
+  if (!lista.length) return '';
+  var ancho = Math.floor(100 / lista.length) + '%';
+
+  var celda = function (p) {
+    return '<td width="' + ancho + '" valign="top" style="background:#ffffff;border:1px solid #e0e7ef;' +
+      'border-radius:10px;padding:13px 15px;">' +
+      (p.deQue
+        ? '<p style="margin:0 0 6px;font-size:9.5px;font-weight:700;color:' + SDI_GRIS +
+          ';text-transform:uppercase;letter-spacing:0.09em;line-height:1.4;">' + p.deQue + '</p>'
+        : '') +
+      '<p style="margin:0;font-family:' + fontFam + ';font-size:13px;font-weight:700;color:' + SDI_NAVY +
+        ';line-height:1.3;">' + p.etiqueta + '</p>' +
+      '<p style="margin:3px 0 0;font-size:11.5px;color:' + SDI_GRIS + ';line-height:1.45;">' + p.deducible + '</p>' +
+      (p.explicacion
+        ? '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:10px;"><tr>' +
+          '<td style="border-top:1px solid ' + SDI_LINEA + ';height:1px;line-height:1px;font-size:0;">&nbsp;</td></tr></table>' +
+          '<p style="margin:9px 0 0;font-size:11.5px;color:#334155;line-height:1.5;">' + p.explicacion + '</p>'
+        : '') +
+    '</td>';
+  };
+
+  return '          <table width="100%" cellpadding="0" cellspacing="0" border="0" ' +
+    'style="border-collapse:separate;border-spacing:6px 0;margin-top:16px;"><tr>' +
+    lista.map(celda).join('') + '</tr></table>\n';
 }
 
 // Export para los tests con Node (sin romper el navegador).
@@ -572,7 +627,7 @@ if (typeof module !== 'undefined' && module.exports) {
     _fileteSDI: _fileteSDI, _analizarPlaca: _analizarPlaca, _placaEsRelleno: _placaEsRelleno,
     _tarjetaVehiculo: _tarjetaVehiculo, _bloqueSobrio: _bloqueSobrio, _pieSDI: _pieSDI,
     _ahorroAnual: _ahorroAnual, _bloquePagos: _bloquePagos,
-    _bloqueCoberturas: _bloqueCoberturas, _filasCoberturas: _filasCoberturas, _notaDeducibles: _notaDeducibles,
+    _bloqueCoberturas: _bloqueCoberturas, _filasCoberturas: _filasCoberturas, _notaDeducibles: _notaDeducibles, _cuadrosDeducibles: _cuadrosDeducibles,
     _deduciblePorCobertura: _deduciblePorCobertura, _montoCR: _montoCR, _enPalabras: _enPalabras,
     SDI_TONOS: SDI_TONOS, SDI_COBERTURAS: SDI_COBERTURAS,
     SDI_NAVY: SDI_NAVY, SDI_VERDE: SDI_VERDE, SDI_ROJO_CL: SDI_ROJO_CL, SDI_COLORES: SDI_COLORES
