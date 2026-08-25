@@ -16,6 +16,12 @@ global.CFG = {
   XSELL_ESTUDIANTIL_URL: ''   // vacío a propósito → debe caer al sitio del agente
 };
 
+// Los bloques de marca del pie viven en email-marca.js, compartido por los
+// tres correos. En el navegador lo carga el <script> de la página; acá hay
+// que ponerlo en el global antes de requerir el módulo que lo usa.
+var _marca = require('../js/email-marca.js');
+Object.keys(_marca).forEach(function (k) { global[k] = _marca[k]; });
+
 var _pe = require('../js/poliza-email.js');
 var buildPolizaActivaEmail = _pe.buildPolizaActivaEmail;
 var buildPolizaWaUrl       = _pe.buildPolizaWaUrl;

@@ -101,8 +101,7 @@ function buildPolizaWaUrl(params) {
     '¡Guárdela en sus favoritos y conduzca con total tranquilidad! 🛡️';
 
   var phone = polizaWaIntl(p.telCliente);
-  return 'https://web.whatsapp.com/send/?'
-    + (phone ? 'phone=' + phone + '&' : '')
+  return 'https://web.whatsapp.com/send/?'+ (phone ? 'phone=' + phone + '&' : '')
     + 'text=' + encodeURIComponent(msg);
 }
 
@@ -150,8 +149,7 @@ function buildPolizaActivaEmail(params) {
   var _assistUrl = polizaAsistenciaUrl;
 
   // Links saneados (solo http/https). Si un cross-sell viene vacío, cae al sitio
-  // del agente — PERO solo si el agente tiene web propia. Si no la tiene, queda ''
-  // (el botón se oculta abajo) en lugar de arrastrar el sitio del owner.
+  // del agente — PERO solo si el agente tiene web propia. Si no la tiene, queda ''// (el botón se oculta abajo) en lugar de arrastrar el sitio del owner.
   // Escapado UNA vez: entra crudo a tres href (assistUrl / viajeUrl / estUrl) y
   // el resto del archivo ya pasa todo por e() o _safe().
   var siteFallback = web ? e('https://' + web) : '';
@@ -174,8 +172,7 @@ function buildPolizaActivaEmail(params) {
           '<p style="margin:0;font-size:13px;color:#7c2d12;line-height:1.55;">' + e(nota).replace(/\n/g, '<br>') + '</p>' +
         '</td></tr>' +
       '</table>' +
-    '</td></tr>'
-  ) : '';
+    '</td></tr>') : '';
 
   return '' +
 '<!DOCTYPE html>' +
@@ -214,7 +211,7 @@ function buildPolizaActivaEmail(params) {
       '<tr><td style="padding:18px;text-align:center;">' +
         '<p style="margin:0 0 4px;font-family:' + fontFam + ';font-size:14px;font-weight:700;color:#0c4a6e;">Centro de Asistencia Digital (Exclusivo)</p>' +
         '<p style="margin:0 0 12px;font-size:12px;color:#475569;line-height:1.55;">Si tiene un accidente o avería, no pierda tiempo buscando números: esta guía le dice qué hacer paso a paso y le conecta al instante con el contacto correcto.</p>' +
-        '<a href="' + assistUrl + '" style="display:inline-block;background:#0369a1;color:#ffffff;text-decoration:none;border-radius:10px;padding:13px 26px;font-family:' + fontFam + ';font-weight:700;font-size:14px;">&#128241; Abrir mi guía de emergencias &rarr;</a>' +
+        '<a href="' + assistUrl + '" style="display:inline-block;background:#0369a1;color:#ffffff;text-decoration:none;border-radius:10px;padding:13px 26px;font-family:' + fontFam + ';font-weight:700;font-size:14px;"> Abrir mi guía de emergencias &rarr;</a>' +
         '<p style="margin:10px 0 0;font-size:11px;color:#64748b;line-height:1.5;">Ábrala en el celular y elija <b>"Añadir a pantalla de inicio"</b> para tenerla siempre a mano, como una App. Sin descargas.</p>' +
       '</td></tr>' +
     '</table>' +
@@ -222,7 +219,7 @@ function buildPolizaActivaEmail(params) {
 
   // 4. DOCUMENTACIÓN ADJUNTA
   '<tr><td style="padding:18px 32px 0;">' +
-    '<p style="margin:0 0 6px;font-family:' + fontFam + ';font-size:13px;font-weight:700;color:#0c2340;">&#128193; Documentación adjunta</p>' +
+    '<p style="margin:0 0 6px;font-family:' + fontFam + ';font-size:13px;font-weight:700;color:#0c2340;"> Documentación adjunta</p>' +
     '<p style="margin:0;font-size:13px;color:#334155;line-height:1.95;">' +
       '&#9989; Tarjeta del seguro<br>' +
       '&#9989; Condiciones Particulares y Generales<br>' +
@@ -233,7 +230,7 @@ function buildPolizaActivaEmail(params) {
 
   // 5. CONTACTOS DE EMERGENCIA
   '<tr><td style="padding:16px 32px 0;">' +
-    '<p style="margin:0 0 6px;font-family:' + fontFam + ';font-size:13px;font-weight:700;color:#0c2340;">&#128222; Contactos de emergencia (guárdelos)</p>' +
+    '<p style="margin:0 0 6px;font-family:' + fontFam + ';font-size:13px;font-weight:700;color:#0c2340;"> Contactos de emergencia (guárdelos)</p>' +
     '<p style="margin:0;font-size:13px;color:#334155;line-height:1.9;">' +
       'Colisiones (Inspector): <b style="color:#0c2340;">800-800-8000</b> y <b style="color:#0c2340;">911</b><br>' +
       'Asistencia en carretera (grúa / avería): <b style="color:#0c2340;">800-800-8001</b>' +
@@ -267,7 +264,7 @@ function buildPolizaActivaEmail(params) {
       '</td>' +
       // Estudiantil
       '<td width="50%" valign="top" style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:16px;">' +
-        '<p style="margin:0 0 2px;font-size:22px;line-height:1;">&#127891;</p>' +
+        '<p style="margin:0 0 2px;font-size:22px;line-height:1;"></p>' +
         '<p style="margin:6px 0 2px;font-family:' + fontFam + ';font-size:14px;font-weight:700;color:#0c2340;">Seguro Estudiantil</p>' +
         '<p style="margin:0 0 12px;font-size:12px;color:#475569;line-height:1.5;">Asegure el futuro de sus hijos durante todo el año lectivo.</p>' +
         (estUrl ? '<a href="' + estUrl + '" style="display:inline-block;background:#16a34a;color:#ffffff;text-decoration:none;border-radius:8px;padding:9px 18px;font-family:' + fontFam + ';font-weight:700;font-size:13px;">Comprar &rarr;</a>' : '') +
@@ -285,21 +282,12 @@ function buildPolizaActivaEmail(params) {
     '</p>' +
   '</td></tr>' +
 
-  // 9. FOOTER SDI (recreado en HTML, sin imagen)
-  '<tr><td bgcolor="#0c2340" style="background:#0c2340;color:#cbd5e1;padding:24px 32px 22px;text-align:center;">' +
-    '<table cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 10px;"><tr>' +
-      '<td valign="middle" style="font-family:' + fontFam + ';font-weight:500;font-size:30px;letter-spacing:-1px;color:#ffffff;line-height:1;">SDI</td>' +
-      '<td valign="middle" style="padding-left:10px;"><table cellpadding="0" cellspacing="0" border="0">' +
-        '<tr><td bgcolor="#ffffff" style="background:#ffffff;height:4px;width:20px;line-height:4px;font-size:0;">&nbsp;</td></tr>' +
-        '<tr><td style="height:3px;line-height:3px;font-size:0;">&nbsp;</td></tr>' +
-        '<tr><td bgcolor="#ffffff" style="background:#ffffff;height:4px;width:20px;line-height:4px;font-size:0;">&nbsp;</td></tr>' +
-        '<tr><td style="height:3px;line-height:3px;font-size:0;">&nbsp;</td></tr>' +
-        '<tr><td bgcolor="#ffffff" style="background:#ffffff;height:4px;width:20px;line-height:4px;font-size:0;">&nbsp;</td></tr>' +
-      '</table></td>' +
-    '</tr></table>' +
-    '<p style="margin:0;font-size:12px;color:#cbd5e1;">Plataforma de <b style="color:#ffffff;">Seguros Digitales SDI&reg;</b></p>' +
-    '<p style="margin:8px 0 0;font-size:10px;color:#64748b;">&copy; 2026 Propiedad Intelectual de ' + e(agente) + '</p>' +
-  '</td></tr>' +
+  // 9. PIE con la marca SDI (modulo compartido js/email-marca.js)
+  _pieSDI({
+    logo: CFG.LOGO_SDI_URL, correo: correoAg, web: web,
+    tel: tel, agente: agente, licencia: lic
+  }) +
+
 
 '</table></td></tr></table></body></html>';
 }

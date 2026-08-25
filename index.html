@@ -657,8 +657,12 @@
        toca la app se agrega una linea aca. -->
   <footer class="app-foot">
     <details>
-      <summary>Última actualización: 21 ago 2026 — el control ya no borra las cotizaciones de meses anteriores</summary>
+      <summary>Última actualización: 25 ago 2026 — el correo al cliente estrena la imagen de la marca</summary>
       <ul>
+        <li><b>25 ago 2026</b> — <b>El correo al cliente estrena la imagen de la marca.</b> Bajo el encabezado azul ahora va la <b>línea de los cuatro colores</b> de la marca, la misma que usted ve en esta consola, y el pie lleva el <b>logotipo oficial de SDI</b> con su nota legal completa. En los tres correos —cotización, póliza activa y renovación—.<br>
+        La <b>tarjeta del vehículo</b> cambió: donde había un dibujito de carro ahora va <b>la placa del cliente</b>, dibujada como la matrícula que es, y en <b>rojo</b> si es de carga liviana. Cuando el vehículo es <b>cero kilómetros</b>, la chapa dice “0 KM” y una línea explica que la placa se asigna al inscribirlo: el <b>000111</b> que usted teclea para poder seguir <b>ya no se le imprime al cliente</b> como si fuera su placa, ni en el correo ni en la guía.<br>
+        Las <b>tres opciones de pago</b> quedaron en su orden natural —trimestral, semestral y anual—, con el <b>anual siempre en verde</b>, el sello de <b>10&nbsp;% Descuento</b> y, abajo, cuánto se ahorra el cliente en el año pagando de una vez.<br>
+        De paso se corrigieron cosas que se arrastraban: el correo <b>tenía palabras sin tilde</b> (“cotizacion”, “8 anos”, “vehiculo”) y cambiaba de tratamiento a mitad de camino; el botón verde de agendar <b>no tenía suficiente contraste</b> para leerse cómodo; y su <b>licencia SUGESE en el pie</b> quedaba demasiado tenue sobre el azul. Los emojis salieron de los tres correos, porque cada programa de correo los dibuja distinto.</li>
         <li><b>21 ago 2026</b> — <b>El control ya no borra las cotizaciones viejas.</b> El historial y las estadísticas guardaban un máximo de <b>100 cotizaciones</b>: al pasar de ahí, la más antigua se caía de la lista y, peor todavía, el respaldo automático subía a Google Drive esa misma lista recortada. Por eso desaparecieron las cotizaciones de julio y por eso “Restaurar de Drive” no devolvía nada — el respaldo ya venía sin ellas. <b>Corregido:</b> el respaldo de Drive ahora es <b>acumulativo</b> (guarda todo lo que ha existido, sin tope) y el navegador pasó de 100 a <b>2.000</b> cotizaciones, que a su ritmo son años de trabajo. Nada de esto cambia cómo se cotiza ni cómo se envía.</li>
         <li><b>19 ago 2026</b> — <b>Renovaciones: avisar solo por WhatsApp.</b> Hay clientes que no tienen correo o no lo usan. En el paso 3 de <b>Renovación confirmada</b> ahora se elige entre <b>Correo + WhatsApp</b> (como siempre) o <b>Solo WhatsApp</b>. Al elegir solo WhatsApp desaparecen los campos del correo, el mensaje deja de decir “le acabo de enviar a su correo” —que no sería cierto— y pasa a decir que usted le comparte el comprobante por ahí mismo; en la misma pantalla hay un botón para <b>descargar el comprobante</b> y adjuntarlo en el chat, porque WhatsApp no permite mandarlo solo con un enlace. La vista previa muestra el mensaje tal como le va a llegar al cliente. Dos cuidados: el envío <b>sigue bloqueado si el comprobante no dice “Pagado”</b>, y al cargar un comprobante nuevo la pantalla <b>vuelve sola a Correo + WhatsApp</b>, para que a un cliente que sí tiene correo no se le deje de enviar por descuido.</li>
         <li><b>19 ago 2026</b> — <b>El enlace que recibe el cliente ya no dice “cotizador”.</b> Los dos enlaces que se comparten por WhatsApp —la guía de la cotización y la guía de qué hacer ante un accidente o una avería— ahora salen desde <b>guia.appsegurosdigitales.com</b>. Antes llevaban la dirección larga de Netlify y empezaban con la palabra “cotizador”, que a un cliente que acaba de renovar no le dice nada. Además quedan más cortos. <b>Los enlaces que ya envió siguen funcionando igual</b>, no hay que reenviar nada.</li>
@@ -703,6 +707,7 @@
   <script src="js/router.js"></script>
   <script src="js/pdf-extract.js"></script>
   <script src="js/pdf-modify.js"></script>
+  <script src="js/email-marca.js"></script>
   <script src="js/email-template.js"></script>
   <script src="js/gmail-auth.js"></script>
   <script src="js/mime-builder.js"></script>

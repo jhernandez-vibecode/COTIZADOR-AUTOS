@@ -14,6 +14,10 @@ const CFG = {
   GUIDE_URL:   'https://cotizador.appsegurosdigitales.com/explicacion/',
   AGENDA_URL:  'https://forms.gle/tqSaZBDcZfNgNktC7',
   LOGO_URL:    'https://cotizador.appsegurosdigitales.com/img/ins-logo.png',
+  // Logotipo SDI del pie del correo. Va como imagen y no recreado con tablas
+  // porque su tipografia esta vectorizada en el kit de marca, y en correo las
+  // fuentes web no cargan: cualquier version hecha con texto caeria a Arial.
+  LOGO_SDI_URL: 'https://cotizador.appsegurosdigitales.com/img/sdi-logo-email.png',
   WEBSITE:     'www.segurosdelins.com',
 
   // Pie del correo

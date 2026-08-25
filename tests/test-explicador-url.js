@@ -120,8 +120,17 @@ test('sustitucionText: Alternativo describe repuestos alternativos (no cae al ge
   if (t.includes('condiciones estandar')) throw new Error('cayó al fallback genérico');
 });
 test('sustitucionText: Plus vs Garantía simple se distinguen', () => {
-  assertContains(_sustitucionText('Extensión de garantía Plus'), '8 anos');
-  assertContains(_sustitucionText('Extensión de garantía'), '5 anos');
+  // 25 ago 2026: los textos pasaron a llevar tilde y a tratar de vos, como el
+  // resto del correo. Antes decían "8 anos" y "Su vehiculo".
+  assertContains(_sustitucionText('Extensión de garantía Plus'), '8 años');
+  assertContains(_sustitucionText('Extensión de garantía'), '5 años');
+});
+
+test('sustitucionText: trata de vos y lleva tildes', () => {
+  const t = _sustitucionText('Extensión de garantía Plus');
+  assertContains(t, 'Tu vehículo');
+  assertContains(t, 'según');
+  if (t.includes('Su vehiculo')) throw new Error('quedó el trato de usted sin tildes');
 });
 
 test('dedDFH valido agrega dd= al URL', () => {

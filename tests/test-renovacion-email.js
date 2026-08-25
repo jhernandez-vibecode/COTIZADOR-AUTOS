@@ -19,6 +19,12 @@ global.CFG = {
   XSELL_ESTUDIANTIL_URL: ''   // vacío a propósito → debe caer al sitio del agente
 };
 
+// Los bloques de marca del pie viven en email-marca.js, compartido por los
+// tres correos. En el navegador lo carga el <script> de la página; acá hay
+// que ponerlo en el global antes de requerir el módulo que lo usa.
+var _marca = require('../js/email-marca.js');
+Object.keys(_marca).forEach(function (k) { global[k] = _marca[k]; });
+
 var _re = require('../js/renovacion-email.js');
 var buildRenovacionEmail = _re.buildRenovacionEmail;
 var buildRenovacionWaUrl = _re.buildRenovacionWaUrl;
@@ -98,10 +104,16 @@ ok('firma-licencia', html.indexOf('08-1318') !== -1);
 ok('firma-tel',      html.indexOf('8822-1348') !== -1);
 ok('firma-correo',   html.indexOf('jhernandez@segurosdelins.com') !== -1);
 ok('footer-sdi',     /Seguros Digitales SDI/.test(html));
-// Logo SDI del pie: kit v1.2, barra de CUATRO colores (JC pidió el último
-// actualizado, el mismo que estrenó el header de las consolas).
-ok('logo-4-colores', html.indexOf('#0369A1') !== -1 && html.indexOf('#0D9488') !== -1
-                     && html.indexOf('#EA580C') !== -1 && html.indexOf('#C9A227') !== -1);
+// Logo SDI del pie: desde el 25 ago 2026 va como IMAGEN y no recreado con
+// tablas. Su tipografía está vectorizada en el kit y en correo las fuentes web
+// no cargan, así que una versión hecha con texto caería a Arial y no sería el
+// logo. Antes este check buscaba los cuatro colores de las barras.
+ok('logo-imagen-oficial', html.indexOf('sdi-logo-email.png') !== -1
+                          && html.indexOf('alt="Seguros Digitales SDI"') !== -1);
+ok('logo-no-recreado-con-tablas', html.indexOf('>SDI</td>') === -1);
+ok('pie-nota-legal-completa', html.indexOf('Propiedad intelectual de') !== -1
+                              && html.indexOf('Todos los derechos reservados') !== -1
+                              && html.indexOf('Agente exclusivo INS') !== -1);
 // Cara al cliente: INS arriba, SDI solo al pie.
 ok('marca-ins-arriba', html.indexOf('Seguros del INS') < html.indexOf('Seguros Digitales SDI'));
 

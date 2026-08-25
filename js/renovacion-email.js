@@ -114,8 +114,7 @@ function buildRenovacionWaTexto(params) {
 
   // El plural del comprobante se arma una sola vez: lo usan las dos redacciones.
   var comprobantes = n > 1
-    ? 'los comprobantes de pago oficiales del INS'
-    : 'el comprobante de pago oficial del INS';
+    ? 'los comprobantes de pago oficiales del INS': 'el comprobante de pago oficial del INS';
 
   // SIN CORREO el mensaje NO puede decir "le acabo de enviar a su correo": ese
   // correo no existe y el cliente lo esperaría con su comprobante adentro. El
@@ -124,8 +123,7 @@ function buildRenovacionWaTexto(params) {
   // envío. WhatsApp no deja adjuntar archivos desde un enlace, así que el PDF lo
   // arrastra el agente al chat y la pantalla se lo deja descargado para eso.
   var cuerpo = p.sinCorreo
-    ? ident + 'Aquí mismo le comparto ' + comprobantes + '.\n'
-    : 'Le acabo de enviar a su correo ' + comprobantes + '.\n' + ident;
+    ? ident + 'Aquí mismo le comparto ' + comprobantes + '.\n': 'Le acabo de enviar a su correo ' + comprobantes + '.\n' + ident;
 
   var msg =
     '¡' + (saludo ? saludo + ', su' : 'Su') + ' renovación está confirmada! ✅🚗\n\n' +
@@ -145,8 +143,7 @@ function buildRenovacionWaTexto(params) {
 function buildRenovacionWaUrl(params) {
   var p = params || {};
   var phone = _renovWaIntl(p.telCliente);
-  return 'https://web.whatsapp.com/send/?'
-    + (phone ? 'phone=' + phone + '&' : '')
+  return 'https://web.whatsapp.com/send/?'+ (phone ? 'phone=' + phone + '&' : '')
     + 'text=' + encodeURIComponent(buildRenovacionWaTexto(p));
 }
 
@@ -201,7 +198,7 @@ function buildRenovacionEmail(params) {
   }
   var mostrarAsegurado = varios && aseg.length > 1;
 
-  var fontFam  = "'Poppins','Helvetica Neue',Helvetica,Arial,sans-serif";
+  var fontFam  = "'Space Grotesk','Helvetica Neue',Helvetica,Arial,sans-serif";
   var fontBody = "'Inter','Helvetica Neue',Helvetica,Arial,sans-serif";
   var fontNum  = "'JetBrains Mono',Consolas,'Courier New',monospace";
 
@@ -236,13 +233,11 @@ function buildRenovacionEmail(params) {
       (vehiculo ? ' <b style="color:#0c2340;">' + e(vehiculo) + '</b>' : '') +
       (placa ? ' placa <b style="color:#0c2340;">' + e(placa) + '</b>' : '');
     polizaFrase = poliza
-      ? ' de su póliza No. <b style="color:#0c2340;">' + e(poliza) + '</b>'
-      : ' de su póliza de automóviles';
+      ? ' de su póliza No. <b style="color:#0c2340;">' + e(poliza) + '</b>': ' de su póliza de automóviles';
   }
   var vehPlural  = varios ? 'continúan protegidos' : 'continúa protegido';
   var adjFrase   = varios
-    ? 'Adjunto encontrará los comprobantes de pago oficiales del INS.'
-    : 'Adjunto encontrará el comprobante de pago oficial del INS.';
+    ? 'Adjunto encontrará los comprobantes de pago oficiales del INS.': 'Adjunto encontrará el comprobante de pago oficial del INS.';
 
   // Detalle de la tarjeta navy. Con UN recibo: los 4 datos en dos columnas.
   // Con VARIOS: una fila por póliza, para que el cliente vea qué se pagó de cada
@@ -309,8 +304,7 @@ function buildRenovacionEmail(params) {
           '<p style="margin:0;font-size:13px;color:#7c2d12;line-height:1.55;">' + e(nota).replace(/\n/g, '<br>') + '</p>' +
         '</td></tr>' +
       '</table>' +
-    '</td></tr>'
-  ) : '';
+    '</td></tr>') : '';
 
   // Una franja del logotipo SDI del pie (kit v1.2: barra de 4 colores).
   function franja(color) {
@@ -325,7 +319,7 @@ function buildRenovacionEmail(params) {
 '<meta name="viewport" content="width=device-width, initial-scale=1.0">' +
 '<title>Su renovación está confirmada &middot; Seguros del INS</title>' +
 '<!--[if !mso]><!-->' +
-'<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">' +
+'<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">' +
 '<!--<![endif]-->' +
 '</head>' +
 '<body style="margin:0;padding:0;background:#f5f5f5;font-family:' + fontBody + ';">' +
@@ -361,20 +355,17 @@ function buildRenovacionEmail(params) {
             (varios ?
               '<div style="font-family:' + fontNum + ';font-size:10px;letter-spacing:.16em;color:#8ba3bf;text-transform:uppercase;">Total pagado</div>' +
               (totalTxt ? '<div style="font-family:' + fontFam + ';font-size:34px;font-weight:700;color:#ffffff;letter-spacing:-.02em;padding:4px 0 2px;">' + e(totalTxt) + '</div>' : '') +
-              '<div style="font-size:11px;color:#8ba3bf;">Incluye IVA &middot; ' + recibos.length + ' recibos' + (fPago ? ' &middot; Fecha de pago ' + e(fPago) : '') + '</div>'
-            : (montoTxt ?
+              '<div style="font-size:11px;color:#8ba3bf;">Incluye IVA &middot; ' + recibos.length + ' recibos' + (fPago ? ' &middot; Fecha de pago ' + e(fPago) : '') + '</div>': (montoTxt ?
               '<div style="font-family:' + fontNum + ';font-size:10px;letter-spacing:.16em;color:#8ba3bf;text-transform:uppercase;">Monto pagado</div>' +
               '<div style="font-family:' + fontFam + ';font-size:34px;font-weight:700;color:#ffffff;letter-spacing:-.02em;padding:4px 0 2px;">' + e(montoTxt) + '</div>' +
-              '<div style="font-size:11px;color:#8ba3bf;">Incluye IVA' + (comprob ? ' &middot; Comprobante N&ordm; ' + e(comprob) : '') + '</div>'
-            : '')) +
+              '<div style="font-size:11px;color:#8ba3bf;">Incluye IVA' + (comprob ? ' &middot; Comprobante N&ordm; ' + e(comprob) : '') + '</div>': '')) +
           '</td>' +
           '<td valign="top" align="right" style="white-space:nowrap;">' +
             '<span style="display:inline-block;background:#0f766e;color:#d1fae5;font-family:' + fontNum + ';font-size:10px;letter-spacing:.14em;padding:5px 12px;border-radius:999px;">PAGADO</span>' +
           '</td>' +
         '</tr></table>' +
         (datosHtml ?
-          '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid rgba(255,255,255,.14);margin-top:14px;">' + datosHtml + '</table>'
-        : '') +
+          '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid rgba(255,255,255,.14);margin-top:14px;">' + datosHtml + '</table>': '') +
       '</td></tr>' +
     '</table>' +
   '</td></tr>' : '') +
@@ -382,7 +373,7 @@ function buildRenovacionEmail(params) {
   // 4. QUÉ HACER SI OCURRE UN EVENTO — el corazón del correo. Información de
   //    servicio, no venta. Solo teléfonos verificados del INS.
   '<tr><td style="padding:22px 32px 0;">' +
-    '<p style="margin:0 0 12px;font-family:' + fontFam + ';font-size:15px;font-weight:700;color:#0c2340;">&#128680; &iquest;Qu&eacute; hacer si ocurre un evento?</p>' +
+    '<p style="margin:0 0 12px;font-family:' + fontFam + ';font-size:15px;font-weight:700;color:#0c2340;"> &iquest;Qu&eacute; hacer si ocurre un evento?</p>' +
     '<table width="100%" cellpadding="0" cellspacing="0" border="0">' +
       '<tr><td width="26" valign="top" style="padding:10px 0;border-top:1px solid #edf1f6;font-family:' + fontNum + ';font-size:11px;color:#c9a227;font-weight:600;">01</td>' +
         '<td valign="top" style="padding:10px 0;border-top:1px solid #edf1f6;">' +
@@ -408,7 +399,7 @@ function buildRenovacionEmail(params) {
       '<tr><td style="padding:18px;text-align:center;">' +
         '<p style="margin:0 0 4px;font-family:' + fontFam + ';font-size:14px;font-weight:700;color:#0c4a6e;">Todo esto, paso a paso y a un clic</p>' +
         '<p style="margin:0 0 12px;font-size:12px;color:#475569;line-height:1.55;">Guarde su gu&iacute;a de emergencias: en el momento del evento le dice qu&eacute; hacer y le conecta con el contacto correcto al instante.</p>' +
-        '<a href="' + assistUrl + '" style="display:inline-block;background:#0369a1;color:#ffffff;text-decoration:none;border-radius:10px;padding:13px 26px;font-family:' + fontFam + ';font-weight:700;font-size:14px;">&#128241; Abrir mi gu&iacute;a de emergencias &rarr;</a>' +
+        '<a href="' + assistUrl + '" style="display:inline-block;background:#0369a1;color:#ffffff;text-decoration:none;border-radius:10px;padding:13px 26px;font-family:' + fontFam + ';font-weight:700;font-size:14px;"> Abrir mi gu&iacute;a de emergencias &rarr;</a>' +
         '<p style="margin:10px 0 0;font-size:11px;color:#64748b;line-height:1.5;">&Aacute;brala en el celular y elija <b>"A&ntilde;adir a pantalla de inicio"</b> para tenerla siempre a mano, como una App. Sin descargas.</p>' +
       '</td></tr>' +
     '</table>' +
@@ -428,7 +419,7 @@ function buildRenovacionEmail(params) {
         (viajeUrl ? '<a href="' + viajeUrl + '" style="display:inline-block;background:#0369a1;color:#ffffff;text-decoration:none;border-radius:8px;padding:9px 18px;font-family:' + fontFam + ';font-weight:700;font-size:13px;">Comprar &rarr;</a>' : '') +
       '</td>' +
       '<td width="50%" valign="top" style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:16px;">' +
-        '<p style="margin:0 0 2px;font-size:22px;line-height:1;">&#127891;</p>' +
+        '<p style="margin:0 0 2px;font-size:22px;line-height:1;"></p>' +
         '<p style="margin:6px 0 2px;font-family:' + fontFam + ';font-size:14px;font-weight:700;color:#0c2340;">Seguro Estudiantil</p>' +
         '<p style="margin:0 0 12px;font-size:12px;color:#475569;line-height:1.5;">Asegure el futuro de sus hijos durante todo el a&ntilde;o lectivo.</p>' +
         (estUrl ? '<a href="' + estUrl + '" style="display:inline-block;background:#16a34a;color:#ffffff;text-decoration:none;border-radius:8px;padding:9px 18px;font-family:' + fontFam + ';font-weight:700;font-size:13px;">Comprar &rarr;</a>' : '') +
@@ -446,19 +437,12 @@ function buildRenovacionEmail(params) {
     '</p>' +
   '</td></tr>' +
 
-  // 8. FOOTER SDI — logotipo recreado en HTML (Gmail bloquea SVG), barra de 4
-  //    colores del kit v1.2, la misma variante que estrenó el header.
-  '<tr><td bgcolor="#0c2340" style="background:#0c2340;color:#cbd5e1;padding:24px 32px 22px;text-align:center;">' +
-    '<table cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 10px;"><tr>' +
-      '<td valign="middle" style="font-family:' + fontFam + ';font-weight:500;font-size:30px;letter-spacing:-1px;color:#ffffff;line-height:1;">SDI</td>' +
-      '<td valign="middle" style="padding-left:10px;"><table cellpadding="0" cellspacing="0" border="0">' +
-        franja('#0369A1') + franja('#0D9488') + franja('#EA580C') +
-        '<tr><td bgcolor="#C9A227" style="background:#C9A227;height:4px;width:20px;line-height:4px;font-size:0;">&nbsp;</td></tr>' +
-      '</table></td>' +
-    '</tr></table>' +
-    '<p style="margin:0;font-size:12px;color:#cbd5e1;">Plataforma de <b style="color:#ffffff;">Seguros Digitales SDI&reg;</b></p>' +
-    '<p style="margin:8px 0 0;font-size:10px;color:#64748b;">&copy; 2026 Propiedad Intelectual de ' + e(agente) + '</p>' +
-  '</td></tr>' +
+  // 8. PIE con la marca SDI (modulo compartido js/email-marca.js)
+  _pieSDI({
+    logo: CFG.LOGO_SDI_URL, correo: correoAg, web: web,
+    tel: tel, agente: agente, licencia: lic
+  }) +
+
 
 '</table></td></tr></table></body></html>';
 }

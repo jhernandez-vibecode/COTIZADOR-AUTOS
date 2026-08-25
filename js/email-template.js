@@ -74,21 +74,17 @@ function buildEmail(params) {
 
   // ============ BLOQUES CONDICIONALES ============
 
-  // Bloque "Interes Asegurable" (solo si el agente selecciono uno)
-  const interesHtml = interesText ? `
-        <tr><td style="padding:0 32px;">
-          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#dbeafe;border-radius:8px;border-left:4px solid #0369a1;margin-top:18px;">
-            <tr><td style="padding:14px 18px;">
-              <p style="margin:0 0 4px;font-size:11px;font-weight:bold;color:#0c4a6e;letter-spacing:0.06em;text-transform:uppercase;">Interes Asegurable</p>
-              <p style="margin:0;font-size:14px;color:#0c4a6e;">${_escape(interesText)}</p>
-            </td></tr>
-          </table>
-        </td></tr>` : '';
+  // Bloque "Interes Asegurable" (solo si el agente selecciono uno).
+  // Sin caja de color ni barra a la izquierda: rotulo en versalitas sobre
+  // una regla fina, igual que el resto de los bloques informativos.
+  const interesHtml = interesText
+    ? '\n' + _bloqueSobrio('Inter&eacute;s asegurable', _escape(interesText), true)
+    : '';
 
   // Bloque "Nota personal del agente" (solo si el agente escribio algo)
   const notaHtml = notaTrim ? `
         <tr><td style="padding:18px 32px 0;">
-          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fff7ed;border-left:4px solid #ea580c;border-radius:8px;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;">
             <tr><td style="padding:14px 18px;">
               <p style="margin:0 0 4px;font-size:11px;font-weight:bold;color:#9a3412;letter-spacing:0.06em;text-transform:uppercase;">Nota de tu agente</p>
               <p style="margin:0;font-size:13px;color:#7c2d12;line-height:1.55;">${_escape(notaTrim).replace(/\n/g, '<br>')}</p>
@@ -96,28 +92,23 @@ function buildEmail(params) {
           </table>
         </td></tr>` : '';
 
-  // Tarjeta del vehiculo: solo si hay datos para mostrar
-  const vehicleCardHtml = (vehiculo || plate || valorFmt) ? `
-        <tr><td style="padding:0 32px 4px;">
-          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0f9ff;border:1px solid #bae6fd;border-left:4px solid #0369a1;border-radius:10px;">
-            <tr>
-              <td style="padding:14px 16px;width:60px;vertical-align:middle;">
-                <table cellpadding="0" cellspacing="0" border="0"><tr><td style="background:#ffffff;border-radius:8px;width:48px;height:48px;text-align:center;font-size:24px;line-height:48px;">&#128663;</td></tr></table>
-              </td>
-              <td style="padding:14px 16px 14px 0;vertical-align:middle;">
-                <p style="margin:0;font-size:10px;color:#0369a1;letter-spacing:0.08em;text-transform:uppercase;font-weight:bold;">Tu vehiculo cotizado</p>
-                <p style="margin:3px 0 0;font-size:16px;font-weight:bold;color:#0c4a6e;font-family:'Space Grotesk',Helvetica,Arial,sans-serif;">${_escape(vehiculo || plate || 'Tu vehiculo')}${plate && vehiculo ? ' &middot; ' + _escape(plate) : ''}</p>
-                ${valorFmt ? `<p style="margin:2px 0 0;font-size:12px;color:#475569;">Valor asegurado: <b style="color:#0c4a6e;">&#8353;${_escape(valorFmt)}</b></p>` : ''}
-              </td>
-            </tr>
-          </table>
-        </td></tr>` : '';
+  // Tarjeta del vehiculo: la placa recreada como matricula, sin emoji ni
+  // barra de color. Con un cero kilometros la chapa dice 0 KM y nunca
+  // imprime el relleno que el agente teclea para poder seguir.
+  const vehicleCardHtml = (vehiculo || plate || valorFmt)
+    ? '\n' + _tarjetaVehiculo({
+        vehiculo: vehiculo || plate,
+        plate: plate,
+        valor: valorFmt,
+        fontFam: "'Space Grotesk','Helvetica Neue',Helvetica,Arial,sans-serif"
+      })
+    : '';
 
   // URL del explicador con todos los datos personalizados
   const guideUrl = _buildGuideUrl({
     clientName:    nombre,
     vehicle:       vehiculo,
-    plate:         p.plate,
+    plate:         _placaEsRelleno(p.plate) ? '' : p.plate,
     year:          p.year,
     vehicleType:   _detectVehicleType(p.vehicleType),
     origenAsia:    !!p.origenAsia,
@@ -168,7 +159,7 @@ function buildEmail(params) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tu cotizacion esta lista &middot; Seguros Digitales SDI</title>
+<title>Tu cotizaci&oacute;n est&aacute; lista &middot; Seguros Digitales SDI</title>
 <!--[if !mso]><!-->
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <!--<![endif]-->
@@ -182,9 +173,12 @@ function buildEmail(params) {
         <!-- 1. HEADER -->
         <tr><td bgcolor="#0c2340" style="background:#0c2340;color:#ffffff;padding:28px 32px;text-align:center;">
           <img src="${CFG.LOGO_URL}" alt="INS" height="46" style="display:block;margin:0 auto 12px;border:0;outline:none;text-decoration:none;height:46px;" />
-          <h1 style="margin:0;font-family:${fontFam};font-size:22px;font-weight:700;letter-spacing:-0.01em;">Tu cotizacion esta lista</h1>
-          <p style="margin:6px 0 0;font-size:12px;opacity:0.75;">Seguros del INS &middot; Tu proteccion al volante</p>
+          <h1 style="margin:0;font-family:${fontFam};font-size:22px;font-weight:700;letter-spacing:-0.01em;">Tu cotizaci&oacute;n est&aacute; lista</h1>
+          <p style="margin:6px 0 0;font-size:12px;opacity:0.75;">Seguros del INS &middot; Tu protecci&oacute;n al volante</p>
         </td></tr>
+
+        <!-- 1b. FILETE DE MARCA SDI (cierra el bloque navy) -->
+        ${_fileteSDI()}
 
         <!-- 2. SALUDO -->
         <tr><td style="padding:28px 32px 14px;">
@@ -229,7 +223,7 @@ function buildEmail(params) {
           <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8fafc;border:1px solid #e0e7ef;border-radius:10px;margin-bottom:8px;">
             <tr>
               <td width="48" valign="top" style="padding:14px 0 14px 16px;">
-                <table cellpadding="0" cellspacing="0" border="0"><tr><td style="background:#10b981;color:#ffffff;width:36px;height:36px;border-radius:50%;text-align:center;font-size:18px;font-weight:bold;line-height:36px;">&#10003;</td></tr></table>
+                <table cellpadding="0" cellspacing="0" border="0"><tr><td style="background:#047857;color:#ffffff;width:36px;height:36px;border-radius:50%;text-align:center;font-size:18px;font-weight:bold;line-height:36px;">&#10003;</td></tr></table>
               </td>
               <td valign="top" style="padding:14px 16px 14px 12px;">
                 <p style="margin:0 0 2px;font-family:${fontFam};font-weight:700;color:#0c4a6e;font-size:14px;">${benefit2.title}</p>
@@ -252,51 +246,17 @@ function buildEmail(params) {
           </table>
         </td></tr>
 
-        <!-- 6. PRECIOS — anclaje invertido (Anual destacado al centro) -->
-        <tr><td style="padding:26px 32px 0;">
-          <h2 style="margin:0 0 6px;font-family:${fontFam};font-size:14px;font-weight:700;color:#0c4a6e;text-transform:uppercase;letter-spacing:0.05em;border-bottom:2px solid #0369a1;padding-bottom:8px;">Tus 3 opciones de pago</h2>
-          <p style="margin:10px 0 14px;font-size:12px;color:#64748b;font-style:italic;text-align:center;">Eleg&iacute; la que mejor se ajuste a tu bolsillo</p>
-
-          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;border-spacing:6px 0;">
-            <tr>
-              <!-- Trimestral -->
-              <td width="33%" align="center" style="background:#ffffff;border:1px solid #e0e7ef;border-radius:10px;padding:14px 8px;vertical-align:middle;">
-                <p style="margin:0;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;font-weight:bold;">Trimestral</p>
-                <p style="margin:6px 0 2px;font-family:${fontFam};font-size:17px;font-weight:800;color:#0c4a6e;">&#8353;${_escape(prices.trimestral || '—')}</p>
-                <p style="margin:0;font-size:10px;color:#64748b;">cada 3 meses</p>
-              </td>
-              <!-- Anual (destacado) -->
-              <td width="34%" align="center" bgcolor="#10b981" style="background:#10b981;color:#ffffff;border-radius:10px;padding:16px 8px;vertical-align:middle;position:relative;">
-                <p style="margin:0 0 4px;background:#fbbf24;color:#422006;font-size:9px;font-weight:800;padding:3px 8px;border-radius:999px;display:inline-block;text-transform:uppercase;letter-spacing:0.05em;">&#9733; Recomendado &middot; -10%</p>
-                <p style="margin:6px 0 0;font-size:10px;color:#ffffff;text-transform:uppercase;letter-spacing:0.08em;font-weight:bold;">Anual</p>
-                <p style="margin:6px 0 2px;font-family:${fontFam};font-size:21px;font-weight:800;color:#ffffff;">&#8353;${_escape(prices.anual || '—')}</p>
-                <p style="margin:0;font-size:10px;color:#ffffff;opacity:0.9;">1 sola vez</p>
-              </td>
-              <!-- Semestral -->
-              <td width="33%" align="center" style="background:#ffffff;border:1px solid #e0e7ef;border-radius:10px;padding:14px 8px;vertical-align:middle;">
-                <p style="margin:0;font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:0.08em;font-weight:bold;">Semestral</p>
-                <p style="margin:6px 0 2px;font-family:${fontFam};font-size:17px;font-weight:800;color:#0c4a6e;">&#8353;${_escape(prices.semestral || '—')}</p>
-                <p style="margin:0;font-size:10px;color:#64748b;">cada 6 meses</p>
-              </td>
-            </tr>
-          </table>
-        </td></tr>
+        <!-- 6. FORMAS DE PAGO (trimestral, semestral, anual; el anual en verde) -->
+        ${_bloquePagos({ prices: prices, fontFam: fontFam })}
 
         ${interesHtml}
 
         <!-- 7. SUSTITUCION DE REPUESTOS -->
-        <tr><td style="padding:22px 32px 0;">
-          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0f9ff;border-left:4px solid #0369a1;border-radius:8px;">
-            <tr><td style="padding:14px 16px;">
-              <p style="margin:0 0 4px;font-size:11px;font-weight:bold;color:#0c4a6e;letter-spacing:0.06em;text-transform:uppercase;">Sustituci&oacute;n de repuestos</p>
-              <p style="margin:0;font-size:13px;color:#0c4a6e;line-height:1.55;">${_escape(sustText)}</p>
-            </td></tr>
-          </table>
-        </td></tr>
+        ${_bloqueSobrio('Sustituci&oacute;n de repuestos', _escape(sustText), false)}
 
         <!-- 8. CTA AGENDAR (camino limpio sin barreras) -->
         <tr><td style="padding:30px 32px 0;text-align:center;">
-          <a href="${CFG.AGENDA_URL}" style="display:inline-block;background:#10b981;color:#ffffff;text-decoration:none;border-radius:10px;padding:16px 32px;font-family:${fontFam};font-weight:700;font-size:16px;">&#128197; Agendar mi cita ahora &rarr;</a>
+          <a href="${CFG.AGENDA_URL}" style="display:inline-block;background:#047857;color:#ffffff;text-decoration:none;border-radius:10px;padding:16px 32px;font-family:${fontFam};font-weight:700;font-size:16px;">Agendar mi cita ahora &rarr;</a>
           <p style="margin:14px 0 0;font-size:12px;color:#475569;font-weight:500;"><b style="color:#0c4a6e;">Cotizaci&oacute;n v&aacute;lida 15 d&iacute;as</b> &middot; Es f&aacute;cil, es r&aacute;pido, es seguro</p>
         </td></tr>
 
@@ -317,7 +277,7 @@ function buildEmail(params) {
 
         <!-- 11. NOTA UBER (al puro final, disclaimer legal) -->
         <tr><td style="padding:22px 32px 0;">
-          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fffbeb;border:1px solid #fcd34d;border-left:4px solid #f59e0b;border-radius:8px;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fffbeb;border:1px solid #fcd34d;border-top:3px solid #f59e0b;border-radius:8px;">
             <tr>
               <td width="32" valign="top" style="padding:12px 0 12px 14px;color:#f59e0b;font-size:16px;line-height:1.2;">&#9888;</td>
               <td valign="top" style="padding:12px 14px 12px 4px;">
@@ -328,33 +288,11 @@ function buildEmail(params) {
           </table>
         </td></tr>
 
-        <!-- 12. FOOTER con marca SDI -->
-        <tr><td bgcolor="#0c2340" style="background:#0c2340;color:#cbd5e1;padding:28px 32px 24px;text-align:center;margin-top:24px;">
-          <!-- SDI logo (recreado en HTML para compatibilidad email) -->
-          <table cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 12px;">
-            <tr>
-              <td valign="middle" style="font-family:${fontFam};font-weight:500;font-size:32px;letter-spacing:-1px;color:#ffffff;line-height:1;">SDI</td>
-              <td valign="middle" style="padding-left:10px;">
-                <table cellpadding="0" cellspacing="0" border="0">
-                  <tr><td bgcolor="#ffffff" style="background:#ffffff;height:4px;width:22px;line-height:4px;font-size:0;">&nbsp;</td></tr>
-                  <tr><td style="height:3px;line-height:3px;font-size:0;">&nbsp;</td></tr>
-                  <tr><td bgcolor="#ffffff" style="background:#ffffff;height:4px;width:22px;line-height:4px;font-size:0;">&nbsp;</td></tr>
-                  <tr><td style="height:3px;line-height:3px;font-size:0;">&nbsp;</td></tr>
-                  <tr><td bgcolor="#ffffff" style="background:#ffffff;height:4px;width:22px;line-height:4px;font-size:0;">&nbsp;</td></tr>
-                  <tr><td style="height:3px;line-height:3px;font-size:0;">&nbsp;</td></tr>
-                  <tr><td bgcolor="#ffffff" style="background:#ffffff;height:4px;width:22px;line-height:4px;font-size:0;">&nbsp;</td></tr>
-                </table>
-              </td>
-            </tr>
-          </table>
-          <p style="margin:0;font-size:12px;color:#cbd5e1;">Esta cotizaci&oacute;n pertenece a <b style="color:#ffffff;">Seguros Digitales SDI&reg;</b></p>
-          <p style="margin:8px 0 4px;font-size:12px;">
-            <a href="mailto:${_escape(CFG.FROM_EMAIL)}" style="color:#7dd3fc;text-decoration:none;font-weight:600;">${_escape(CFG.FROM_EMAIL)}</a>
-            ${CFG.WEBSITE ? ` &middot; <a href="https://${_escape(CFG.WEBSITE)}" style="color:#7dd3fc;text-decoration:none;font-weight:600;">${_escape(CFG.WEBSITE)}</a>` : ''}
-          </p>
-          <p style="margin:6px 0 0;font-size:11px;color:#64748b;">Tel: ${_escape(CFG.PHONE)} &middot; Lic. SUGESE ${_escape(CFG.LICENSE)}</p>
-          <p style="margin:10px 0 0;font-size:10px;color:#64748b;">&copy; 2026 Propiedad Intelectual de ${_escape(CFG.FROM_NAME)}</p>
-        </td></tr>
+        <!-- 12. PIE con la marca SDI -->
+        ${_pieSDI({
+          logo: CFG.LOGO_SDI_URL, correo: CFG.FROM_EMAIL, web: CFG.WEBSITE,
+          tel: CFG.PHONE, agente: CFG.FROM_NAME, licencia: CFG.LICENSE
+        })}
 
       </table>
     </td>
@@ -376,7 +314,7 @@ function buildEmail(params) {
 function _interestText(key) {
   const map = {
     'propietario': 'Propietario Registral',
-    'cero-km':     'Vehiculo Cero Kilometros (en proceso de compra)',
+    'cero-km':     'Vehículo Cero Kilómetros (en proceso de compra)',
     'traspaso':    'En proceso de traspaso',
     'compra':      'En proceso de compra'
   };
@@ -417,17 +355,17 @@ function _reposKind(label) {
 function _sustitucionText(label) {
   switch (_reposKind(label)) {
     case 'plus':
-      return 'Su vehiculo aplica a repuestos originales de agencia (cobertura hasta 8 anos / 80,000 km segun la Extension de Garantia Plus).';
+      return 'Tu vehículo aplica a repuestos originales de agencia: cobertura hasta 8 años o 80.000 km, según la Extensión de Garantía Plus.';
     case 'garantia':
-      return 'Su vehiculo aplica a repuestos originales de agencia (cobertura hasta 5 anos / 60,000 km segun la Extension de Garantia).';
+      return 'Tu vehículo aplica a repuestos originales de agencia: cobertura hasta 5 años o 60.000 km, según la Extensión de Garantía.';
     case 'vehiculo':
-      return 'Su vehiculo aplica a repuestos originales de agencia mientras se mantenga en garantia de fabrica.';
+      return 'Tu vehículo aplica a repuestos originales de agencia mientras se mantenga en garantía de fábrica.';
     case 'original':
-      return 'Su poliza incluye repuestos originales en taller multimarca o especializado.';
+      return 'Tu póliza incluye repuestos originales en taller multimarca o especializado.';
     case 'alternativo':
-      return 'Su poliza utiliza repuestos alternativos, genericos y/o usados segun disponibilidad del mercado.';
+      return 'Tu póliza utiliza repuestos alternativos, genéricos y/o usados según disponibilidad del mercado.';
     default:
-      return 'Su poliza aplica las condiciones estandar de sustitucion de repuestos del INS.';
+      return 'Tu póliza aplica las condiciones estándar de sustitución de repuestos del INS.';
   }
 }
 
@@ -616,7 +554,7 @@ function buildFollowUpEmail(p) {
   // Sin fallback a la web del owner: si el agente no tiene web propia, queda ''
   // y no se muestra (misma regla que el correo de cotización principal).
   const web      = CFG.WEBSITE ? _escHtml(CFG.WEBSITE) : '';
-  const fontFam  = "'Inter','Segoe UI',Arial,Helvetica,sans-serif";
+  const fontFam  = "'Space Grotesk','Helvetica Neue',Helvetica,Arial,sans-serif";
 
   return `<!DOCTYPE html>
 <html lang="es">
