@@ -1801,7 +1801,7 @@ main { max-width: 880px; margin: 0 auto; padding: 0 24px 60px; }
   <section class="section" id="s1">
     <div class="section-header">
       <span class="section-num">📋 Sección 1 · Tu recorrido</span>
-      <h2 class="section-title">¿Qué incluye tu Cobertura Total?</h2>
+      <h2 class="section-title">¿Qué incluye tu cobertura?</h2>
       <p class="section-sub">Toca cada tarjeta para ver qué cubre exactamente. Los montos se calculan sobre tu valor asegurado de ₡10.000.000.</p>
     </div>
 
@@ -2517,6 +2517,55 @@ const data = {
 
 const fmt = (n) => '₡' + Number(n).toLocaleString('de-DE');
 
+// ===== [GUIA-CB-PURO] — lógica pura, sin DOM. El test
+// tests/test-explicador-secciones.js extrae este bloque por los marcadores
+// y lo evalúa en Node; si lo movés, mové los dos marcadores con él. =====
+
+/**
+ * Parsea el param `cb` ("A-300000000.B-15000000.C.G.M") a un mapa
+ * {CODIGO: monto|null}. Devuelve null si no viene o no se le entiende nada —
+ * y null significa "no tocar la guía", nunca "guía en blanco".
+ */
+function _parseCbMapa(cb) {
+  if (!cb) return null;
+  var mapa = {};
+  String(cb).split('.').forEach(function (t) {
+    var p = t.split('-');
+    var cod = String(p[0] || '').toUpperCase();
+    if (/^[A-Z]+$/.test(cod)) mapa[cod] = (p[1] && /^\d+$/.test(p[1])) ? Number(p[1]) : null;
+  });
+  return Object.keys(mapa).length ? mapa : null;
+}
+
+/**
+ * Decide qué pasos de la guía le aplican a ESTA cotización.
+ *
+ * El deducible y los repuestos hablan del daño al PROPIO vehículo, que lo
+ * cubren D (colisión/vuelco), F (robo) y H (riesgos adicionales). Una
+ * cotización sin ninguna de las tres no tiene deducible propio que explicar
+ * ni repuestos que reponer — mostrarle esos pasos al cliente es hablarle de
+ * algo que no contrató.
+ *
+ * El paso del deducible ESTÁNDAR además PROMETE el reintegro de la IDD
+ * ("con la IDD baja a cero"), así que exige que la IDD venga en la
+ * cotización. Las variantes asiático/alta gama solo describen el esquema
+ * del deducible, que aplica con o sin IDD.
+ *
+ * @param {Object|null} mapa - lo que devuelve _parseCbMapa
+ * @returns {Object|null} {deducible, deducibleDif, repuestos} o null si no
+ *                        hay dato (enlaces viejos: no se toca nada)
+ */
+function _seccionesQueAplican(mapa) {
+  if (!mapa) return null;
+  var propio = ['D', 'F', 'H'].some(function (c) { return c in mapa; });
+  return {
+    deducible:    propio && ('IDD' in mapa),
+    deducibleDif: propio,
+    repuestos:    propio
+  };
+}
+// ===== [/GUIA-CB-PURO] =====
+
 /**
  * Deja en la sección 1 SOLO las coberturas que trae la cotización, con el
  * monto que trae el PDF.
@@ -2534,16 +2583,9 @@ const fmt = (n) => '₡' + Number(n).toLocaleString('de-DE');
  *                      guion, el monto cuando el PDF lo trae)
  */
 function aplicarCoberturas(cb) {
-  if (!cb) return;
-
-  var mapa = {};
-  String(cb).split('.').forEach(function (t) {
-    var p = t.split('-');
-    var cod = String(p[0] || '').toUpperCase();
-    if (/^[A-Z]+$/.test(cod)) mapa[cod] = (p[1] && /^\d+$/.test(p[1])) ? Number(p[1]) : null;
-  });
   // Un parámetro ilegible no puede dejar la guía en blanco: mejor no tocarla.
-  if (!Object.keys(mapa).length) return;
+  var mapa = _parseCbMapa(cb);
+  if (!mapa) return;
 
   var quedan = 0;
   document.querySelectorAll('#s1 .bento-tile').forEach(function (tile) {
@@ -2586,6 +2628,115 @@ function aplicarCoberturas(cb) {
   if (s1Sub) {
     s1Sub.innerHTML = 'Toca cada tarjeta para ver el detalle. Estas son las coberturas que trae tu cotización, ' +
                       'con el monto de cada una.';
+  }
+}
+
+/**
+ * Oculta los pasos que no le aplican a esta cotización (deducible y/o
+ * repuestos, según _seccionesQueAplican) y renumera el recorrido.
+ *
+ * 🔴 Por qué existe: la sección 1 ya mostraba solo lo contratado, pero el
+ * deducible y los repuestos seguían fijos — a un cliente sin colisión, robo
+ * ni riesgos adicionales se le explicaba el deducible de esas coberturas y
+ * la sustitución de repuestos, que aplican al daño al propio vehículo.
+ *
+ * 🔴 Sin el parámetro `cb` (enlaces ya enviados) no se toca nada: la guía
+ * queda con sus 5 pasos de siempre, byte a byte.
+ */
+function aplicarSecciones(mapa) {
+  var q = _seccionesQueAplican(mapa);
+  if (!q) return;
+
+  var oculto = false;
+  // Con og/ag la sección activa es la variante (s3a/s3b); sin flags, la
+  // estándar. Si el paso no aplica se esconden las tres por parejo.
+  var okPaso3 = (data.og || data.ag) ? q.deducibleDif : q.deducible;
+  if (!okPaso3) {
+    ['s3', 's3a', 's3b'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    oculto = true;
+  }
+  if (!q.repuestos) {
+    var s4 = document.getElementById('s4');
+    if (s4) s4.style.display = 'none';
+    oculto = true;
+  }
+  // Solo se renumera si algo se escondió: con todo visible la guía queda
+  // idéntica a la estática (y los enlaces viejos ni pasan por acá).
+  if (oculto) renumerarGuia();
+}
+
+// Nombres que usan la barra de pasos y los botones entre secciones. Las
+// variantes del deducible (s3a asiático / s3b alta gama) comparten nombre.
+var _NOMBRE_PASO = { s1: 'Coberturas', s2: 'Asistencia', s3: 'Deducible', s3a: 'Deducible', s3b: 'Deducible', s4: 'Repuestos', s5: 'Pagos' };
+var _NOMBRE_NEXT = { s2: 'Asistencia 24/7', s3: 'Deducible', s3a: 'Deducible', s3b: 'Deducible', s4: 'Repuestos', s5: 'Tus 3 opciones' };
+var _FRASE_PASO  = { s1: 'qué cubre tu cotización', s2: 'asistencia 24/7', s3: 'cómo te protege ante un choque', s3a: 'cómo te protege ante un choque', s3b: 'cómo te protege ante un choque', s4: 'qué pasa con los repuestos' };
+
+/**
+ * Rearma el recorrido con los pasos que quedaron visibles: numera las
+ * secciones y los dots, esconde los dots huérfanos, re-encadena los botones
+ * anterior/siguiente, y ajusta el hero (recorrido, puntos, "Paso 1 de N")
+ * y el contador flotante. El "Avanzar" de Pagos hacia la cita no se toca.
+ */
+function renumerarGuia() {
+  var visibles = ['s1', 's2', 's3', 's3a', 's3b', 's4', 's5']
+    .map(function (id) { return document.getElementById(id); })
+    .filter(function (el) { return el && el.style.display !== 'none'; });
+  var total = visibles.length;
+
+  visibles.forEach(function (sec, i) {
+    // Numeración del rótulo de cada sección
+    var badge = sec.querySelector('.section-num');
+    if (badge) badge.innerHTML = badge.innerHTML.replace(/Sección \d+/, 'Sección ' + (i + 1));
+    // Botones anterior / siguiente re-encadenados a los pasos visibles
+    if (i > 0) {
+      var prev = sec.querySelector('.step-btn.prev');
+      if (prev) {
+        prev.dataset.target = visibles[i - 1].id;
+        prev.textContent = '← ' + _NOMBRE_PASO[visibles[i - 1].id];
+      }
+    }
+    if (i < total - 1) {
+      var next = sec.querySelector('.step-btn.next[data-target]');
+      if (next) {
+        next.dataset.target = visibles[i + 1].id;
+        next.textContent = 'Siguiente: ' + _NOMBRE_NEXT[visibles[i + 1].id] + ' →';
+      }
+    }
+  });
+
+  // Dots del recorrido: esconder los de pasos ocultos y renumerar el resto.
+  // (display directo, no [hidden]: .sticky-dot ya tiene display propio.)
+  var dots = [];
+  document.querySelectorAll('.sticky-dot').forEach(function (dot) {
+    var idx = visibles.indexOf(document.getElementById(dot.dataset.target));
+    if (idx === -1) { dot.style.display = 'none'; return; }
+    var num = dot.querySelector('.num');
+    if (num) num.textContent = idx + 1;
+    dots.push(dot);
+  });
+  // El script de navegación (corre después) toma estas dos listas en lugar
+  // de las estáticas de 5 pasos.
+  window._dotsGuia = dots;
+  window._pasosGuia = visibles.map(function (el) { return el.id; });
+
+  // Contador flotante "n / total"
+  var ctr = document.querySelector('.float-nav .ctr');
+  if (ctr) ctr.innerHTML = '<span id="floatCtr">1</span> / ' + total;
+
+  // Hero: puntos de progreso, "Paso 1 de N" y el texto del recorrido
+  document.querySelectorAll('.progress-line .dot').forEach(function (d, i) {
+    if (i >= total) d.remove();
+  });
+  var stepLabel = document.querySelector('.progress-line .step-label');
+  if (stepLabel) stepLabel.textContent = 'Paso 1 de ' + total;
+  var roadmap = document.querySelector('.bubble .roadmap');
+  if (roadmap) {
+    var frases = visibles.slice(0, -1).map(function (el) { return _FRASE_PASO[el.id]; }).filter(Boolean);
+    roadmap.innerHTML = '<b>Tu recorrido en ' + total + ' pasos:</b><br/>' +
+      frases.join(' · ') + ' · y al final, las <b>3 opciones de pago</b> para que elijas la que más te conviene.';
   }
 }
 const initials = (name) => name.split(/\s+/).filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase() || 'JC';
@@ -2774,6 +2925,11 @@ function applyPersonalization() {
       if (grid) grid.innerHTML = '<p style="text-align:center;color:#64748b;font-size:14px;padding:20px;">Consulta a tu agente las opciones de pago disponibles.</p>';
     }
   }
+
+  // Pasos 3 (deducible) y 4 (repuestos) — solo si la cotización trae
+  // cobertura al propio vehículo. Va DESPUÉS del bloque og/ag de arriba,
+  // porque decide sobre la variante del deducible que quedó activa.
+  aplicarSecciones(_parseCbMapa(data.cb));
 }
 
 // Aplicar al cargar
@@ -2781,7 +2937,10 @@ applyPersonalization();
 
 // ============ STICKY NAV + INTERSECTION OBSERVER ============
 const sections = document.querySelectorAll('.section');
-const stickyDots = document.querySelectorAll('.sticky-dot');
+// Si aplicarSecciones escondió pasos, renumerarGuia dejó en window._dotsGuia /
+// window._pasosGuia las listas de lo que quedó visible. Sin eso (enlaces
+// viejos, sin `cb`), las estáticas de siempre.
+const stickyDots = window._dotsGuia || document.querySelectorAll('.sticky-dot');
 const stickyNav = document.getElementById('stickyNav');
 const floatNav = document.getElementById('floatNav');
 const floatCtr = document.getElementById('floatCtr');
@@ -2789,7 +2948,7 @@ const floatPrev = document.getElementById('floatPrev');
 const floatNext = document.getElementById('floatNext');
 
 let currentSection = 0;
-const sectionIds = ['s1', 's2', 's3', 's4', 's5'];
+const sectionIds = window._pasosGuia || ['s1', 's2', 's3', 's4', 's5'];
 
 window.addEventListener('scroll', () => {
   const scrolled = window.scrollY > 200;
