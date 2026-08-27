@@ -13,6 +13,51 @@ description: >
 
 # Cotizador SDI — Checkpoint extendido (historico largo)
 
+## 27 ago 2026 — el explicador dinamico: pasos 3 y 4 segun coberturas (`07d0f60`)
+
+Cerro el pendiente que dejo la jornada del 25 ago. Pedido de JC: "actualizar el explicador para que
+no quede fijo y cambiar el titulo a algo mas generico, que incluye su cobertura nada mas". Tag de
+rollback **`pre-explicador-dinamico-27ago`**. Aprobado por JC sobre 3 mockups (3, 4 y 5 pasos) antes
+del push; verificado en produccion el mismo dia.
+
+**Titulo generico.** La seccion 1 decia "¿Que incluye tu Cobertura Total?" — suena a nombre de
+paquete y promete de mas. Quedo **"¿Que incluye tu cobertura?"**, sea la que sea. Es la unica parte
+del cambio que tambien ven los enlaces viejos, y les queda mejor que lo que tenian.
+
+**La regla (`_seccionesQueAplican`).** El deducible y los repuestos hablan del danio al PROPIO
+vehiculo, que lo cubren D (colision), F (robo) y H (riesgos adicionales):
+
+- **Paso 3 estandar (IDD):** requiere alguna de D/F/H **y ademas la IDD** — ese paso PROMETE el
+  reintegro ("con la IDD baja a cero"), y no se promete lo que no se cotizo.
+- **Paso 3 variantes asiatico/alta gama (s3a/s3b):** requieren solo D/F/H. Describen el esquema del
+  deducible, que aplica con o sin IDD (su caja de IDD ya esta redactada como pregunta).
+- **Paso 4 repuestos:** requiere alguna de D/F/H.
+- **Sin el param `cb` (enlaces ya enviados): NO SE TOCA NADA.** La guia queda con sus 5 pasos,
+  byte a byte — verificado en produccion contra un enlace sin `cb`.
+
+**La renumeracion (`renumerarGuia`).** Solo corre si algo se escondio. Renumera los rotulos
+("Seccion N"), esconde los dots huerfanos de la sticky-nav y renumera el resto, re-encadena los
+botones anterior/siguiente entre los pasos visibles (el "Avanzar" de Pagos hacia qtcita no se toca),
+y ajusta el hero (texto "Tu recorrido en N pasos", puntos de progreso, "Paso 1 de N") y el contador
+flotante "n / N". Deja `window._pasosGuia` y `window._dotsGuia`; el script de navegacion (corre
+despues) los toma en lugar de las listas estaticas de 5. Con eso **el gotcha de los "5 dots fijos"
+quedo resuelto**: los dots y el contador ya son dinamicos. Bonus: cuando renumera con og/ag, el
+observer usa el id real (s3a/s3b), asi que el contador ya avanza al scrollear la variante — el quirk
+viejo sigue solo en enlaces sin `cb`.
+
+**Donde vive.** Todo en `explicacion/index.html`. La logica pura (parser + regla) esta entre los
+marcadores `[GUIA-CB-PURO]`/`[/GUIA-CB-PURO]`: el test **`tests/test-explicador-secciones.js`**
+(25 checks) la extrae por los marcadores y la evalua en Node — si se mueve el bloque, mover los dos
+marcadores con el. El test tambien prueba el circuito completo correo → `cb` → decision de la guia
+(buildEmail real). `aplicarCoberturas` quedo delgada: el parse se mudo a `_parseCbMapa`, compartido.
+`aplicarSecciones` corre AL FINAL de `applyPersonalization`, despues del bloque og/ag, porque decide
+sobre la variante del deducible que quedo activa.
+
+**Suite tras la jornada: 17 archivos / 605 checks en verde.** Smoke localhost con 5 escenarios
+(3, 4 y 5 pasos, enlace viejo, og sin D/F/H) + verificacion en produccion (DOM renderizado con
+Chrome headless: 3 pasos con `cb` recortado, 5 pasos sin `cb`). Registro de cambios anotado al pie
+de la consola.
+
 ## 25 ago 2026 (3) — la guia mostraba coberturas no cotizadas (`04c69d9`)
 
 Lo cazo JC probando con una cotizacion real: **el correo mostraba cinco coberturas y `/explicacion/`
@@ -40,6 +85,8 @@ mientras los montos escritos a mano usaban coma. Todo unificado a punto, como el
 cliente sin D, F ni H se le sigue explicando el deducible de esas coberturas. No promete un monto, pero
 habla de algo que no tiene. 🔴 Ojo al tocarlo: la sticky-nav tiene 5 dots fijos y el contador dice
 "1 / 5"; ocultar una seccion sin ocultar su dot rompe la navegacion.
+→ **RESUELTO el 27 ago 2026** (`07d0f60`): ver la jornada de arriba. Los dots y el contador ya son
+dinamicos.
 
 ## 25 ago 2026 (2) — las coberturas del PDF en el correo (`c1721f0`)
 
