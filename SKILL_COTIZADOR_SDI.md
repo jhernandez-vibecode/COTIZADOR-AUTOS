@@ -13,6 +13,28 @@ description: >
 
 # Cotizador SDI — Checkpoint extendido (historico largo)
 
+## 27 ago 2026 (2ª tanda) — el paso de la asistencia tambien es dinamico (`ba294c3`)
+
+Bug reportado por JC el mismo dia, probando el explicador dinamico recien publicado: *"si marco solo
+A y C igual me estan saliendo las asistencias, ese cuadro solo debe salir si elijo G o G y M"*. La
+primera tanda solo condiciono los pasos 3 (deducible) y 4 (repuestos); el paso 2 (asistencia) quedo
+fijo, y le prometia "tienes asistencia 24/7 incluida" a clientes que no cotizaron la Multiasistencia.
+Tag de rollback **`pre-asistencia-dinamica-27ago`**.
+
+- **La regla:** `_seccionesQueAplican` devuelve ademas `asistencia: ('G' in mapa) || ('M' in mapa)`.
+  G es la Multiasistencia en carretera y M su extendida — el paso habla de esas dos.
+- **`aplicarSecciones`** esconde `s2` cuando no aplica; `renumerarGuia` ya era generica y acomoda
+  todo sola (s2 estaba en su lista de pasos desde la 1ª tanda). Una cotizacion con solo A y C queda
+  en **2 pasos**: coberturas y pagos.
+- **El correo NO tenia el bug**: la fila de asistencia sale de las coberturas del PDF, y los benefit
+  cards genericos ("Asistencia 24/7") solo aparecen sin coberturas parseadas. Era solo la guia.
+- **Sin `cb` no se toca nada** — re-verificado (el snapshot data: del browser pane se come el query
+  string, y de paso probo ese camino).
+- Tests: `test-explicador-secciones.js` paso de 25 a **32 checks** (suite: 17 archivos / **612**),
+  incluidos el caso exacto de JC (solo A y C), G sola, M sola, y el circuito
+  correo con SOLO_AC → `cb` → guia. Verificado en localhost (server estatico `cotizador-autos` de
+  launch.json, working tree vivo) y en produccion con los 3 escenarios.
+
 ## 27 ago 2026 — el explicador dinamico: pasos 3 y 4 segun coberturas (`07d0f60`)
 
 Cerro el pendiente que dejo la jornada del 25 ago. Pedido de JC: "actualizar el explicador para que
