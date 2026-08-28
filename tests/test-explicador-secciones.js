@@ -1,6 +1,7 @@
 /**
  * Test del explicador: los pasos 3 (deducible) y 4 (repuestos) solo le
- * aplican a la cotizacion que trae cobertura al PROPIO vehiculo (D, F o H).
+ * aplican a la cotizacion que trae cobertura al PROPIO vehiculo (D, F o H),
+ * y el paso 2 (asistencia) solo si trae Multiasistencia (G o M).
  *
  * Lo que vigila:
  *   1. La logica pura del bloque [GUIA-CB-PURO] de explicacion/index.html
@@ -51,13 +52,20 @@ console.log('\n-- que pasos le aplican a la cotizacion --');
 ok('sin dato: null, y la guia no se toca', _seccionesQueAplican(null) === null);
 
 var completo = _seccionesQueAplican(_parseCbMapa('A-1.B-2.C.D-18000000.F.H-18000000.G.M.N.IDD'));
-ok('paquete completo: los tres pasos aplican',
-   completo.deducible && completo.deducibleDif && completo.repuestos);
+ok('paquete completo: los cuatro pasos aplican',
+   completo.asistencia && completo.deducible && completo.deducibleDif && completo.repuestos);
 
 // El caso de JC: cotizacion SIN colision, SIN robo y SIN riesgos adicionales
 var sinPropio = _seccionesQueAplican(_parseCbMapa('A-300000000.B-15000000.C.G.M.N'));
 ok('sin D, F ni H: ni deducible ni repuestos',
    !sinPropio.deducible && !sinPropio.deducibleDif && !sinPropio.repuestos);
+ok('...pero con G y M la asistencia si', sinPropio.asistencia);
+
+// El caso de JC (27 ago): solo A y C — la asistencia no se contrato
+var soloAC = _seccionesQueAplican(_parseCbMapa('A-300000000.C-100000000'));
+ok('solo A y C: la asistencia NO aplica', !soloAC.asistencia);
+ok('con G sola alcanza para asistencia', _seccionesQueAplican(_parseCbMapa('A-1.C.G')).asistencia);
+ok('con M sola tambien (es la extendida)', _seccionesQueAplican(_parseCbMapa('A-1.C.M')).asistencia);
 
 ok('con solo D alcanza para repuestos', _seccionesQueAplican(_parseCbMapa('D-5.IDD')).repuestos);
 ok('con solo F alcanza para repuestos', _seccionesQueAplican(_parseCbMapa('F.IDD')).repuestos);
@@ -78,6 +86,8 @@ ok('aplicarSecciones corre con el cb del enlace',
 ok('solo se renumera si algo se escondio', html.indexOf('if (oculto) renumerarGuia()') !== -1);
 ok('las tres variantes del deducible se esconden juntas',
    html.indexOf("['s3', 's3a', 's3b'].forEach") !== -1);
+ok('la asistencia (s2) se esconde cuando no aplica',
+   html.indexOf('if (!q.asistencia)') !== -1 && html.indexOf("getElementById('s2')") !== -1);
 ok('la navegacion toma los pasos visibles',
    html.indexOf('window._pasosGuia ||') !== -1 && html.indexOf('window._dotsGuia ||') !== -1);
 
@@ -116,6 +126,16 @@ var COMPLETO = SIN_DFH.concat([
 var qSin = _seccionesQueAplican(_parseCbMapa(cbDelCorreo(buildEmail(Object.assign({ coberturas: SIN_DFH }, COT)))));
 ok('correo sin D/F/H: la guia esconde deducible y repuestos',
    qSin !== null && !qSin.deducible && !qSin.repuestos);
+ok('...pero trae G, asi que la asistencia queda', qSin.asistencia);
+
+// Solo A y C: el correo no muestra asistencia y la guia tampoco
+var SOLO_AC = [
+  { cod: 'A', desc: 'RC', montos: [{ etiqueta: 'Monto por accidente', valor: '300,000,000.00' }] },
+  { cod: 'C', desc: 'RC D', montos: [{ etiqueta: 'Monto asegurado', valor: '100,000,000.00' }] }
+];
+var qAC = _seccionesQueAplican(_parseCbMapa(cbDelCorreo(buildEmail(Object.assign({ coberturas: SOLO_AC }, COT)))));
+ok('correo con solo A y C: la guia esconde tambien la asistencia',
+   qAC !== null && !qAC.asistencia && !qAC.deducible && !qAC.repuestos);
 
 var qCom = _seccionesQueAplican(_parseCbMapa(cbDelCorreo(buildEmail(Object.assign({ coberturas: COMPLETO }, COT)))));
 ok('correo con D/F e IDD: la guia muestra los tres pasos',

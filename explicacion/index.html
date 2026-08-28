@@ -2551,14 +2551,20 @@ function _parseCbMapa(cb) {
  * cotización. Las variantes asiático/alta gama solo describen el esquema
  * del deducible, que aplica con o sin IDD.
  *
+ * El paso de la asistencia habla de la Multiasistencia en carretera, que es
+ * la cobertura G (y M, su extendida). Una cotización sin G ni M no tiene
+ * asistencia que prometer — el paso diría "tienes asistencia 24/7 incluida"
+ * sobre algo que el cliente no contrató.
+ *
  * @param {Object|null} mapa - lo que devuelve _parseCbMapa
- * @returns {Object|null} {deducible, deducibleDif, repuestos} o null si no
- *                        hay dato (enlaces viejos: no se toca nada)
+ * @returns {Object|null} {asistencia, deducible, deducibleDif, repuestos} o
+ *                        null si no hay dato (enlaces viejos: no se toca nada)
  */
 function _seccionesQueAplican(mapa) {
   if (!mapa) return null;
   var propio = ['D', 'F', 'H'].some(function (c) { return c in mapa; });
   return {
+    asistencia:   ('G' in mapa) || ('M' in mapa),
     deducible:    propio && ('IDD' in mapa),
     deducibleDif: propio,
     repuestos:    propio
@@ -2632,8 +2638,9 @@ function aplicarCoberturas(cb) {
 }
 
 /**
- * Oculta los pasos que no le aplican a esta cotización (deducible y/o
- * repuestos, según _seccionesQueAplican) y renumera el recorrido.
+ * Oculta los pasos que no le aplican a esta cotización (asistencia,
+ * deducible y/o repuestos, según _seccionesQueAplican) y renumera el
+ * recorrido.
  *
  * 🔴 Por qué existe: la sección 1 ya mostraba solo lo contratado, pero el
  * deducible y los repuestos seguían fijos — a un cliente sin colisión, robo
@@ -2648,6 +2655,11 @@ function aplicarSecciones(mapa) {
   if (!q) return;
 
   var oculto = false;
+  if (!q.asistencia) {
+    var s2 = document.getElementById('s2');
+    if (s2) s2.style.display = 'none';
+    oculto = true;
+  }
   // Con og/ag la sección activa es la variante (s3a/s3b); sin flags, la
   // estándar. Si el paso no aplica se esconden las tres por parejo.
   var okPaso3 = (data.og || data.ag) ? q.deducibleDif : q.deducible;
