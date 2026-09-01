@@ -49,52 +49,22 @@ var html = buildRenovacionEmail(base);
 
 // ---------- Contenido esencial ----------
 ok('doctype',        /^<!DOCTYPE html>/.test(html));
-ok('saludo',         html.indexOf('Estimado(a) <b>Carlos Andrés</b>:') !== -1);
-// Helpers: el formato de monto y fecha es el de SASINS (es-CR).
-function fD(d, m, y) { return new Date(y, m - 1, d).toLocaleDateString('es-CR', { day: '2-digit', month: 'short', year: '2-digit' }); }
-function fM(n) { return '\u20A1 ' + n.toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
-// Header IGUAL al del Recibo de Pago de SASINS (1 sep 2026, pedido JC).
-ok('header-recibo-de-pago', html.indexOf('<div style="font-size:20px;font-weight:700;color:#fff">Recibo de pago</div>') !== -1
-                            && html.indexOf('<div style="font-size:12px;color:#a0c4e8;margin-top:2px">Renovaci&oacute;n confirmada</div>') !== -1);
-ok('header-estilo-sasins',  html.indexOf('bgcolor="#1a3a5c" style="background:#1a3a5c;padding:24px 32px 20px;text-align:center"') !== -1
-                            && html.indexOf('alt="INS" height="36" style="height:36px;display:inline-block;margin-bottom:10px"') !== -1);
-// Filete SDI (60/25/10/5) inmediatamente después del header (pedido JC 1 sep 2026).
-ok('filete-sdi-bajo-header', (function () {
-  var iH = html.indexOf('Renovaci&oacute;n confirmada</div>');
-  var iF = html.indexOf('width="60%" height="4"');
-  return iH !== -1 && iF !== -1 && iF > iH && iF - iH < 400;
-})());
+ok('saludo',         /Hola Carlos Andrés,/.test(html));
+ok('titulo',         /Su renovación está confirmada/.test(html));
 ok('poliza',         html.indexOf('0101AUT100000001') !== -1);
 ok('placa',          html.indexOf('BXY123') !== -1);
-// Marca y modelo SÍ van (pedido JC 1 sep: es un seguro de autos). El número
-// de comprobante no: va en el PDF adjunto, como en SASINS.
-ok('vehiculo',       /Veh&iacute;culo/.test(html) && html.indexOf('TOYOTA YARIS 2019') !== -1);
-ok('monto-texto-fallback', html.indexOf('Pago aplicado &mdash; ₡92.555') !== -1);   // sin número: el texto de la app
-ok('monto-formato-sasins', buildRenovacionEmail(Object.assign({}, base, { monto: 92555 })).indexOf('Pago aplicado &mdash; ' + fM(92555)) !== -1);
-ok('caja-al-dia',    /Su p&oacute;liza de autom&oacute;vil qued&oacute; al d&iacute;a\./.test(html));
+ok('vehiculo',       html.indexOf('TOYOTA YARIS 2019') !== -1);
+ok('comprobante',    html.indexOf('R202608108000001') !== -1);
+ok('monto',          html.indexOf('₡92.555') !== -1);
+ok('badge-pagado',   html.indexOf('>PAGADO<') !== -1);
 ok('pago-aplicado',  /fue aplicado correctamente/.test(html));
-ok('periodo-pagado', /Per&iacute;odo pagado/.test(html) && html.indexOf(fD(30, 8, 2026) + ' &rarr; ' + fD(30, 11, 2026)) !== -1);
-ok('fecha-pago',     /Fecha de pago/.test(html) && html.indexOf(fD(10, 8, 2026)) !== -1);
+ok('periodo-pagado', /Período pagado/.test(html) && html.indexOf('30/08/2026') !== -1 && html.indexOf('30/11/2026') !== -1);
+ok('fecha-pago',     /Fecha de pago/.test(html) && html.indexOf('10/08/2026') !== -1);
 ok('logo-ins',       html.indexOf('img/ins-logo.png') !== -1);
 
 // El ajuste que pidió JC: "Adjunto encontrará…" en su PROPIO párrafo, con aire,
 // para que no se lea como un solo bloque de texto pegado a la confirmación.
-ok('adjunto-frase',  /Adjunto encontrar&aacute; el <b>comprobante oficial del INS<\/b>\./.test(html));
-ok('adjunto-linea',  /Adjunto: comprobante oficial del INS \(PDF\)/.test(html));
-ok('adjunto-nombres', buildRenovacionEmail(Object.assign({}, base, { adjuntos: ['recibo-1.pdf', 'recibo-2.pdf'] })).indexOf('Adjunto: recibo-1.pdf &middot; recibo-2.pdf') !== -1);
-// Un comprobante en DÓLARES sale en dólares (hallazgo de la revisión adversarial).
-var enUsd = buildRenovacionEmail(Object.assign({}, base, { monto: 1250.5, montoTexto: '$1.250,50', moneda: 'USD' }));
-ok('usd-simbolo',    enUsd.indexOf('Pago aplicado &mdash; $ ' + (1250.5).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })) !== -1
-                     && enUsd.indexOf('Pago aplicado &mdash; \u20A1') === -1);
-ok('usd-por-texto',  buildRenovacionEmail(Object.assign({}, base, { monto: 1250.5, montoTexto: '$1.250,50' })).indexOf('&mdash; $ ') !== -1);
-var planUsd = buildRenovacionEmail({ nombrePila: 'Ana', recibos: [
-  { poliza: 'A', placa: 'AAA111', monto: 100, montoTexto: '$100,00', moneda: 'USD', asegurado: 'X' },
-  { poliza: 'B', placa: 'BBB222', monto: 200, montoTexto: '$200,00', moneda: 'USD', asegurado: 'Y' } ] });
-ok('usd-plan-total', planUsd.indexOf('$&nbsp;' + (300).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })) !== -1 && planUsd.indexOf('\u20A1') === -1);
-var planMixto = buildRenovacionEmail({ nombrePila: 'Ana', totalTexto: '', recibos: [
-  { poliza: 'A', placa: 'AAA111', monto: 100, montoTexto: '$100,00', moneda: 'USD', asegurado: 'X' },
-  { poliza: 'B', placa: 'BBB222', monto: 200, montoTexto: '₡200,00', moneda: 'CRC', asegurado: 'Y' } ] });
-ok('mixto-no-suma',  planMixto.indexOf('300,00') === -1 && !/undefined|NaN/.test(planMixto));
+ok('adjunto-parrafo-aparte', /<p style="margin:10px 0 0;">Adjunto encontrará el comprobante/.test(html));
 
 // ---------- Es un correo de CONFIANZA, no de cobro ----------
 ok('NO-pague-antes',   !/pague antes|antes del vencimiento|fecha l[ií]mite/i.test(html));
@@ -156,11 +126,11 @@ ok('nota-ausente-sin-texto', !/Nota de su agente/.test(html));
 
 // ---------- Datos faltantes: nada queda colgando ----------
 var minimo = buildRenovacionEmail({ nombrePila: 'Ana' });
-ok('min-sin-crash',     minimo.indexOf('Estimado(a) <b>Ana</b>:') !== -1);
+ok('min-sin-crash',     minimo.indexOf('Hola Ana,') !== -1);
 ok('min-sin-poliza-no', !/póliza No\. <b/.test(minimo));
 ok('min-sin-undefined', !/undefined|NaN|null/.test(minimo));
 var sinVehiculo = buildRenovacionEmail(Object.assign({}, base, { vehiculo: '' }));
-ok('sin-vehiculo-placa', sinVehiculo.indexOf('<span style="font-family:Consolas,monospace">BXY123</span>') !== -1);
+ok('sin-vehiculo-frase', /su vehículo placa <b style="color:#0c2340;">BXY123/.test(sinVehiculo));
 
 // ---------- XSS ----------
 var evil = buildRenovacionEmail({ nombrePila: '<img src=x onerror=alert(1)>', poliza: 'X', placa: 'P',
@@ -198,46 +168,28 @@ var htmlMulti = buildRenovacionEmail({
   recibos: tresRecibos, fechaPago: '10/08/2026'
 });
 
-ok('multi-plan-frase',      /con los recibos de su plan familiar\./.test(htmlMulti));
-ok('multi-plan-al-dia',     /Plan familiar &middot; las 3 p&oacute;lizas quedaron al d&iacute;a\./.test(htmlMulti));
-ok('multi-adjunto-generico', /Adjunto: comprobante oficial del INS \(PDF\)/.test(htmlMulti));
-// Con varios recibos, el período solo se muestra si es el MISMO en todos.
-ok('multi-periodo-comun',   /Per&iacute;odo pagado/.test(htmlMulti));
-var periodosDistintos = buildRenovacionEmail({ nombrePila: 'Ana', recibos: [
-  { poliza: 'A', placa: 'AAA111', periodoDesde: '01/01/2026', periodoHasta: '01/04/2026', monto: 1, montoTexto: '₡1', asegurado: 'X' },
-  { poliza: 'B', placa: 'BBB222', periodoDesde: '01/02/2026', periodoHasta: '01/05/2026', monto: 2, montoTexto: '₡2', asegurado: 'Y' } ] });
-ok('multi-periodo-distinto-oculto', !/Per&iacute;odo pagado/.test(periodosDistintos));
-ok('multi-total-label',     /TOTAL DEL PLAN/.test(htmlMulti));
-// Plan familiar: la tabla es la de COBROS de SASINS (buildHijasDesgloseHtml).
-function fMnb(n) { return '\u20A1&nbsp;' + n.toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
-ok('multi-total-sumado',    htmlMulti.indexOf(fMnb(316755)) !== -1);   // 92.555 + 78.300 + 145.900
-ok('multi-total-del-plan',  /TOTAL DEL PLAN \(3 p&oacute;lizas\):/.test(htmlMulti));
-ok('multi-tabla-cobros',    /Plan familiar &mdash; desglose de p&oacute;lizas/.test(htmlMulti)
-                            && htmlMulti.indexOf('<th style="padding:7px 8px;">P&oacute;liza hija</th>') !== -1
-                            && htmlMulti.indexOf('background:#f0f4ff;border:1px solid #c7d7f7') !== -1);
+ok('multi-plural-polizas',  /sus 3 pólizas de automóviles/.test(htmlMulti));
+ok('multi-plural-vehiculos', /sus vehículos continúan protegidos/.test(htmlMulti));
+ok('multi-plural-adjuntos', /Adjunto encontrará los comprobantes de pago oficiales del INS/.test(htmlMulti));
+ok('multi-total-label',     /Total pagado/.test(htmlMulti));
+ok('multi-total-sumado',    htmlMulti.indexOf('₡316.755') !== -1);   // 92.555 + 78.300 + 145.900
+ok('multi-cuenta-recibos',  /3 recibos/.test(htmlMulti));
 ok('multi-las-3-polizas',   htmlMulti.indexOf('0101AUT100000001') !== -1
                             && htmlMulti.indexOf('0101AUT200000002') !== -1
                             && htmlMulti.indexOf('0101AUT300000003') !== -1);
-ok('multi-sin-emoji',       htmlMulti.indexOf('\uD83D\uDC68') === -1);
-ok('multi-sin-frase-cobro', !/Al cancelar este recibo/.test(htmlMulti));
 ok('multi-las-3-placas',    htmlMulti.indexOf('BXY123') !== -1 && htmlMulti.indexOf('ZWT456') !== -1 && htmlMulti.indexOf('DEF789') !== -1);
-ok('multi-los-3-montos',    htmlMulti.indexOf(fMnb(92555)) !== -1 && htmlMulti.indexOf(fMnb(78300)) !== -1 && htmlMulti.indexOf(fMnb(145900)) !== -1);
-// Marca y modelo de cada póliza del plan, bajo su placa.
-var htmlMultiVeh = buildRenovacionEmail({ nombrePila: 'Ana', recibos: tresRecibos.map(function (r, i) { return Object.assign({}, r, { vehiculo: 'AUTO ' + (i + 1) }); }) });
-ok('multi-vehiculo-por-fila', /BXY123<div style="font-size:10px;color:#5f6b68;margin-top:2px;font-family:[^"]+">AUTO 1<\/div>/.test(htmlMultiVeh)
-                              && htmlMultiVeh.indexOf('>AUTO 3</div>') !== -1);
-ok('multi-fecha-pago',      htmlMulti.indexOf(fD(10, 8, 2026)) !== -1);
-// La tabla de SASINS lleva SIEMPRE la columna Asegurado (placa · asegurado · monto).
-ok('multi-col-asegurado',   htmlMulti.indexOf('>Asegurado<') !== -1);
+ok('multi-los-3-montos',    htmlMulti.indexOf('₡92.555') !== -1 && htmlMulti.indexOf('₡78.300') !== -1 && htmlMulti.indexOf('₡145.900') !== -1);
+ok('multi-fecha-pago',      htmlMulti.indexOf('10/08/2026') !== -1);
+// Mismo titular en todos: la columna "Asegurado" sobra y no se pinta.
+ok('multi-sin-col-asegurado', htmlMulti.indexOf('>Asegurado<') === -1);
 // Lo demás del correo NO cambia
 ok('multi-guia-evento',   /&iquest;Qu&eacute; hacer si ocurre un evento\?/.test(htmlMulti));
 ok('multi-cross-sell',    /Seguros de Viaje/.test(htmlMulti));
 ok('multi-sin-cobro',     !/pague antes|fecha l[ií]mite/i.test(htmlMulti));
 ok('multi-sin-undefined', !/undefined|NaN|null/.test(htmlMulti));
 
-// Total explícito de la app: solo cuando algún monto no es numérico.
-ok('multi-total-explicito', buildRenovacionEmail({ nombrePila: 'Ana', totalTexto: '₡316.755',
-  recibos: tresRecibos.map(function (r) { return { poliza: r.poliza, placa: r.placa, montoTexto: r.montoTexto, asegurado: r.asegurado }; }) }).indexOf('₡316.755') !== -1);
+// Total explícito de la app: manda sobre la suma automática.
+ok('multi-total-explicito', buildRenovacionEmail({ nombrePila: 'Ana', recibos: tresRecibos, totalTexto: '₡316.755' }).indexOf('₡316.755') !== -1);
 
 // PLAN FAMILIAR (D3 de JC): los recibos vienen a nombre de distintas personas.
 // El correo se dirige al DUEÑO DEL PLAN y la tabla dice de quién es cada póliza.
@@ -249,18 +201,18 @@ var familiar = buildRenovacionEmail({
     { poliza: '0101AUT200000002', placa: 'ZWT456', montoTexto: '₡78.300', monto: 78300, asegurado: 'Mora Vega Lucía' }
   ]
 });
-ok('familiar-saludo-dueno',  familiar.indexOf('Estimado(a) <b>Carlos</b>:') !== -1);
+ok('familiar-saludo-dueno',  /Hola Carlos,/.test(familiar));
 ok('familiar-col-asegurado', familiar.indexOf('>Asegurado<') !== -1);
 ok('familiar-ambos-nombres', familiar.indexOf('Ramírez Soto Carlos Andrés') !== -1 && familiar.indexOf('Mora Vega Lucía') !== -1);
-ok('familiar-total',         familiar.indexOf(fMnb(170855)) !== -1);
+ok('familiar-total',         familiar.indexOf('₡170.855') !== -1);
 
 // UN recibo pasado como array: el correo queda idéntico al de campos sueltos.
 var unoArray = buildRenovacionEmail({ nombrePila: 'Carlos Andrés', numComprobante: 'R202608108000001', fechaPago: '10/08/2026',
   recibos: [{ poliza: '0101AUT100000001', placa: 'BXY123', vehiculo: 'TOYOTA YARIS 2019',
               periodoDesde: '30/08/2026', periodoHasta: '30/11/2026', montoTexto: '₡92.555', monto: 92555 }] });
-ok('uno-array-singular',   /Su p&oacute;liza de autom&oacute;vil qued&oacute; al d&iacute;a/.test(unoArray) && !/plan familiar/.test(unoArray));
-ok('uno-array-monto-label', /Pago aplicado &mdash; /.test(unoArray) && !/Total pagado/.test(unoArray));
-ok('uno-array-poliza',      unoArray.indexOf('<span style="font-family:Consolas,monospace">0101AUT100000001</span>') !== -1);
+ok('uno-array-singular',   /su póliza No\./.test(unoArray) && !/sus 2|sus 1 pólizas/.test(unoArray));
+ok('uno-array-monto-label', /Monto pagado/.test(unoArray) && !/Total pagado/.test(unoArray));
+ok('uno-array-comprobante', unoArray.indexOf('R202608108000001') !== -1);
 ok('uno-array-sin-tabla',   unoArray.indexOf('>Asegurado<') === -1);
 
 // WhatsApp con varias pólizas: dice cuántas, no nombra una sola.

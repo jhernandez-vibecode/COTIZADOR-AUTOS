@@ -561,11 +561,9 @@
         return {
           poliza: r.data.poliza, placa: r.data.placa, vehiculo: r.data.vehiculo,
           periodoDesde: r.data.periodoDesde, periodoHasta: r.data.periodoHasta,
-          montoTexto: r.data.montoTexto, monto: r.data.monto, moneda: r.data.moneda, asegurado: r.data.cliente
+          montoTexto: r.data.montoTexto, monto: r.data.monto, asegurado: r.data.cliente
         };
       }),
-      // Nombres de los PDF que van adjuntos: el correo los lista (plantilla SASINS).
-      adjuntos:   state.files.map(function (f) { return f.name; }),
       numComprobante: state.recibos.length === 1 ? state.recibos[0].data.numComprobante : '',
       fechaPago:      state.recibos.length ? state.recibos[0].data.fechaPago : '',
       totalTexto:     state.recibos.length > 1 ? totalTexto() : '',
