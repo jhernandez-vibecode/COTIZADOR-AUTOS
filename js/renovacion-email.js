@@ -326,12 +326,20 @@ function buildRenovacionEmail(params) {
 '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f5f5;padding:24px 0;"><tr><td align="center">' +
 '<table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:12px;overflow:hidden;max-width:600px;box-shadow:0 4px 20px rgba(12,35,64,.08);">' +
 
-  // 1. HEADER (INS arriba: es la cara al cliente)
-  '<tr><td bgcolor="#0c2340" style="background:#0c2340;color:#ffffff;padding:26px 32px;text-align:center;">' +
-    '<img src="' + e(logoUrl) + '" alt="INS" height="44" style="display:block;margin:0 auto 10px;border:0;outline:none;text-decoration:none;height:44px;">' +
-    '<h1 style="margin:0;font-family:' + fontFam + ';font-size:21px;font-weight:700;letter-spacing:-.01em;">Su renovación está confirmada</h1>' +
-    '<p style="margin:6px 0 0;font-size:12px;opacity:.78;">Seguros del INS &middot; Su protección al volante</p>' +
+  // 1. HEADER (INS arriba: es la cara al cliente). Desde el 1 sep 2026 es
+  //    IGUAL al del correo "Recibo de pago" de SASINS (pedido JC): logo INS
+  //    36px, "Recibo de pago" 20px y "Renovación confirmada" 12px sobre
+  //    #1a3a5c — transcripción literal de gmail.js envolverCorreoHtml
+  //    (variante headerLogo). Solo cambió este bloque; el resto del correo
+  //    queda como estaba.
+  '<tr><td bgcolor="#1a3a5c" style="background:#1a3a5c;padding:24px 32px 20px;text-align:center">' +
+    '<img src="' + e(logoUrl) + '" alt="INS" height="36" style="height:36px;display:inline-block;margin-bottom:10px">' +
+    '<div style="font-size:20px;font-weight:700;color:#fff">Recibo de pago</div>' +
+    '<div style="font-size:12px;color:#a0c4e8;margin-top:2px">Renovaci&oacute;n confirmada</div>' +
   '</td></tr>' +
+  // 1b. FILETE DE MARCA SDI bajo el header (pedido JC 1 sep 2026; bloque
+  //     compartido de js/email-marca.js, el mismo del correo de cotización).
+  _fileteSDI() +
 
   // 2. SALUDO + confirmación del pago (verde). El "Adjunto encontrará…" va en
   //    párrafo aparte con aire: JC pidió que no se leyera como un solo bloque.

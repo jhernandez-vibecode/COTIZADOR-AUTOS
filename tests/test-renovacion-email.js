@@ -50,7 +50,17 @@ var html = buildRenovacionEmail(base);
 // ---------- Contenido esencial ----------
 ok('doctype',        /^<!DOCTYPE html>/.test(html));
 ok('saludo',         /Hola Carlos Andrés,/.test(html));
-ok('titulo',         /Su renovación está confirmada/.test(html));
+// Header IGUAL al del Recibo de Pago de SASINS (1 sep 2026, pedido JC).
+ok('header-recibo-de-pago', html.indexOf('<div style="font-size:20px;font-weight:700;color:#fff">Recibo de pago</div>') !== -1
+                            && html.indexOf('<div style="font-size:12px;color:#a0c4e8;margin-top:2px">Renovaci&oacute;n confirmada</div>') !== -1);
+ok('header-estilo-sasins',  html.indexOf('bgcolor="#1a3a5c" style="background:#1a3a5c;padding:24px 32px 20px;text-align:center"') !== -1
+                            && html.indexOf('alt="INS" height="36" style="height:36px;display:inline-block;margin-bottom:10px"') !== -1);
+// Filete SDI (60/25/10/5) inmediatamente después del header (pedido JC 1 sep 2026).
+ok('filete-sdi-bajo-header', (function () {
+  var iH = html.indexOf('Renovaci&oacute;n confirmada</div>');
+  var iF = html.indexOf('width="60%" height="4"');
+  return iH !== -1 && iF !== -1 && iF > iH && iF - iH < 400;
+})());
 ok('poliza',         html.indexOf('0101AUT100000001') !== -1);
 ok('placa',          html.indexOf('BXY123') !== -1);
 ok('vehiculo',       html.indexOf('TOYOTA YARIS 2019') !== -1);

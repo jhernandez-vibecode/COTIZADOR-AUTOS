@@ -2189,3 +2189,21 @@ exige **clave nueva** y volver a cargar las 4 variables.
 1. **Pie del explicador** (`/explicacion/`): falta proponérselo — lo ve el asegurado.
 2. Borrar el sitio Netlify duplicado `cotizador-autos-sdi.netlify.app` y el SPF/DKIM
    de segurosdelins.com.
+
+
+## Checkpoint 1 sep 2026 — encabezado del Recibo de Pago de SASINS en el correo de renovaciones
+
+- **Qué**: `js/renovacion-email.js` bloque 1 (header) = transcripción literal de la variante `headerLogo` de
+  `envolverCorreoHtml` (SASINS `js/gmail.js`): `bgcolor="#1a3a5c"`, padding `24px 32px 20px`, logo INS `height="36"`
+  inline-block, `<div 20px 700 #fff>Recibo de pago</div>`, `<div 12px #a0c4e8>Renovación confirmada</div>`; bloque 1b
+  `_fileteSDI()` debajo (pedido "ponele el filo de colores").
+- **Alcance**: SOLO ese correo y SOLO el header. Cotización y póliza activa byte-idénticos (verificado con `git diff`).
+  El cuerpo del correo de renovaciones tampoco cambió.
+- **Por qué**: JC quiere que lo que recibe el cliente se vea igual salga de SASINS o del cotizador; la referencia es el
+  correo "Recibo de pago" de SASINS (v1.44.0-rc, 31 ago 2026), que a su vez transcribió del cotizador el bloque de
+  evento, la guía y el pie SDI. Ojo: el correo que JC mostró primero era el de `/polizas-activas/`, verificado en prod.
+- **Reproceso a evitar**: el primer intento tocó los tres correos (envoltorio 580/#f0f2f5 + header) y quitó el filete
+  de la cotización. JC lo cortó: "solo te pedí cambiar el de renovaciones". Regla: alcance literal.
+- **Tests**: `tests/test-renovacion-email.js` 123 checks (nuevos `header-recibo-de-pago`, `header-estilo-sasins`,
+  `filete-sdi-bajo-header`). Suite completa 17 archivos en verde.
+- **Rollback**: tag `pre-pie-sasins-1sep` (= `52b62fb`).
