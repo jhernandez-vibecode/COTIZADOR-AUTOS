@@ -2207,3 +2207,17 @@ exige **clave nueva** y volver a cargar las 4 variables.
 - **Tests**: `tests/test-renovacion-email.js` 123 checks (nuevos `header-recibo-de-pago`, `header-estilo-sasins`,
   `filete-sdi-bajo-header`). Suite completa 17 archivos en verde.
 - **Rollback**: tag `pre-pie-sasins-1sep` (= `52b62fb`).
+
+## Checkpoint 1 sep 2026 (2ª tanda) — el correo de renovaciones ES la plantilla "Recibo de pago" de SASINS
+
+- **Supersede** al checkpoint anterior del mismo día (que solo tocaba el header). JC fijó la referencia completa: el
+  correo "Recibo de pago" de SASINS. `buildRenovacionEmail` = transcripción literal de `_correoReciboHtml`
+  (recibo-pago.js) + `envolverCorreoHtml` variante `headerLogo` (gmail.js) + `_fileteSDI()` + `_pieSDI`.
+- **Ajustes de JC**: fila "Vehículo" (marca y modelo) en la tabla de datos; con varios recibos, la tabla de desglose de
+  COBROS de SASINS (`plantillas.js buildHijasDesgloseHtml`) con el vehículo en sublínea bajo la placa, sin emoji y sin
+  la frase de cobro.
+- **Fontanería**: agente desde CFG; `recibos[]` (poliza/placa/vehiculo/periodoDesde/periodoHasta/montoTexto/monto/
+  asegurado), `fechaPago`, `notaAdicional`, `totalTexto` (solo si algún monto no es numérico); monto `es-CR` 2 decimales,
+  fecha dd/mm/aaaa → "30 ago 26"; guía `_renovAsistenciaUrl()`; cross-sell `CFG.XSELL_*` con fallback al sitio del agente.
+- **Ya no se muestran** (plantilla de SASINS): número de comprobante y tarjeta navy del monto. WhatsApp intacto.
+- **Tests**: `test-renovacion-email.js` 128 checks. Suite 17 archivos en verde. Tag `pre-pie-sasins-1sep`.

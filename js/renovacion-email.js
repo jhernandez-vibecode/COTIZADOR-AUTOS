@@ -159,48 +159,62 @@ function buildRenovacionEmail(params) {
     return /^https?:\/\//i.test(String(u || '')) ? e(String(u)) : '';
   };
 
+  // ── PLANTILLA "RECIBO DE PAGO" DE SASINS (1 sep 2026, dictada por JC:
+  //    "esta era la plantilla aprobada, solo agregale el filo de colores").
+  //    Transcripción LITERAL de js/recibo-pago.js _correoReciboHtml + el
+  //    envoltorio de js/gmail.js envolverCorreoHtml (variante headerLogo) de
+  //    SASINS. Acá solo cambia la fontanería: el agente sale de CFG
+  //    (multi-agente), los datos del comprobante que leyó la app, y las URLs
+  //    de la guía y del cross-sell. El pie es el mismo _pieSDI que SASINS
+  //    transcribió de este módulo el 31 ago. Los bloques cara-al-cliente NO se
+  //    redactan de nuevo — se copian de la plantilla aprobada. ──
+
   var p = params || {};
   var saludo   = (p.nombrePila || p.cliente || '').trim();
   var recibos  = _renovRecibos(p);
   var varios   = recibos.length > 1;
+  var esPlan   = varios;   // en SASINS, varios recibos = plan familiar (madre + hijas)
   var uno      = recibos[0] || {};
   var poliza   = (uno.poliza   || '').trim();
   var placa    = (uno.placa    || '').trim();
   var vehiculo = (uno.vehiculo || '').trim();
-  var comprob  = (p.numComprobante || '').trim();
-  var montoTxt = (uno.montoTexto || '').trim();
   var desde    = (uno.periodoDesde  || '').trim();
   var hasta    = (uno.periodoHasta  || '').trim();
   var fPago    = (p.fechaPago     || '').trim();
   var nota     = (p.notaAdicional || '').trim();
 
-  // Total: lo manda la app ya formateado; si no viene, se suma acá.
-  var totalTxt = (p.totalTexto || '').trim();
-  if (varios && !totalTxt) {
+  // Monto como lo pinta SASINS (utils.fmt: es-CR, 2 decimales → "₡ 92 555,00").
+  // Si la app no trae el número, se usa el texto tal cual venga.
+  var _rpMonto = function (num, texto) {
+    return (typeof num === 'number' && isFinite(num))
+      ? '\u20A1 ' + num.toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      : String(texto == null ? '' : texto).trim();
+  };
+  // Fecha como la pinta SASINS (utils.fmtDate: "07 sept 26") a partir del
+  // dd/mm/aaaa que trae el comprobante. Si no es una fecha, se deja tal cual.
+  var _rpFecha = function (s) {
+    var t = String(s == null ? '' : s).trim();
+    var m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(t);
+    if (!m) return t;
+    try {
+      return new Date(+m[3], +m[2] - 1, +m[1]).toLocaleDateString('es-CR', { day: '2-digit', month: 'short', year: '2-digit' });
+    } catch (err) { return t; }
+  };
+
+  // Total: la suma de los montos numéricos (formato SASINS). Si alguno no es
+  // legible, el total ya formateado que manda la app; si tampoco, vacío.
+  var montoTx;
+  if (varios) {
     var suma = 0, sumable = true;
     for (var q = 0; q < recibos.length; q++) {
       var v = recibos[q].monto;
       if (typeof v !== 'number' || !isFinite(v)) { sumable = false; break; }
       suma += v;
     }
-    if (sumable) {
-      totalTxt = '₡' + suma.toLocaleString('de-DE', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-    }
+    montoTx = sumable ? _rpMonto(suma) : (p.totalTexto || '').trim();
+  } else {
+    montoTx = _rpMonto(uno.monto, uno.montoTexto);
   }
-
-  // En un plan familiar las pólizas vienen a nombre de distintas personas de la
-  // familia. Si difieren, la tabla lleva columna "Asegurado" para que el dueño
-  // del plan sepa cuál es de quién.
-  var aseg = [];
-  for (var w = 0; w < recibos.length; w++) {
-    var a = String(recibos[w].asegurado || '').trim();
-    if (a && aseg.indexOf(a) === -1) aseg.push(a);
-  }
-  var mostrarAsegurado = varios && aseg.length > 1;
-
-  var fontFam  = "'Space Grotesk','Helvetica Neue',Helvetica,Arial,sans-serif";
-  var fontBody = "'Inter','Helvetica Neue',Helvetica,Arial,sans-serif";
-  var fontNum  = "'JetBrains Mono',Consolas,'Courier New',monospace";
 
   // Datos del agente (perfil → CFG)
   var agente   = CFG.FROM_NAME  || 'Juan Carlos Hernandez Vargas';
@@ -212,105 +226,140 @@ function buildRenovacionEmail(params) {
   var web      = String(CFG.WEBSITE == null ? '' : CFG.WEBSITE).replace(/^https?:\/\//i, '').trim();
   var logoUrl  = CFG.LOGO_URL   || 'https://cotizador.appsegurosdigitales.com/img/ins-logo.png';
 
-  // Escapado UNA vez: entra crudo a tres href (assistUrl / viajeUrl / estUrl) y
-  // el resto del archivo ya pasa todo por e() o _safe().
+  // Escapado UNA vez: entra crudo a tres href (assistUrl / viajeUrl / estUrl).
   var siteFallback = web ? e('https://' + web) : '';
   // El botón de la guía lleva la URL LARGA a propósito: armar el correo no debe
-  // depender de una llamada de red al acortador. El corto es cosa del WhatsApp,
-  // donde el cliente ve la dirección cruda.
+  // depender de una llamada de red al acortador. El corto es cosa del WhatsApp.
   var assistUrl = e(_renovAsistenciaUrl()) || siteFallback || '#';
   var viajeUrl  = _safe(CFG.XSELL_VIAJE_URL) || siteFallback;
   var estUrl    = _safe(CFG.XSELL_ESTUDIANTIL_URL) || siteFallback;
 
-  // Confirmación en singular o en plural según cuántos recibos entren.
-  var vehFrase, polizaFrase;
-  if (varios) {
-    polizaFrase = ' de <b style="color:#0c2340;">sus ' + recibos.length + ' pólizas de automóviles</b>';
-    vehFrase    = 'sus vehículos';
-  } else {
-    // "su vehículo TOYOTA YARIS 2019 placa BXY123" / "su vehículo placa BXY123"
-    vehFrase = 'su vehículo' +
-      (vehiculo ? ' <b style="color:#0c2340;">' + e(vehiculo) + '</b>' : '') +
-      (placa ? ' placa <b style="color:#0c2340;">' + e(placa) + '</b>' : '');
-    polizaFrase = poliza
-      ? ' de su póliza No. <b style="color:#0c2340;">' + e(poliza) + '</b>': ' de su póliza de automóviles';
-  }
-  var vehPlural  = varios ? 'continúan protegidos' : 'continúa protegido';
-  var adjFrase   = varios
-    ? 'Adjunto encontrará los comprobantes de pago oficiales del INS.': 'Adjunto encontrará el comprobante de pago oficial del INS.';
+  var fontBody = "'Inter','Helvetica Neue',Arial,sans-serif";
 
-  // Detalle de la tarjeta navy. Con UN recibo: los 4 datos en dos columnas.
-  // Con VARIOS: una fila por póliza, para que el cliente vea qué se pagó de cada
-  // una y no solo un total suelto.
-  var datosHtml = '';
-  if (varios) {
-    datosHtml =
-      '<tr><td colspan="2" style="padding-top:4px;">' +
-        '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">' +
-          '<tr>' +
-            '<th align="left" style="font-family:' + fontNum + ';font-size:9px;letter-spacing:.1em;color:#7d93ad;text-transform:uppercase;font-weight:600;padding:6px 4px;border-bottom:1px solid rgba(255,255,255,.16);">Póliza</th>' +
-            (mostrarAsegurado ? '<th align="left" style="font-family:' + fontNum + ';font-size:9px;letter-spacing:.1em;color:#7d93ad;text-transform:uppercase;font-weight:600;padding:6px 4px;border-bottom:1px solid rgba(255,255,255,.16);">Asegurado</th>' : '') +
-            '<th align="left" style="font-family:' + fontNum + ';font-size:9px;letter-spacing:.1em;color:#7d93ad;text-transform:uppercase;font-weight:600;padding:6px 4px;border-bottom:1px solid rgba(255,255,255,.16);">Placa</th>' +
-            '<th align="left" style="font-family:' + fontNum + ';font-size:9px;letter-spacing:.1em;color:#7d93ad;text-transform:uppercase;font-weight:600;padding:6px 4px;border-bottom:1px solid rgba(255,255,255,.16);">Período pagado</th>' +
-            '<th align="right" style="font-family:' + fontNum + ';font-size:9px;letter-spacing:.1em;color:#7d93ad;text-transform:uppercase;font-weight:600;padding:6px 4px;border-bottom:1px solid rgba(255,255,255,.16);">Monto</th>' +
-          '</tr>' +
-          (function () {
-            var filas = '';
-            for (var r = 0; r < recibos.length; r++) {
-              var x = recibos[r];
-              var per = (x.periodoDesde && x.periodoHasta)
-                ? (e(x.periodoDesde) + ' &rarr; ' + e(x.periodoHasta)) : '&mdash;';
-              filas +=
-                '<tr>' +
-                  '<td style="font-family:' + fontNum + ';font-size:11.5px;color:#e8eef5;padding:7px 4px;border-bottom:1px solid rgba(255,255,255,.09);">' + (e(x.poliza) || '&mdash;') + '</td>' +
-                  (mostrarAsegurado ? '<td style="font-size:11.5px;color:#cbd5e1;padding:7px 4px;border-bottom:1px solid rgba(255,255,255,.09);">' + (e(x.asegurado) || '&mdash;') + '</td>' : '') +
-                  '<td style="font-family:' + fontNum + ';font-size:11.5px;color:#e8eef5;padding:7px 4px;border-bottom:1px solid rgba(255,255,255,.09);">' + (e(x.placa) || '&mdash;') + '</td>' +
-                  '<td style="font-family:' + fontNum + ';font-size:11.5px;color:#e8eef5;padding:7px 4px;border-bottom:1px solid rgba(255,255,255,.09);">' + per + '</td>' +
-                  '<td align="right" style="font-family:' + fontNum + ';font-size:11.5px;color:#ffffff;padding:7px 4px;border-bottom:1px solid rgba(255,255,255,.09);">' + (e(x.montoTexto) || '&mdash;') + '</td>' +
-                '</tr>';
-            }
-            return filas;
-          })() +
-        '</table>' +
-      '</td></tr>';
-  } else {
-    var datos = [];
-    if (poliza) datos.push(['Póliza', poliza]);
-    if (placa)  datos.push(['Placa', placa]);
-    if (desde && hasta) datos.push(['Período pagado', desde + ' &rarr; ' + hasta]);
-    if (fPago)  datos.push(['Fecha de pago', fPago]);
+  var kv = function (k, val) {
+    return '<tr><td style="padding:5px 0;color:#6c757d;font-size:12px">' + k + '</td>' +
+      '<td style="padding:5px 0;text-align:right;font-size:12.5px;color:#1a1a1a;font-weight:600">' + val + '</td></tr>';
+  };
+  var mono = function (s) { return '<span style="font-family:Consolas,monospace">' + e(s) + '</span>'; };
 
-    for (var i = 0; i < datos.length; i += 2) {
-      var celdas = '';
-      for (var j = i; j < i + 2; j++) {
-        if (j < datos.length) {
-          celdas += '<td width="50%" valign="top" style="padding:7px 0;">' +
-            '<div style="font-family:' + fontNum + ';font-size:9.5px;letter-spacing:.1em;color:#7d93ad;text-transform:uppercase;">' + datos[j][0] + '</div>' +
-            '<div style="font-family:' + fontNum + ';font-size:13px;color:#e8eef5;padding-top:2px;">' + e(datos[j][1]).replace('&amp;rarr;', '&rarr;') + '</div>' +
-          '</td>';
-        } else {
-          celdas += '<td width="50%">&nbsp;</td>';
-        }
-      }
-      datosHtml += '<tr>' + celdas + '</tr>';
+  // Plan familiar: la tabla de desglose es la MISMA de los avisos de Cobros de
+  // SASINS (plantillas.js buildHijasDesgloseHtml, transcrita), pedido JC 1 sep
+  // 2026: "si es plan familiar debe ir la tabla igual que en cobros con el
+  // detalle". Cambia solo la fontanería: los datos salen de recibos[] y el
+  // vehículo (marca y modelo) va en una línea bajo la placa, con el mismo
+  // estilo de la sublínea que esa tabla ya usa. Sin la frase de "al cancelar
+  // este recibo" (esto es un pago aplicado, no un cobro) y sin emoji
+  // (decisión JC 31 ago para el Recibo de pago).
+  var desglose = '';
+  if (esPlan) {
+    var fmt2 = function (n) {
+      return Number(n || 0).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
+    var montoCelda = function (h) {
+      return (typeof h.monto === 'number' && isFinite(h.monto))
+        ? '\u20A1&nbsp;' + fmt2(h.monto)
+        : e(String(h.montoTexto == null ? '' : h.montoTexto).trim() || '\u2014');
+    };
+    var filas = '';
+    for (var i = 0; i < recibos.length; i++) {
+      var h = recibos[i];
+      var vehLinea = h.vehiculo
+        ? '<div style="font-size:10px;color:#5f6b68;margin-top:2px;font-family:' + fontBody + ';">' + e(h.vehiculo) + '</div>'
+        : '';
+      filas += '\n' +
+        '    <tr>\n' +
+        '      <td style="padding:6px 8px;border-bottom:1px solid #e5e7eb;font-family:\'Courier New\',monospace;font-size:11px;">' + e(h.poliza || '') + '</td>\n' +
+        '      <td style="padding:6px 8px;border-bottom:1px solid #e5e7eb;font-size:12px;">' + e(h.asegurado || '\u2014') + '</td>\n' +
+        '      <td style="padding:6px 8px;border-bottom:1px solid #e5e7eb;font-family:\'Courier New\',monospace;font-size:11px;">' + e(h.placa || '\u2014') + vehLinea + '</td>\n' +
+        '      <td style="padding:6px 8px;border-bottom:1px solid #e5e7eb;text-align:right;font-family:\'Courier New\',monospace;font-size:11px;">' + montoCelda(h) + '</td>\n' +
+        '    </tr>';
     }
+    var totalCelda = montoTx ? e(montoTx).replace('\u20A1 ', '\u20A1&nbsp;') : '\u2014';
+    desglose = '\n' +
+      '<div style="background:#f0f4ff;border:1px solid #c7d7f7;border-radius:8px;padding:14px 16px;margin:14px 0;">\n' +
+      '  <div style="font-size:14px;font-weight:700;color:#1a3a5c;margin-bottom:10px;">\n' +
+      '    Plan familiar &mdash; desglose de p&oacute;lizas\n' +
+      '  </div>\n' +
+      '  <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fff;border-radius:6px;overflow:hidden;">\n' +
+      '    <thead>\n' +
+      '      <tr style="background:#1a3a5c;color:#fff;font-size:11px;text-align:left;">\n' +
+      '        <th style="padding:7px 8px;">P&oacute;liza hija</th>\n' +
+      '        <th style="padding:7px 8px;">Asegurado</th>\n' +
+      '        <th style="padding:7px 8px;">Placa</th>\n' +
+      '        <th style="padding:7px 8px;text-align:right;">Monto</th>\n' +
+      '      </tr>\n' +
+      '    </thead>\n' +
+      '    <tbody>' + filas + '\n' +
+      '      <tr style="background:#e6f2e6;font-weight:800;">\n' +
+      '        <td colspan="3" style="padding:8px;font-size:12px;color:#1a3a5c;">\n' +
+      '          TOTAL DEL PLAN (' + recibos.length + ' p&oacute;liza' + (recibos.length !== 1 ? 's' : '') + '):\n' +
+      '        </td>\n' +
+      '        <td style="padding:8px;text-align:right;font-family:\'Courier New\',monospace;color:#1a3a5c;font-size:13px;">\n' +
+      '          ' + totalCelda + '\n' +
+      '        </td>\n' +
+      '      </tr>\n' +
+      '    </tbody>\n' +
+      '  </table>\n' +
+      '</div>';
   }
 
-  var notaHtml = nota ? (
-    '<tr><td style="padding:6px 32px 0;">' +
-      '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fff7ed;border-left:4px solid #ea580c;border-radius:8px;">' +
-        '<tr><td style="padding:12px 16px;">' +
-          '<p style="margin:0 0 3px;font-size:11px;font-weight:bold;color:#9a3412;letter-spacing:.06em;text-transform:uppercase;">Nota de su agente</p>' +
-          '<p style="margin:0;font-size:13px;color:#7c2d12;line-height:1.55;">' + e(nota).replace(/\n/g, '<br>') + '</p>' +
-        '</td></tr>' +
-      '</table>' +
-    '</td></tr>') : '';
+  // Bloques "¿Qué hacer si ocurre un evento?" y "guía de emergencias".
+  var pasoEvt = function (n, titulo, txt) {
+    return '<tr><td width="26" valign="top" style="padding:10px 0;border-top:1px solid #edf1f6;font-family:Consolas,monospace;font-size:11px;color:#c9a227;font-weight:600;">' + n + '</td>' +
+      '<td valign="top" style="padding:10px 0;border-top:1px solid #edf1f6;">' +
+      '<p style="margin:0 0 2px;font-size:13.5px;font-weight:700;color:#0c2340;">' + titulo + '</p>' +
+      '<p style="margin:0;font-size:12.5px;color:#475569;line-height:1.55;">' + txt + '</p>' +
+      '</td></tr>';
+  };
 
-  // Una franja del logotipo SDI del pie (kit v1.2: barra de 4 colores).
-  function franja(color) {
-    return '<tr><td bgcolor="' + color + '" style="background:' + color + ';height:4px;width:20px;line-height:4px;font-size:0;">&nbsp;</td></tr>' +
-           '<tr><td style="height:3px;line-height:3px;font-size:0;">&nbsp;</td></tr>';
-  }
+  var cuerpo =
+    '<p style="margin:0 0 12px">Estimado(a) <b>' + e(saludo) + '</b>:</p>\n' +
+    '<p style="margin:0 0 14px">Le confirmo que su pago fue aplicado correctamente. Adjunto encontrar&aacute; el <b>comprobante oficial del INS</b>' + (esPlan ? ' con los recibos de su plan familiar' : '') + '.</p>\n' +
+    '<div style="background:#e3f6ec;border:1px solid #b9e6cd;border-radius:10px;padding:14px 16px;margin:0 0 14px">\n' +
+    '  <div style="font-size:16px;font-weight:800;color:#0d7a43">Pago aplicado' + (montoTx ? ' &mdash; ' + e(montoTx) : '') + '</div>\n' +
+    '  <div style="font-size:12px;color:#0d7a43;margin-top:3px">' + (esPlan ? 'Plan familiar &middot; las ' + recibos.length + ' p&oacute;lizas quedaron al d&iacute;a.' : 'Su p&oacute;liza de autom&oacute;vil qued&oacute; al d&iacute;a.') + '</div>\n' +
+    '</div>\n' +
+    '<table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e9ecef;border-radius:10px;padding:0;margin:0 0 4px"><tr><td style="padding:12px 16px">\n' +
+    '<table width="100%" cellpadding="0" cellspacing="0">\n' +
+    (!esPlan && poliza ? kv('P&oacute;liza', mono(poliza)) + '\n' : '') +
+    (!esPlan && vehiculo ? kv('Veh&iacute;culo', e(vehiculo)) + '\n' : '') +
+    (desde && hasta ? kv('Per&iacute;odo pagado', e(_rpFecha(desde)) + ' &rarr; ' + e(_rpFecha(hasta))) + '\n' : '') +
+    (fPago ? kv('Fecha de pago', e(_rpFecha(fPago))) + '\n' : '') +
+    (!esPlan && placa ? kv('Placa', mono(placa)) + '\n' : '') +
+    '</table></td></tr></table>\n' +
+    desglose + '\n' +
+    '<p style="margin:16px 0 12px;font-size:15px;font-weight:700;color:#0c2340;">&iquest;Qu&eacute; hacer si ocurre un evento?</p>\n' +
+    '<table width="100%" cellpadding="0" cellspacing="0" border="0">\n' +
+    pasoEvt('01', 'Primero, las personas', 'Si hay personas lesionadas, llame de inmediato al <b style="color:#0c2340;">911</b>.') + '\n' +
+    pasoEvt('02', 'Reporte el accidente de una vez', 'Llame a Colisiones del INS al <b style="color:#0c2340;">800-800-8000</b> para que le env&iacute;en un inspector. Y muy importante: <b style="color:#0c2340;">nunca haga acuerdos con terceros</b> sin la autorizaci&oacute;n previa del INS &mdash; eso protege la validez de su cobertura.') + '\n' +
+    pasoEvt('03', '&iquest;Aver&iacute;a en carretera?', 'Su asistencia 24/7 est&aacute; al <b style="color:#0c2340;">800-800-8001</b>: gr&uacute;a, cerrajer&iacute;a, cambio de llanta, paso de corriente y env&iacute;o de combustible. El alcance de su plan, seg&uacute;n la antig&uuml;edad de su veh&iacute;culo, est&aacute; en su gu&iacute;a.') + '\n' +
+    '</table>\n' +
+    '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;margin:16px 0">\n' +
+    '  <tr><td style="padding:18px;text-align:center;">\n' +
+    '    <p style="margin:0 0 4px;font-size:14px;font-weight:700;color:#0c4a6e;">Todo esto, paso a paso y a un clic</p>\n' +
+    '    <p style="margin:0 0 12px;font-size:12px;color:#475569;line-height:1.55;">Guarde su gu&iacute;a de emergencias: en el momento del evento le dice qu&eacute; hacer y le conecta con el contacto correcto al instante.</p>\n' +
+    '    <a href="' + assistUrl + '" style="display:inline-block;background:#0369a1;color:#ffffff;text-decoration:none;border-radius:10px;padding:13px 26px;font-weight:700;font-size:14px;">Abrir mi gu&iacute;a de emergencias &rarr;</a>\n' +
+    '    <p style="margin:10px 0 0;font-size:11px;color:#64748b;line-height:1.5;">&Aacute;brala en el celular y elija <b>"A&ntilde;adir a pantalla de inicio"</b> para tenerla siempre a mano, como una App. Sin descargas.</p>\n' +
+    '  </td></tr>\n' +
+    '</table>\n' +
+    '<h2 style="margin:16px 0 12px;font-size:13px;font-weight:700;color:#0c2340;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #e0e7ef;padding-bottom:8px">Otros seguros que le pueden interesar</h2>\n' +
+    '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;border-spacing:6px 0;margin:0 0 6px"><tr>\n' +
+    '<td width="50%" valign="top" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:16px">\n' +
+    '  <p style="margin:0 0 2px;font-size:14px;font-weight:700;color:#0c2340">Seguros de Viaje</p>\n' +
+    '  <p style="margin:0 0 12px;font-size:12px;color:#475569;line-height:1.5">Proteja su pr&oacute;xima aventura dentro y fuera del pa&iacute;s.</p>\n' +
+    (viajeUrl ? '  <a href="' + viajeUrl + '" style="display:inline-block;background:#0369a1;color:#ffffff;text-decoration:none;border-radius:8px;padding:9px 18px;font-weight:700;font-size:13px">Comprar &rarr;</a>\n' : '') +
+    '</td>\n' +
+    '<td width="50%" valign="top" style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:16px">\n' +
+    '  <p style="margin:0 0 2px;font-size:14px;font-weight:700;color:#0c2340">Seguro Estudiantil</p>\n' +
+    '  <p style="margin:0 0 12px;font-size:12px;color:#475569;line-height:1.5">Asegure el futuro de sus hijos durante todo el a&ntilde;o lectivo.</p>\n' +
+    (estUrl ? '  <a href="' + estUrl + '" style="display:inline-block;background:#16a34a;color:#ffffff;text-decoration:none;border-radius:8px;padding:9px 18px;font-weight:700;font-size:13px">Comprar &rarr;</a>\n' : '') +
+    '</td>\n' +
+    '</tr></table>\n' +
+    (nota ? '<div style="background:#f8f9fa;border-radius:10px;padding:12px 16px;margin:0 0 14px;font-size:12.5px;color:#1e293b;line-height:1.6"><span style="font-size:10px;font-weight:700;letter-spacing:.8px;color:#6c757d;text-transform:uppercase">Nota de su agente</span><br>' + e(nota).replace(/\n/g, '<br>') + '</div>\n' : '') +
+    '<p style="margin:0 0 12px">Gracias por renovar su confianza. Cualquier duda, con gusto le atiendo.</p>\n' +
+    '<p style="margin:0;font-size:12.5px"><b>' + e(agente) + '</b> &middot; Agente de Seguros del INS<br>\n' +
+    '<span style="color:#6c757d">Licencia SUGESE ' + e(lic) + ' &middot; ' + e(tel) + '</span></p>\n' +
+    '<p style="margin:12px 0 0;font-size:11px;color:#6c757d">Adjunto: ' + (varios ? 'comprobantes oficiales del INS (PDF)' : 'comprobante oficial del INS (PDF)') + '</p>';
 
   return '' +
 '<!DOCTYPE html>' +
@@ -319,138 +368,37 @@ function buildRenovacionEmail(params) {
 '<meta name="viewport" content="width=device-width, initial-scale=1.0">' +
 '<title>Su renovación está confirmada &middot; Seguros del INS</title>' +
 '<!--[if !mso]><!-->' +
-'<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">' +
+'<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">' +
 '<!--<![endif]-->' +
 '</head>' +
-'<body style="margin:0;padding:0;background:#f5f5f5;font-family:' + fontBody + ';">' +
-'<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f5f5;padding:24px 0;"><tr><td align="center">' +
-'<table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:12px;overflow:hidden;max-width:600px;box-shadow:0 4px 20px rgba(12,35,64,.08);">' +
+// Envoltorio de SASINS (envolverCorreoHtml): fondo #f0f2f5, tarjeta de 580.
+'<body style="margin:0;padding:0;background:#f0f2f5;font-family:' + fontBody + '">' +
+'<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f2f5;padding:24px 0"><tr><td align="center">' +
+'<table width="580" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.1)">' +
 
-  // 1. HEADER (INS arriba: es la cara al cliente). Desde el 1 sep 2026 es
-  //    IGUAL al del correo "Recibo de pago" de SASINS (pedido JC): logo INS
-  //    36px, "Recibo de pago" 20px y "Renovación confirmada" 12px sobre
-  //    #1a3a5c — transcripción literal de gmail.js envolverCorreoHtml
-  //    (variante headerLogo). Solo cambió este bloque; el resto del correo
-  //    queda como estaba.
+  // 1. HEADER (INS arriba: es la cara al cliente) — IGUAL al del correo
+  //    "Recibo de pago" de SASINS: logo INS 36px, "Recibo de pago" 20px y
+  //    "Renovación confirmada" 12px sobre #1a3a5c.
   '<tr><td bgcolor="#1a3a5c" style="background:#1a3a5c;padding:24px 32px 20px;text-align:center">' +
     '<img src="' + e(logoUrl) + '" alt="INS" height="36" style="height:36px;display:inline-block;margin-bottom:10px">' +
     '<div style="font-size:20px;font-weight:700;color:#fff">Recibo de pago</div>' +
     '<div style="font-size:12px;color:#a0c4e8;margin-top:2px">Renovaci&oacute;n confirmada</div>' +
   '</td></tr>' +
   // 1b. FILETE DE MARCA SDI bajo el header (pedido JC 1 sep 2026; bloque
-  //     compartido de js/email-marca.js, el mismo del correo de cotización).
+  //     compartido de js/email-marca.js).
   _fileteSDI() +
 
-  // 2. SALUDO + confirmación del pago (verde). El "Adjunto encontrará…" va en
-  //    párrafo aparte con aire: JC pidió que no se leyera como un solo bloque.
-  '<tr><td style="padding:26px 32px 4px;">' +
-    '<p style="margin:0 0 14px;font-family:' + fontFam + ';font-size:18px;font-weight:700;color:#0c2340;">Hola ' + e(saludo) + ',</p>' +
-    '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ecfdf5;border:1px solid #a7f3d0;border-left:4px solid #10b981;border-radius:10px;">' +
-      '<tr><td style="padding:14px 18px;font-size:14px;line-height:1.6;color:#065f46;">' +
-        '<p style="margin:0;">Es un gusto saludarle. Le confirmo que el pago de la renovación' + polizaFrase + ' fue aplicado correctamente y ' + vehFrase + ' ' + vehPlural + ', sin interrupciones.</p>' +
-        '<p style="margin:10px 0 0;">' + adjFrase + ' &#9989;</p>' +
-      '</td></tr>' +
-    '</table>' +
+  // 2. CUERPO — la celda única de SASINS (14px, línea 1.8) con la plantilla.
+  '<tr><td style="padding:30px 32px">' +
+    '<div style="font-size:14px;color:#1a1a1a;line-height:1.8">' + cuerpo + '</div>' +
   '</td></tr>' +
 
-  // 3. TARJETA DEL COMPROBANTE (navy, filete dorado SDI abajo)
-  (montoTxt || totalTxt || datosHtml ?
-  '<tr><td style="padding:18px 32px 0;">' +
-    '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#0c2340;border-radius:12px;border-bottom:4px solid #c9a227;">' +
-      '<tr><td style="padding:20px 22px;">' +
-        '<table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>' +
-          '<td valign="top">' +
-            (varios ?
-              '<div style="font-family:' + fontNum + ';font-size:10px;letter-spacing:.16em;color:#8ba3bf;text-transform:uppercase;">Total pagado</div>' +
-              (totalTxt ? '<div style="font-family:' + fontFam + ';font-size:34px;font-weight:700;color:#ffffff;letter-spacing:-.02em;padding:4px 0 2px;">' + e(totalTxt) + '</div>' : '') +
-              '<div style="font-size:11px;color:#8ba3bf;">Incluye IVA &middot; ' + recibos.length + ' recibos' + (fPago ? ' &middot; Fecha de pago ' + e(fPago) : '') + '</div>': (montoTxt ?
-              '<div style="font-family:' + fontNum + ';font-size:10px;letter-spacing:.16em;color:#8ba3bf;text-transform:uppercase;">Monto pagado</div>' +
-              '<div style="font-family:' + fontFam + ';font-size:34px;font-weight:700;color:#ffffff;letter-spacing:-.02em;padding:4px 0 2px;">' + e(montoTxt) + '</div>' +
-              '<div style="font-size:11px;color:#8ba3bf;">Incluye IVA' + (comprob ? ' &middot; Comprobante N&ordm; ' + e(comprob) : '') + '</div>': '')) +
-          '</td>' +
-          '<td valign="top" align="right" style="white-space:nowrap;">' +
-            '<span style="display:inline-block;background:#0f766e;color:#d1fae5;font-family:' + fontNum + ';font-size:10px;letter-spacing:.14em;padding:5px 12px;border-radius:999px;">PAGADO</span>' +
-          '</td>' +
-        '</tr></table>' +
-        (datosHtml ?
-          '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid rgba(255,255,255,.14);margin-top:14px;">' + datosHtml + '</table>': '') +
-      '</td></tr>' +
-    '</table>' +
-  '</td></tr>' : '') +
-
-  // 4. QUÉ HACER SI OCURRE UN EVENTO — el corazón del correo. Información de
-  //    servicio, no venta. Solo teléfonos verificados del INS.
-  '<tr><td style="padding:22px 32px 0;">' +
-    '<p style="margin:0 0 12px;font-family:' + fontFam + ';font-size:15px;font-weight:700;color:#0c2340;"> &iquest;Qu&eacute; hacer si ocurre un evento?</p>' +
-    '<table width="100%" cellpadding="0" cellspacing="0" border="0">' +
-      '<tr><td width="26" valign="top" style="padding:10px 0;border-top:1px solid #edf1f6;font-family:' + fontNum + ';font-size:11px;color:#c9a227;font-weight:600;">01</td>' +
-        '<td valign="top" style="padding:10px 0;border-top:1px solid #edf1f6;">' +
-          '<p style="margin:0 0 2px;font-size:13.5px;font-weight:700;color:#0c2340;">Primero, las personas</p>' +
-          '<p style="margin:0;font-size:12.5px;color:#475569;line-height:1.55;">Si hay personas lesionadas, llame de inmediato al <b style="color:#0c2340;">911</b>.</p>' +
-        '</td></tr>' +
-      '<tr><td width="26" valign="top" style="padding:10px 0;border-top:1px solid #edf1f6;font-family:' + fontNum + ';font-size:11px;color:#c9a227;font-weight:600;">02</td>' +
-        '<td valign="top" style="padding:10px 0;border-top:1px solid #edf1f6;">' +
-          '<p style="margin:0 0 2px;font-size:13.5px;font-weight:700;color:#0c2340;">Reporte el accidente de una vez</p>' +
-          '<p style="margin:0;font-size:12.5px;color:#475569;line-height:1.55;">Llame a Colisiones del INS al <b style="color:#0c2340;">800-800-8000</b> para que le env&iacute;en un inspector. Y muy importante: <b style="color:#0c2340;">nunca haga acuerdos con terceros</b> sin la autorizaci&oacute;n previa del INS &mdash; eso protege la validez de su cobertura.</p>' +
-        '</td></tr>' +
-      '<tr><td width="26" valign="top" style="padding:10px 0;border-top:1px solid #edf1f6;font-family:' + fontNum + ';font-size:11px;color:#c9a227;font-weight:600;">03</td>' +
-        '<td valign="top" style="padding:10px 0;border-top:1px solid #edf1f6;">' +
-          '<p style="margin:0 0 2px;font-size:13.5px;font-weight:700;color:#0c2340;">&iquest;Aver&iacute;a en carretera?</p>' +
-          '<p style="margin:0;font-size:12.5px;color:#475569;line-height:1.55;">Su asistencia 24/7 est&aacute; al <b style="color:#0c2340;">800-800-8001</b>: gr&uacute;a, cerrajer&iacute;a, cambio de llanta, paso de corriente y env&iacute;o de combustible. El alcance de su plan, seg&uacute;n la antig&uuml;edad de su veh&iacute;culo, est&aacute; en su gu&iacute;a.</p>' +
-        '</td></tr>' +
-    '</table>' +
-  '</td></tr>' +
-
-  // 5. CTA — guía de emergencias con la ficha del agente
-  '<tr><td style="padding:16px 32px 0;">' +
-    '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;">' +
-      '<tr><td style="padding:18px;text-align:center;">' +
-        '<p style="margin:0 0 4px;font-family:' + fontFam + ';font-size:14px;font-weight:700;color:#0c4a6e;">Todo esto, paso a paso y a un clic</p>' +
-        '<p style="margin:0 0 12px;font-size:12px;color:#475569;line-height:1.55;">Guarde su gu&iacute;a de emergencias: en el momento del evento le dice qu&eacute; hacer y le conecta con el contacto correcto al instante.</p>' +
-        '<a href="' + assistUrl + '" style="display:inline-block;background:#0369a1;color:#ffffff;text-decoration:none;border-radius:10px;padding:13px 26px;font-family:' + fontFam + ';font-weight:700;font-size:14px;"> Abrir mi gu&iacute;a de emergencias &rarr;</a>' +
-        '<p style="margin:10px 0 0;font-size:11px;color:#64748b;line-height:1.5;">&Aacute;brala en el celular y elija <b>"A&ntilde;adir a pantalla de inicio"</b> para tenerla siempre a mano, como una App. Sin descargas.</p>' +
-      '</td></tr>' +
-    '</table>' +
-  '</td></tr>' +
-
-  notaHtml +
-
-  // 6. CROSS-SELL (JC, 10 ago 2026: va SIEMPRE — este correo es a veces el único
-  //    contacto del año con el cliente). Personalizable por agente.
-  '<tr><td style="padding:22px 32px 0;">' +
-    '<h2 style="margin:0 0 12px;font-family:' + fontFam + ';font-size:13px;font-weight:700;color:#0c2340;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #e0e7ef;padding-bottom:8px;">Otros seguros que le pueden interesar</h2>' +
-    '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;border-spacing:6px 0;"><tr>' +
-      '<td width="50%" valign="top" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:16px;">' +
-        '<p style="margin:0 0 2px;font-size:22px;line-height:1;">&#9992;&#65039;</p>' +
-        '<p style="margin:6px 0 2px;font-family:' + fontFam + ';font-size:14px;font-weight:700;color:#0c2340;">Seguros de Viaje</p>' +
-        '<p style="margin:0 0 12px;font-size:12px;color:#475569;line-height:1.5;">Proteja su pr&oacute;xima aventura dentro y fuera del pa&iacute;s.</p>' +
-        (viajeUrl ? '<a href="' + viajeUrl + '" style="display:inline-block;background:#0369a1;color:#ffffff;text-decoration:none;border-radius:8px;padding:9px 18px;font-family:' + fontFam + ';font-weight:700;font-size:13px;">Comprar &rarr;</a>' : '') +
-      '</td>' +
-      '<td width="50%" valign="top" style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:16px;">' +
-        '<p style="margin:0 0 2px;font-size:22px;line-height:1;"></p>' +
-        '<p style="margin:6px 0 2px;font-family:' + fontFam + ';font-size:14px;font-weight:700;color:#0c2340;">Seguro Estudiantil</p>' +
-        '<p style="margin:0 0 12px;font-size:12px;color:#475569;line-height:1.5;">Asegure el futuro de sus hijos durante todo el a&ntilde;o lectivo.</p>' +
-        (estUrl ? '<a href="' + estUrl + '" style="display:inline-block;background:#16a34a;color:#ffffff;text-decoration:none;border-radius:8px;padding:9px 18px;font-family:' + fontFam + ';font-weight:700;font-size:13px;">Comprar &rarr;</a>' : '') +
-      '</td>' +
-    '</tr></table>' +
-  '</td></tr>' +
-
-  // 7. FIRMA
-  '<tr><td style="padding:24px 32px 0;border-top:1px solid #e0e7ef;">' +
-    '<p style="margin:18px 0 0;font-size:13px;color:#475569;line-height:1.5;">Gracias por renovar su confianza. Quedo a su disposici&oacute;n para cualquier consulta. Atentamente,</p>' +
-    '<p style="margin:10px 0 0;font-family:' + fontFam + ';font-weight:700;color:#0c2340;font-size:14px;">' + e(agente) + '</p>' +
-    '<p style="margin:2px 0 0;font-size:11px;color:#64748b;line-height:1.6;">Agente de Seguros Exclusivo &middot; Instituto Nacional de Seguros<br>' +
-      'Licencia SUGESE ' + e(lic) + ' &middot; Tel: ' + e(tel) + '<br>' +
-      '<a href="mailto:' + e(correoAg) + '" style="color:#0369a1;text-decoration:none;">' + e(correoAg) + '</a>' + (web ? (' &middot; ' + e(web)) : '') +
-    '</p>' +
-  '</td></tr>' +
-
-  // 8. PIE con la marca SDI (modulo compartido js/email-marca.js)
+  // 3. PIE con la marca SDI (modulo compartido js/email-marca.js) — el mismo
+  //    que SASINS transcribió para su Recibo de pago.
   _pieSDI({
     logo: CFG.LOGO_SDI_URL, correo: correoAg, web: web,
     tel: tel, agente: agente, licencia: lic
   }) +
-
 
 '</table></td></tr></table></body></html>';
 }
