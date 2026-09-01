@@ -81,6 +81,20 @@ ok('logo-ins',       html.indexOf('img/ins-logo.png') !== -1);
 // para que no se lea como un solo bloque de texto pegado a la confirmación.
 ok('adjunto-frase',  /Adjunto encontrar&aacute; el <b>comprobante oficial del INS<\/b>\./.test(html));
 ok('adjunto-linea',  /Adjunto: comprobante oficial del INS \(PDF\)/.test(html));
+ok('adjunto-nombres', buildRenovacionEmail(Object.assign({}, base, { adjuntos: ['recibo-1.pdf', 'recibo-2.pdf'] })).indexOf('Adjunto: recibo-1.pdf &middot; recibo-2.pdf') !== -1);
+// Un comprobante en DÓLARES sale en dólares (hallazgo de la revisión adversarial).
+var enUsd = buildRenovacionEmail(Object.assign({}, base, { monto: 1250.5, montoTexto: '$1.250,50', moneda: 'USD' }));
+ok('usd-simbolo',    enUsd.indexOf('Pago aplicado &mdash; $ ' + (1250.5).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })) !== -1
+                     && enUsd.indexOf('Pago aplicado &mdash; \u20A1') === -1);
+ok('usd-por-texto',  buildRenovacionEmail(Object.assign({}, base, { monto: 1250.5, montoTexto: '$1.250,50' })).indexOf('&mdash; $ ') !== -1);
+var planUsd = buildRenovacionEmail({ nombrePila: 'Ana', recibos: [
+  { poliza: 'A', placa: 'AAA111', monto: 100, montoTexto: '$100,00', moneda: 'USD', asegurado: 'X' },
+  { poliza: 'B', placa: 'BBB222', monto: 200, montoTexto: '$200,00', moneda: 'USD', asegurado: 'Y' } ] });
+ok('usd-plan-total', planUsd.indexOf('$&nbsp;' + (300).toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })) !== -1 && planUsd.indexOf('\u20A1') === -1);
+var planMixto = buildRenovacionEmail({ nombrePila: 'Ana', totalTexto: '', recibos: [
+  { poliza: 'A', placa: 'AAA111', monto: 100, montoTexto: '$100,00', moneda: 'USD', asegurado: 'X' },
+  { poliza: 'B', placa: 'BBB222', monto: 200, montoTexto: '₡200,00', moneda: 'CRC', asegurado: 'Y' } ] });
+ok('mixto-no-suma',  planMixto.indexOf('300,00') === -1 && !/undefined|NaN/.test(planMixto));
 
 // ---------- Es un correo de CONFIANZA, no de cobro ----------
 ok('NO-pague-antes',   !/pague antes|antes del vencimiento|fecha l[ií]mite/i.test(html));
@@ -186,7 +200,13 @@ var htmlMulti = buildRenovacionEmail({
 
 ok('multi-plan-frase',      /con los recibos de su plan familiar\./.test(htmlMulti));
 ok('multi-plan-al-dia',     /Plan familiar &middot; las 3 p&oacute;lizas quedaron al d&iacute;a\./.test(htmlMulti));
-ok('multi-plural-adjuntos', /Adjunto: comprobantes oficiales del INS \(PDF\)/.test(htmlMulti));
+ok('multi-adjunto-generico', /Adjunto: comprobante oficial del INS \(PDF\)/.test(htmlMulti));
+// Con varios recibos, el período solo se muestra si es el MISMO en todos.
+ok('multi-periodo-comun',   /Per&iacute;odo pagado/.test(htmlMulti));
+var periodosDistintos = buildRenovacionEmail({ nombrePila: 'Ana', recibos: [
+  { poliza: 'A', placa: 'AAA111', periodoDesde: '01/01/2026', periodoHasta: '01/04/2026', monto: 1, montoTexto: '₡1', asegurado: 'X' },
+  { poliza: 'B', placa: 'BBB222', periodoDesde: '01/02/2026', periodoHasta: '01/05/2026', monto: 2, montoTexto: '₡2', asegurado: 'Y' } ] });
+ok('multi-periodo-distinto-oculto', !/Per&iacute;odo pagado/.test(periodosDistintos));
 ok('multi-total-label',     /TOTAL DEL PLAN/.test(htmlMulti));
 // Plan familiar: la tabla es la de COBROS de SASINS (buildHijasDesgloseHtml).
 function fMnb(n) { return '\u20A1&nbsp;' + n.toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }

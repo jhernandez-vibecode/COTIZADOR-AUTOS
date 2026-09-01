@@ -2221,3 +2221,6 @@ exige **clave nueva** y volver a cargar las 4 variables.
   fecha dd/mm/aaaa → "30 ago 26"; guía `_renovAsistenciaUrl()`; cross-sell `CFG.XSELL_*` con fallback al sitio del agente.
 - **Ya no se muestran** (plantilla de SASINS): número de comprobante y tarjeta navy del monto. WhatsApp intacto.
 - **Tests**: `test-renovacion-email.js` 128 checks. Suite 17 archivos en verde. Tag `pre-pie-sasins-1sep`.
+- **Revisión adversarial post-push (5 lentes)**: mayor corregido — moneda por recibo (`moneda` desde la app, símbolo
+  `$`/`₡`, sin sumar monedas mezcladas); menores — `adjuntos` con nombres de PDF, período solo si es común a todos los
+  recibos. Notas para JC: `esPlan = varios`, firma desde CFG vs literal de SASINS, `<link>` de fuentes en el head.

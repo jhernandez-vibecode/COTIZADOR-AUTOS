@@ -51,7 +51,7 @@ function _renovRecibos(p) {
   var suelto = {
     poliza: p.poliza, placa: p.placa, vehiculo: p.vehiculo,
     periodoDesde: p.periodoDesde, periodoHasta: p.periodoHasta,
-    montoTexto: p.montoTexto, monto: p.monto, asegurado: p.cliente
+    montoTexto: p.montoTexto, monto: p.monto, moneda: p.moneda, asegurado: p.cliente
   };
   return (suelto.poliza || suelto.placa || suelto.montoTexto) ? [suelto] : [];
 }
@@ -180,14 +180,32 @@ function buildRenovacionEmail(params) {
   var vehiculo = (uno.vehiculo || '').trim();
   var desde    = (uno.periodoDesde  || '').trim();
   var hasta    = (uno.periodoHasta  || '').trim();
+  // Con varios recibos el período se muestra solo si es el MISMO en todos:
+  // el del primero no puede presentarse como el de todo el plan.
+  if (varios) {
+    for (var pr = 1; pr < recibos.length; pr++) {
+      if ((recibos[pr].periodoDesde || '').trim() !== desde || (recibos[pr].periodoHasta || '').trim() !== hasta) { desde = ''; hasta = ''; break; }
+    }
+  }
   var fPago    = (p.fechaPago     || '').trim();
   var nota     = (p.notaAdicional || '').trim();
+  // Nombres de los PDF adjuntos (la app los conoce); SASINS los lista en la
+  // línea "Adjunto:". Sin nombres, el texto genérico de la plantilla.
+  var adjuntos = (Array.isArray(p.adjuntos) ? p.adjuntos : []).map(function (n) { return String(n == null ? '' : n).trim(); }).filter(Boolean);
 
+  // Símbolo de moneda por recibo (como _sym de SASINS): la moneda que leyó la
+  // app ('USD'/'CRC'); sin ella, el símbolo del texto del monto; si no, ₡.
+  // Un comprobante en dólares NUNCA sale en colones (hallazgo de revisión).
+  var _rpSym = function (moneda, texto) {
+    if (moneda === 'USD') return '$';
+    if (moneda === 'CRC') return '\u20A1';
+    return /^\s*\$/.test(String(texto == null ? '' : texto)) ? '$' : '\u20A1';
+  };
   // Monto como lo pinta SASINS (utils.fmt: es-CR, 2 decimales → "₡ 92 555,00").
   // Si la app no trae el número, se usa el texto tal cual venga.
-  var _rpMonto = function (num, texto) {
+  var _rpMonto = function (num, texto, moneda) {
     return (typeof num === 'number' && isFinite(num))
-      ? '\u20A1 ' + num.toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      ? _rpSym(moneda, texto) + ' ' + num.toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
       : String(texto == null ? '' : texto).trim();
   };
   // Fecha como la pinta SASINS (utils.fmtDate: "07 sept 26") a partir del
@@ -206,14 +224,17 @@ function buildRenovacionEmail(params) {
   var montoTx;
   if (varios) {
     var suma = 0, sumable = true;
+    var sym0 = _rpSym(uno.moneda, uno.montoTexto);
     for (var q = 0; q < recibos.length; q++) {
       var v = recibos[q].monto;
       if (typeof v !== 'number' || !isFinite(v)) { sumable = false; break; }
+      // Monedas mezcladas no se suman: el total lo pone la app o queda vacío.
+      if (_rpSym(recibos[q].moneda, recibos[q].montoTexto) !== sym0) { sumable = false; break; }
       suma += v;
     }
-    montoTx = sumable ? _rpMonto(suma) : (p.totalTexto || '').trim();
+    montoTx = sumable ? _rpMonto(suma, '', uno.moneda || (sym0 === '$' ? 'USD' : 'CRC')) : (p.totalTexto || '').trim();
   } else {
-    montoTx = _rpMonto(uno.monto, uno.montoTexto);
+    montoTx = _rpMonto(uno.monto, uno.montoTexto, uno.moneda);
   }
 
   // Datos del agente (perfil → CFG)
@@ -257,7 +278,7 @@ function buildRenovacionEmail(params) {
     };
     var montoCelda = function (h) {
       return (typeof h.monto === 'number' && isFinite(h.monto))
-        ? '\u20A1&nbsp;' + fmt2(h.monto)
+        ? _rpSym(h.moneda, h.montoTexto) + '&nbsp;' + fmt2(h.monto)
         : e(String(h.montoTexto == null ? '' : h.montoTexto).trim() || '\u2014');
     };
     var filas = '';
@@ -274,7 +295,7 @@ function buildRenovacionEmail(params) {
         '      <td style="padding:6px 8px;border-bottom:1px solid #e5e7eb;text-align:right;font-family:\'Courier New\',monospace;font-size:11px;">' + montoCelda(h) + '</td>\n' +
         '    </tr>';
     }
-    var totalCelda = montoTx ? e(montoTx).replace('\u20A1 ', '\u20A1&nbsp;') : '\u2014';
+    var totalCelda = montoTx ? e(montoTx).replace(/^(\S+) /, '$1&nbsp;') : '\u2014';
     desglose = '\n' +
       '<div style="background:#f0f4ff;border:1px solid #c7d7f7;border-radius:8px;padding:14px 16px;margin:14px 0;">\n' +
       '  <div style="font-size:14px;font-weight:700;color:#1a3a5c;margin-bottom:10px;">\n' +
@@ -359,7 +380,7 @@ function buildRenovacionEmail(params) {
     '<p style="margin:0 0 12px">Gracias por renovar su confianza. Cualquier duda, con gusto le atiendo.</p>\n' +
     '<p style="margin:0;font-size:12.5px"><b>' + e(agente) + '</b> &middot; Agente de Seguros del INS<br>\n' +
     '<span style="color:#6c757d">Licencia SUGESE ' + e(lic) + ' &middot; ' + e(tel) + '</span></p>\n' +
-    '<p style="margin:12px 0 0;font-size:11px;color:#6c757d">Adjunto: ' + (varios ? 'comprobantes oficiales del INS (PDF)' : 'comprobante oficial del INS (PDF)') + '</p>';
+    '<p style="margin:12px 0 0;font-size:11px;color:#6c757d">Adjunto: ' + (adjuntos.length ? adjuntos.map(e).join(' &middot; ') : 'comprobante oficial del INS (PDF)') + '</p>';
 
   return '' +
 '<!DOCTYPE html>' +
