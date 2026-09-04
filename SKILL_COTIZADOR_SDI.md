@@ -2189,3 +2189,36 @@ exige **clave nueva** y volver a cargar las 4 variables.
 1. **Pie del explicador** (`/explicacion/`): falta proponérselo — lo ve el asegurado.
 2. Borrar el sitio Netlify duplicado `cotizador-autos-sdi.netlify.app` y el SPF/DKIM
    de segurosdelins.com.
+
+## SVA V32 del INS — pendiente con fecha (4 set 2026)
+
+Copiado del SKILL router, que manda para lo vigente. El plan completo con el código de cada paso está en
+`docs/superpowers/plans/2026-09-04-cobertura-asi-asistencias.md` y los mockups aprobados en
+`docs/superpowers/specs/2026-09-03-cobertura-asi-mockups.html`.
+
+## Pendientes
+
+- 🔴 **SVA V32 del INS — dos frentes con fecha límite: 28 de setiembre de 2026.** La circular 0395-2026
+  (registro SUGESE G01-01-A01-012 V32, aprobada 26/08/2026) cambia dos cosas que tocan esta app:
+  1. **Cobertura ASI — Servicios de Multiasistencia (NUEVA).** Seis planes opcionales con prima adicional que el
+     cliente elige en la Solicitud de Seguro: Mascota ₡7.200 · Funeraria ₡10.800 · Salud Bienestar ₡18.000 ·
+     Salud Premium ₡42.000 · Autos Plus ₡42.000 · VIP ₡42.000 (anuales, **sin IVA 13% ni fraccionamiento**).
+     Sin deducible; no reciben NINGÚN descuento (ni plan familiar, ni 0 km, ni buena experiencia); mínimo cobertura
+     A; se puede llevar más de uno pero no repetido; territorio nacional; se piden al 800-800-8001.
+     **JC escogió el diseño el 4 set 2026** (opción 2: tarjeta discreta en el correo después de las formas de pago
+     + página `/asistencias/` con configurador y total en vivo) y pidió **NO implementar todavía** — sigue
+     dándole forma hasta el 28. Plan por tareas con el código real:
+     `docs/superpowers/plans/2026-09-04-cobertura-asi-asistencias.md`; mockups aprobados:
+     `docs/superpowers/specs/2026-09-03-cobertura-asi-mockups.html` (commit `e01bc41`).
+     🔴 **Trampa de nombres: la constante nueva es `CFG.PLANES_URL`, NO `CFG.ASSIST_URL`** — esa última es el
+     Centro de Asistencia Digital de la póliza activa, otra app y otro repo.
+  2. **Nuevo esquema de Sustitución de Repuestos (SIN PLAN AÚN).** Quedan cuatro opciones: Vehículo en Garantía,
+     Extensión de Garantía **Plus**, **Original Multimarca** y Alternativo Genérico/Usado. **Desaparece "Extensión
+     de Garantía" a secas** y los topes de años/km se mudan de las Condiciones Generales a la Solicitud de Seguro.
+     Afecta a `_reposKind` y `_sustitucionText` (email-template.js), a `_parsePaymentMatrix`/`selectPriceColumn`
+     (pdf-extract.js, la matriz de 5 columnas de FORMA DE PAGO) y al texto fijo de la sección 4 del explicador
+     ("hasta 5 años o 60.000 km"). Desde el 28 los PDF pueden venir con otras etiquetas y **eso se rompe en
+     silencio**: el parser caería al genérico y el correo mostraría la fila equivocada.
+  🔴 **Los datos del dossier se verifican leyendo cada página COMO IMAGEN.** El emparejamiento
+  servicio↔límite por coordenadas se equivoca en las filas apretadas (Salud Premium). Conteos correctos:
+  11 · 8 · 16 · 30 · 7 · 21.
