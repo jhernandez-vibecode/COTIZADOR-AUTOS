@@ -1,0 +1,1325 @@
+<title>Planes de Asistencia ASI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+<style>
+/* ==========================================================================
+   Mockups · Cobertura ASI (Servicios de Multiasistencia) en el Cotizador SDI
+   Linea grafica heredada de /explicacion/ : Space Grotesk + Inter + navy SDI.
+   Pagina de una sola cara clara, a proposito: replica lo que ve el cliente.
+   ========================================================================== */
+:root{
+  --navy:#0c2340;
+  --navy-soft:#16324f;
+  --azul:#0369a1;
+  --azul-deep:#0c4a6e;
+  --azul-bg:#e0f2fe;
+  --verde:#047857;
+  --verde-bg:#d1fae5;
+  --cyan:#0e7490;
+  --cyan-bg:#ecfeff;
+  --oro:#78350f;
+  --oro-bg:#fef3c7;
+  --oro-linea:#c9a227;
+  --naranja:#9a3412;
+  --naranja-bg:#ffedd5;
+  --pizarra:#334155;
+  --pizarra-bg:#f1f5f9;
+
+  --tinta:#0f172a;
+  --texto:#334155;
+  --mudo:#64748b;
+  --borde:#e0e7ef;
+  --borde-fuerte:#cbd5e1;
+  --papel:#ffffff;
+  --fondo:#f4f7fa;
+
+  --display:'Space Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --cuerpo:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --dato:'JetBrains Mono','SF Mono',Consolas,monospace;
+
+  --r:14px;
+  --salto:cubic-bezier(.34,1.4,.5,1);
+  --suave:cubic-bezier(.2,.8,.3,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none !important}
+body{
+  margin:0;
+  background:var(--fondo);
+  color:var(--texto);
+  font-family:var(--cuerpo);
+  font-size:15px;
+  line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{font-family:var(--display);color:var(--tinta);margin:0;text-wrap:balance;letter-spacing:-.015em}
+p{margin:0}
+a{color:var(--azul)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--azul);outline-offset:3px;border-radius:6px}
+
+/* ---------- chrome del escaparate ---------- */
+.sc-top{
+  background:var(--navy);
+  color:#e2e8f0;
+  padding:26px 24px 0;
+  position:relative;
+}
+.sc-top::after{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:4px;
+  background:linear-gradient(90deg,var(--azul) 0 60%,#0d9488 60% 85%,#ea580c 85% 95%,var(--oro-linea) 95% 100%);
+}
+.sc-wrap{max-width:1120px;margin:0 auto}
+.sc-eyebrow{
+  font-family:var(--display);font-size:11px;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:#94a3b8;margin-bottom:8px;
+}
+.sc-top h1{color:#fff;font-size:clamp(24px,3.4vw,34px);line-height:1.1}
+.sc-top .sc-lead{color:#b6c4d6;font-size:14px;max-width:64ch;margin-top:10px}
+.sc-meta{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 0}
+.sc-tag{
+  font-size:11px;font-weight:600;letter-spacing:.04em;color:#cbd5e1;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);
+  padding:5px 10px;border-radius:999px;
+}
+.sc-tag b{color:#fff;font-weight:700}
+.sc-tabs{display:flex;gap:4px;margin-top:22px;flex-wrap:wrap}
+.sc-tab{
+  appearance:none;background:transparent;border:0;cursor:pointer;
+  font-family:var(--display);font-size:13px;font-weight:600;color:#94a3b8;
+  padding:11px 16px;border-radius:10px 10px 0 0;
+  transition:color .16s var(--suave),background .16s var(--suave);
+  display:flex;align-items:center;gap:9px;
+}
+.sc-tab:hover{color:#e2e8f0;background:rgba(255,255,255,.06)}
+.sc-tab[aria-selected="true"]{background:var(--fondo);color:var(--navy)}
+.sc-tab .n{
+  font-family:var(--dato);font-size:11px;font-weight:700;
+  width:19px;height:19px;border-radius:5px;display:grid;place-items:center;
+  background:rgba(255,255,255,.12);color:#cbd5e1;
+}
+.sc-tab[aria-selected="true"] .n{background:var(--azul);color:#fff}
+.sc-tab:active{transform:translateY(1px)}
+
+.sc-body{max-width:1120px;margin:0 auto;padding:28px 24px 72px}
+
+.sc-intro{
+  display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);
+  gap:20px;align-items:start;margin-bottom:26px;
+}
+.sc-intro h2{font-size:21px;margin-bottom:8px}
+.sc-intro p{font-size:14.5px;max-width:60ch}
+.sc-ficha{
+  background:var(--papel);border:1px solid var(--borde);border-radius:var(--r);
+  padding:16px 18px;font-size:13px;
+}
+.sc-ficha dt{
+  font-family:var(--display);font-size:10.5px;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--mudo);
+}
+.sc-ficha dd{margin:2px 0 12px;color:var(--tinta);font-weight:500}
+.sc-ficha dd:last-child{margin-bottom:0}
+
+.sc-rotulo{
+  display:flex;align-items:center;gap:12px;margin:38px 0 14px;
+}
+.sc-rotulo span{
+  font-family:var(--display);font-size:11px;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--mudo);white-space:nowrap;
+}
+.sc-rotulo::after{content:"";flex:1;height:1px;background:var(--borde)}
+
+/* ---------- marco de correo ---------- */
+.em-escena{background:#e8edf3;border-radius:var(--r);padding:26px 18px;border:1px solid var(--borde)}
+.em-marco{
+  max-width:600px;margin:0 auto;background:#fff;
+  box-shadow:0 8px 26px rgba(12,35,64,.10);
+  font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#334155;line-height:1.55;
+}
+.em-marco .em-corte{
+  padding:9px 26px;background:#f1f5f9;color:#94a3b8;font-size:10.5px;
+  letter-spacing:.1em;text-transform:uppercase;text-align:center;font-weight:700;
+}
+.em-marco .em-pad{padding:20px 26px}
+.em-marco table{border-collapse:collapse}
+
+/* ---------- lienzo de la pagina del cliente ---------- */
+.pg{
+  background:#f8fafc;border:1px solid var(--borde);border-radius:var(--r);
+  overflow:hidden;box-shadow:0 10px 30px rgba(12,35,64,.07);
+}
+.pg-head{background:var(--navy);color:#fff;padding:15px 26px;position:relative;display:flex;align-items:center;gap:12px}
+.pg-head::after{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:3px;
+  background:linear-gradient(90deg,var(--azul) 0 60%,#0d9488 60% 85%,#ea580c 85% 95%,var(--oro-linea) 95% 100%);
+}
+.pg-logo{
+  font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.02em;color:#fff;
+  display:flex;align-items:center;gap:8px;
+}
+.pg-logo i{display:block;width:3px;height:15px;background:var(--azul);border-radius:2px}
+.pg-logo i:nth-child(2){background:#0d9488}
+.pg-logo i:nth-child(3){background:#ea580c}
+.pg-logo i:nth-child(4){background:var(--oro-linea)}
+.pg-head small{margin-left:auto;color:#94a3b8;font-size:11px;letter-spacing:.06em}
+.pg-in{padding:32px 30px 40px}
+@media (max-width:640px){.pg-in{padding:24px 18px 32px}}
+
+/* hero de la pagina */
+.pg-hero{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,.85fr);gap:26px;align-items:end}
+.pg-hero .kicker{
+  font-family:var(--display);font-size:11px;font-weight:700;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--azul);display:flex;align-items:center;gap:8px;
+}
+.pg-hero .kicker em{
+  font-style:normal;background:var(--oro-bg);color:var(--oro);
+  padding:3px 7px;border-radius:5px;letter-spacing:.08em;font-size:10px;
+}
+.pg-hero h1{font-size:clamp(27px,4vw,40px);line-height:1.06;margin:12px 0 0}
+.pg-hero .lead{margin-top:12px;font-size:15.5px;max-width:52ch;color:var(--texto)}
+.pg-desde{
+  background:var(--papel);border:1px solid var(--borde);border-radius:var(--r);padding:18px 20px;
+}
+.pg-desde .lbl{font-family:var(--display);font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--mudo)}
+.pg-desde .cifra{font-family:var(--display);font-size:34px;font-weight:700;color:var(--verde);line-height:1.05;margin-top:2px;letter-spacing:-.02em}
+.pg-desde .cifra small{font-size:14px;font-weight:600;color:var(--texto);letter-spacing:0}
+.pg-desde .pie{font-size:12px;color:var(--mudo);margin-top:8px;border-top:1px solid var(--borde);padding-top:8px}
+@media (max-width:760px){.pg-hero{grid-template-columns:1fr;gap:18px}}
+
+.pg-reglas{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.pg-regla{
+  display:inline-flex;align-items:center;gap:7px;background:var(--papel);
+  border:1px solid var(--borde);border-radius:999px;padding:7px 13px;
+  font-size:12.5px;font-weight:500;color:var(--texto);
+}
+.pg-regla svg{flex:none;color:var(--verde)}
+
+.pg-sec{margin-top:38px}
+.pg-sec > h2{font-size:21px;margin-bottom:4px}
+.pg-sec > .sub{font-size:14px;color:var(--mudo);margin-bottom:18px;max-width:62ch}
+
+/* ---------- fila de plan (acordeon, opcion 1) ---------- */
+.lista{border-top:1px solid var(--borde)}
+.fila{border-bottom:1px solid var(--borde);background:var(--papel)}
+.fila-cab{
+  display:grid;grid-template-columns:38px minmax(0,1fr) auto 26px;
+  gap:14px;align-items:center;width:100%;
+  background:none;border:0;text-align:left;cursor:pointer;
+  padding:16px 18px;transition:background .14s var(--suave);
+}
+.fila-cab:hover{background:#f8fafc}
+.fila-cab:active{background:#f1f5f9}
+.ico{
+  width:38px;height:38px;border-radius:11px;display:grid;place-items:center;flex:none;
+}
+.fila-nom{font-family:var(--display);font-size:16px;font-weight:600;color:var(--tinta);line-height:1.25}
+.fila-linea{font-size:13px;color:var(--mudo);margin-top:1px}
+.fila-precio{text-align:right;white-space:nowrap}
+.fila-precio b{font-family:var(--display);font-size:17px;font-weight:700;color:var(--tinta);letter-spacing:-.01em}
+.fila-precio span{display:block;font-size:11px;color:var(--mudo);font-weight:500}
+.chev{color:var(--borde-fuerte);transition:transform .28s var(--salto)}
+.fila[data-abierta="1"] .chev{transform:rotate(180deg);color:var(--azul)}
+.fila-cuerpo{display:grid;grid-template-rows:0fr;transition:grid-template-rows .34s var(--suave)}
+.fila[data-abierta="1"] .fila-cuerpo{grid-template-rows:1fr}
+.fila-cuerpo > div{overflow:hidden}
+.fila-cont{padding:2px 18px 22px 70px;border-top:1px solid transparent}
+@media (max-width:640px){
+  .fila-cab{grid-template-columns:32px minmax(0,1fr) auto;gap:11px;padding:14px 14px}
+  .chev{display:none}
+  .fila-cont{padding:2px 14px 20px}
+  .ico{width:32px;height:32px;border-radius:9px}
+}
+.fila-desc{font-size:14px;max-width:64ch;margin-bottom:16px}
+
+/* tabla de servicios */
+.tabla{width:100%;border-collapse:collapse;font-size:13.5px}
+.tabla caption{
+  text-align:left;font-family:var(--display);font-size:10.5px;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--mudo);padding-bottom:6px;
+}
+.tabla td{padding:7px 0;border-bottom:1px solid #eef2f7;vertical-align:top}
+.tabla tr:last-child td{border-bottom:0}
+.tabla .lim{
+  text-align:right;white-space:nowrap;padding-left:16px;
+  font-family:var(--dato);font-size:12.5px;font-weight:500;font-variant-numeric:tabular-nums;color:var(--tinta);
+}
+.tabla .lim em{font-style:normal;color:var(--naranja);font-weight:700}
+.tabla .lim.sin{font-family:var(--cuerpo);font-weight:600;color:var(--verde);font-size:12.5px}
+.cols2{columns:2;column-gap:34px}
+.cols2 > table{width:100%;break-inside:auto}
+@media (max-width:760px){.cols2{columns:1}}
+.nota-plan{
+  margin-top:14px;font-size:12.5px;color:var(--mudo);
+  border-top:1px solid var(--borde);padding-top:10px;max-width:78ch;
+}
+
+/* lista del funerario */
+.incluye{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:1fr 1fr;gap:7px 26px;font-size:13.5px}
+.incluye li{display:flex;gap:9px;align-items:flex-start}
+.incluye svg{flex:none;margin-top:3px;color:var(--verde)}
+@media (max-width:640px){.incluye{grid-template-columns:1fr}}
+.monto-caja{
+  display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px;
+}
+.monto-caja div{
+  background:var(--pizarra-bg);border-radius:10px;padding:10px 14px;
+}
+.monto-caja .k{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--mudo);font-family:var(--display);font-weight:600}
+.monto-caja .v{font-family:var(--display);font-size:17px;font-weight:700;color:var(--tinta)}
+
+/* selector + barra de total (opcion 1) */
+.pick{
+  display:inline-flex;align-items:center;gap:8px;margin-top:14px;cursor:pointer;
+  font-size:13px;font-weight:600;color:var(--azul);user-select:none;
+}
+.pick input{width:17px;height:17px;accent-color:var(--azul);cursor:pointer}
+.barra{
+  position:sticky;bottom:0;margin:0 -30px -40px;padding:14px 30px;
+  background:rgba(12,35,64,.96);color:#fff;
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  transform:translateY(105%);transition:transform .4s var(--salto);
+}
+.barra[data-on="1"]{transform:translateY(0)}
+.barra .cuenta{font-size:13px;color:#cbd5e1}
+.barra .tot{margin-left:auto;text-align:right}
+.barra .tot b{font-family:var(--display);font-size:20px;font-weight:700;display:block;line-height:1.1}
+.barra .tot span{font-size:11px;color:#94a3b8}
+@media (max-width:640px){.barra{margin:0 -18px -32px;padding:12px 18px}.barra .tot{margin-left:0}}
+
+/* ---------- botones ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  font-family:var(--display);font-size:14px;font-weight:600;
+  padding:11px 20px;border-radius:10px;border:1px solid transparent;
+  cursor:pointer;text-decoration:none;
+  transition:transform .1s var(--suave),background .15s var(--suave),box-shadow .15s var(--suave);
+}
+.btn:active{transform:translateY(1px) scale(.985)}
+.btn-wa{background:#128c7e;color:#fff}
+.btn-wa:hover{background:#0f7568}
+.btn-linea{background:transparent;border-color:var(--borde-fuerte);color:var(--azul-deep)}
+.btn-linea:hover{border-color:var(--azul);background:#f0f9ff}
+
+/* ---------- pasos + condiciones (compartido) ---------- */
+.pasos{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media (max-width:760px){.pasos{grid-template-columns:1fr}}
+.paso{background:var(--papel);border:1px solid var(--borde);border-radius:var(--r);padding:18px}
+.paso .n{
+  font-family:var(--dato);font-size:12px;font-weight:700;color:#fff;background:var(--navy);
+  width:24px;height:24px;border-radius:7px;display:grid;place-items:center;margin-bottom:10px;
+}
+.paso h3{font-size:15px;margin-bottom:5px}
+.paso p{font-size:13.5px;color:var(--texto)}
+.paso .tel{font-family:var(--dato);font-weight:700;color:var(--azul-deep);white-space:nowrap}
+
+.saber{
+  list-style:none;padding:0;margin:0;
+  display:grid;grid-template-columns:1fr 1fr;gap:0 34px;
+}
+@media (max-width:760px){.saber{grid-template-columns:1fr}}
+.saber li{display:flex;gap:11px;padding:11px 0;border-bottom:1px solid var(--borde);font-size:13.5px}
+.saber svg{flex:none;margin-top:3px;color:var(--mudo)}
+.saber b{color:var(--tinta)}
+
+.fuente{
+  margin-top:30px;padding-top:16px;border-top:1px solid var(--borde);
+  font-size:12px;color:var(--mudo);max-width:80ch;
+}
+
+/* ---------- opcion 2 · configurador ---------- */
+.cfg{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,.9fr);gap:24px;align-items:start}
+@media (max-width:860px){.cfg{grid-template-columns:1fr}}
+.cfg-lista{background:var(--papel);border:1px solid var(--borde);border-radius:var(--r);overflow:hidden}
+.cfg-fila{display:grid;grid-template-columns:36px minmax(0,1fr) auto auto;gap:13px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--borde)}
+.cfg-fila:last-child{border-bottom:0}
+.cfg-fila[data-on="1"]{background:#f0f9ff}
+.cfg-nom{font-family:var(--display);font-size:15px;font-weight:600;color:var(--tinta)}
+.cfg-linea{font-size:12.5px;color:var(--mudo)}
+.cfg-precio{font-family:var(--display);font-weight:700;font-size:15px;color:var(--tinta);white-space:nowrap;font-variant-numeric:tabular-nums}
+@media (max-width:520px){
+  .cfg-fila{grid-template-columns:32px minmax(0,1fr) auto;gap:10px;padding:12px}
+  .cfg-fila .cfg-ver{grid-column:2/-1;justify-self:start}
+}
+.sw{
+  --w:44px;appearance:none;margin:0;flex:none;
+  width:var(--w);height:25px;border-radius:999px;background:var(--borde-fuerte);
+  position:relative;cursor:pointer;border:0;
+  transition:background .2s var(--suave);
+}
+.sw::after{
+  content:"";position:absolute;top:3px;left:3px;width:19px;height:19px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 3px rgba(12,35,64,.35);
+  transition:transform .26s var(--salto);
+}
+.sw:checked{background:var(--verde)}
+.sw:checked::after{transform:translateX(19px)}
+.cfg-ver{
+  background:none;border:0;padding:0;cursor:pointer;
+  font-size:12.5px;font-weight:600;color:var(--azul);white-space:nowrap;
+}
+.cfg-ver:hover{text-decoration:underline}
+
+.resumen{
+  background:var(--papel);border:1px solid var(--borde);border-radius:var(--r);
+  padding:20px;position:sticky;top:16px;
+}
+.resumen h3{font-size:16px;margin-bottom:3px}
+.resumen .sub{font-size:12.5px;color:var(--mudo);margin-bottom:14px}
+.res-vacio{
+  text-align:center;padding:22px 6px;color:var(--mudo);font-size:13px;
+  border:1px dashed var(--borde-fuerte);border-radius:10px;
+}
+.res-vacio svg{color:var(--borde-fuerte);margin-bottom:8px}
+.res-item{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--borde);font-size:13.5px}
+.res-item b{font-family:var(--dato);font-weight:500;font-variant-numeric:tabular-nums;color:var(--tinta)}
+.res-suma{display:flex;justify-content:space-between;padding:8px 0;font-size:13px;color:var(--mudo)}
+.res-suma b{font-family:var(--dato);font-weight:500;font-variant-numeric:tabular-nums;color:var(--texto)}
+.res-total{
+  display:flex;justify-content:space-between;align-items:baseline;
+  margin-top:6px;padding-top:12px;border-top:2px solid var(--navy);
+}
+.res-total span{font-family:var(--display);font-size:13px;font-weight:600;color:var(--tinta)}
+.res-total b{font-family:var(--display);font-size:26px;font-weight:700;color:var(--verde);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.res-nota{font-size:11.5px;color:var(--mudo);margin-top:10px}
+.resumen .btn{width:100%;margin-top:14px}
+
+.det{margin-top:16px;background:var(--papel);border:1px solid var(--borde);border-radius:var(--r);padding:20px}
+.det-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.det-tab{
+  background:var(--pizarra-bg);border:1px solid transparent;border-radius:999px;
+  padding:6px 13px;font-size:12.5px;font-weight:600;color:var(--texto);cursor:pointer;
+  transition:background .15s var(--suave),color .15s var(--suave);
+}
+.det-tab:hover{background:#e2e8f0}
+.det-tab[aria-selected="true"]{background:var(--navy);color:#fff}
+
+/* ---------- opcion 3 · guiado ---------- */
+.preg{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px}
+.chip{
+  display:inline-flex;align-items:center;gap:9px;cursor:pointer;user-select:none;
+  background:var(--papel);border:1.5px solid var(--borde-fuerte);border-radius:999px;
+  padding:9px 16px 9px 12px;font-size:13.5px;font-weight:500;color:var(--texto);
+  transition:border-color .16s var(--suave),background .16s var(--suave),color .16s var(--suave);
+}
+.chip:hover{border-color:var(--azul);color:var(--azul-deep)}
+.chip:active{transform:scale(.98)}
+.chip input{position:absolute;opacity:0;pointer-events:none}
+.chip .marca{
+  width:19px;height:19px;border-radius:6px;border:1.5px solid var(--borde-fuerte);
+  display:grid;place-items:center;flex:none;transition:background .16s var(--suave),border-color .16s var(--suave);
+}
+.chip .marca svg{opacity:0;color:#fff;transition:opacity .14s var(--suave)}
+.chip:has(input:checked){border-color:var(--verde);background:var(--verde-bg);color:#065f46;font-weight:600}
+.chip:has(input:checked) .marca{background:var(--verde);border-color:var(--verde)}
+.chip:has(input:checked) .marca svg{opacity:1}
+
+.reco{margin-top:26px}
+.reco-vacio{
+  background:var(--papel);border:1px dashed var(--borde-fuerte);border-radius:var(--r);
+  padding:26px;text-align:center;color:var(--mudo);font-size:13.5px;
+}
+.reco-grid{display:grid;gap:14px}
+.reco-card{
+  background:var(--papel);border:1px solid var(--borde);border-radius:var(--r);
+  padding:18px 20px;display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:16px;align-items:center;
+  animation:entra .34s var(--suave) both;
+}
+@media (max-width:640px){.reco-card{grid-template-columns:36px minmax(0,1fr);row-gap:12px}.reco-card .reco-pre{grid-column:2/-1}}
+@keyframes entra{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms !important;transition-duration:.01ms !important}
+}
+.reco-card h3{font-size:17px}
+.reco-por{font-size:12.5px;color:var(--verde);font-weight:600;margin-top:3px;display:flex;align-items:center;gap:6px}
+.reco-pre{text-align:right;white-space:nowrap}
+.reco-pre b{font-family:var(--display);font-size:19px;font-weight:700;color:var(--tinta);display:block}
+.reco-pre span{font-size:11px;color:var(--mudo)}
+.otros{margin-top:26px}
+.otros summary{
+  cursor:pointer;font-family:var(--display);font-size:14px;font-weight:600;color:var(--azul-deep);
+  list-style:none;display:flex;align-items:center;gap:8px;padding:12px 0;
+}
+.otros summary::-webkit-details-marker{display:none}
+.otros summary svg{transition:transform .25s var(--salto)}
+.otros[open] summary svg{transform:rotate(180deg)}
+
+/* ---------- pie del escaparate ---------- */
+.sc-pie{
+  max-width:1120px;margin:0 auto;padding:0 24px 60px;
+}
+.sc-pie-caja{
+  background:var(--papel);border:1px solid var(--borde);border-radius:var(--r);padding:22px 24px;
+}
+.sc-pie-caja h3{font-size:16px;margin-bottom:10px}
+.sc-pie-caja ol{margin:0;padding-left:20px;font-size:13.5px}
+.sc-pie-caja li{margin-bottom:7px}
+.sc-pie-caja li:last-child{margin-bottom:0}
+.sc-fuente{font-size:12px;color:var(--mudo);margin-top:16px;max-width:88ch}
+</style>
+
+<header class="sc-top">
+  <div class="sc-wrap">
+    <p class="sc-eyebrow">Cotizador Autos SDI &middot; mockups para escoger</p>
+    <h1>Cobertura ASI, tres maneras de ofrecerla</h1>
+    <p class="sc-lead">
+      El INS estrena seis planes de asistencia opcionales. Cada opci&oacute;n de abajo trae dos piezas:
+      el bloque que ir&iacute;a <b>dentro del correo de cotizaci&oacute;n</b> y la <b>p&aacute;gina aparte</b> con el detalle
+      y el precio de cada plan. Se pueden mezclar: el correo de una con la p&aacute;gina de otra.
+    </p>
+    <div class="sc-meta">
+      <span class="sc-tag">Circular <b>0395-2026</b></span>
+      <span class="sc-tag">Condiciones Generales SVA <b>V32</b></span>
+      <span class="sc-tag">Vigente <b>28 set 2026</b></span>
+      <span class="sc-tag"><b>6</b> planes &middot; &#8353;7.200 a &#8353;42.000 al a&ntilde;o</span>
+    </div>
+    <div class="sc-tabs" role="tablist" aria-label="Opciones de dise&ntilde;o">
+      <button class="sc-tab" role="tab" aria-selected="true" aria-controls="op1" id="tab1"><span class="n">1</span> La l&iacute;nea + cat&aacute;logo</button>
+      <button class="sc-tab" role="tab" aria-selected="false" aria-controls="op2" id="tab2"><span class="n">2</span> La tarjeta + configurador</button>
+      <button class="sc-tab" role="tab" aria-selected="false" aria-controls="op3" id="tab3"><span class="n">3</span> La pregunta + gu&iacute;a</button>
+    </div>
+  </div>
+</header>
+
+<main class="sc-body">
+
+  <!-- ============================ OPCION 1 ============================ -->
+  <section id="op1" role="tabpanel" aria-labelledby="tab1">
+    <div class="sc-intro">
+      <div>
+        <h2>Opci&oacute;n 1 &middot; La l&iacute;nea al pie, y un cat&aacute;logo para leer</h2>
+        <p>
+          La m&aacute;s discreta de las tres. En el correo no hay caja, ni bot&oacute;n, ni color: tres renglones
+          entre dos reglas finas, despu&eacute;s de tu firma. Quien va a lo suyo ni la registra; quien anda
+          curioso, entra. La p&aacute;gina es un cat&aacute;logo que se lee de arriba abajo, con cada plan
+          plegado hasta que lo abr&iacute;s.
+        </p>
+      </div>
+      <dl class="sc-ficha">
+        <dt>D&oacute;nde va en el correo</dt>
+        <dd>Despu&eacute;s de la firma, antes del aviso de Uber</dd>
+        <dt>Cu&aacute;nto ocupa</dt>
+        <dd>~70 px &middot; tres renglones de texto</dd>
+        <dt>C&oacute;mo se enciende</dt>
+        <dd>Casilla en la vista 3, prendida por defecto</dd>
+      </dl>
+    </div>
+
+    <div class="sc-rotulo"><span>En el correo</span></div>
+    <div class="em-escena">
+      <div class="em-marco">
+        <div class="em-corte">&middot;&middot;&middot; cierre del correo de cotizaci&oacute;n &middot;&middot;&middot;</div>
+        <div class="em-pad">
+          <p style="margin:0 0 6px;font-family:Georgia,serif;font-style:italic;color:#475569;font-size:14px;">&ldquo;Cualquier duda que tengas, hablemos. Estoy para vos.&rdquo;</p>
+          <p style="margin:0;font-weight:bold;color:#0c2340;font-size:14px;">Juan Carlos Hern&aacute;ndez Vargas</p>
+          <p style="margin:2px 0 0;font-size:11px;color:#64748b;">Tu agente &middot; Lic. SUGESE 08-1318</p>
+        </div>
+
+        <!-- BLOQUE ASI · variante linea -->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+          <tr><td style="padding:0 26px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border-top:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;">
+              <tr><td style="padding:16px 0;">
+                <p style="margin:0 0 5px;font-size:10px;font-weight:bold;letter-spacing:.1em;text-transform:uppercase;color:#8a6d1f;">Opcional &middot; nuevo del INS</p>
+                <p style="margin:0;font-size:13.5px;line-height:1.55;color:#475569;">
+                  Desde el 28 de setiembre pod&eacute;s sumarle <b style="color:#0c2340;">planes de asistencia</b> a tu p&oacute;liza:
+                  mascota, salud, cuido del carro o gastos funerarios. Van aparte de la cotizaci&oacute;n, desde
+                  <b style="color:#0c2340;">&#8353;7.200 al a&ntilde;o</b>.
+                </p>
+                <p style="margin:8px 0 0;font-size:13.5px;">
+                  <a href="#op1-pagina" style="color:#0369a1;font-weight:bold;text-decoration:none;">Ver los seis planes y su precio &rarr;</a>
+                </p>
+              </td></tr>
+            </table>
+          </td></tr>
+        </table>
+
+        <div class="em-pad" style="padding-top:16px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#fff7ed;border-top:3px solid #ea580c;">
+            <tr><td style="padding:12px 14px;font-size:12px;color:#7c2d12;">
+              &#9888; Esta p&oacute;liza <b>no cubre</b> el uso del veh&iacute;culo en plataformas tipo Uber o DiDi.
+            </td></tr>
+          </table>
+        </div>
+        <div class="em-corte">pie del correo</div>
+      </div>
+    </div>
+
+    <div class="sc-rotulo"><span>La p&aacute;gina &middot; cat&aacute;logo</span></div>
+    <div class="pg" id="op1-pagina">
+      <div class="pg-head">
+        <span class="pg-logo"><i></i><i></i><i></i><i></i> SDI</span>
+        <small>SEGUROS DEL INS</small>
+      </div>
+      <div class="pg-in">
+        <div class="pg-hero">
+          <div>
+            <p class="kicker">Cobertura ASI <em>nueva</em></p>
+            <h1>Sumale asistencias a tu p&oacute;liza de autos</h1>
+            <p class="lead">
+              El INS abri&oacute; seis planes que se contratan junto con el seguro del carro y cubren
+              cosas de todos los d&iacute;as: el veterinario, una consulta m&eacute;dica, el lavado del carro,
+              los gastos funerarios. Eleg&iacute;s el que te sirva &mdash; o ninguno.
+            </p>
+          </div>
+          <div class="pg-desde">
+            <p class="lbl">Desde</p>
+            <p class="cifra">&#8353;7.200 <small>al a&ntilde;o</small></p>
+            <p class="pie">Seis planes. Pod&eacute;s llevar m&aacute;s de uno.</p>
+          </div>
+        </div>
+        <div class="pg-reglas" id="reglas1"></div>
+
+        <div class="pg-sec">
+          <h2>Los seis planes</h2>
+          <p class="sub">Toc&aacute; uno para ver todo lo que trae, con la cantidad de eventos al a&ntilde;o y el tope de cada servicio.</p>
+          <div class="lista" id="lista1"></div>
+        </div>
+
+        <div class="pg-sec" id="pasos1"></div>
+        <div class="pg-sec" id="saber1"></div>
+        <p class="fuente" id="fuente1"></p>
+
+        <div class="barra" id="barra1">
+          <span class="cuenta" id="cuenta1"></span>
+          <span class="tot"><b id="tot1"></b><span>al a&ntilde;o, m&aacute;s IVA</span></span>
+          <a class="btn btn-wa" id="wa1" href="#" target="_blank" rel="noopener">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.5 14.1c-.2.6-1.2 1.2-1.7 1.2-.4 0-.9.2-3.1-.7-2.6-1.1-4.2-3.8-4.4-4-.1-.2-1-1.4-1-2.6 0-1.3.7-1.9.9-2.1.2-.3.5-.3.7-.3h.5c.2 0 .4-.1.7.5l.8 2c.1.2.1.4 0 .5l-.4.5-.3.3c-.1.1-.2.3-.1.5.1.2.6 1 1.3 1.6.9.8 1.6 1 1.9 1.2.2.1.4 0 .5-.1l.7-.8c.2-.2.3-.2.5-.1l2 .9c.2.1.4.2.4.3.1.1.1.6-.1 1.2Z"/></svg>
+            Mandarle mi selecci&oacute;n a Juan Carlos
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ OPCION 2 ============================ -->
+  <section id="op2" role="tabpanel" aria-labelledby="tab2" hidden>
+    <div class="sc-intro">
+      <div>
+        <h2>Opci&oacute;n 2 &middot; La tarjeta con precios, y un configurador que suma</h2>
+        <p>
+          Ac&aacute; el correo s&iacute; ense&ntilde;a los seis nombres con su precio, en una tarjeta gris de
+          fondo plano. Se ve m&aacute;s, pero sigue sin competir: no lleva bot&oacute;n de color ni foto.
+          La p&aacute;gina es un armador &mdash; el cliente prende interruptores y ve el total del a&ntilde;o
+          moverse en vivo, con IVA aparte.
+        </p>
+      </div>
+      <dl class="sc-ficha">
+        <dt>D&oacute;nde va en el correo</dt>
+        <dd>Despu&eacute;s de las formas de pago</dd>
+        <dt>Cu&aacute;nto ocupa</dt>
+        <dd>~170 px &middot; tarjeta con seis nombres</dd>
+        <dt>C&oacute;mo se enciende</dt>
+        <dd>Casilla en la vista 3, prendida por defecto</dd>
+      </dl>
+    </div>
+
+    <div class="sc-rotulo"><span>En el correo</span></div>
+    <div class="em-escena">
+      <div class="em-marco">
+        <div class="em-corte">&middot;&middot;&middot; despu&eacute;s de las formas de pago &middot;&middot;&middot;</div>
+        <div class="em-pad">
+          <!-- BLOQUE ASI · variante tarjeta -->
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;">
+            <tr><td style="padding:18px 20px;">
+              <p style="margin:0 0 3px;font-size:10px;font-weight:bold;letter-spacing:.1em;text-transform:uppercase;color:#8a6d1f;">Opcional &middot; nuevo del INS</p>
+              <p style="margin:0 0 4px;font-family:'Space Grotesk',Arial,sans-serif;font-size:16px;font-weight:bold;color:#0c2340;">Asistencias que le pod&eacute;s sumar a la p&oacute;liza</p>
+              <p style="margin:0 0 14px;font-size:13px;color:#64748b;line-height:1.5;">Se contratan aparte de la cotizaci&oacute;n y se cobran junto con el seguro. Precios al a&ntilde;o, sin IVA.</p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;font-size:13px;" id="em-planes"></table>
+              <p style="margin:16px 0 0;">
+                <a href="#op2-pagina" style="display:inline-block;border:1px solid #cbd5e1;border-radius:8px;padding:9px 16px;color:#0c4a6e;font-weight:bold;font-size:13px;text-decoration:none;">Ver qu&eacute; trae cada plan &rarr;</a>
+              </p>
+            </td></tr>
+          </table>
+        </div>
+        <div class="em-corte">sigue el inter&eacute;s asegurable &middot;&middot;&middot;</div>
+      </div>
+    </div>
+
+    <div class="sc-rotulo"><span>La p&aacute;gina &middot; configurador</span></div>
+    <div class="pg" id="op2-pagina">
+      <div class="pg-head">
+        <span class="pg-logo"><i></i><i></i><i></i><i></i> SDI</span>
+        <small>SEGUROS DEL INS</small>
+      </div>
+      <div class="pg-in">
+        <div class="pg-hero">
+          <div>
+            <p class="kicker">Cobertura ASI <em>nueva</em></p>
+            <h1>Arm&aacute; tus asistencias</h1>
+            <p class="lead">
+              Prend&eacute; los planes que te sirvan y mir&aacute; cu&aacute;nto suman al a&ntilde;o.
+              Nada de esto cambia el precio de tu seguro: va aparte, en la misma p&oacute;liza.
+            </p>
+          </div>
+          <div class="pg-desde">
+            <p class="lbl">Desde</p>
+            <p class="cifra">&#8353;7.200 <small>al a&ntilde;o</small></p>
+            <p class="pie">M&aacute;s IVA del 13%.</p>
+          </div>
+        </div>
+        <div class="pg-reglas" id="reglas2"></div>
+
+        <div class="pg-sec">
+          <div class="cfg">
+            <div>
+              <div class="cfg-lista" id="cfg2"></div>
+              <div class="det">
+                <h3 style="font-size:16px;margin-bottom:3px;">Qu&eacute; trae cada plan</h3>
+                <p class="sub" style="font-size:13px;color:var(--mudo);margin-bottom:14px;">Eventos por a&ntilde;o y tope de cada servicio, tal como los public&oacute; el INS.</p>
+                <div class="det-tabs" id="detTabs2"></div>
+                <div id="detCont2"></div>
+              </div>
+            </div>
+            <aside class="resumen">
+              <h3>Tu selecci&oacute;n</h3>
+              <p class="sub">Prima anual de los planes de asistencia.</p>
+              <div id="res2"></div>
+            </aside>
+          </div>
+        </div>
+
+        <div class="pg-sec" id="pasos2"></div>
+        <div class="pg-sec" id="saber2"></div>
+        <p class="fuente" id="fuente2"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ OPCION 3 ============================ -->
+  <section id="op3" role="tabpanel" aria-labelledby="tab3" hidden>
+    <div class="sc-intro">
+      <div>
+        <h2>Opci&oacute;n 3 &middot; Una pregunta en el correo, y una gu&iacute;a que elige por &eacute;l</h2>
+        <p>
+          El correo no anuncia nada: pregunta. Dos renglones que apuntan a algo que el cliente
+          reconoce &mdash; el perro, el carro, los viajes &mdash; y de ah&iacute; sale el clic. La p&aacute;gina
+          arranca con seis casillas de &ldquo;esto me pasa a m&iacute;&rdquo; y le deja adelante solo los planes
+          que le calzan. El cat&aacute;logo completo sigue abajo, nunca se esconde.
+        </p>
+      </div>
+      <dl class="sc-ficha">
+        <dt>D&oacute;nde va en el correo</dt>
+        <dd>Justo antes del bot&oacute;n de agendar la cita</dd>
+        <dt>Cu&aacute;nto ocupa</dt>
+        <dd>~55 px &middot; dos renglones</dd>
+        <dt>C&oacute;mo se enciende</dt>
+        <dd>Casilla en la vista 3, prendida por defecto</dd>
+      </dl>
+    </div>
+
+    <div class="sc-rotulo"><span>En el correo</span></div>
+    <div class="em-escena">
+      <div class="em-marco">
+        <div class="em-corte">&middot;&middot;&middot; despu&eacute;s de la sustituci&oacute;n de repuestos &middot;&middot;&middot;</div>
+        <div class="em-pad">
+          <!-- BLOQUE ASI · variante pregunta -->
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+            <tr>
+              <td width="3" style="background:#0369a1;"></td>
+              <td style="padding:2px 0 2px 16px;">
+                <p style="margin:0 0 5px;font-family:'Space Grotesk',Arial,sans-serif;font-size:15px;font-weight:bold;color:#0c2340;line-height:1.35;">
+                  &iquest;Ten&eacute;s mascota, o te vendr&iacute;a bien que te laven el carro dos veces al a&ntilde;o?
+                </p>
+                <p style="margin:0;font-size:13.5px;color:#475569;line-height:1.55;">
+                  Desde el 28 de setiembre el INS deja agregarle planes de asistencia a la p&oacute;liza, desde
+                  &#8353;7.200 al a&ntilde;o. <a href="#op3-pagina" style="color:#0369a1;font-weight:bold;text-decoration:none;">Mir&aacute; cu&aacute;l te sirve &rarr;</a>
+                </p>
+              </td>
+            </tr>
+          </table>
+        </div>
+        <div class="em-pad" style="padding-top:4px;text-align:center;">
+          <a href="#" style="display:inline-block;background:#047857;color:#fff;font-weight:bold;font-size:15px;padding:14px 30px;border-radius:8px;text-decoration:none;">Agendar mi cita ahora</a>
+        </div>
+        <div class="em-corte">sigue la prueba social &middot;&middot;&middot;</div>
+      </div>
+    </div>
+
+    <div class="sc-rotulo"><span>La p&aacute;gina &middot; gu&iacute;a por necesidad</span></div>
+    <div class="pg" id="op3-pagina">
+      <div class="pg-head">
+        <span class="pg-logo"><i></i><i></i><i></i><i></i> SDI</span>
+        <small>SEGUROS DEL INS</small>
+      </div>
+      <div class="pg-in">
+        <div class="pg-hero">
+          <div>
+            <p class="kicker">Cobertura ASI <em>nueva</em></p>
+            <h1>&iquest;Cu&aacute;l de las asistencias te sirve?</h1>
+            <p class="lead">
+              Marc&aacute; lo que va con vos y te dejo adelante los planes que calzan. Son seis en total
+              y se contratan junto con tu seguro de autos.
+            </p>
+          </div>
+          <div class="pg-desde">
+            <p class="lbl">Desde</p>
+            <p class="cifra">&#8353;7.200 <small>al a&ntilde;o</small></p>
+            <p class="pie">Pod&eacute;s llevar m&aacute;s de uno.</p>
+          </div>
+        </div>
+        <div class="pg-reglas" id="reglas3"></div>
+
+        <div class="pg-sec" style="margin-top:28px;">
+          <h2>Cont&aacute;me de vos</h2>
+          <p class="sub">Marc&aacute; todas las que apliquen. Pod&eacute;s cambiarlas cuando quer&aacute;s.</p>
+          <div class="preg" id="preg3"></div>
+          <div class="reco" id="reco3"></div>
+        </div>
+
+        <details class="otros">
+          <summary>
+            Ver los seis planes con su detalle completo
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </summary>
+          <div class="lista" id="lista3"></div>
+        </details>
+
+        <div class="pg-sec" id="pasos3"></div>
+        <div class="pg-sec" id="saber3"></div>
+        <p class="fuente" id="fuente3"></p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<div class="sc-pie">
+  <div class="sc-pie-caja">
+    <h3>Lo que hay que decidir antes de programar</h3>
+    <ol>
+      <li><b>Cu&aacute;l opci&oacute;n</b> &mdash; o qu&eacute; correo con qu&eacute; p&aacute;gina, si quer&eacute;s mezclar.</li>
+      <li><b>El IVA.</b> El INS publica las primas sin el 13%. Ac&aacute; el precio grande va sin IVA y el impuesto se
+          nombra aparte, igual que en el dossier. Si prefer&iacute;s que el cliente vea el n&uacute;mero final, se cambia.</li>
+      <li><b>El interruptor.</b> El bloque tiene que poder apagarse: hasta el 28 de setiembre el INS emite con la
+          versi&oacute;n anterior y estos planes todav&iacute;a no existen en la solicitud.</li>
+      <li><b>El bot&oacute;n de WhatsApp</b> de la p&aacute;gina te manda a vos la lista que el cliente marc&oacute;. Falta definir si
+          eso adem&aacute;s queda anotado en alg&uacute;n lado o solo te llega el mensaje.</li>
+    </ol>
+    <p class="sc-fuente">
+      Datos tomados de: Circular INS N&deg; 0395-2026 &middot; Matriz de Cambios de las Condiciones Generales del Seguro
+      Voluntario de Autom&oacute;viles, versi&oacute;n 32 (registro SUGESE G01-01-A01-012, aprobada el 26 de agosto de 2026,
+      implementaci&oacute;n el 28 de setiembre de 2026) &middot; Dossier &ldquo;Planes de asistencia en Seguro Voluntario de
+      Autom&oacute;viles&rdquo;. Las primas y los l&iacute;mites de cada servicio est&aacute;n copiados de esos documentos, sin redondear ni
+      completar. Ning&uacute;n servicio ni monto de esta p&aacute;gina fue inventado.
+    </p>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ------------------------------------------------------------------
+     DATOS. Todo sale del dossier del INS y de la matriz de cambios V32.
+     Los limites se transcriben tal cual: "Sin limite" es literal del
+     documento y no se traduce a "ilimitado".
+     ------------------------------------------------------------------ */
+  var IVA = 0.13;
+
+  var PLANES = [
+    {
+      id: 'mascota', nom: 'Mascota', prima: 7200, tono: 'verde', icono: 'pata',
+      linea: 'Para el perro o el gato de la casa.',
+      desc: 'Atención veterinaria de urgencia, cuido cotidiano y apoyo en la búsqueda de la mascota, para animales de compañía que conviven en el hogar.',
+      nota: 'Aplica para animales de compañía que conviven permanentemente en el hogar, bajo el cuidado y responsabilidad de la persona asegurada, y que no están destinados a fines comerciales o productivos.',
+      serv: [
+        ['Consulta veterinaria de urgencia', '1', '₡25.000'],
+        ['Traslado en emergencia', '3', '₡50.000'],
+        ['Vacunación y desparasitación', '1', '₡20.000'],
+        ['Grooming a domicilio o en centro', '1', '₡15.000'],
+        ['Cremación de mascota', '3', '₡50.000'],
+        ['Hotel para mascotas', '3', '₡10.000'],
+        ['Impresión de material POP para la búsqueda', '3', '₡25.000'],
+        ['Puja en redes sociales por pérdida', '3', '₡25.000'],
+        ['Volanteo en la zona cercana al domicilio', '1', '₡25.000'],
+        ['Alojamiento por hospitalización del titular', '3', '₡10.000'],
+        ['Paseo de mascotas domésticas', '3', '₡10.000']
+      ]
+    },
+    {
+      id: 'funerario', nom: 'Asistencia Funeraria', prima: 10800, tono: 'pizarra', icono: 'corazon',
+      linea: 'Cubre el servicio funerario del asegurado.',
+      desc: 'Brinda acompañamiento y servicios funerarios esenciales por fallecimiento de la persona asegurada, ofreciendo apoyo y tranquilidad a la familia en momentos difíciles.',
+      nota: 'El servicio lo solicita el cónyuge de la persona asegurada o personas mayores de edad que convivan con ella.',
+      monto: '₡500.000', montoAlt: 'o $1.000 según la moneda del contrato',
+      eventos: '1 por año póliza, dentro del territorio nacional',
+      incluye: [
+        'Tanatopraxia: preparación del cuerpo para la velación',
+        'Féretro estándar',
+        'Sala de velación hasta 24 horas',
+        'Arreglo floral central y dos arreglos medianos',
+        'Alquiler de sillas, altar y base para el féretro',
+        'Traslado a la sala o domicilio, templo y cementerio',
+        'Café, refrescos y alimentación',
+        'Gastos de cremación o sepultura'
+      ]
+    },
+    {
+      id: 'bienestar', nom: 'Salud Bienestar', prima: 18000, tono: 'cyan', icono: 'pulso',
+      linea: 'Orientación médica, ejercicio y apoyo en la casa.',
+      desc: 'Plan de asistencia integral que brinda orientación médica, psicológica y nutricional, servicios de bienestar y actividad física, y apoyo para el hogar.',
+      nota: 'Límite por evento en colones o su equivalente en dólares según la moneda del contrato. Las consultas virtuales tienen una duración máxima de una hora.',
+      serv: [
+        ['Orientación médica telefónica', '', 'Sin límite'],
+        ['Consulta psicológica virtual', '2', '₡30.000'],
+        ['Consulta nutricional virtual', '1', '₡15.000'],
+        ['Clases funcionales en vivo', '4', '₡15.000'],
+        ['Orientación farmacéutica', '', 'Sin límite'],
+        ['Orientación nutricional telefónica', '', 'Sin límite'],
+        ['Conexión con médicos, laboratorios, hospitales y clínicas', '', 'Sin límite'],
+        ['Referencia de veterinarios', '', 'Sin límite'],
+        ['Asesoría telefónica de viajes y turismo nacional', '', 'Sin límite'],
+        ['Diseño de rutinas de ejercicio', '1', '₡25.000'],
+        ['Fumigación del hogar', '1', '₡35.000'],
+        ['Limpieza de tanque séptico', '1', '₡40.000'],
+        ['Limpieza de canoas', '1', '₡61.000'],
+        ['Jardinería (corte de césped)', '1', '₡20.000'],
+        ['Instalación de lámparas', '1', '₡41.600'],
+        ['Recarga de extintores (máx. 1)', '1', '₡10.000']
+      ]
+    },
+    {
+      id: 'premium', nom: 'Salud Premium', prima: 42000, tono: 'azul', icono: 'cruz',
+      linea: 'Especialistas, exámenes, terapias y traslados.',
+      desc: 'Brinda atención médica especializada, exámenes y diagnósticos, terapias y traslados médicos, complementados con servicios de bienestar y apoyo al hogar.',
+      nota: 'Límite por evento en colones o su equivalente en dólares según la moneda del contrato. La orientación médica telefónica tiene una duración máxima de 15 minutos.',
+      serv: [
+        ['Visita médica a domicilio', '2', '₡40.000'],
+        ['Consulta con especialista', '1', '₡45.000'],
+        ['Orientación médica telefónica', '', 'Sin límite'],
+        ['Consulta psicológica presencial', '2', '₡30.000'],
+        ['Consulta nutricional presencial', '1', '₡25.000'],
+        ['Consulta nutricional telefónica', '', 'Sin límite'],
+        ['Consulta farmacéutica', '', 'Sin límite'],
+        ['Consulta y limpieza dental simple', '1', '₡30.000'],
+        ['Perfil lipídico', '1', '₡25.000'],
+        ['Exámenes de laboratorio generales', '1', '₡45.000'],
+        ['Rayos X o electrocardiograma', '1', '₡40.000'],
+        ['Terapias respiratorias a domicilio', '2', '₡25.000'],
+        ['Terapias físicas', '2', '₡25.000'],
+        ['Terapias alternativas avaladas por la OMS', '2', '₡25.000'],
+        ['Audiometría', '1', '₡15.000'],
+        ['Oftalmología', '1', '₡50.000'],
+        ['Traslado en taxi al hogar o centro de salud', '2', '₡26.000'],
+        ['Traslado en ambulancia por accidente o enfermedad', '1', '₡103.500'],
+        ['Conexión con médicos y clínicas', '', 'Sin límite'],
+        ['Clases de yoga en vivo', '4', '₡15.000'],
+        ['Traslado residencia–aeropuerto', '4', '₡26.000'],
+        ['Fumigación del hogar', '1', '₡35.000'],
+        ['Recarga de extintores', '1', '₡10.000'],
+        ['Limpieza de tanque séptico', '1', '₡40.000'],
+        ['Limpieza de canoas', '1', '₡61.000'],
+        ['Instalación de lámparas', '1', '₡41.600'],
+        ['Jardinería (corte de césped)', '1', '₡20.000'],
+        ['Servicio doméstico', '1', '₡13.500'],
+        ['Asesoría de viajes y turismo', '', 'Sin límite'],
+        ['Referencia de veterinarios', '', 'Sin límite']
+      ]
+    },
+    {
+      id: 'autos', nom: 'Autos Plus', prima: 42000, tono: 'naranja', icono: 'carro',
+      linea: 'Cuido estético del carro y traslados al aeropuerto.',
+      desc: 'Servicios de cuido y mantenimiento estético del vehículo asegurado, con traslados al aeropuerto como beneficio adicional.',
+      nota: 'El lavado y el tratamiento de tapicerías se solicitan con 24 horas de antelación. El servicio a domicilio aplica dentro de 20 km desde la ubicación del proveedor asignado.',
+      serv: [
+        ['Desabolladuras y rayones', '1', '₡78.000'],
+        ['Cambio de aceite', '2', '₡53.900'],
+        ['Pulido de pintura', '1', '₡35.000'],
+        ['Tratamiento de tapicerías', '1', '₡35.000'],
+        ['Traslado al aeropuerto', '4', '₡26.000'],
+        ['Lavado de vehículo a domicilio', '1', '₡12.000'],
+        ['Lavado de vehículo en local', '1', '₡10.000']
+      ]
+    },
+    {
+      id: 'vip', nom: 'VIP', prima: 42000, tono: 'oro', icono: 'corona',
+      linea: 'Salud, hogar y negocio en un solo plan.',
+      desc: 'Combina servicios exclusivos para la persona, el hogar y la empresa: bienestar, salud, apoyo legal, mantenimiento, traslados y beneficios especiales.',
+      nota: 'Límite por evento en colones o su equivalente en dólares según la moneda del contrato.',
+      serv: [
+        ['Enfermería domiciliar por enfermedad', '1', '₡100.000'],
+        ['Alquiler de equipo médico duradero', '1', '₡100.000'],
+        ['Asistencias en eventos sociales', '1', '₡100.000'],
+        ['Asistencia legal por robo en la sede de la empresa', '2', '₡122.000'],
+        ['Coach de ventas', '1', '₡70.000'],
+        ['Renta diaria hospitalaria', '1', '₡67.500'],
+        ['Limpieza de canoas', '1', '₡61.000'],
+        ['Exámenes médicos de laboratorio generales', '1', '₡50.000'],
+        ['Pulido de focos', '1', '₡50.000'],
+        ['Limpieza de tanque de agua', '1', '₡45.000'],
+        ['Fisioterapia de descarga por deporte', '3', '₡43.120'],
+        ['Inspección de riesgos de incendio en la empresa', '2', '₡41.600'],
+        ['Instalación de lámparas', '2', '₡41.600'],
+        ['Limpieza de tanque séptico', '1', '₡40.000'],
+        ['Fumigación del hogar', '1', '₡35.000'],
+        ['Coach financiero', '1', '₡30.000'],
+        ['Traslado residencia–aeropuerto', '4', '₡26.000'],
+        ['Jardinería', '1', '₡20.000'],
+        ['Guardería diurna de niño o niña', '1', '₡12.000'],
+        ['Recarga de extintores del hogar', '1', '₡10.000'],
+        ['Lavado de vehículo', '1', '₡10.000']
+      ]
+    }
+  ];
+
+  /* Necesidades de la opcion 3 -> planes que las resuelven, con el
+     servicio concreto que justifica la recomendacion. */
+  var NECESIDADES = [
+    { id: 'mascota',  txt: 'Tengo perro o gato',            planes: { mascota: 'consulta veterinaria de urgencia y traslado' } },
+    { id: 'carro',    txt: 'Cuido mucho el carro',          planes: { autos: 'desabolladuras, pulido y cambio de aceite' } },
+    { id: 'aero',     txt: 'Viajo seguido por el aeropuerto', planes: { autos: '4 traslados al aeropuerto al año', premium: '4 traslados residencia–aeropuerto', vip: '4 traslados residencia–aeropuerto' } },
+    { id: 'salud',    txt: 'Quiero respaldo médico',    planes: { bienestar: 'orientación médica sin límite de eventos', premium: 'especialista, exámenes y ambulancia' } },
+    { id: 'funeral',  txt: 'Quiero cubrir gastos funerarios', planes: { funerario: 'servicio funerario completo hasta ₡500.000' } },
+    { id: 'negocio',  txt: 'Tengo empresa o negocio',       planes: { vip: 'asistencia legal por robo en la sede e inspección de incendio' } }
+  ];
+
+  var REGLAS = [
+    'Se contrata junto con el seguro de autos',
+    'Necesitás al menos la cobertura A',
+    'Podés llevar más de un plan',
+    'Esta cobertura no tiene deducible'
+  ];
+
+  var PASOS = [
+    { t: 'Elegí los que querés', p: 'Podés llevar más de un plan. Lo único que no se puede es repetir el mismo dos veces.' },
+    { t: 'Decime antes de emitir', p: 'Queda anotado en la Solicitud de Seguro y se cobra junto con la póliza. Tenés que llevar al menos la cobertura A de Responsabilidad Civil.' },
+    { t: 'Para usarlo, llamás', p: 'Al <span class="tel">800-800-8001</span>, las 24 horas los 365 días del año. También por WhatsApp o correo. Ellos coordinan al proveedor.' }
+  ];
+
+  var SABER = [
+    ['Los servicios se dan <b>en especie</b>', 'el INS coordina y paga al proveedor. Si lo contratás por tu cuenta no hay reintegro, salvo que el INS lo autorice antes.'],
+    ['Si el costo pasa el tope', 'la diferencia se la pagás al proveedor en el momento.'],
+    ['Los eventos <b>no se acumulan</b>', 'lo que no usás en el año no pasa a la renovación ni a la prórroga.'],
+    ['Todo se brinda <b>en Costa Rica</b>', 'los planes de asistencia operan dentro del territorio nacional.'],
+    ['El plan es <b>tuyo</b>', 'los servicios son exclusivos para vos como asegurado o tomador de la póliza.'],
+    ['La prima no baja ni sube', 'a estos planes no se les aplica ningún descuento ni recargo &mdash; ni plan familiar, ni cero kilómetros, ni buena experiencia. Solo el recargo por fraccionamiento si pagás en cuotas.']
+  ];
+
+  var FUENTE = 'Precios y servicios según el dossier de Planes de Asistencia del INS y las Condiciones Generales del Seguro Voluntario de Automóviles versión 32 (registro SUGESE G01-01-A01-012), vigentes desde el 28 de setiembre de 2026. Las primas son anuales y no incluyen el IVA del 13% ni el recargo por fraccionamiento. El detalle completo de cada servicio, con sus condiciones y exclusiones, está en las Condiciones Operativas de Multiasistencia de la póliza.';
+
+  var WA_AGENTE = '50688221348';
+
+  /* ------------------------------ utilidades ------------------------------ */
+  function col(n) { return '₡' + n.toLocaleString('de-DE'); }
+  function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function $(sel, raiz) { return (raiz || document).querySelector(sel); }
+  function plan(id) { for (var i = 0; i < PLANES.length; i++) if (PLANES[i].id === id) return PLANES[i]; return null; }
+
+  var ICONOS = {
+    pata: '<circle cx="6.6" cy="9.4" r="1.7"/><circle cx="10.2" cy="6.8" r="1.7"/><circle cx="13.8" cy="6.8" r="1.7"/><circle cx="17.4" cy="9.4" r="1.7"/><path d="M12 11.2c2.9 0 5.2 2.3 5.2 4.5 0 1.6-1.3 2.7-2.9 2.7-.9 0-1.7-.4-2.3-.4s-1.4.4-2.3.4c-1.6 0-2.9-1.1-2.9-2.7 0-2.2 2.3-4.5 5.2-4.5Z"/>',
+    corazon: '<path d="M12 20s-6.8-4.3-6.8-9A3.9 3.9 0 0 1 12 8.3a3.9 3.9 0 0 1 6.8 2.7c0 4.7-6.8 9-6.8 9Z"/>',
+    pulso: '<path d="M3 12.5h3.6l2-5.2 3 10.4 2.4-6 1.4 2.9H21"/>',
+    cruz: '<circle cx="12" cy="12" r="8.4"/><path d="M12 8.2v7.6M8.2 12h7.6"/>',
+    carro: '<path d="M5.4 17.4v1.5M18.6 17.4v1.5"/><path d="M4 17.4v-3.8l1.8-4.2A2 2 0 0 1 7.6 8.2h8.8a2 2 0 0 1 1.8 1.2l1.8 4.2v3.8Z"/><circle cx="7.7" cy="14.6" r="1.1"/><circle cx="16.3" cy="14.6" r="1.1"/>',
+    corona: '<path d="M4.2 17.6h15.6M4.6 8.4l3.6 3L12 5.6l3.8 5.8 3.6-3-1.4 6.6H6Z"/>',
+    check: '<path d="M4.5 12.6l4.6 4.6L19.5 6.8"/>'
+  };
+
+  function svgIco(nombre, tam) {
+    return '<svg width="' + tam + '" height="' + tam + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+      'stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICONOS[nombre] + '</svg>';
+  }
+
+  function estiloTono(t) {
+    var m = {
+      verde:    ['var(--verde-bg)', 'var(--verde)'],
+      pizarra:  ['var(--pizarra-bg)', 'var(--pizarra)'],
+      cyan:     ['var(--cyan-bg)', 'var(--cyan)'],
+      azul:     ['var(--azul-bg)', 'var(--azul)'],
+      naranja:  ['var(--naranja-bg)', 'var(--naranja)'],
+      oro:      ['var(--oro-bg)', 'var(--oro)']
+    }[t] || ['var(--pizarra-bg)', 'var(--pizarra)'];
+    return 'background:' + m[0] + ';color:' + m[1] + ';';
+  }
+
+  /* -------------------- piezas de contenido compartidas -------------------- */
+  function htmlDetalle(p) {
+    var h = '<p class="fila-desc">' + esc(p.desc) + '</p>';
+    if (p.incluye) {
+      h += '<div class="monto-caja">' +
+        '<div><p class="k">Monto máximo</p><p class="v">' + p.monto + '</p></div>' +
+        '<div><p class="k">Eventos</p><p class="v" style="font-size:14px;">' + esc(p.eventos) + '</p></div>' +
+        '</div>';
+      h += '<ul class="incluye">';
+      for (var j = 0; j < p.incluye.length; j++) {
+        h += '<li>' + svgIco('check', 14) + '<span>' + esc(p.incluye[j]) + '</span></li>';
+      }
+      h += '</ul>';
+      h += '<p class="nota-plan">' + p.montoAlt + '. ' + esc(p.nota) + '</p>';
+      return h;
+    }
+    var mitad = Math.ceil(p.serv.length / 2);
+    h += '<div class="cols2">' + tablaServ(p.serv.slice(0, mitad), 'Servicios del plan') +
+         tablaServ(p.serv.slice(mitad), 'Eventos por año y tope') + '</div>';
+    h += '<p class="nota-plan">' + esc(p.nota) + '</p>';
+    return h;
+  }
+
+  function tablaServ(filas, titulo) {
+    var h = '<table class="tabla"><caption>' + titulo + '</caption><tbody>';
+    for (var i = 0; i < filas.length; i++) {
+      var f = filas[i];
+      var lim = f[1] ? '<em>' + f[1] + '</em> &middot; ' + f[2] : f[2];
+      h += '<tr><td>' + esc(f[0]) + '</td><td class="lim' + (f[1] ? '' : ' sin') + '">' + lim + '</td></tr>';
+    }
+    return h + '</tbody></table>';
+  }
+
+  /* Los tres pintores salen sin hacer nada si su destino no existe. Un solo
+     nodo ausente reventaba el arranque entero y se llevaba puesto el enganche
+     de las pestañas: el clasico fallo en cascada. */
+  function pintaReglas(id) {
+    var el = $(id); if (!el) return;
+    var h = '';
+    for (var i = 0; i < REGLAS.length; i++) {
+      h += '<span class="pg-regla">' + svgIco('check', 14) + REGLAS[i] + '</span>';
+    }
+    el.innerHTML = h;
+  }
+
+  function pintaPasos(id) {
+    var el = $(id); if (!el) return;
+    var h = '<h2>Cómo se activa</h2><p class="sub">Tres pasos, y el último es el que usás el día que lo necesitás.</p><div class="pasos">';
+    for (var i = 0; i < PASOS.length; i++) {
+      h += '<div class="paso"><p class="n">' + (i + 1) + '</p><h3>' + PASOS[i].t + '</h3><p>' + PASOS[i].p + '</p></div>';
+    }
+    el.innerHTML = h + '</div>';
+  }
+
+  function pintaSaber(id) {
+    var el = $(id); if (!el) return;
+    var h = '<h2>Lo que conviene saber</h2><ul class="saber">';
+    for (var i = 0; i < SABER.length; i++) {
+      h += '<li>' + svgIco('check', 14) + '<span>' + SABER[i][0] + ': ' + SABER[i][1] + '</span></li>';
+    }
+    el.innerHTML = h + '</ul>';
+  }
+
+  function urlWa(ids) {
+    var t = 'Hola Juan Carlos, revisé los planes de asistencia y me interesan: ';
+    var nombres = [];
+    for (var i = 0; i < ids.length; i++) nombres.push(plan(ids[i]).nom);
+    t += nombres.join(', ') + '.';
+    return 'https://web.whatsapp.com/send/?phone=' + WA_AGENTE + '&text=' + encodeURIComponent(t);
+  }
+
+  /* ============================ OPCION 1 ============================ */
+  function montaCatalogo(cont, conPick) {
+    var h = '';
+    for (var i = 0; i < PLANES.length; i++) {
+      var p = PLANES[i];
+      h += '<div class="fila" data-plan="' + p.id + '">' +
+        '<button class="fila-cab" type="button" aria-expanded="false">' +
+          '<span class="ico" style="' + estiloTono(p.tono) + '">' + svgIco(p.icono, 20) + '</span>' +
+          '<span><span class="fila-nom">' + esc(p.nom) + '</span><span class="fila-linea">' + esc(p.linea) + '</span></span>' +
+          '<span class="fila-precio"><b>' + col(p.prima) + '</b><span>al año, más IVA</span></span>' +
+          '<svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>' +
+        '</button>' +
+        '<div class="fila-cuerpo"><div><div class="fila-cont">' + htmlDetalle(p) +
+          (conPick ? '<label class="pick"><input type="checkbox" data-pick="' + p.id + '"> Me interesa este plan</label>' : '') +
+        '</div></div></div>' +
+      '</div>';
+    }
+    cont.innerHTML = h;
+
+    cont.addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('.fila-cab') : null;
+      if (!b) return;
+      var fila = b.parentNode;
+      var abierta = fila.getAttribute('data-abierta') === '1';
+      fila.setAttribute('data-abierta', abierta ? '0' : '1');
+      b.setAttribute('aria-expanded', abierta ? 'false' : 'true');
+    });
+  }
+
+  function barraOp1() {
+    var barra = $('#barra1'), cuenta = $('#cuenta1'), tot = $('#tot1'), wa = $('#wa1');
+    $('#lista1').addEventListener('change', function (e) {
+      if (!e.target.matches('[data-pick]')) return;
+      var marcados = [].slice.call(document.querySelectorAll('#lista1 [data-pick]:checked'));
+      var ids = marcados.map(function (c) { return c.getAttribute('data-pick'); });
+      var suma = 0;
+      for (var i = 0; i < ids.length; i++) suma += plan(ids[i]).prima;
+      barra.setAttribute('data-on', ids.length ? '1' : '0');
+      cuenta.textContent = ids.length === 1 ? '1 plan marcado' : ids.length + ' planes marcados';
+      tot.textContent = col(suma);
+      wa.href = urlWa(ids);
+    });
+  }
+
+  /* ============================ OPCION 2 ============================ */
+  function montaCorreoPlanes() {
+    var h = '', i;
+    for (i = 0; i < PLANES.length; i += 2) {
+      h += '<tr>';
+      for (var k = 0; k < 2; k++) {
+        var p = PLANES[i + k];
+        h += '<td width="50%" style="padding:5px 10px 5px 0;vertical-align:top;">' +
+          (p ? '<span style="color:#0c2340;font-weight:bold;">' + esc(p.nom) + '</span>' +
+               '<span style="color:#64748b;"> &middot; ' + col(p.prima) + '</span>' : '') +
+          '</td>';
+      }
+      h += '</tr>';
+    }
+    $('#em-planes').innerHTML = h;
+  }
+
+  function montaConfigurador() {
+    var sel = {};
+    var lista = $('#cfg2'), res = $('#res2');
+    var h = '';
+    for (var i = 0; i < PLANES.length; i++) {
+      var p = PLANES[i];
+      h += '<div class="cfg-fila" data-plan="' + p.id + '">' +
+        '<span class="ico" style="width:36px;height:36px;border-radius:10px;' + estiloTono(p.tono) + '">' + svgIco(p.icono, 19) + '</span>' +
+        '<span><span class="cfg-nom">' + esc(p.nom) + '</span><br><span class="cfg-linea">' + esc(p.linea) + '</span>' +
+        '<br><button class="cfg-ver" type="button" data-ver="' + p.id + '">Ver qué trae</button></span>' +
+        '<span class="cfg-precio">' + col(p.prima) + '</span>' +
+        '<input class="sw" type="checkbox" role="switch" data-sw="' + p.id + '" aria-label="Agregar ' + esc(p.nom) + '">' +
+      '</div>';
+    }
+    lista.innerHTML = h;
+
+    function pintaResumen() {
+      var ids = Object.keys(sel).filter(function (k) { return sel[k]; });
+      if (!ids.length) {
+        res.innerHTML = '<div class="res-vacio">' +
+          '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h9"/></svg>' +
+          '<p>Todavía no agregaste ninguno.<br>Prend&eacute; los que te sirvan y acá se va sumando.</p></div>';
+        return;
+      }
+      var neto = 0, hh = '';
+      for (var i = 0; i < ids.length; i++) {
+        var p = plan(ids[i]);
+        neto += p.prima;
+        hh += '<div class="res-item"><span>' + esc(p.nom) + '</span><b>' + col(p.prima) + '</b></div>';
+      }
+      var iva = Math.round(neto * IVA);
+      hh += '<div class="res-suma" style="margin-top:6px;"><span>Prima anual</span><b>' + col(neto) + '</b></div>';
+      hh += '<div class="res-suma"><span>IVA 13%</span><b>' + col(iva) + '</b></div>';
+      hh += '<div class="res-total"><span>Total al año</span><b>' + col(neto + iva) + '</b></div>';
+      hh += '<p class="res-nota">Si pagás el seguro en cuotas, a estos planes también se les aplica el recargo por fraccionamiento.</p>';
+      hh += '<a class="btn btn-wa" href="' + urlWa(ids) + '" target="_blank" rel="noopener">' +
+        '<svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.5 14.1c-.2.6-1.2 1.2-1.7 1.2-.4 0-.9.2-3.1-.7-2.6-1.1-4.2-3.8-4.4-4-.1-.2-1-1.4-1-2.6 0-1.3.7-1.9.9-2.1.2-.3.5-.3.7-.3h.5c.2 0 .4-.1.7.5l.8 2c.1.2.1.4 0 .5l-.4.5-.3.3c-.1.1-.2.3-.1.5.1.2.6 1 1.3 1.6.9.8 1.6 1 1.9 1.2.2.1.4 0 .5-.1l.7-.8c.2-.2.3-.2.5-.1l2 .9c.2.1.4.2.4.3.1.1.1.6-.1 1.2Z"/></svg>' +
+        'Mandáselo a Juan Carlos</a>';
+      res.innerHTML = hh;
+    }
+
+    lista.addEventListener('change', function (e) {
+      var id = e.target.getAttribute && e.target.getAttribute('data-sw');
+      if (!id) return;
+      sel[id] = e.target.checked;
+      e.target.closest('.cfg-fila').setAttribute('data-on', e.target.checked ? '1' : '0');
+      pintaResumen();
+    });
+    lista.addEventListener('click', function (e) {
+      var id = e.target.getAttribute && e.target.getAttribute('data-ver');
+      if (!id) return;
+      abreTab(id);
+      $('#detTabs2').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    /* pestañas de detalle */
+    var th = '';
+    for (var j = 0; j < PLANES.length; j++) {
+      th += '<button class="det-tab" type="button" role="tab" data-tab="' + PLANES[j].id + '" aria-selected="' + (j === 0) + '">' + esc(PLANES[j].nom) + '</button>';
+    }
+    $('#detTabs2').innerHTML = th;
+    function abreTab(id) {
+      var tabs = document.querySelectorAll('#detTabs2 .det-tab');
+      for (var i = 0; i < tabs.length; i++) {
+        tabs[i].setAttribute('aria-selected', tabs[i].getAttribute('data-tab') === id ? 'true' : 'false');
+      }
+      $('#detCont2').innerHTML = htmlDetalle(plan(id));
+    }
+    $('#detTabs2').addEventListener('click', function (e) {
+      var id = e.target.getAttribute && e.target.getAttribute('data-tab');
+      if (id) abreTab(id);
+    });
+    abreTab(PLANES[0].id);
+    pintaResumen();
+  }
+
+  /* ============================ OPCION 3 ============================ */
+  function montaGuia() {
+    var cont = $('#preg3'), reco = $('#reco3');
+    var h = '';
+    for (var i = 0; i < NECESIDADES.length; i++) {
+      var n = NECESIDADES[i];
+      h += '<label class="chip"><input type="checkbox" data-nec="' + n.id + '">' +
+        '<span class="marca">' + svgIco('check', 12) + '</span>' + esc(n.txt) + '</label>';
+    }
+    cont.innerHTML = h;
+
+    function pinta() {
+      var marcadas = [].slice.call(cont.querySelectorAll('[data-nec]:checked'))
+        .map(function (c) { return c.getAttribute('data-nec'); });
+      if (!marcadas.length) {
+        reco.innerHTML = '<div class="reco-vacio">Marcá arriba lo que va con vos y acá te dejo los planes que calzan.</div>';
+        return;
+      }
+      var porque = {};
+      for (var i = 0; i < NECESIDADES.length; i++) {
+        var n = NECESIDADES[i];
+        if (marcadas.indexOf(n.id) === -1) continue;
+        for (var pid in n.planes) {
+          if (!porque[pid]) porque[pid] = [];
+          porque[pid].push(n.planes[pid]);
+        }
+      }
+      var ids = Object.keys(porque).sort(function (a, b) { return plan(a).prima - plan(b).prima; });
+      var hh = '<h3 style="font-size:17px;margin-bottom:4px;">' +
+        (ids.length === 1 ? 'Este es el que te calza' : 'Estos son los que te calzan') + '</h3>' +
+        '<p class="sub" style="font-size:13.5px;color:var(--mudo);margin-bottom:16px;">Por lo que marcaste. Podés llevar uno, varios o ninguno.</p><div class="reco-grid">';
+      for (var k = 0; k < ids.length; k++) {
+        var p = plan(ids[k]);
+        hh += '<div class="reco-card" style="animation-delay:' + (k * 55) + 'ms">' +
+          '<span class="ico" style="width:42px;height:42px;border-radius:12px;' + estiloTono(p.tono) + '">' + svgIco(p.icono, 22) + '</span>' +
+          '<span><h3>' + esc(p.nom) + '</h3>' +
+          '<p class="reco-por">' + svgIco('check', 13) + 'Trae ' + esc(porque[ids[k]].join('; ')) + '</p></span>' +
+          '<span class="reco-pre"><b>' + col(p.prima) + '</b><span>al año, más IVA</span></span>' +
+        '</div>';
+      }
+      hh += '</div><p style="margin-top:14px;"><a class="btn btn-wa" href="' + urlWa(ids) + '" target="_blank" rel="noopener">' +
+        '<svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.5 14.1c-.2.6-1.2 1.2-1.7 1.2-.4 0-.9.2-3.1-.7-2.6-1.1-4.2-3.8-4.4-4-.1-.2-1-1.4-1-2.6 0-1.3.7-1.9.9-2.1.2-.3.5-.3.7-.3h.5c.2 0 .4-.1.7.5l.8 2c.1.2.1.4 0 .5l-.4.5-.3.3c-.1.1-.2.3-.1.5.1.2.6 1 1.3 1.6.9.8 1.6 1 1.9 1.2.2.1.4 0 .5-.1l.7-.8c.2-.2.3-.2.5-.1l2 .9c.2.1.4.2.4.3.1.1.1.6-.1 1.2Z"/></svg>' +
+        'Preguntarle a Juan Carlos por estos</a></p>';
+      reco.innerHTML = hh;
+    }
+    cont.addEventListener('change', pinta);
+    pinta();
+  }
+
+  /* ------------------------------ arranque ------------------------------ */
+
+  /* Las pestañas se enganchan PRIMERO: son la navegación entre las tres
+     opciones y no pueden depender de que todo lo demás se pinte bien. */
+  var tabs = document.querySelectorAll('.sc-tab');
+  for (var i = 0; i < tabs.length; i++) {
+    tabs[i].addEventListener('click', function () {
+      for (var j = 0; j < tabs.length; j++) {
+        var sel = tabs[j] === this;
+        var panel = document.getElementById(tabs[j].getAttribute('aria-controls'));
+        tabs[j].setAttribute('aria-selected', sel ? 'true' : 'false');
+        if (panel) panel.hidden = !sel;
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+
+  montaCatalogo($('#lista1'), true);
+  montaCatalogo($('#lista3'), false);
+  barraOp1();
+  montaCorreoPlanes();
+  montaConfigurador();
+  montaGuia();
+  ['1', '2', '3'].forEach(function (n) {
+    pintaReglas('#reglas' + n);
+    pintaPasos('#pasos' + n);
+    pintaSaber('#saber' + n);
+    var f = $('#fuente' + n);
+    if (f) f.textContent = FUENTE;
+  });
+})();
+</script>
