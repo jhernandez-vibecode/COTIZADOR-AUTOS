@@ -23,4 +23,7 @@ npm-debug.log*
 
 # Brainstorm artifacts (Claude superpowers)
 .superpowers/
-.claude/
+# .claude/ se versiona (skills del proyecto). Solo queda fuera lo local:
+/.claude/launch.json
+/.claude/settings.local.json
+/.claude/**/*.backup-*
