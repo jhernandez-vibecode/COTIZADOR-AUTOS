@@ -1242,4 +1242,4 @@ cosa que se haga en este repo:
 
 ---
 
-> **Ubicaciones canon (desde el 7 sep 2026, decisión 10-C):** `jhernandez-vibecode/COTIZADOR-AUTOS` → `.claude/skills/especialista-cotizador-autos-sdi/SKILL.md` y `C:\Users\segur\.claude\skills\especialista-cotizador-autos-sdi\SKILL.md`, byte-idénticas. Se edita en el repo, se commitea y se copia al user-level (o al revés, pero siempre las dos en el mismo día).
+> **Ubicaciones canon (desde el 6 sep 2026, decisión 10-C):** `jhernandez-vibecode/COTIZADOR-AUTOS` → `.claude/skills/especialista-cotizador-autos-sdi/SKILL.md` y `C:\Users\segur\.claude\skills\especialista-cotizador-autos-sdi\SKILL.md`, byte-idénticas. Se edita en el repo, se commitea y se copia al user-level (o al revés, pero siempre las dos en el mismo día).
