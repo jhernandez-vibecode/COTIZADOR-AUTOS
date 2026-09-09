@@ -13,6 +13,44 @@ description: >
 
 # Cotizador SDI — Checkpoint extendido (historico largo)
 
+## 9 set 2026 (4ª tanda) — el 📊 sale de app.js + dos limpiezas de la revision
+
+Puntos 4, 5 y 2 del informe thermo-nuclear.
+
+**Punto 5 — el 💬 a quien ya compro.** `buildWaFollowUpUrl` redacta un seguimiento de cotizacion ("¿Tuvo chance
+de revisarla?") y el boton salia en TODAS las filas del 📊, incluidas las que ya tienen la poliza emitida.
+Defecto PREEXISTENTE (verificado contra el codigo anterior), no de la simplificacion, pero que quedo pegado a la
+marca "✓ Poliza emitida". Ahora `_statsListHtml` lo omite en filas cerradas. NO se invento un mensaje de
+postventa: es texto de cara al cliente y lo aprueba JC.
+
+**Punto 4 — API inflada y campos muertos.** `marcarPolizaEmitida` devolvia `{marcada, creada, entry}` con
+`marcada: true` en los DOS return — un campo que no informaba nada — y el unico llamador de produccion ignora el
+retorno entero. Quedo `{creada, entry}`. Los campos `poliza` (numero) y `origen` se escribian y no los leia
+nadie; en vez de borrarlos se les dio uso en la fila: el numero de poliza se muestra, y el cliente que llego
+directo se marca "sin cotizacion previa" — su fecha se leia como fecha de cotizacion.
+
+**Punto 2 — `js/stats-ui.js`.** `app.js` paso de **1410 a 1170 lineas**; el modulo nuevo son 292. Sus unicas
+dependencias son `history.js` y `showToast`: se verifico enumerando las llamadas externas del modulo. Lleva su
+propio `_esc` (mismo criterio que `email-marca.js` con `_escMarca`) para no depender del orden de carga y poder
+probarse en Node. Carga entre `history.js` y `router.js`; `app.js` sigue enganchando los botones del rail, lo
+que funciona porque el enganche ocurre en `DOMContentLoaded`, no en tiempo de carga.
+
+Un `_setEstado` que se habia puesto en el `module.exports` para los tests se retiro: helper solo-para-tests
+dentro del codigo de produccion. El test fija los filtros con `runInContext`.
+
+`tests/test-stats-ui.js` (**22 checks**) — antes este render no tenia ninguna prueba, estaba enterrado en
+app.js. Suite: **20 archivos / 688 checks**. Smoke: los 3 modales abren con clic real, chip y buscador filtran,
+la fila cerrada muestra la poliza y no ofrece WhatsApp, la del cliente directo dice "sin cotizacion previa".
+Cero errores de consola.
+
+⚠️ **PENDIENTE para JC:** una entrada creada por poliza cuenta como "Cotizada" en los KPIs aunque ese cliente
+nunca cotizo. Se dejo asi porque cambiarlo altera lo que el aprobo ("si no esta, igual cuenta"), pero infla el
+numero de cotizadas.
+
+🔴 Escribir esta misma entrada con un heredoc de bash se comio todo el texto entre backticks y el script igual
+dijo "OK". Es la trampa de siempre: los parches con backticks van por Write a un `.cjs`, y despues se LEE lo que
+quedo escrito.
+
 ## 9 set 2026 (3ª tanda) — la purga se mueve al respaldo (revision thermo-nuclear)
 
 Hallazgo #1 de la revision de calidad que pidio JC al cerrar la jornada. `purgarHistorial()` se llamaba desde

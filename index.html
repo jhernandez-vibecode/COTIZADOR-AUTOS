@@ -629,8 +629,14 @@
        toca la app se agrega una linea aca. -->
   <footer class="app-foot">
     <details>
-      <summary>Última actualización: 9 set 2026 — nada se borra sin estar respaldado antes</summary>
+      <summary>Última actualización: 9 set 2026 — el seguimiento ya no se le ofrece a quien ya compró</summary>
       <ul>
+        <li><b>9 set 2026</b> — <b>El WhatsApp de seguimiento ya no aparece en clientes que ya compraron.</b>
+        Ese botón manda un mensaje que pregunta <i>"¿tuvo chance de revisarla?"</i>, y se lo estaba ofreciendo
+        también sobre cotizaciones con la póliza ya emitida. Ahora solo sale donde tiene sentido. En esas filas,
+        además, <b>ahora se ve el número de póliza</b> — ya no hay que ir a buscarlo al correo — y las de un
+        cliente que nunca cotizó por la app se marcan como <b>"sin cotización previa"</b>, para que su fecha no
+        se lea como si hubiera cotizado ese día.</li>
         <li><b>9 set 2026</b> — <b>La limpieza del registro ahora solo borra lo que ya está respaldado.</b>
         Antes corría al abrir la app, borraba primero y respaldaba después. Ahora es al revés: <b>primero se
         guarda el respaldo en su Drive y recién entonces se borran las cotizaciones viejas sin póliza</b>. Si el
@@ -733,6 +739,7 @@
   <script src="js/agent-profile.js"></script>
   <script src="js/shortlink.js"></script>
   <script src="js/history.js"></script>
+  <script src="js/stats-ui.js"></script>
   <script src="js/router.js"></script>
   <script src="js/pdf-extract.js"></script>
   <script src="js/pdf-modify.js"></script>

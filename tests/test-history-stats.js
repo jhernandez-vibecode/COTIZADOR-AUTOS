@@ -224,7 +224,7 @@ test('marcarPolizaEmitida cruza por placa y cierra ESA cotización', () => {
     { id: 'b', date: haceDias(6), plate: 'CXV002', client: 'Beto' }
   ]);
   const r = marcarPolizaEmitida({ plate: 'BXY123', poliza: '0101AUT123' });
-  eq(r.marcada, true); eq(r.creada, false);
+  eq(r.creada, false);
   const list = loadHistory();
   ok(historyTienePoliza(list.find(e => e.id === 'a')), 'no cerró la cotización de la placa');
   eq(historyTienePoliza(list.find(e => e.id === 'b')), false, 'cerró una que no era');

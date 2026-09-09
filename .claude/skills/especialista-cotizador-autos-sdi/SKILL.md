@@ -151,6 +151,7 @@ js/poliza-app.js        Orquestación de /polizas-activas/ (cargar → revisar �
 js/renovacion-extract.js RenovacionParse: lee el Comprobante de Pago del INS (INS-F-1011060) — nº comprobante, asegurado, estado, póliza, placa (con relleno de ancho fijo), período PAGADO, fecha de pago, monto. estaPagado() = guard D7. Reusa helpers de PolizaParse
 js/renovacion-email.js  buildRenovacionEmail() + buildRenovacionWaUrl() — correo "Renovación confirmada" (NO de cobro) + aviso WA. Reusa polizaAsistenciaUrl/polizaWaIntl
 js/renovacion-app.js    Orquestación de /renovaciones/ (cargar → revisar → redactar → enviar → WhatsApp) + triple barrera del guard D7
+js/stats-ui.js          Pestaña 📊 (render + handlers). Extraído de app.js el 9 set 2026; solo depende de history.js
 js/app.js               Orquestación + historial + estadísticas (📊) + sugerencia alta gama + sync vista 2
 ```
 
@@ -171,6 +172,8 @@ Este orden es estricto — no alterar:
 toast.js → config.js → state.js → agent-profile.js → shortlink.js → history.js → router.js →
 pdf-extract.js → pdf-modify.js → email-marca.js → email-template.js →
 gmail-auth.js → mime-builder.js → standard-docs.js → drive-sync.js → app.js
+
+(**`stats-ui.js` va entre `history.js` y `router.js`** — ver "El 📊 salió de app.js".)
 ```
 `toast.js` es autónomo (inyecta su CSS), va primero. `shortlink.js` va antes de `history.js` (su `acortarGuia` delega ahí). `history.js` requiere nada más que localStorage. `standard-docs.js` va antes de `app.js` (lo usa para adjuntar el Deber). `drive-sync.js` va después de `history.js`/`config.js` y antes de `app.js`.
 
@@ -1011,13 +1014,58 @@ respaldo, y que la conversión histórica siga cuadrando después de purgar.
 Smoke en localhost con datos inventados: purga automática al arrancar (se fue la vieja sin póliza, se quedó la
 vieja con póliza), cruce por placa con guion y minúsculas, cliente directo, reenvío sin duplicar, los tres
 chips, buscador por apellido, filtro por mes, el 🕘, móvil a 375 px y `/polizas-activas/` arrancando con los
-módulos nuevos. Cero errores de consola. **Suite: 19 archivos / 666 checks.**
+módulos nuevos. Cero errores de consola. **Suite: 20 archivos / 688 checks.**
 
 🔴 **La caché del navegador sirvió los `.js` viejos durante el smoke** y las funciones nuevas salían
 `undefined`. No era un bug: `fetch(url, {cache:'reload'})` sobre cada `<script src>` y recargar. Comprobar
 `typeof` de una función nueva ANTES de diagnosticar nada.
 
 ---
+## El 📊 salió de app.js: `js/stats-ui.js` (9 set 2026)
+
+De la revisión thermo-nuclear. `app.js` tenía **1410 líneas y seis responsabilidades** sin relación entre sí
+(respaldo en Drive, historial 🕘, estadísticas 📊, flujo del wizard, render y helpers). El 📊 era el corte más
+limpio: no depende del flujo de cotización.
+
+**`app.js` 1410 → 1170 líneas; `js/stats-ui.js` 292.**
+
+- Sus únicas dependencias son `history.js` y `showToast`. **Nada de app.js** — se verificó enumerando las
+  llamadas externas del módulo.
+- 🔴 **Lleva su propio `_esc`** en vez de usar el `_escapeHtml` de app.js. Mismo criterio que `email-marca.js`
+  con `_escMarca`: el módulo no depende de quién se cargue antes y se puede probar en Node sin montar la app.
+- **Orden de carga: después de `history.js`, antes de `app.js`.** app.js sigue enganchando los botones del rail
+  (`btnStats`, `statsFilters`, `statsList`…) sobre funciones que ahora viven acá; funciona porque el enganche
+  ocurre en `DOMContentLoaded`, no en tiempo de carga.
+- `tests/test-stats-ui.js` (**22 checks**) lo monta en un contexto `vm`. Antes este render no tenía test: estaba
+  enterrado en app.js.
+
+**Lo que quedó pendiente de esa revisión** (por orden de valor): un `js/wizard.js` que borre el `setStep`
+byte-idéntico de `poliza-app.js` y `renovacion-app.js`, las **5 copias del regex de email** y el reintento de
+token duplicado; y decidir si 🕘 y 📊 siguen siendo dos pantallas — hoy describen la misma cotización con dos
+modelos distintos ("Vigente/Vencida" contra "Con póliza/Sin póliza").
+
+### El 💬 no se le ofrece a quien ya compró
+
+`buildWaFollowUpUrl` redacta un seguimiento de cotización: *"¿Tuvo chance de revisarla?"*. El botón salía en
+**todas** las filas — defecto preexistente, no de la simplificación del 📊, pero que quedó junto a la marca
+"✓ Póliza emitida". Ahora `_statsListHtml` lo omite cuando la cotización está cerrada. No se inventó un mensaje
+de postventa: eso es texto de cara al cliente y lo aprueba JC.
+
+### Campos que se guardaban y no se leían
+
+`marcarPolizaEmitida` devolvía `{marcada, creada, entry}` con **`marcada: true` en los dos `return`** — un dato
+que no informaba nada — y el único llamador de producción ignora el retorno completo. Quedó `{creada, entry}`.
+
+Los campos `poliza` (número) y `origen` se escribían y no los leía nadie. En vez de borrarlos se les
+dio uso en la fila: el número de póliza se muestra, y las entradas de un cliente que llegó directo dicen
+**"sin cotización previa"** para que su fecha no se lea como fecha de cotización.
+
+⚠️ **Queda una decisión para JC:** una entrada con `origen: 'poliza'` **cuenta como "Cotizada"** en los KPIs,
+aunque ese cliente nunca cotizó. Se dejó así porque cambiarlo altera lo que él aprobó ("si no está, igual
+cuenta"), pero infla el número de cotizadas.
+
+---
+
 ## 🔴 La clase de placa la declara el INS (9 set 2026) — EN PROD
 
 JC: *"habiamos aprobado un mockup para cuando se cotizaban carga liviana, este no jalo la placa"*

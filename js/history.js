@@ -579,7 +579,8 @@ function esTombstone(e) {
  *
  * @param {{plate:string, client?:string, clientFull?:string, email?:string,
  *          vehicle?:string, poliza?:string}} datos
- * @returns {{marcada:boolean, creada:boolean, entry:(object|null)}}
+ * @returns {{creada:boolean, entry:object}} creada=true si el cliente no tenia
+ *          cotizacion previa y hubo que darle entrada propia.
  */
 function marcarPolizaEmitida(datos) {
   const d = datos || {};
@@ -599,7 +600,7 @@ function marcarPolizaEmitida(datos) {
         _persistHistory(list);
         _afterHistoryChange();
       }
-      return { marcada: true, creada: false, entry: e };
+      return { creada: false, entry: e };
     }
   }
 
@@ -620,7 +621,7 @@ function marcarPolizaEmitida(datos) {
   list.unshift(nueva);
   _persistHistory(list);
   _afterHistoryChange();
-  return { marcada: true, creada: true, entry: nueva };
+  return { creada: true, entry: nueva };
 }
 
 // ===================================================================
