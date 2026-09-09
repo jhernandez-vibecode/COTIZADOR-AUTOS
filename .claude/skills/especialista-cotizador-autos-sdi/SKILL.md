@@ -1049,6 +1049,47 @@ módulos nuevos. Cero errores de consola. **Suite: 21 archivos / 712 checks.**
 `typeof` de una función nueva ANTES de diagnosticar nada.
 
 ---
+## 🔴 El 🕘 y el 📊 son UNA sola pantalla (9 set 2026)
+
+JC: *"punto 6 dejá solo uno"*. Eran dos listas de la misma cotización con **modelos distintos** — el 🕘 decía
+"Vigente · 5d / Vencida" (los 15 días que vale una cotización del INS) y el 📊 "Con póliza / Sin póliza" — y cada
+una tenía la mitad de las acciones. **`js/history-ui.js` se eliminó**; `stats-ui.js` absorbió todo.
+
+### Qué se transcribió del 🕘 (no se rehízo: se copió)
+
+| Del 🕘 | Cómo quedó |
+|---|---|
+| 🔗 abrir la guía | igual, y **solo si la entrada tiene `guideUrl`** |
+| 📄 copiar el enlace | igual, con el acortado y el `prompt` de respaldo si el navegador niega el portapapeles |
+| Badge "Vigente · Nd / Vencida" | **fundido en la marca**: "Sin póliza · vence en 9 d" / "Cotización vencida" |
+| El correo del cliente | en **su propia línea** (`.stat-mail`): metido en la meta empujaba placa y vehículo fuera del ancho |
+| "Restaurar de Drive" del vacío | igual, pero **solo con el registro vacío de verdad** — no cuando un filtro no da resultados |
+
+🔴 **Lo único que NO se llevó, y por qué:**
+- El **💬 de compartir la guía** (`buildWaShareUrl`, *"Te acabo de enviar por correo…"*). Ese mensaje pertenece
+  al momento del envío y **sigue existiendo en la vista 4**. En un registro histórico sería falso: la lista
+  conserva el 💬 de seguimiento, que además solo sale en las cotizaciones sin póliza.
+- El botón **"Borrar historial"** (borraba todo con `clearHistory()`, **sin dejar lápidas**, así que volvía desde
+  Drive al restaurar). Lo cubre el botón del ⚙, que respalda antes y sí deja lápidas.
+
+### Nombres
+
+El acceso del rail pasó de **"Estadísticas"** a **"Cotizaciones"** y el título del modal a **"📊 Cotizaciones
+enviadas"**: la pantalla ya no son solo métricas. El rail quedó con **6 accesos**.
+
+🔴 Los ids **`btnStats` / `statsModal` / `statsList` NO cambiaron** aunque el nombre visible sí — `app.js` los
+engancha por id y un id inexistente se lleva el `DOMContentLoaded` entero.
+
+### Verificación
+
+11 checks nuevos en `test-stats-ui.js` (**32 en total**), uno por cada cosa heredada, más uno que falla si
+`history-ui.js`, `historyModal` o `btnHistory` **reaparecen**. Un check viejo que esperaba "6 d" se actualizó a
+"vence en 9 d": quedó obsoleto por el cambio de diseño, no por un bug. Smoke en pestaña limpia: el rail con 6
+accesos, las 3 filas con sus botones (la cerrada sin 💬), y las tres marcas — emitida, vence en 9 d, vencida.
+Cero errores de consola.
+
+---
+
 ## `app.js` bajó de 1410 a 968 líneas (9 set 2026)
 
 Cierre de la revisión thermo-nuclear. `app.js` tenía **seis responsabilidades** sin relación entre sí; quedó con
@@ -1160,8 +1201,8 @@ limpio: no depende del flujo de cotización.
 - `tests/test-stats-ui.js` (**22 checks**) lo monta en un contexto `vm`. Antes este render no tenía test: estaba
   enterrado en app.js.
 
-**Lo que queda de esa revisión:** solo decidir si 🕘 y 📊 siguen siendo dos pantallas. `app.js` ya bajó a 968
-líneas y el `js/wizard.js` está hecho (ver arriba).
+**La revisión quedó cerrada:** `app.js` en 968 líneas, `js/wizard.js` hecho, y el 🕘 fusionado con el 📊 (ver
+arriba).
 
 ### El 💬 no se le ofrece a quien ya compró
 

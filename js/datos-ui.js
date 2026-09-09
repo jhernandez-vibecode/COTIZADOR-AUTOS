@@ -37,8 +37,7 @@ function _refreshDriveStatus() {
 
 /** Repinta las listas abiertas (historial / estadísticas) tras cambiar los datos. */
 function _refreshOpenLists() {
-  const hist = document.getElementById('historyModal');
-  if (hist && hist.classList.contains('active') && typeof renderHistory === 'function') renderHistory();
+
   const stats = document.getElementById('statsModal');
   if (stats && stats.classList.contains('active') && typeof renderStats === 'function') renderStats();
 }
@@ -191,7 +190,6 @@ async function limpiarRegistroSinPoliza() {
 
     showToast('Registro limpio: se borraron ' + r.purgadas + '. Quedan ' + quedan + '.', 'success');
     if (typeof renderStats === 'function') renderStats();
-    if (typeof renderHistory === 'function') renderHistory();
     if (typeof _refreshDriveStatus === 'function') _refreshDriveStatus();
   } catch (e) {
     console.error('[limpiar] ', e);

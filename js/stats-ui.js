@@ -99,6 +99,27 @@ function renderStats() {
   document.getElementById('statsFilters').innerHTML = _statsFiltersHtml();
   document.getElementById('statsList').innerHTML    = _statsListHtml(filtered);
 
+  // Handlers que venían del 🕘. Se enganchan acá porque la lista se repinta
+  // entera en cada render.
+  const _hr = document.getElementById('btnStatsRestore');
+  if (_hr) _hr.addEventListener('click', driveRestoreNow);
+
+  document.getElementById('statsList').querySelectorAll('button[data-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const e = filtered[parseInt(btn.dataset.copy, 10)];
+      if (!e || !e.guideUrl) return;
+      // Se copia el link CORTO: es el que el cliente ve crudo al pegarlo.
+      acortarGuia(e.guideUrl).then(function (corto) {
+        navigator.clipboard.writeText(corto).then(function () {
+          showToast('Link de la guía copiado.', 'success');
+        }, function () {
+          // Tras el await el navegador puede negar el portapapeles.
+          window.prompt('Copiá el link manualmente:', corto);
+        });
+      });
+    });
+  });
+
   const cnt = document.getElementById('statsSearchCount');
   if (cnt) {
     cnt.textContent = _statsSearch
@@ -174,9 +195,20 @@ function _statsFiltersHtml() {
  */
 function _statsListHtml(entries) {
   if (!entries.length) {
-    return '<div class="history-empty">No hay cotizaciones para este filtro.</div>';
+    // Con el registro entero vacío se ofrece restaurar: es el caso de haber
+    // limpiado el navegador. Lo traía el 🕘 y no se puede perder.
+    const vacioDeVerdad = !_statsMonth && _statsFilter === 'all' && !_statsSearch;
+    if (!vacioDeVerdad) {
+      return '<div class="history-empty">No hay cotizaciones para este filtro.</div>';
+    }
+    return '<div class="history-empty">Aún no has enviado cotizaciones desde este navegador.</div>'
+      + '<div style="margin-top:14px;text-align:center;">'
+        + '<p style="margin:0 0 8px;font-size:12px;color:var(--gray-500,#64748b);">'
+          + '¿Ya usabas la app antes o limpiaste este navegador? Recuperá tu control desde tu Google Drive:</p>'
+        + '<button class="btn btn-secondary" id="btnStatsRestore" type="button">☁️ Restaurar de Drive</button>'
+      + '</div>';
   }
-  return entries.map(function (e) {
+  return entries.map(function (e, i) {
     const cerrada = historyTienePoliza(e);
     const value   = historyEntryValue(e);
     const elapsed = historyDaysSince(e);
@@ -185,12 +217,19 @@ function _statsListHtml(entries) {
     const id      = _esc(e.id || '');
     const placa   = historyEntryPlate(e);
 
+    // La vigencia venía del 🕘: una cotización del INS vale 15 días. Se fundió
+    // en la misma marca en vez de sumar una segunda insignia.
     let marca;
     if (cerrada) {
       marca = '<span class="history-badge pol" title="Se le envió la póliza activa">✓ Póliza emitida</span>';
+    } else if (elapsed == null) {
+      marca = '<span class="history-badge esp">Sin póliza</span>';
+    } else if (elapsed < 15) {
+      const quedan = 15 - elapsed;
+      marca = '<span class="history-badge esp" title="La cotización del INS vale 15 días">Sin póliza &middot; vence en '
+            + quedan + ' d</span>';
     } else {
-      const ago = (elapsed == null) ? '' : (elapsed === 0 ? 'hoy' : elapsed === 1 ? 'ayer' : elapsed + ' d');
-      marca = '<span class="history-badge esp" title="Todavía sin póliza">Sin póliza' + (ago ? ' &middot; ' + ago : '') + '</span>';
+      marca = '<span class="history-badge off" title="Pasaron los 15 días que vale la cotización del INS">Cotización vencida</span>';
     }
 
     const meta = [
@@ -205,20 +244,34 @@ function _statsListHtml(entries) {
       e.origen === 'poliza' ? 'sin cotización previa' : ''
     ].filter(Boolean).join(' &middot; ');
 
+    // El correo va en su propia línea (como en el 🕘): metido en la meta empujaba
+    // la placa y el vehículo fuera del ancho de la fila.
+    const mail = e.email
+      ? '<div class="stat-mail">' + _esc(e.email) + '</div>'
+      : '';
+
     // 🔴 El 💬 manda el mensaje de SEGUIMIENTO de una cotización ("¿tuvo chance
     // de revisarla?"). A quien ya tiene la póliza emitida eso no se le puede
     // decir, así que en esas filas el botón no aparece.
     const wa = cerrada ? ''
       : '<a class="history-btn" href="' + _esc(buildWaFollowUpUrl(e)) + '" target="_blank" rel="noopener" title="Escribirle por WhatsApp">💬</a>';
 
+    // 🔗 y 📄 venían del 🕘: abrir la guía del cliente y copiar su enlace.
+    const guia = e.guideUrl
+      ? '<a class="history-btn" href="' + _esc(e.guideUrl) + '" target="_blank" rel="noopener" title="Abrir la guía explicada">🔗</a>'
+        + '<button class="history-btn" data-copy="' + i + '" title="Copiar el enlace de la guía">📄</button>'
+      : '';
+
     return '<div class="stat-row' + (cerrada ? ' con-poliza' : '') + '">'
       + '<div class="stat-fecha">' + _esc(fecha) + '</div>'
       + '<div class="stat-main">'
         + '<div class="stat-cli">' + _esc(historyClientName(e) || '(sin nombre)') + '</div>'
         + '<div class="stat-meta">' + meta + '</div>'
+        + mail
       + '</div>'
       + '<div class="stat-marca">' + marca + '</div>'
       + '<div class="stat-acc">'
+        + guia
         + wa
         + '<button class="history-btn danger" data-del="' + id + '" title="Eliminar del registro">🗑</button>'
       + '</div>'

@@ -856,6 +856,15 @@ textarea.form-control { resize: vertical; min-height: 70px; }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* El correo del cliente, en su propia línea bajo la meta. */
+.stat-mail {
+  font-size: 11px;
+  color: var(--gray-400, #94a3b8);
+  margin-top: 1px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .stat-marca { white-space: nowrap; }
 .stat-acc { display: flex; gap: 5px; }
 

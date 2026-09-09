@@ -144,16 +144,7 @@ document.addEventListener('DOMContentLoaded', function () {
   if (_btnInviteDis) _btnInviteDis.addEventListener('click', dismissDriveInvite);
 
   // ============ MODAL DE HISTORIAL DE ENVIOS ============
-  document.getElementById('btnHistory').addEventListener('click', openHistoryModal);
-  document.getElementById('btnHistoryClose').addEventListener('click', closeHistoryModal);
-  document.getElementById('btnHistoryExit').addEventListener('click', closeHistoryModal);
-  document.getElementById('btnHistoryClear').addEventListener('click', function () {
-    if (confirm('¿Borrar todo el historial de cotizaciones enviadas?')) {
-      clearHistory();
-      renderHistory();
-      showToast('Historial borrado.', 'success');
-    }
-  });
+
 
   // ============ PESTAÑA DE ESTADÍSTICAS (📊) ============
   document.getElementById('btnStats').addEventListener('click', openStatsModal);
@@ -290,13 +281,17 @@ function closeProfileModal() {
 }
 
 // =====================================================================
-// EL MODAL 🕘 Y LA ADMINISTRACIÓN DE DATOS SE FUERON DE ACÁ
+// LO QUE YA NO VIVE EN app.js
 // =====================================================================
-//   js/history-ui.js  — modal 🕘 (historial de envíos)
-//   js/datos-ui.js    — respaldo en Drive + limpieza del registro
-// Extraídos el 9 set 2026, cerrando la revisión de calidad. app.js se queda
-// con lo suyo: el flujo de la cotización. Los botones del rail se siguen
+//   js/stats-ui.js  — la pantalla del registro (📊)
+//   js/datos-ui.js  — respaldo en Drive + limpieza del registro
+//   js/wizard.js    — lo comun de los tres asistentes
+// Extraidos el 9 set 2026, cerrando la revision de calidad. app.js se queda
+// con lo suyo: el flujo de la cotizacion. Los botones del rail se siguen
 // enganchando abajo, en el DOMContentLoaded.
+//
+// El modal 🕘 se fusiono con el 📊 ese mismo dia (decision de JC: "dejá solo
+// uno"): eran dos vistas del mismo dato con modelos distintos.
 
 // =====================================================================
 // PESTAÑA DE ESTADISTICAS (modal 📊)  ->  js/stats-ui.js

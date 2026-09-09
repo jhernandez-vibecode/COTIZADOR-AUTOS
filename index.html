@@ -174,32 +174,10 @@
     </div>
   </div>
 
-  <!-- ======================== MODAL · HISTORIAL DE ENVÍOS ======================== -->
-  <div class="modal-backdrop" id="historyModal">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h2 class="modal-title">Historial de cotizaciones enviadas</h2>
-        <button class="modal-close" id="btnHistoryClose" aria-label="Cerrar">×</button>
-      </div>
-      <div class="modal-body">
-        <p class="modal-hint">
-          Cotizaciones enviadas desde este navegador. La cotización del INS vale 15 días —
-          usá este historial para dar seguimiento. El PDF no se guarda; para reenviar, subilo de nuevo.
-        </p>
-        <div id="historyList"></div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" id="btnHistoryClear">Borrar historial</button>
-        <button class="btn btn-primary" id="btnHistoryExit">Salir</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ======================== MODAL · ESTADÍSTICAS (📊) ======================== -->
   <div class="modal-backdrop" id="statsModal">
     <div class="modal-card stats-card">
       <div class="modal-header">
-        <h2 class="modal-title">📊 Estadísticas de cotizaciones</h2>
+        <h2 class="modal-title">📊 Cotizaciones enviadas</h2>
         <button class="modal-close" id="btnStatsClose" aria-label="Cerrar">×</button>
       </div>
       <div class="modal-body">
@@ -242,7 +220,7 @@
 
     <!-- Menú "Consola" (7 ago 2026). Antes eran 6 emojis sueltos en la esquina
          del header (🧮 📋 📨 📊 🕘 ⚙), sin nombre y sin orden. Los botones que
-         abren modales CONSERVAN sus ids (btnStats / btnHistory / btnSettings):
+         abren modales CONSERVAN sus ids (btnStats / btnSettings):
          app.js los engancha por id, así que renombrarlos rompe los modales. -->
     <nav class="side-rail" aria-label="Secciones">
 
@@ -265,11 +243,7 @@
       <div class="rail-sec">Mi control</div>
       <button type="button" class="rail-item" id="btnStats" style="animation-delay:.14s">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M7 15l3.5-4 3 2.5L20 7"/></svg>
-        Estadísticas
-      </button>
-      <button type="button" class="rail-item" id="btnHistory" style="animation-delay:.18s">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 8v4l3 2"/></svg>
-        Historial
+        Cotizaciones
       </button>
 
       <div class="rail-sec">Consulta</div>
@@ -642,8 +616,14 @@
        toca la app se agrega una linea aca. -->
   <footer class="app-foot">
     <details>
-      <summary>Última actualización: 9 set 2026 — el envío ya no se pierde si caduca la sesión de Google</summary>
+      <summary>Última actualización: 9 set 2026 — Historial y Estadísticas ahora son una sola pantalla</summary>
       <ul>
+        <li><b>9 set 2026</b> — <b>El Historial y las Estadísticas ahora son una sola pantalla: "Cotizaciones
+        enviadas".</b> Eran dos listas de lo mismo, cada una con la mitad de las cosas. La pantalla única tiene
+        <b>todo lo que había en las dos</b>: los números de arriba, las barras por mes, el buscador, y en cada
+        cotización el enlace de la guía, copiar ese enlace, el WhatsApp y eliminar. La marca ahora dice también
+        <b>cuántos días le quedan de vigencia</b> ("vence en 9 d") o si ya venció, que antes solo se veía en el
+        Historial. En el menú quedó un solo acceso: <b>Cotizaciones</b>.</li>
         <li><b>9 set 2026</b> — <b>Si se le vence la sesión de Google en medio del envío, el correo ya no se
         pierde.</b> Al dejar la pantalla abierta un rato largo, Google caduca el permiso y el envío fallaba: en
         el cotizador había que volver a subir el PDF y empezar de nuevo. Ahora las tres pantallas de envío
@@ -762,7 +742,6 @@
   <script src="js/shortlink.js"></script>
   <script src="js/history.js"></script>
   <script src="js/stats-ui.js"></script>
-  <script src="js/history-ui.js"></script>
   <script src="js/router.js"></script>
   <script src="js/pdf-extract.js"></script>
   <script src="js/pdf-modify.js"></script>
