@@ -137,14 +137,21 @@ const VIEJAS = [
     // Hay exactamente DOS llamadores legítimos: driveBackup (automática, tras
     // respaldar) y el botón del ⚙ (manual, que respalda antes). Lo que no puede
     // volver es una llamada suelta en el arranque — fue la que perdió datos.
-    const app = fs.readFileSync(path.join(__dirname, '..', 'js', 'app.js'), 'utf8');
+    // La limpieza manual vive en datos-ui.js desde que se partió app.js.
+    const dir = path.join(__dirname, '..', 'js');
 
-    // toda llamada en app.js tiene que estar dentro de limpiarRegistroSinPoliza
-    const ini = app.indexOf('async function limpiarRegistroSinPoliza');
+    // app.js, que es quien arranca la pantalla, no puede purgar por su cuenta
+    const app = fs.readFileSync(path.join(dir, 'app.js'), 'utf8');
+    eq((app.match(/purgarHistorial\s*\(/g) || []).length, 0,
+       'app.js volvió a purgar en el arranque');
+
+    // en datos-ui.js, toda llamada tiene que estar dentro de la limpieza manual
+    const datos = fs.readFileSync(path.join(dir, 'datos-ui.js'), 'utf8');
+    const ini = datos.indexOf('async function limpiarRegistroSinPoliza');
     ok(ini > 0, 'no está la limpieza manual');
-    const fin = app.indexOf('\n}', ini);
-    const dentro = app.slice(ini, fin);
-    const total = (app.match(/purgarHistorial\s*\(/g) || []).length;
+    const fin = datos.indexOf('\n}', ini);
+    const dentro = datos.slice(ini, fin);
+    const total = (datos.match(/purgarHistorial\s*\(/g) || []).length;
     const enLimpieza = (dentro.match(/purgarHistorial\s*\(/g) || []).length;
     eq(total, enLimpieza, 'hay una llamada a purgarHistorial fuera de la limpieza manual');
     eq(enLimpieza, 1, 'la limpieza manual debería purgar una sola vez');
@@ -154,7 +161,7 @@ const VIEJAS = [
     const iPurga  = dentro.indexOf('purgarHistorial(');
     ok(iBackup > 0 && iBackup < iPurga, 'la limpieza manual borra antes de respaldar');
 
-    const drive = fs.readFileSync(path.join(__dirname, '..', 'js', 'drive-sync.js'), 'utf8');
+    const drive = fs.readFileSync(path.join(dir, 'drive-sync.js'), 'utf8');
     ok(/purgarHistorial\s*\(/.test(drive), 'nadie llama a la purga automática');
   });
 

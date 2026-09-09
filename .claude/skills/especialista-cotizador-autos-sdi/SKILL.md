@@ -1049,6 +1049,66 @@ módulos nuevos. Cero errores de consola. **Suite: 21 archivos / 712 checks.**
 `typeof` de una función nueva ANTES de diagnosticar nada.
 
 ---
+## `app.js` bajó de 1410 a 968 líneas (9 set 2026)
+
+Cierre de la revisión thermo-nuclear. `app.js` tenía **seis responsabilidades** sin relación entre sí; quedó con
+una: **el flujo de la cotización**. Los cuatro módulos nuevos salieron en el orden en que se pudo cortar limpio:
+
+| Módulo | Líneas | Qué se llevó |
+|---|---|---|
+| `js/stats-ui.js` | 292 | la pestaña 📊 |
+| `js/datos-ui.js` | 202 | respaldo en Drive + limpieza del registro |
+| `js/history-ui.js` | 119 | el modal 🕘 |
+| `js/wizard.js` | 113 | lo común de los tres asistentes |
+| **`js/app.js`** | **968** | el flujo de la cotización, y nada más |
+
+### Por qué Drive y la limpieza van juntos
+
+No es un cajón de sastre: los une un invariante. **Nada se borra sin estar respaldado antes** —
+`limpiarRegistroSinPoliza()` respalda y aborta si el respaldo falla, y la purga automática vive dentro de
+`driveBackup()`. Separarlos volvería a dejar el borrado lejos de su red de seguridad, que es justo el bug del
+que salió todo esto.
+
+### Cada módulo lleva su propio escape
+
+`history-ui.js` usaba el `_escapeHtml` de app.js, que **se carga después**. Se le puso `_escHist` propio, igual
+que `stats-ui.js` con `_esc` y `email-marca.js` con `_escMarca`. Son cinco líneas repetidas; a cambio ningún
+módulo depende del orden de carga y todos se pueden probar en Node sin montar la app. **Es el patrón del
+proyecto, no un descuido** — antes de "unificarlo" en un helper compartido, tener en cuenta que eso reintroduce
+la dependencia de orden.
+
+### Orden de carga en `index.html`
+
+```
+toast → config → state → agent-profile → shortlink → history →
+stats-ui → history-ui → router → pdf-extract → pdf-modify → email-marca →
+email-template → gmail-auth → wizard → mime-builder → standard-docs →
+drive-sync → datos-ui → app
+```
+
+Regla: **cada UI va después del módulo de datos del que depende, y todas antes de `app.js`**, que engancha los
+botones del rail en el `DOMContentLoaded`. Ahí está la trampa conocida: un id inexistente hace que ese
+`addEventListener` lance y **se lleve el resto del arranque**. Tras mover accesos, comprobar con clic real que
+los 3 modales abren.
+
+### Verificación
+
+Smoke en pestaña limpia: los 3 modales abren, el historial pinta sus 2 filas con sus botones de copiar y
+WhatsApp, el 📊 sus filas, el ⚙ el estado de Drive y el botón de limpieza. Y el **flujo completo del cotizador**
+con un PDF real: cargar → vista 2 (`plateClass: CL-CARGA LIVIANA`) → vista 3 con la chapa roja en el correo.
+**Cero errores de consola.** Suite: 21 archivos / 712 checks.
+
+🔴 Al mover la limpieza a `datos-ui.js`, el test `test-purga-respaldo.js` empezó a fallar porque buscaba
+`purgarHistorial` en app.js. **No era un falso positivo: el test hacía bien su trabajo** — se le apuntó al
+archivo nuevo conservando el invariante (app.js: cero llamadas; datos-ui.js: todas dentro de la limpieza, con
+`driveBackup` antes).
+
+**Lo único que queda de la revisión:** decidir si 🕘 y 📊 siguen siendo dos pantallas. Describen la misma
+cotización con dos modelos — "Vigente · Nd / Vencida" (los 15 días del INS) contra "Con póliza / Sin póliza" —
+y ahora que son dos archivos hermanos la duplicación se ve de frente. Es decisión de JC.
+
+---
+
 ## `js/wizard.js` — lo común de los tres asistentes (9 set 2026)
 
 Punto 3 de la revisión thermo-nuclear. Las tres pantallas de envío son el mismo asistente de 4 pasos con
@@ -1100,9 +1160,8 @@ limpio: no depende del flujo de cotización.
 - `tests/test-stats-ui.js` (**22 checks**) lo monta en un contexto `vm`. Antes este render no tenía test: estaba
   enterrado en app.js.
 
-**Lo que queda de esa revisión:** decidir si 🕘 y 📊 siguen siendo dos pantallas — hoy describen la misma
-cotización con dos modelos distintos ("Vigente/Vencida" contra "Con póliza/Sin póliza") — y seguir bajando
-`app.js`, que quedó en ~1180 líneas. El `js/wizard.js` ya se hizo (ver arriba).
+**Lo que queda de esa revisión:** solo decidir si 🕘 y 📊 siguen siendo dos pantallas. `app.js` ya bajó a 968
+líneas y el `js/wizard.js` está hecho (ver arriba).
 
 ### El 💬 no se le ofrece a quien ya compró
 
