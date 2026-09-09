@@ -157,5 +157,53 @@ test('_reposFixedIndex mapea el orden fijo de 5 columnas', () => {
   assertEq(_reposFixedIndex('cualquier cosa', 3), -1); // solo aplica a 5 columnas
 });
 
+// =====================================================================
+// SVA V32 del INS — entra el 28 de setiembre de 2026
+// =====================================================================
+// El esquema de repuestos cambia: desaparece "Extensión de Garantía" a secas,
+// entra "Original Multimarca", y la tabla FORMA DE PAGO pasa de 5 columnas a 4.
+//
+// Se verificó el 9 set 2026 que el emparejamiento por etiquetas aguanta el
+// cambio: la documentación del proyecto decía que "se rompe en silencio" y eso
+// es inexacto. Estos checks fijan lo medido, para que el 28 no haya que
+// averiguarlo con cotizaciones de clientes reales.
+
+const V32 = ['Vehículo en Garantía', 'Extensión de Garantía Plus',
+             'Original Multimarca', 'Alternativo Genérico / Usados'];
+const gridV32 = { centers: [100, 180, 260, 340], labels: V32, values: [] };
+
+test('V32: las 4 etiquetas nuevas caen en SU columna', () => {
+  V32.forEach(function (etiqueta, i) {
+    assertEq(_labelMatch(V32, etiqueta).index, i, etiqueta);
+  });
+});
+
+test('V32: "Original Multimarca" no se confunde con "Extensión de Garantía Plus"', () => {
+  assertEq(_labelMatch(V32, 'Original Multimarca').index, 2);
+});
+
+test('V32: el emparejamiento se declara confiable, no dispara el aviso ámbar', () => {
+  V32.forEach(function (etiqueta) {
+    assert(priceColumnConfident(gridV32, etiqueta), 'avisaría de más en: ' + etiqueta);
+  });
+});
+
+test('V32: _reposFixedIndex se apaga con 4 columnas (solo cubre el orden de 5)', () => {
+  assertEq(_reposFixedIndex('Original Multimarca', 4), -1);
+  assertEq(_reposFixedIndex('Extensión de garantía Plus', 4), -1);
+});
+
+// 🔴 EL HUECO REAL, y es el unico: un PDF de transicion que traiga las 4
+// columnas nuevas pero el repuesto VIEJO en la pagina 1. "Extensión de
+// Garantía" ya no existe como columna, asi que cae en la de "Plus" — y con
+// score alto, o sea SIN el aviso ambar. Precio equivocado en silencio.
+// Si aparece un PDF asi despues del 28 set, este es el sitio a arreglar.
+test('🔴 V32: el repuesto RETIRADO cae en Plus y no avisa (hueco conocido)', () => {
+  assertEq(_labelMatch(V32, 'Extensión de Garantía').index, 1,
+           'si esto cambia, revisar el comentario de arriba');
+  assert(priceColumnConfident(gridV32, 'Extensión de Garantía'),
+         'documentado como hueco: hoy NO avisa');
+});
+
 console.log(`\n${pass} pass, ${fail} fail`);
 process.exit(fail > 0 ? 1 : 0);
