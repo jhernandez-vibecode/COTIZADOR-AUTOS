@@ -9,33 +9,42 @@
  * cotizacion requiere volver a subir el PDF original.
  *
  * API publica:
- *   - loadHistory()              -> Array<entry>
- *   - saveHistoryEntry(e)        -> void   (unshift + cap 100)
+ *   - loadHistory()              -> Array<entry>  (CRUDA: incluye lapidas)
+ *   - loadHistoryVivas()         -> Array<entry>  (lo que se le muestra al agente)
+ *   - saveHistoryEntry(e)        -> void
  *   - clearHistory()             -> void
  *   - buildWaShareUrl(entry)     -> string URL de WhatsApp con la guia
- *   - buildWaFollowUpUrl(entry)  -> string URL de WhatsApp de seguimiento
+ *   - buildWaFollowUpUrl(entry)  -> string URL de WhatsApp para escribirle al cliente
  *   - newHistoryId()             -> string id estable para una entrada
  *   - ensureHistoryIds()         -> Array<entry> (migra ids a entradas viejas)
- *   - historyEstado(e)           -> 'pendiente'|'agendada'|'concretada'|'desechada'
- *   - setHistoryEstado(id,e[,cita])-> bool (cambia el estado del ciclo de vida)
- *   - setHistoryConfirmed(id,b)  -> bool  (back-compat → concretada/pendiente)
- *   - historyCitaHoy(e)          -> bool  (agendada con citaFecha = hoy)
  *   - deleteHistoryEntry(id)     -> bool  (elimina un registro por id)
  *   - historyEntryValue(entry)   -> number (valor asegurado, recuperable del link)
  *   - historyEntryPlate(entry)   -> string (placa, recuperable del link)
  *   - historyClientName(entry)   -> string (nombre COMPLETO para mostrar/buscar)
  *   - historyMatchesSearch(e,q)  -> bool   (coincide por placa / cliente / vehiculo)
- *   - computeHistoryStats(arr)   -> { total, agendada, concretada, desechada, rate }  (pura)
- *   - groupHistoryByMonth(arr)   -> [{ key, label, entries, stats }]  (pura)
  *   - historyDaysSince(e[,now])  -> number dias desde el envio (o null)
- *   - historyNeedsFollowUp(e)    -> bool  (pendiente, >3d, sin follow-up, no descartado, vigente)
- *   - setHistoryFollowUp(id[,iso])-> bool (marca que se envio el seguimiento)
- *   - dismissFollowUp(id)        -> bool  (descarta la sugerencia de seguimiento, sin enviar)
- *   - historyFollowUpState(e)    -> 'seguir'|'seguido'|null (solo pendientes)
+ *   - historyTienePoliza(e)      -> bool   (se le emitio la poliza)
+ *   - esTombstone(e)             -> bool   (registro ya purgado, sin datos)
+ *   - marcarPolizaEmitida(datos) -> {marcada,creada,entry}  (la llama /polizas-activas/)
+ *   - purgarHistorial([d][,now]) -> {purgadas,meses}  (borra las sin poliza > 90 dias)
+ *   - loadResumen()              -> { "YYYY-MM": {cot,pol} } conteo de lo purgado
+ *   - mergeResumenes(a,b)        -> object (PURA; se queda con el mayor de cada mes)
+ *   - replaceResumen(res)        -> bool
+ *   - computeHistoryStats(arr[,extra]) -> { total, conPoliza, rate }  (pura)
+ *   - groupHistoryByMonth(arr)   -> [{ key, label, entries, stats }]
+ *   - mergeHistories(a,b[,cap])  -> Array (union sin perdida)
+ *   - replaceHistory(arr[,cap])  -> bool
+ *
+ * 🔴 El 9 set 2026 se retiro el ciclo de estados que el agente marcaba a mano
+ * (Pendiente/Agendada/Concretada/Desechada) junto con el seguimiento a 3 dias
+ * y las citas. Decision de JC: el unico cierre que cuenta es haberle enviado
+ * la POLIZA ACTIVA al cliente. Ya no existen historyEstado, setHistoryEstado,
+ * setHistoryConfirmed, historyCitaHoy, historyNeedsFollowUp,
+ * historyFollowUpState, setHistoryFollowUp ni dismissFollowUp.
  *
  * Forma de entry:
  *   { id, date: ISO string, client, clientFull, email, plate, vehicle, quote,
- *     valor, estado, citaFecha, confirmed, followUpAt, guideUrl, waCliente }
+ *     valor, polizaAt, poliza, origen, updatedAt, guideUrl, waCliente }
  *   - client     : nombre de PILA. Es el del SALUDO — va dentro de los mensajes
  *                  ("Hola Silvia, ..."), no se toca.
  *   - clientFull : nombre COMPLETO tal cual viene del PDF del INS (apellidos
@@ -44,14 +53,16 @@
  *                  apellido. Entradas viejas no lo traen -> cae a `client`.
  *   - valor      : valor asegurado del vehiculo (para filtro de alto valor).
  *                  Entradas viejas no lo traen: se recupera del param `va` del guideUrl.
- *   - estado     : ciclo de vida 'pendiente'|'agendada'|'concretada'|'desechada'
- *                  (default 'pendiente'). Entradas legacy con confirmed:true → 'concretada'.
- *   - citaFecha  : YYYY-MM-DD de la cita (solo cuando estado === 'agendada').
- *   - confirmed  : back-compat; se mantiene en sync (true sii estado === 'concretada').
- *   - followUpAt : ISO de cuando se envio el (unico) correo de seguimiento.
- *                  Una vez puesto, la cotizacion no vuelve a aparecer en el aviso.
- *   - followUpDismissed : true si el agente descarto la sugerencia de seguimiento
- *                  (no se envia nada; sale del aviso ⏳ y del badge "seguir").
+ *   - polizaAt   : ISO de cuando se le envio la POLIZA ACTIVA. Es lo unico que
+ *                  marca una cotizacion como cerrada, y lo pone la app sola.
+ *                  Una entrada con polizaAt NO se purga nunca.
+ *   - poliza     : numero de poliza, si el PDF lo traia.
+ *   - origen     : 'poliza' si el cliente nunca cotizo por la app y entro al
+ *                  registro directamente por el envio de la poliza.
+ *
+ * Forma de una LAPIDA (entrada purgada a los 90 dias, ver purgarHistorial):
+ *   { id, date, purged: true, updatedAt }  — cero datos del cliente.
+ *   Existe solo para que el borrado se propague al respaldo de Drive.
  */
 
 const HISTORY_KEY = 'cotizador_sdi_history_v1';
@@ -86,6 +97,16 @@ function loadHistory() {
     console.warn('[history] error leyendo localStorage:', e);
     return [];
   }
+}
+
+/**
+ * El historial SIN las lapidas de las cotizaciones ya purgadas. Es lo que ve
+ * el agente: loadHistory() cruda se reserva para el respaldo y la fusion, que
+ * SI necesitan las lapidas para que un borrado no vuelva desde Drive.
+ * @returns {Array<object>}
+ */
+function loadHistoryVivas() {
+  return loadHistory().filter(function (e) { return !esTombstone(e); });
 }
 
 /**
@@ -382,65 +403,6 @@ function ensureHistoryIds() {
  * @returns {boolean} true si se encontro y guardo
  */
 /**
- * Cambia el estado del ciclo de vida de una cotización.
- * @param {string} id
- * @param {string} estado - 'pendiente' | 'agendada' | 'concretada' | 'desechada'
- * @param {string} [citaFecha] - YYYY-MM-DD; solo se guarda cuando estado === 'agendada'.
- * @returns {boolean} true si se encontró y guardó
- */
-function setHistoryEstado(id, estado, citaFecha) {
-  if (!id) return false;  // sin id, find(undefined) matchearía una entrada legacy equivocada
-  try {
-    const arr = loadHistory();
-    const e = arr.find(function (x) { return x && x.id === id; });
-    if (!e) return false;
-    e.estado = estado;
-    e.confirmed = (estado === 'concretada');  // back-compat con lecturas viejas
-    if (estado === 'agendada') {
-      if (citaFecha) e.citaFecha = citaFecha;
-    } else {
-      delete e.citaFecha;  // al salir de 'agendada' no queda fecha de cita vieja latente
-    }
-    e.updatedAt = _nowIso();
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(arr));
-    _afterHistoryChange();
-    return true;
-  } catch (err) {
-    console.warn('[history] no se pudo actualizar el estado:', err);
-    return false;
-  }
-}
-
-/** Back-compat: marca concretada/pendiente. Para el resto usar setHistoryEstado. */
-function setHistoryConfirmed(id, confirmed) {
-  return setHistoryEstado(id, confirmed ? 'concretada' : 'pendiente');
-}
-
-/**
- * Descarta la SUGERENCIA de seguimiento de una cotización pendiente (el agente
- * decide no darle seguimiento). No envía nada; solo la saca del aviso ⏳ y del
- * badge "seguir". No cambia su estado (sigue 'pendiente').
- * @param {string} id
- * @returns {boolean} true si se encontró y guardó
- */
-function dismissFollowUp(id) {
-  if (!id) return false;
-  try {
-    const arr = loadHistory();
-    const e = arr.find(function (x) { return x && x.id === id; });
-    if (!e) return false;
-    e.followUpDismissed = true;
-    e.updatedAt = _nowIso();
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(arr));
-    _afterHistoryChange();
-    return true;
-  } catch (err) {
-    console.warn('[history] no se pudo descartar el seguimiento:', err);
-    return false;
-  }
-}
-
-/**
  * Elimina una cotización del historial por su id estable. Útil para borrar
  * registros de prueba / duplicados desde la pestaña 📊. Permanente (no hay
  * papelera) — la UI pide confirmación antes de llamar.
@@ -464,43 +426,6 @@ function deleteHistoryEntry(id) {
 }
 
 /**
- * Marca que se envió el correo de seguimiento de una cotización (el único).
- * A partir de aquí ya no aparece en el aviso de seguimientos pendientes.
- * @param {string} id
- * @param {string} [iso] - timestamp ISO; default ahora.
- * @returns {boolean} true si se encontró y guardó
- */
-function setHistoryFollowUp(id, iso) {
-  if (!id) return false;  // sin id, find(undefined) marcaría una entrada legacy equivocada
-  try {
-    const arr = loadHistory();
-    const e = arr.find(function (x) { return x && x.id === id; });
-    if (!e) return false;
-    e.followUpAt = iso || new Date().toISOString();
-    e.updatedAt = _nowIso();
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(arr));
-    _afterHistoryChange();
-    return true;
-  } catch (err) {
-    console.warn('[history] no se pudo marcar el seguimiento:', err);
-    return false;
-  }
-}
-
-/**
- * Estado del ciclo de vida de una cotización: 'pendiente' | 'agendada' |
- * 'concretada' | 'desechada'. Migración tolerante de entradas legacy: las que
- * solo tienen confirmed:true se leen como 'concretada'; el resto, 'pendiente'.
- * @param {object} e
- * @returns {string}
- */
-function historyEstado(e) {
-  if (!e) return 'pendiente';
-  if (e.estado) return e.estado;
-  return e.confirmed ? 'concretada' : 'pendiente';
-}
-
-/**
  * Metricas de un conjunto de cotizaciones. PURA: no toca localStorage —
  * recibe el array y devuelve los numeros (asi es testeable en Node).
  * @param {Array<object>} entries
@@ -508,18 +433,25 @@ function historyEstado(e) {
  *          rate = CONVERSIÓN: concretada / total (enviadas), con 1 decimal, o
  *          null solo si no hay cotizaciones (para mostrar "—").
  */
-function computeHistoryStats(entries) {
-  const list = Array.isArray(entries) ? entries : [];
-  const total = list.length;
-  let agendada = 0, concretada = 0, desechada = 0;
-  list.forEach(function (e) {
-    const st = historyEstado(e);
-    if (st === 'agendada') agendada++;
-    else if (st === 'concretada') concretada++;
-    else if (st === 'desechada') desechada++;
-  });
-  const rate = total > 0 ? Math.round((concretada / total) * 1000) / 10 : null;
-  return { total: total, agendada: agendada, concretada: concretada, desechada: desechada, rate: rate };
+/**
+ * Metricas de un conjunto de cotizaciones. PURA: no toca localStorage.
+ *
+ * Desde el 9 set 2026 el agente no marca nada a mano: una cotizacion cuenta
+ * como cerrada cuando se le envio la POLIZA ACTIVA (ver marcarPolizaEmitida).
+ * @param {Array<object>} entries
+ * @param {{cot:number,pol:number}} [extra] - conteo de lo ya purgado (ver loadResumen)
+ * @returns {{total:number, conPoliza:number, rate:(number|null)}}
+ *          rate = conversion: conPoliza / total, con 1 decimal; null si no hay nada.
+ */
+function computeHistoryStats(entries, extra) {
+  const list = (Array.isArray(entries) ? entries : []).filter(function (e) { return !esTombstone(e); });
+  const ex = extra || { cot: 0, pol: 0 };
+  let conPoliza = 0;
+  list.forEach(function (e) { if (historyTienePoliza(e)) conPoliza++; });
+  const total = list.length + (ex.cot || 0);
+  conPoliza += (ex.pol || 0);
+  const rate = total > 0 ? Math.round((conPoliza / total) * 1000) / 10 : null;
+  return { total: total, conPoliza: conPoliza, rate: rate };
 }
 
 /**
@@ -539,8 +471,11 @@ function historyMonthKey(e) {
  * @returns {Array<{key:string,label:string,entries:Array,stats:object}>}
  */
 function groupHistoryByMonth(entries) {
-  const list = Array.isArray(entries) ? entries : [];
-  const map = {};
+  const list = (Array.isArray(entries) ? entries : []).filter(function (e) { return !esTombstone(e); });
+  const res  = loadResumen();
+  const map  = {};
+  // Un mes del que ya se purgo todo igual tiene que aparecer en las barras.
+  Object.keys(res).forEach(function (k) { map[k] = map[k] || []; });
   list.forEach(function (e) {
     const key = historyMonthKey(e);
     (map[key] = map[key] || []).push(e);
@@ -551,7 +486,10 @@ function groupHistoryByMonth(entries) {
       const d = new Date(key + '-01T12:00:00');
       label = d.toLocaleDateString('es-CR', { month: 'short', year: 'numeric' });
     }
-    return { key: key, label: label, entries: map[key], stats: computeHistoryStats(map[key]) };
+    // A las cotizaciones vivas del mes se les suma lo que ya se purgo de ese
+    // mismo mes: si no, el historico de conversion se iria distorsionando a
+    // medida que se borran las viejas sin poliza.
+    return { key: key, label: label, entries: map[key], stats: computeHistoryStats(map[key], res[key]) };
   });
 }
 
@@ -566,52 +504,6 @@ function historyDaysSince(e, nowMs) {
   if (!sent || isNaN(sent.getTime())) return null;
   const now = (nowMs != null) ? nowMs : Date.now();
   return Math.floor((now - sent.getTime()) / 86400000);
-}
-
-/**
- * ¿La cotización necesita seguimiento? = enviada hace MÁS de 3 días, SIN
- * confirmar y todavía vigente (dentro de los 15 días que vale la cotización
- * INS). Las recién enviadas (≤3d), las confirmadas y las vencidas quedan fuera.
- * @param {object} e
- * @param {number} [nowMs]
- * @returns {boolean}
- */
-function historyNeedsFollowUp(e, nowMs) {
-  if (historyEstado(e) !== 'pendiente') return false;  // agendada/concretada/desechada salen del flujo
-  if (e && e.followUpDismissed) return false;           // el agente descartó la sugerencia
-  const d = historyDaysSince(e, nowMs);
-  if (d == null) return false;
-  return d > 3 && d < 15 && !(e && e.followUpAt);
-}
-
-/**
- * Estado de seguimiento de una cotización PENDIENTE (para la insignia en 📊):
- *   'seguir'  → +3d, aún vigente y SIN seguimiento previo.
- *   'seguido' → ya se envió el (único) seguimiento.
- *   null      → no es pendiente, recién enviada, o sin fecha.
- * (Las agendadas/concretadas/desechadas no tienen flujo de seguimiento.)
- * @param {object} e
- * @param {number} [nowMs]
- * @returns {string|null}
- */
-function historyFollowUpState(e, nowMs) {
-  if (historyEstado(e) !== 'pendiente') return null;
-  if (historyNeedsFollowUp(e, nowMs)) return 'seguir';
-  if (e && e.followUpAt) return 'seguido';
-  return null;
-}
-
-/**
- * ¿La cotización tiene cita agendada para HOY? (estado 'agendada' + citaFecha = hoy local).
- * @param {object} e
- * @param {number} [nowMs] - referencia para "hoy" (default Date.now()); para tests.
- * @returns {boolean}
- */
-function historyCitaHoy(e, nowMs) {
-  if (!e || historyEstado(e) !== 'agendada' || !e.citaFecha) return false;
-  const now = (nowMs != null) ? new Date(nowMs) : new Date();
-  const hoy = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
-  return String(e.citaFecha).slice(0, 10) === hoy;
 }
 
 /**
@@ -648,6 +540,204 @@ function buildWaFollowUpUrl(entry, phoneOverride) {
  * @param {object} e
  * @returns {string}
  */
+/**
+ * ¿Esta cotizacion llego a poliza? Lo pone marcarPolizaEmitida() cuando el
+ * agente envia la poliza activa desde /polizas-activas/. El agente no marca
+ * nada a mano: si mando la poliza, el negocio se cerro.
+ * @param {object} e
+ * @returns {boolean}
+ */
+function historyTienePoliza(e) {
+  return !!(e && e.polizaAt);
+}
+
+/**
+ * Una entrada PURGADA: se le borraron todos los datos del cliente y solo queda
+ * la marca de que existio. Sirve para que el borrado se propague al respaldo:
+ * mergeHistories la prefiere sobre la entrada original (su updatedAt es mas
+ * nuevo), asi que restaurar de Drive NO la resucita.
+ * @param {object} e
+ * @returns {boolean}
+ */
+function esTombstone(e) {
+  return !!(e && e.purged);
+}
+
+/**
+ * Marca que a esta placa se le emitio la poliza. La llama /polizas-activas/ al
+ * terminar el envio.
+ *
+ * Si la placa esta en el historial, esa cotizacion queda cerrada. Si NO esta
+ * (el cliente nunca cotizo por la app, o su cotizacion ya se purgo), se crea
+ * una entrada propia: es un cliente real y tiene que contar igual.
+ *
+ * Idempotente: reenviar la misma poliza no cuenta dos veces.
+ *
+ * @param {{plate:string, client?:string, clientFull?:string, email?:string,
+ *          vehicle?:string, poliza?:string}} datos
+ * @returns {{marcada:boolean, creada:boolean, entry:(object|null)}}
+ */
+function marcarPolizaEmitida(datos) {
+  const d = datos || {};
+  const placa = _normHistorySearch(historyEntryPlate({ plate: d.plate || d.placa || '' }));
+  const ahora = _nowIso();
+  const list  = ensureHistoryIds();
+
+  if (placa) {
+    for (let i = 0; i < list.length; i++) {
+      const e = list[i];
+      if (esTombstone(e)) continue;
+      if (_normHistorySearch(historyEntryPlate(e)) !== placa) continue;
+      if (!e.polizaAt) {
+        e.polizaAt  = ahora;
+        e.updatedAt = ahora;
+        if (d.poliza) e.poliza = String(d.poliza);
+        _persistHistory(list);
+        _afterHistoryChange();
+      }
+      return { marcada: true, creada: false, entry: e };
+    }
+  }
+
+  // Sin cotizacion previa: entra como cliente que llego directo.
+  const nueva = {
+    id:         newHistoryId(),
+    date:       ahora,
+    updatedAt:  ahora,
+    polizaAt:   ahora,
+    origen:     'poliza',
+    client:     d.client || '',
+    clientFull: d.clientFull || d.client || '',
+    email:      d.email || '',
+    plate:      d.plate || d.placa || '',
+    vehicle:    d.vehicle || '',
+    poliza:     d.poliza ? String(d.poliza) : ''
+  };
+  list.unshift(nueva);
+  _persistHistory(list);
+  _afterHistoryChange();
+  return { marcada: true, creada: true, entry: nueva };
+}
+
+// ===================================================================
+// RESUMEN MENSUAL DE LO PURGADO
+// ===================================================================
+
+/**
+ * Cuando una cotizacion vieja se borra, sus DATOS se van pero su CONTEO se
+ * queda aca: { "2026-07": { cot: 48, pol: 10 } }. Son dos numeros por mes.
+ *
+ * Sin esto, borrar las viejas distorsionaria el historico: un cliente que
+ * cotizo en enero y compro en junio dejaria una poliza sin su cotizacion, y la
+ * conversion de los meses viejos se iria desdibujando sola.
+ */
+const RESUMEN_KEY = 'cotizador_sdi_resumen_v1';
+
+/**
+ * @returns {Object<string,{cot:number,pol:number}>} por clave de mes YYYY-MM
+ */
+function loadResumen() {
+  try {
+    const raw = localStorage.getItem(RESUMEN_KEY);
+    const o   = raw ? JSON.parse(raw) : {};
+    return (o && typeof o === 'object' && !Array.isArray(o)) ? o : {};
+  } catch (e) {
+    console.warn('[history] resumen ilegible:', e);
+    return {};
+  }
+}
+
+function _persistResumen(res) {
+  try { localStorage.setItem(RESUMEN_KEY, JSON.stringify(res || {})); return true; }
+  catch (e) { console.warn('[history] no se pudo guardar el resumen:', e); return false; }
+}
+
+/**
+ * Fusiona dos resumenes. Se queda con el MAYOR de cada mes, no con la suma:
+ * si dos equipos respaldan el mismo mes ya purgado, sumar lo contaria doble.
+ * PURA.
+ * @param {object} a
+ * @param {object} b
+ * @returns {object}
+ */
+function mergeResumenes(a, b) {
+  const out = {};
+  [a || {}, b || {}].forEach(function (src) {
+    Object.keys(src).forEach(function (k) {
+      const v = src[k] || {};
+      const p = out[k] || { cot: 0, pol: 0 };
+      out[k] = {
+        cot: Math.max(p.cot || 0, Number(v.cot) || 0),
+        pol: Math.max(p.pol || 0, Number(v.pol) || 0)
+      };
+    });
+  });
+  return out;
+}
+
+/** Reemplaza el resumen guardado (lo usa la restauracion desde Drive). */
+function replaceResumen(res) {
+  return _persistResumen(res || {});
+}
+
+/**
+ * Dias que una cotizacion SIN poliza sobrevive en el registro.
+ * Decision de JC (9 set 2026): si no llego a cliente en 90 dias, se borra —
+ * "sino vamos a hacer una lista infinita de personas que ni siquiera llegan a
+ * ser cliente".
+ */
+const PURGA_DIAS = 90;
+
+/**
+ * Borra las cotizaciones SIN poliza mas viejas que `dias`, dejando solo el
+ * conteo del mes en el resumen.
+ *
+ * 🔴 Lo que llego a poliza NO se toca nunca: es el cliente real y es el dato
+ *    que sostiene la conversion.
+ * 🔴 De cada borrada queda un tombstone (id + fecha, CERO datos del cliente)
+ *    para que el borrado se propague al respaldo. Sin el, mergeHistories las
+ *    volveria a traer desde Drive en el siguiente respaldo.
+ *
+ * @param {number} [dias=PURGA_DIAS]
+ * @param {number} [nowMs] - para poder testearlo
+ * @returns {{purgadas:number, meses:number}}
+ */
+function purgarHistorial(dias, nowMs) {
+  const limite = (typeof dias === 'number' && dias > 0) ? dias : PURGA_DIAS;
+  const ahora  = (typeof nowMs === 'number') ? nowMs : Date.now();
+  const iso    = new Date(ahora).toISOString();
+  const list   = ensureHistoryIds();
+  const res    = loadResumen();
+  let purgadas = 0;
+  const meses  = {};
+
+  for (let i = 0; i < list.length; i++) {
+    const e = list[i];
+    if (esTombstone(e) || historyTienePoliza(e)) continue;
+    const d = historyDaysSince(e, ahora);
+    if (d == null || d < limite) continue;
+
+    const k = historyMonthKey(e);
+    meses[k] = (meses[k] || 0) + 1;
+    // El registro se reemplaza por su lapida: no queda nombre, correo,
+    // telefono, placa ni vehiculo.
+    list[i] = { id: e.id, date: e.date, purged: true, updatedAt: iso };
+    purgadas++;
+  }
+
+  if (!purgadas) return { purgadas: 0, meses: 0 };
+
+  Object.keys(meses).forEach(function (k) {
+    const p = res[k] || { cot: 0, pol: 0 };
+    res[k] = { cot: (p.cot || 0) + meses[k], pol: p.pol || 0 };
+  });
+
+  _persistResumen(res);
+  _persistHistory(list);
+  _afterHistoryChange();
+  return { purgadas: purgadas, meses: Object.keys(meses).length };
+}
+
 function _entryKey(e) {
   if (e && e.id) return 'id:' + e.id;
   return 'k:' + [

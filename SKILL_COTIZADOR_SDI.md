@@ -13,6 +13,76 @@ description: >
 
 # Cotizador SDI — Checkpoint extendido (historico largo)
 
+## 9 set 2026 (2ª tanda) — el 📊 se simplifico: la poliza es el unico cierre
+
+Pedido de JC a mitad de la jornada de la placa: *"Cambiamos la zona de estadisticas a algo más simple, vamos a
+llevar solo el conteo de las cotizadas y las concretadas se cuentan con el envio de póliza activa, sino vamos a
+hacer una lista infinita de personas que ni si quiera llegan a ser cliente"*.
+
+Se le preguntaron **tres decisiones** antes de tocar nada, porque cambiaban materialmente el trabajo, y se le
+mostro un **mockup** antes de escribir codigo:
+
+1. **Seguimiento**: eligio *"Quitar todo: solo numeros"* (se le habia recomendado conservar el seguimiento a 3
+   dias, que era lo unico del 📊 que generaba negocio sin trabajo manual; eligio con esa advertencia a la vista).
+2. **Concretadas**: cruzar por placa al enviar la poliza, y si la placa no esta, contar igual.
+3. **Lista vieja**: *"Borrarlas de verdad a los 90 dias"* — tambien con la advertencia de que son datos que no
+   vuelven.
+
+### La interaccion que aparecio al armar el mockup
+
+Combinar (2) y (3) tiene una consecuencia que no estaba a la vista al elegirlas: **si un cliente cotiza en enero
+y compra en junio, su cotizacion ya se purgo y la venta no se puede cruzar por placa**. La poliza suma al
+contador, pero la conversion historica se va desdibujando sola.
+
+Se le planteo sin re-litigar su decision, con la solucion: al purgar se guarda **solo el conteo del mes**
+(`cotizador_sdi_resumen_v1`, dos numeros por mes, cero datos personales). JC: *"dale así, con lo del conteo por
+mes"*.
+
+### Lo retirado
+
+`history.js`: `historyEstado`, `setHistoryEstado`, `setHistoryConfirmed`, `historyCitaHoy`,
+`historyNeedsFollowUp`, `historyFollowUpState`, `setHistoryFollowUp`, `dismissFollowUp`.
+`app.js`: 14 funciones del aviso y del ciclo + el modal `#avisoModal`.
+`email-template.js`: `buildFollowUpEmail` (83 lineas) quedo sin llamador y se elimino.
+`css/styles.css`: `.estado-select`, `.cita-*`, `.aviso-*`, insignias `.fu/.seguido/.desest/.cita`.
+
+Se verifico que **ningun id enganchado por `addEventListener` en app.js quedara huerfano** en index.html: en
+este proyecto un id inexistente lanza y se lleva el resto del `DOMContentLoaded`.
+
+### El cierre automatico
+
+`marcarPolizaEmitida(datos)` en history.js, llamada desde `poliza-app.js` justo despues del envio (dentro de
+try/catch: el correo ya salio, esto no puede tumbar el flujo). Cruza por placa normalizada
+(`_normHistorySearch`, asi `BCS-123` ≈ `bcs123`); si no la encuentra crea una entrada con `origen: 'poliza'`;
+es idempotente; y **sin placa crea, nunca adivina cual cerrar**.
+
+🔴 `/polizas-activas/` **no cargaba history.js ni drive-sync.js**. Ahora si: history despues de shortlink y
+antes de poliza-app.
+
+### La purga y las lapidas
+
+`purgarHistorial()` corre sola al arrancar la app, en silencio. Borra las **sin poliza** de mas de 90 dias.
+
+- **Lo que llego a poliza no se purga nunca.**
+- De cada borrada queda `{id, date, purged:true, updatedAt}` — **cero datos del cliente**. Sin la lapida,
+  `mergeHistories` las resucitaria desde Drive en el siguiente respaldo. **No hubo que tocar el merge**: la
+  lapida tiene el `updatedAt` mas nuevo y ya gana. De paso cierra el pendiente de que el boton 🗑 no borraba de
+  Drive.
+- `loadHistoryVivas()` para la pantalla; `loadHistory()` cruda para respaldo y fusion.
+- `mergeResumenes` toma el **MAYOR** de cada mes, no la suma: dos equipos con el mismo mes purgado lo contarian
+  doble.
+
+### Verificacion
+
+`tests/test-history-stats.js` reescrito (**42 checks**; los 27 viejos probaban lo eliminado). Suite: **18
+archivos / 654 checks**. Smoke en localhost con datos inventados: purga al arrancar, cruce por placa con guion,
+cliente directo, reenvio sin duplicar, los tres chips, buscador, filtro por mes, historial, movil 375 px y
+`/polizas-activas/` viva. Cero errores de consola.
+
+🔴 **La cache del navegador sirvio los .js viejos** durante el smoke: `purgarHistorial` salia `undefined`
+aunque el archivo servido si la tenia. Se resolvio con `fetch(url, {cache:'reload'})` sobre cada `<script
+src>` + recarga. Comprobar `typeof` antes de diagnosticar.
+
 ## 9 set 2026 — la clase de placa la declara el INS, no el formato
 
 Reportado por JC con una captura del correo ya enviado: *"habiamos aprobado un muck up para cuando se

@@ -160,7 +160,6 @@ document.addEventListener('DOMContentLoaded', function () {
   // Delegacion: los contenedores siempre existen, los hijos se repintan.
   document.getElementById('statsMonths').addEventListener('click', _onStatsMonthClick);
   document.getElementById('statsFilters').addEventListener('click', _onStatsFilterClick);
-  document.getElementById('statsList').addEventListener('change', _onStatsListChange);
   document.getElementById('statsList').addEventListener('click', _onStatsListClick);
   // Buscador por placa / cliente (input estático: el listener se registra una vez).
   const _statsSearchInput = document.getElementById('statsSearch');
@@ -171,16 +170,6 @@ document.addEventListener('DOMContentLoaded', function () {
   const _statsSearchClear = document.getElementById('statsSearchClear');
   if (_statsSearchClear) _statsSearchClear.addEventListener('click', _clearStatsSearch);
 
-  // ============ AVISO DE SEGUIMIENTOS PENDIENTES (al inicio) ============
-  document.getElementById('btnAvisoSendAll').addEventListener('click', sendAllFollowUps);
-  document.getElementById('btnAvisoLater').addEventListener('click', snoozeAvisoToday);
-  document.getElementById('btnAvisoClose').addEventListener('click', snoozeAvisoToday);
-  document.getElementById('btnAvisoStats').addEventListener('click', function () {
-    closeAvisoModal();
-    openStatsModal();
-  });
-  document.getElementById('avisoList').addEventListener('click', _onAvisoListClick);
-  document.getElementById('avisoCitas').addEventListener('click', _onAvisoCitasClick);
 
   // ============ CARGAR PERFIL DEL AGENTE ============
   // Si hay perfil guardado en localStorage, lo aplicamos sobre CFG.
@@ -197,9 +186,13 @@ document.addEventListener('DOMContentLoaded', function () {
   if (savedProfile) {
     applyProfile(savedProfile);
     paintRailAgent();          // ya con los datos del agente aplicados
-    // Aviso al inicio (citas de hoy + seguimientos +3d). Solo con perfil
-    // configurado; pequeño delay para no chocar con el render inicial.
-    setTimeout(maybeShowAviso, 400);
+    // Mantenimiento del registro: borra las cotizaciones sin póliza de más de
+    // 90 días (decisión de JC, 9 set 2026) dejando solo el conteo del mes.
+    // Silencioso: no es algo que el agente tenga que atender.
+    try {
+      const purga = purgarHistorial();
+      if (purga.purgadas) console.info('[historial] purgadas ' + purga.purgadas + ' cotizaciones sin póliza de más de 90 días');
+    } catch (e) { console.warn('[historial] no se pudo purgar:', e); }
     // Invitación (una vez) a activar el respaldo en Drive si aún no lo hizo.
     maybeShowDriveInvite();
   } else {
@@ -359,7 +352,7 @@ async function driveSyncNow() {
     _refreshDriveStatus();
     _refreshOpenLists();
     paintRailAgent();
-    const n = (res && res.found) ? res.merged : loadHistory().length;
+    const n = (res && res.found) ? res.merged : loadHistoryVivas().length;
     showToast('Respaldo activado. Tu control quedó guardado en tu Google Drive (' + n + (n === 1 ? ' cotización' : ' cotizaciones') + ').', 'success');
   } catch (e) {
     console.error('[drive] sync:', e);
@@ -443,7 +436,7 @@ function closeHistoryModal() {
  */
 function renderHistory() {
   const list = document.getElementById('historyList');
-  const entries = loadHistory();
+  const entries = loadHistoryVivas();
 
   if (!entries.length) {
     list.innerHTML =
@@ -543,95 +536,90 @@ function closeStatsModal() {
   document.getElementById('statsModal').classList.remove('active');
 }
 
-/** Aplica los filtros activos (mes y/o alto valor) a un set de cotizaciones. */
-/** Orden de embudo para la lista: concretadas arriba, luego agendadas, pendientes, desechadas. */
-function _estadoOrden(e) {
-  const st = historyEstado(e);
-  return st === 'concretada' ? 0 : st === 'agendada' ? 1 : st === 'pendiente' ? 2 : 3;
-}
 
+/**
+ * Aplica los filtros activos del 📊 sobre las cotizaciones vivas.
+ * Orden: mes → chip → búsqueda. Al final, las más recientes primero.
+ * @param {Array<object>} entries
+ * @returns {Array<object>}
+ */
 function _applyStatsFilters(entries) {
-  var arr = Array.isArray(entries) ? entries.slice() : [];
+  let arr = entries.slice();
   if (_statsMonth) {
     arr = arr.filter(function (e) { return historyMonthKey(e) === _statsMonth; });
   }
   if (_statsFilter === 'high') {
     arr = arr.filter(function (e) { return historyEntryValue(e) >= STATS_HIGH_THRESHOLD; });
-  } else if (_statsFilter === 'followup') {
-    arr = arr.filter(function (e) { return historyNeedsFollowUp(e); });
+  } else if (_statsFilter === 'poliza') {
+    arr = arr.filter(function (e) { return historyTienePoliza(e); });
   }
-  // Búsqueda por placa / cliente (se combina con los filtros anteriores).
   if (_statsSearch) {
     arr = arr.filter(function (e) { return historyMatchesSearch(e, _statsSearch); });
   }
-  // Orden de embudo: Concretada → Agendada → Pendiente → Desechada. Dentro de
-  // agendadas, la cita más próxima primero; en el resto se mantiene el orden
-  // existente (más reciente primero, por el sort estable de JS).
-  arr.sort(function (a, b) {
-    const oa = _estadoOrden(a), ob = _estadoOrden(b);
-    if (oa !== ob) return oa - ob;
-    if (oa === 1) {  // agendadas: por fecha de cita ascendente (la más próxima primero)
-      const ca = String(a.citaFecha || '9999-99-99'), cb = String(b.citaFecha || '9999-99-99');
-      if (ca !== cb) return ca < cb ? -1 : 1;
-    }
-    return 0;
-  });
   return arr;
 }
 
-/** Repinta TODO (resumen + meses + filtros + lista) según el estado actual. */
+/**
+ * Repinta el 📊 completo con lo que hay en localStorage.
+ *
+ * Desde el 9 set 2026 la pantalla no tiene nada que marcar: una cotización se
+ * cuenta como cerrada sola, cuando se le envía la póliza activa. A los números
+ * se les suma el conteo de lo ya purgado (loadResumen) para que el histórico
+ * no se desdibuje a medida que se borran las viejas.
+ */
 function renderStats() {
-  const entries  = ensureHistoryIds();          // garantiza ids (migra viejas)
+  const entries  = ensureHistoryIds().filter(function (e) { return !esTombstone(e); });
   const months   = groupHistoryByMonth(entries);
-  const filtered  = _applyStatsFilters(entries);
+  const filtered = _applyStatsFilters(entries);
 
-  document.getElementById('statsKpis').innerHTML    = _statsKpisHtml(computeHistoryStats(filtered));
+  // Los totales de arriba miran SIEMPRE todo el registro (más lo purgado), no
+  // el filtro: son el tablero del negocio, no del recorte que se esté viendo.
+  const resumen = loadResumen();
+  const global  = { cot: 0, pol: 0 };
+  Object.keys(resumen).forEach(function (k) {
+    global.cot += Number(resumen[k].cot) || 0;
+    global.pol += Number(resumen[k].pol) || 0;
+  });
+
+  document.getElementById('statsKpis').innerHTML    = _statsKpisHtml(computeHistoryStats(entries, global));
   document.getElementById('statsMonths').innerHTML  = _statsMonthsHtml(months);
   document.getElementById('statsFilters').innerHTML = _statsFiltersHtml();
   document.getElementById('statsList').innerHTML    = _statsListHtml(filtered);
 
-  // Contador de coincidencias (solo cuando hay búsqueda activa). El input es
-  // estático — renderStats NO lo toca, así no se pierde el foco al teclear.
   const cnt = document.getElementById('statsSearchCount');
   if (cnt) {
     cnt.textContent = _statsSearch
-      ? (filtered.length + (filtered.length === 1 ? ' coincidencia' : ' coincidencias'))
+      ? filtered.length + (filtered.length === 1 ? ' resultado' : ' resultados')
       : '';
   }
 }
 
-// ---------- Formateadores ----------
-
+/** Formatea la conversión (0-100) como porcentaje; "—" si no hay dato. */
 function _fmtRate(r) {
-  return (r == null) ? '—' : (String(r).replace('.', ',') + ' %');
+  if (r == null) return '—';
+  return (Math.round(r * 10) / 10) + '%';
 }
 
-/** Fecha de HOY en formato YYYY-MM-DD (local), para <input type="date">. */
-function _todayISODate() {
-  const d = new Date();
-  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-}
-
-/** 14500000 → "₡14,5M" · 22000000 → "₡22M" (es-CR, coma decimal). */
+/** ₡ en millones, corto: 12,4M */
 function _fmtMillones(n) {
   if (!n) return '';
-  const m = Math.round((n / 1e6) * 10) / 10;
-  return '₡' + String(m).replace('.', ',') + 'M';
+  return '₡' + (Math.round((n / 1000000) * 10) / 10).toString().replace('.', ',') + 'M';
 }
 
-// ---------- Plantillas HTML ----------
-
+/** Los tres números de arriba: cotizadas, con póliza y conversión. */
 function _statsKpisHtml(s) {
-  function kpi(num, label) {
-    return '<div class="stats-kpi"><div class="stats-kpi-num">' + num + '</div><div class="stats-kpi-label">' + label + '</div></div>';
+  function kpi(num, label, cls) {
+    return '<div class="stats-kpi' + (cls ? ' ' + cls : '') + '">'
+      + '<div class="stats-kpi-num">' + num + '</div>'
+      + '<div class="stats-kpi-label">' + label + '</div></div>';
   }
-  return kpi(s.total, 'Enviadas')
-    + kpi(s.agendada, 'Agendadas')
-    + kpi(s.concretada, 'Concretadas')
-    + kpi(s.desechada, 'Desechadas')
-    + '<div class="stats-kpi rate"><div class="stats-kpi-num">' + _fmtRate(s.rate) + '</div><div class="stats-kpi-label">Conversión</div></div>';
+  return kpi(s.total, 'Cotizadas')
+    + kpi(s.conPoliza, 'Con póliza emitida', 'pol')
+    + '<div class="stats-kpi rate"><div class="stats-kpi-num">' + _fmtRate(s.rate) + '</div>'
+    + '<div class="stats-kpi-label">Conversión</div></div>';
 }
 
+/** Barras por mes: total cotizado y, encima, la parte que llegó a póliza. */
 function _statsMonthsHtml(months) {
   if (!months.length) {
     return '<div class="history-empty">Aún no hay cotizaciones registradas.</div>';
@@ -639,13 +627,18 @@ function _statsMonthsHtml(months) {
   const maxTotal = months.reduce(function (mx, m) { return Math.max(mx, m.stats.total); }, 0) || 1;
   let html = months.map(function (m) {
     const pct    = Math.round((m.stats.total / maxTotal) * 100);
+    const pctPol = Math.round((m.stats.conPoliza / maxTotal) * 100);
     const active = (_statsMonth === m.key) ? ' active' : '';
     return '<div class="stats-month' + active + '" data-month-key="' + _escapeHtml(m.key) + '">'
       + '<div class="stats-month-label">' + _escapeHtml(m.label) + '</div>'
-      + '<div class="stats-month-bar-wrap"><div class="stats-month-bar" style="width:' + pct + '%"></div></div>'
-      + '<div class="stats-month-meta">' + m.stats.total + ' cot &middot; <b title="Concretadas">' + m.stats.concretada + ' concr.</b>'
-        + (m.stats.rate != null ? ' &middot; ' + _fmtRate(m.stats.rate) : '') + '</div>'
-      + '</div>';
+      + '<div class="stats-month-bar-wrap">'
+        + '<div class="stats-month-bar" style="width:' + pct + '%"></div>'
+        + '<div class="stats-month-bar pol" style="width:' + pctPol + '%"></div>'
+      + '</div>'
+      + '<div class="stats-month-meta">' + m.stats.total + ' cot &middot; '
+        + '<b class="pol-txt">' + m.stats.conPoliza + ' con póliza</b>'
+        + (m.stats.rate != null ? ' &middot; ' + _fmtRate(m.stats.rate) : '')
+      + '</div></div>';
   }).join('');
   if (_statsMonth) {
     html += '<button class="stats-chip" data-month-clear="1" style="align-self:flex-start;margin-top:2px;">↺ Ver todos los meses</button>';
@@ -659,73 +652,54 @@ function _statsFiltersHtml() {
   }
   return chip('all', 'Todas')
     + chip('high', '⭐ Alto valor ≥₡10M')
-    + chip('followup', '⏳ Para seguir (+3 d)');
+    + chip('poliza', '✓ Con póliza');
 }
 
+/**
+ * Una fila por cotización. Sin selector de estado ni fecha de cita: la única
+ * marca es "✓ Póliza emitida", y la pone la app cuando se envía la póliza.
+ */
 function _statsListHtml(entries) {
   if (!entries.length) {
     return '<div class="history-empty">No hay cotizaciones para este filtro.</div>';
   }
-  const ESTADOS = [['pendiente', 'Pendiente'], ['agendada', 'Agendada'], ['concretada', 'Concretada'], ['desechada', 'Desechada']];
   return entries.map(function (e) {
-    const estado  = historyEstado(e);
     const value   = historyEntryValue(e);
     const high    = value >= STATS_HIGH_THRESHOLD;
     const elapsed = historyDaysSince(e);
     const sent    = e.date ? new Date(e.date) : null;
     const fecha   = sent ? sent.toLocaleDateString('es-CR', { day: '2-digit', month: 'short' }) : '';
-    const ago     = (elapsed == null) ? '' : (elapsed === 0 ? 'hoy' : elapsed === 1 ? 'ayer' : 'hace ' + elapsed + ' d');
     const id      = _escapeHtml(e.id || '');
+    const placa   = historyEntryPlate(e);
 
-    // Insignias según el estado del ciclo de vida
-    let badges = '';
-    if (estado === 'pendiente') {
-      const daysLeft = (elapsed == null) ? -1 : 15 - elapsed;
-      badges += (daysLeft > 0)
-        ? '<span class="history-badge ok">Vigente &middot; ' + daysLeft + 'd</span>'
-        : '<span class="history-badge off">Vencida</span>';
-      const fuState = historyFollowUpState(e);
-      if (fuState === 'seguir')  badges += ' <span class="history-badge fu" title="Vigente +3 días sin respuesta — conviene seguimiento">⏳ seguir</span>';
-      else if (fuState === 'seguido') badges += ' <span class="history-badge seguido" title="Ya se le envió el seguimiento">✓ seguido</span>';
-    } else if (estado === 'agendada' && historyCitaHoy(e)) {
-      badges += '<span class="history-badge cita" title="La cita es hoy">📅 cita hoy</span>';
+    let marca;
+    if (historyTienePoliza(e)) {
+      marca = '<span class="history-badge pol" title="Se le envió la póliza activa">✓ Póliza emitida</span>';
+    } else {
+      const ago = (elapsed == null) ? '' : (elapsed === 0 ? 'hoy' : elapsed === 1 ? 'ayer' : elapsed + ' d');
+      marca = '<span class="history-badge esp" title="Todavía sin póliza">Sin póliza' + (ago ? ' &middot; ' + ago : '') + '</span>';
     }
 
-    // Selector de estado + (si agendada) fecha de la cita
-    const opts = ESTADOS.map(function (o) {
-      return '<option value="' + o[0] + '"' + (o[0] === estado ? ' selected' : '') + '>' + o[1] + '</option>';
-    }).join('');
-    const sel = '<select class="estado-select estado-' + estado + '" data-estado="' + id + '" aria-label="Estado de la cotización">' + opts + '</select>';
-    const citaInput = (estado === 'agendada')
-      ? '<label class="cita-wrap"><span class="cita-lbl">Cita:</span><input type="date" class="cita-date" data-cita="' + id + '" value="' + _escapeHtml(String(e.citaFecha || '').slice(0, 10)) + '" aria-label="Fecha de la cita" title="Fecha de la cita" /></label>'
-      : '';
+    const meta = [
+      placa ? _escapeHtml(placa) : '',
+      e.vehicle ? _escapeHtml(e.vehicle) : '',
+      value ? (high ? '⭐ ' : '') + _fmtMillones(value) : ''
+    ].filter(Boolean).join(' &middot; ');
 
-    return '<div class="stat-item estado-' + estado + (high ? ' high' : '') + '">'
+    return '<div class="stat-row' + (historyTienePoliza(e) ? ' con-poliza' : '') + '">'
+      + '<div class="stat-fecha">' + _escapeHtml(fecha) + '</div>'
       + '<div class="stat-main">'
-        + '<div class="stat-title">'
-          + (high ? '<span class="stat-star" title="Carro de alto valor (≥₡10M)">⭐</span>' : '')
-          + _escapeHtml(historyClientName(e) || '(sin nombre)')
-          + (e.plate ? ' &middot; ' + _escapeHtml(e.plate) : '')
-          + (value ? ' <span class="stat-value">' + _fmtMillones(value) + '</span>' : '')
-          + (badges ? ' ' + badges : '')
-        + '</div>'
-        + '<div class="stat-meta">' + (ago ? '<b class="stat-ago">' + ago + '</b>' : '') + (ago && fecha ? ' &middot; ' : '') + fecha
-          + (e.vehicle ? ' &middot; ' + _escapeHtml(e.vehicle) : '')
-          + (e.email ? ' &middot; ' + _escapeHtml(e.email) : '')
-        + '</div>'
+        + '<div class="stat-cli">' + _escapeHtml(historyClientName(e) || '(sin nombre)') + '</div>'
+        + '<div class="stat-meta">' + meta + '</div>'
       + '</div>'
-      + '<div class="stat-actions">'
-        + citaInput
-        + sel
-        + '<a class="history-btn" href="' + _escapeHtml(buildWaFollowUpUrl(e)) + '" target="_blank" rel="noopener" title="WhatsApp de seguimiento">💬</a>'
-        + '<button class="history-btn" data-mail="' + id + '" title="Enviar correo de seguimiento">✉️</button>'
-        + '<button class="history-btn danger" data-del="' + id + '" title="Eliminar este registro">🗑</button>'
+      + '<div class="stat-marca">' + marca + '</div>'
+      + '<div class="stat-acc">'
+        + '<a class="history-btn" href="' + _escapeHtml(buildWaFollowUpUrl(e)) + '" target="_blank" rel="noopener" title="Escribirle por WhatsApp">💬</a>'
+        + '<button class="history-btn danger" data-del="' + id + '" title="Eliminar del registro">🗑</button>'
       + '</div>'
     + '</div>';
   }).join('');
 }
-
-// ---------- Handlers (delegados) ----------
 
 function _onStatsMonthClick(e) {
   if (e.target.closest('[data-month-clear]')) { _statsMonth = null; renderStats(); return; }
@@ -761,41 +735,6 @@ function _clearStatsSearch() {
   renderStats();
 }
 
-function _onStatsListChange(e) {
-  // Cambio de estado (Pendiente/Agendada/Concretada/Desechada)
-  const sel = e.target.closest('.estado-select');
-  if (sel) {
-    const id = sel.dataset.estado;
-    const nuevo = sel.value;
-    let cita;
-    if (nuevo === 'agendada') {
-      const entry = loadHistory().find(function (x) { return x && x.id === id; });
-      cita = (entry && entry.citaFecha) || _todayISODate();  // por defecto hoy; editable
-    }
-    // renderStats() reconstruye toda la lista → guardamos scroll y devolvemos el foco.
-    const modal = document.getElementById('statsModal');
-    const prevScroll = modal ? modal.scrollTop : 0;
-    setHistoryEstado(id, nuevo, cita);
-    renderStats();  // cambia color, muestra/oculta la fecha de cita y actualiza los KPIs
-    if (modal) modal.scrollTop = prevScroll;
-    const esc = (window.CSS && CSS.escape) ? CSS.escape(id) : id;
-    if (nuevo === 'agendada') {
-      // foco a la fecha recién creada para que el agente la confirme/ajuste
-      const nd = document.querySelector('.cita-date[data-cita="' + esc + '"]');
-      if (nd) { nd.focus(); if (nd.showPicker) { try { nd.showPicker(); } catch (e2) {} } }
-    } else {
-      const again = document.querySelector('.estado-select[data-estado="' + esc + '"]');
-      if (again) again.focus();
-    }
-    return;
-  }
-  // Cambio de fecha de la cita (sin re-render para no perder el foco del input)
-  const dt = e.target.closest('.cita-date');
-  if (dt) {
-    setHistoryEstado(dt.dataset.cita, 'agendada', dt.value || _todayISODate());
-  }
-}
-
 function _onStatsListClick(e) {
   // Eliminar registro (prueba/duplicado) — con confirmación, es permanente.
   const del = e.target.closest('[data-del]');
@@ -809,246 +748,6 @@ function _onStatsListClick(e) {
     }
     return;
   }
-  // Correo de seguimiento
-  const btn = e.target.closest('[data-mail]');
-  if (!btn) return;
-  const entry = loadHistory().find(function (x) { return x && x.id === btn.dataset.mail; });
-  if (entry) sendFollowUpEmail(entry, btn);
-}
-
-/**
- * Construye y envía UN correo de seguimiento por Gmail y marca followUpAt.
- * Requiere un token ya obtenido (getToken antes). Lanza si Gmail rechaza.
- * Núcleo reutilizado por el ✉️ por fila y por el envío en lote del aviso.
- * @param {object} entry
- */
-async function _sendOneFollowUp(entry) {
-  // Fail-closed ante localStorage corrupto/editado a mano: no concatenar un
-  // correo inválido en el header To: (mismo regex que la validación de envío).
-  if (!entry || !entry.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(entry.email)) {
-    throw new Error('Correo del destinatario inválido: ' + ((entry && entry.email) || '(vacío)'));
-  }
-  const html = buildFollowUpEmail({
-    nombre:   entry.client,
-    vehiculo: entry.vehicle,
-    guideUrl: entry.guideUrl
-  });
-  const raw = buildMIMESimple({
-    to:      entry.email,
-    from:    '"' + CFG.FROM_NAME + '" <' + CFG.FROM_EMAIL + '>',
-    subject: 'Seguimiento a su cotización' + (entry.vehicle ? ' — ' + entry.vehicle : ''),
-    html:    html
-  });
-  await sendEmail(raw);
-  setHistoryFollowUp(entry.id, new Date().toISOString());
-}
-
-/**
- * Envía el correo de seguimiento de UNA cotización (botón ✉️). Pide
- * confirmación porque dispara un envío real desde la cuenta del agente.
- * Al enviar marca followUpAt → no vuelve a aparecer en el aviso.
- * @returns {Promise<boolean>} true si se envió
- */
-async function sendFollowUpEmail(entry, btn) {
-  if (!entry || !entry.email) {
-    showToast('Esta cotización no tiene un correo guardado.', 'error');
-    return false;
-  }
-  if (!confirm('¿Enviar correo de seguimiento a ' + (entry.client || 'el cliente') + ' (' + entry.email + ')?')) {
-    return false;
-  }
-  const original = btn.textContent;
-  btn.disabled = true;
-  btn.textContent = '…';
-  try {
-    await getToken();
-    await _sendOneFollowUp(entry);
-    showToast('Correo de seguimiento enviado a ' + (entry.client || entry.email) + '.', 'success');
-    if (document.getElementById('statsModal').classList.contains('active')) renderStats();
-    return true;
-  } catch (err) {
-    console.error('[seguimiento] error al enviar:', err);
-    showToast('No se pudo enviar el correo: ' + err.message, 'error');
-    return false;
-  } finally {
-    btn.disabled = false;
-    btn.textContent = original;
-  }
-}
-
-// =====================================================================
-// AVISO DE SEGUIMIENTOS PENDIENTES (al abrir la app)
-// =====================================================================
-// Solo a los 3 días: cotizaciones +3d, sin confirmar, vigentes y SIN
-// seguimiento previo (un único seguimiento). Tras enviarlo, se desestiman.
-
-/**
- * Cotizaciones que necesitan el (único) seguimiento ahora mismo.
- * Usa ensureHistoryIds() (NO loadHistory) para migrar ids a entradas legacy:
- * sin id, setHistoryFollowUp(undefined) marcaría la entrada equivocada y podría
- * duplicar el correo. Ordena por antigüedad desc → la más próxima a vencer arriba.
- */
-function _pendingFollowUps() {
-  return ensureHistoryIds()
-    .filter(function (e) { return historyNeedsFollowUp(e); })
-    .sort(function (a, b) { return (historyDaysSince(b) || 0) - (historyDaysSince(a) || 0); });
-}
-
-/** Cotizaciones agendadas con cita HOY (para cerrar: concretar o desechar). */
-function _citasHoy() {
-  return ensureHistoryIds().filter(function (e) { return historyCitaHoy(e); });
-}
-
-/** Al abrir la app: si hay citas de hoy o seguimientos pendientes, muestra el aviso. */
-function maybeShowAviso() {
-  // Si el agente lo pospuso hoy ("Ahora no" / cerrar), no insistir hasta mañana
-  // o hasta reabrir el navegador (sessionStorage).
-  try {
-    if (sessionStorage.getItem('cotizador_sdi_aviso_snooze') === new Date().toDateString()) return;
-  } catch (e) { /* sessionStorage no disponible: seguimos */ }
-  const citas = _citasHoy(), pend = _pendingFollowUps();
-  if (!citas.length && !pend.length) return;
-  renderAviso(citas, pend);
-  document.getElementById('avisoModal').classList.add('active');
-}
-
-function closeAvisoModal() {
-  document.getElementById('avisoModal').classList.remove('active');
-}
-
-/** Recalcula citas + pendientes; si no queda nada cierra el aviso, si no repinta. */
-function _refreshAviso() {
-  const citas = _citasHoy(), pend = _pendingFollowUps();
-  if (!citas.length && !pend.length) { closeAvisoModal(); return; }
-  renderAviso(citas, pend);
-}
-
-/** Cierra el aviso y lo pospone por hoy (para no reaparecer en cada recarga). */
-function snoozeAvisoToday() {
-  try { sessionStorage.setItem('cotizador_sdi_aviso_snooze', new Date().toDateString()); } catch (e) {}
-  closeAvisoModal();
-}
-
-function _avisoListHtml(entries) {
-  return entries.map(function (e) {
-    const elapsed = historyDaysSince(e);
-    const ago = (elapsed == null) ? '' : 'hace ' + elapsed + ' d';
-    const id  = _escapeHtml(e.id || '');
-    return '<div class="aviso-item">'
-      + '<div class="aviso-main">'
-        + '<div class="aviso-name">' + _escapeHtml(historyClientName(e) || '(sin nombre)') + '</div>'
-        + '<div class="aviso-meta">'
-          + (e.vehicle ? _escapeHtml(e.vehicle) : '')
-          + (e.plate ? ' &middot; ' + _escapeHtml(e.plate) : '')
-          + (ago ? ' &middot; ' + ago : '')
-        + '</div>'
-      + '</div>'
-      + '<div class="aviso-cita-btns">'
-        + '<button class="history-btn" data-aviso-mail="' + id + '" title="Enviar seguimiento a este">✉️</button>'
-        + '<button class="history-btn" data-seguir-no="' + id + '" title="No dar seguimiento (descartar sugerencia)">✕</button>'
-      + '</div>'
-    + '</div>';
-  }).join('');
-}
-
-function _avisoCitasHtml(citas) {
-  return citas.map(function (e) {
-    const id = _escapeHtml(e.id || '');
-    return '<div class="aviso-item cita">'
-      + '<div class="aviso-main">'
-        + '<div class="aviso-name">' + _escapeHtml(historyClientName(e) || '(sin nombre)') + '</div>'
-        + '<div class="aviso-meta">' + (e.vehicle ? _escapeHtml(e.vehicle) : '')
-          + (e.plate ? ' &middot; ' + _escapeHtml(e.plate) : '') + '</div>'
-      + '</div>'
-      + '<div class="aviso-cita-btns">'
-        + '<button class="aviso-mini ok" data-cita-ok="' + id + '">Concretada</button>'
-        + '<button class="aviso-mini no" data-cita-no="' + id + '">Desechada</button>'
-      + '</div>'
-    + '</div>';
-  }).join('');
-}
-
-function renderAviso(citas, pend) {
-  const citasSec = document.getElementById('avisoCitasSection');
-  if (citasSec) citasSec.style.display = citas.length ? '' : 'none';
-  document.getElementById('avisoCitas').innerHTML = _avisoCitasHtml(citas);
-
-  const segSec = document.getElementById('avisoSeguirSection');
-  if (segSec) segSec.style.display = pend.length ? '' : 'none';
-  document.getElementById('avisoList').innerHTML = _avisoListHtml(pend);
-
-  const btnAll = document.getElementById('btnAvisoSendAll');
-  if (btnAll) {
-    btnAll.style.display = pend.length ? '' : 'none';
-    btnAll.textContent = pend.length === 1 ? 'Enviar seguimiento' : 'Enviar seguimiento a las ' + pend.length;
-  }
-}
-
-/** Envía el seguimiento a TODAS las pendientes (un permiso de Gmail). */
-async function sendAllFollowUps() {
-  const pend = _pendingFollowUps();
-  if (!pend.length) { closeAvisoModal(); return; }
-  const btn = document.getElementById('btnAvisoSendAll');
-  const original = btn ? btn.textContent : '';
-  if (btn) { btn.disabled = true; btn.textContent = 'Enviando…'; }
-  let ok = 0, fail = 0;
-  try {
-    await getToken();
-  } catch (e) {
-    showToast('No se pudo autorizar Gmail: ' + e.message, 'error');
-    if (btn) { btn.disabled = false; btn.textContent = original; }
-    return;
-  }
-  for (let i = 0; i < pend.length; i++) {
-    try {
-      await _sendOneFollowUp(pend[i]);
-      ok++;
-    } catch (e) {
-      // Token caducó/revocó a mitad del lote (sendEmail hizo clearToken). Reintentar UNA vez
-      // re-autorizando, para no tumbar las filas restantes por un solo 401.
-      if (typeof S !== 'undefined' && !S.accessToken) {
-        try { await getToken(); await _sendOneFollowUp(pend[i]); ok++; continue; }
-        catch (e2) { console.error('[aviso] reintento falló', pend[i] && pend[i].id, e2); }
-      }
-      console.error('[aviso] fallo envío', pend[i] && pend[i].id, e);
-      fail++;
-    }
-  }
-  if (btn) { btn.disabled = false; btn.textContent = original; }
-  showToast(ok + ' seguimiento' + (ok === 1 ? '' : 's') + ' enviado' + (ok === 1 ? '' : 's')
-    + (fail ? ' · ' + fail + ' no se pudieron enviar' : '') + '.', fail ? 'error' : 'success');
-  if (document.getElementById('statsModal').classList.contains('active')) renderStats();
-  _refreshAviso();  // si quedan citas de hoy, el aviso sigue abierto con ellas
-}
-
-/** ✉️ por fila dentro del aviso: envía uno y refresca la lista. */
-function _onAvisoListClick(e) {
-  // Descartar la sugerencia (no enviar nunca seguimiento a este)
-  const no = e.target.closest('[data-seguir-no]');
-  if (no) {
-    dismissFollowUp(no.dataset.seguirNo);
-    showToast('Sugerencia de seguimiento descartada.', 'success');
-    if (document.getElementById('statsModal').classList.contains('active')) renderStats();
-    _refreshAviso();
-    return;
-  }
-  const btn = e.target.closest('[data-aviso-mail]');
-  if (!btn) return;
-  const entry = loadHistory().find(function (x) { return x && x.id === btn.dataset.avisoMail; });
-  if (!entry) return;
-  sendFollowUpEmail(entry, btn).then(_refreshAviso);
-}
-
-/** Botones Concretada/Desechada de la sección "Citas de hoy" del aviso. */
-function _onAvisoCitasClick(e) {
-  const ok = e.target.closest('[data-cita-ok]');
-  const no = e.target.closest('[data-cita-no]');
-  if (!ok && !no) return;
-  const id = ok ? ok.dataset.citaOk : no.dataset.citaNo;
-  setHistoryEstado(id, ok ? 'concretada' : 'desechada');
-  showToast(ok ? 'Marcada como concretada. ✅' : 'Marcada como desechada.', 'success');
-  if (document.getElementById('statsModal').classList.contains('active')) renderStats();
-  _refreshAviso();
 }
 
 /**

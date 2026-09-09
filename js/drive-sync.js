@@ -183,7 +183,11 @@ function _drivePayload(historyArr) {
     agentEmail: (typeof CFG !== 'undefined' && CFG.FROM_EMAIL) || '',
     agentName:  (typeof CFG !== 'undefined' && CFG.FROM_NAME)  || '',
     history:    Array.isArray(historyArr) ? historyArr : ensureHistoryIds(),
-    profile:    (typeof loadProfile === 'function') ? loadProfile() : null
+    profile:    (typeof loadProfile === 'function') ? loadProfile() : null,
+    // Conteo por mes de las cotizaciones ya purgadas (sus datos ya no existen
+    // en ningun lado). Sin esto, restaurar en un equipo limpio dejaria el
+    // historico de conversion en blanco para los meses viejos.
+    resumen:    (typeof loadResumen === 'function') ? loadResumen() : {}
   };
 }
 
@@ -215,6 +219,11 @@ async function driveBackup(token) {
         // Si algún día vuelve a aparecer un tope en esta línea, es el mismo bug.
         paraDrive = mergeHistories(local, remote.history, Infinity);
         replaceHistory(paraDrive);  // el navegador se queda con las más recientes
+        // El resumen se fusiona con el MAYOR de cada mes, nunca sumando: dos
+        // equipos respaldando el mismo mes ya purgado lo contarian doble.
+        if (remote.resumen && typeof mergeResumenes === 'function') {
+          replaceResumen(mergeResumenes(loadResumen(), remote.resumen));
+        }
       }
     } catch (e) {
       console.warn('[drive] no se pudo leer el respaldo previo, se sube lo local:', e);
@@ -248,8 +257,10 @@ function _mismoContenido(remoto, historial) {
     if (!remoto || !Array.isArray(remoto.history)) return false;
     if (remoto.history.length !== historial.length) return false;
     const perfil = (typeof loadProfile === 'function') ? loadProfile() : null;
+    const resLocal = (typeof loadResumen === 'function') ? loadResumen() : {};
     return JSON.stringify(remoto.history) === JSON.stringify(historial)
-        && JSON.stringify(remoto.profile || null) === JSON.stringify(perfil || null);
+        && JSON.stringify(remoto.profile || null) === JSON.stringify(perfil || null)
+        && JSON.stringify(remoto.resumen || {}) === JSON.stringify(resLocal);
   } catch (e) {
     return false;
   }
@@ -272,6 +283,9 @@ async function driveRestore(token) {
   // Se fusiona SIN tope y el recorte al tope del navegador lo hace
   // replaceHistory: así lo que no entre acá sigue vivo en Drive.
   const merged   = mergeHistories(loadHistory(), incoming, Infinity);
+  if (data && data.resumen && typeof mergeResumenes === 'function') {
+    replaceResumen(mergeResumenes(loadResumen(), data.resumen));
+  }
   replaceHistory(merged);
   const enLocal  = loadHistory().length;
 

@@ -1,6 +1,22 @@
 /**
- * Test de la capa de estadísticas (history.js): tasa de éxito, recuperación
- * del valor asegurado, agrupación por mes, confirmación y WhatsApp de seguimiento.
+ * Test de la capa de estadísticas (history.js).
+ *
+ * Reescrito el 9 set 2026, cuando JC pidió simplificar el 📊: *"vamos a llevar
+ * solo el conteo de las cotizadas y las concretadas se cuentan con el envío de
+ * póliza activa, sino vamos a hacer una lista infinita de personas que ni
+ * siquiera llegan a ser cliente"*.
+ *
+ * Lo que vigila:
+ *   1. Que una cotización se cierre SOLA al enviarle la póliza activa, cruzando
+ *      por placa — y que si el cliente nunca cotizó por la app igual cuente.
+ *   2. Que la purga a los 90 días NUNCA se lleve una que llegó a póliza.
+ *   3. Que lo purgado deje su conteo en el resumen, para que la conversión de
+ *      los meses viejos no se desdibuje.
+ *   4. Que un borrado NO vuelva desde el respaldo de Drive (lápidas).
+ *
+ * Ya no existen los estados que el agente marcaba a mano ni el seguimiento a
+ * 3 días: historyEstado, setHistoryEstado, setHistoryConfirmed, historyCitaHoy,
+ * historyNeedsFollowUp, historyFollowUpState, setHistoryFollowUp, dismissFollowUp.
  *
  * Run: node tests/test-history-stats.js
  */
@@ -28,312 +44,359 @@ function test(name, fn) {
 function eq(a, b, msg) {
   if (a !== b) throw new Error((msg || 'eq') + `: esperaba ${JSON.stringify(b)}, obtuve ${JSON.stringify(a)}`);
 }
-function assertContains(h, n) { if (!h.includes(n)) throw new Error(`esperaba contener "${n}"`); }
-function assertNotContains(h, n) { if (h.includes(n)) throw new Error(`NO debería contener "${n}"`); }
+function ok(v, msg) { if (!v) throw new Error(msg || 'esperaba verdadero'); }
+function reset() {
+  localStorage._d = {};
+}
+/** Fecha ISO de hace N días. */
+function haceDias(n) {
+  return new Date(Date.now() - n * 86400000).toISOString();
+}
+function sembrar(list) {
+  reset();
+  localStorage.setItem('cotizador_sdi_history_v1', JSON.stringify(list));
+}
 
-// "Hoy" fijo para todos los tests con fechas (determinístico).
-const NOW = new Date('2026-06-16T12:00:00Z').getTime();
+const DIA = 86400000;
+const STATS_HIGH_THRESHOLD = 10000000;
 
-// ---------- computeHistoryStats ----------
-
+// ============ computeHistoryStats ============
 test('computeHistoryStats: lista vacía → rate null', () => {
   const s = computeHistoryStats([]);
-  eq(s.total, 0, 'total'); eq(s.concretada, 0, 'concretada'); eq(s.agendada, 0, 'agendada');
-  eq(s.desechada, 0, 'desechada'); eq(s.rate, null, 'rate');
+  eq(s.total, 0); eq(s.conPoliza, 0); eq(s.rate, null);
 });
 
-test('computeHistoryStats: conversión = concretadas/enviadas (sobre el total)', () => {
-  const arr = [
-    { estado: 'concretada' }, { estado: 'concretada' }, { estado: 'concretada' },
-    { estado: 'desechada' },
-    { estado: 'pendiente' }, { estado: 'agendada' }, { estado: 'pendiente' }
-  ];
-  const s = computeHistoryStats(arr);
-  eq(s.total, 7, 'total'); eq(s.concretada, 3, 'concretada'); eq(s.desechada, 1, 'desechada'); eq(s.agendada, 1, 'agendada');
-  eq(s.rate, 42.9, 'rate'); // 3 / 7 = 42,9
+test('computeHistoryStats: conversión = con póliza / cotizadas', () => {
+  const s = computeHistoryStats([
+    { id: '1', polizaAt: haceDias(1) },
+    { id: '2' },
+    { id: '3', polizaAt: haceDias(2) },
+    { id: '4' }
+  ]);
+  eq(s.total, 4); eq(s.conPoliza, 2); eq(s.rate, 50);
 });
 
-test('computeHistoryStats: sin concretadas (solo pendientes/agendadas) → 0% (no null)', () => {
-  eq(computeHistoryStats([{ estado: 'pendiente' }, { estado: 'agendada' }]).rate, 0);
+test('computeHistoryStats: ninguna con póliza → 0%, no null', () => {
+  eq(computeHistoryStats([{ id: '1' }, { id: '2' }]).rate, 0);
 });
 
-test('computeHistoryStats: legacy confirmed:true cuenta como concretada; conversión sobre total', () => {
-  const s = computeHistoryStats([{ confirmed: true }, { confirmed: false }, { estado: 'desechada' }]);
-  eq(s.concretada, 1, 'concretada'); eq(s.desechada, 1, 'desechada'); eq(s.rate, 33.3, 'rate'); // 1 / 3
+test('computeHistoryStats no rompe con entradas null', () => {
+  const s = computeHistoryStats([null, { id: '1', polizaAt: 'x' }, undefined]);
+  eq(s.total, 3); eq(s.conPoliza, 1);
 });
 
-test('computeHistoryStats no rompe con entradas null en el array', () => {
-  const s = computeHistoryStats([null, { estado: 'concretada' }, undefined]);
-  eq(s.total, 3, 'total'); eq(s.concretada, 1, 'concretada');
+test('computeHistoryStats: las lápidas NO se cuentan como cotizaciones', () => {
+  const s = computeHistoryStats([
+    { id: '1', polizaAt: 'x' },
+    { id: '2', purged: true },
+    { id: '3', purged: true }
+  ]);
+  eq(s.total, 1, 'una lápida no es una cotización');
+  eq(s.conPoliza, 1);
 });
 
-// ---------- historyEstado / setHistoryEstado / historyCitaHoy ----------
-
-test('historyEstado: migración legacy y default', () => {
-  eq(historyEstado({ confirmed: true }), 'concretada');
-  eq(historyEstado({ confirmed: false }), 'pendiente');
-  eq(historyEstado({}), 'pendiente');
-  eq(historyEstado({ estado: 'agendada' }), 'agendada');
-  eq(historyEstado({ estado: 'desechada', confirmed: false }), 'desechada');
-  eq(historyEstado(null), 'pendiente');
+test('computeHistoryStats: le suma el conteo de lo ya purgado', () => {
+  // 2 vivas (1 con póliza) + 8 purgadas del pasado (3 con póliza) = 10 y 4.
+  const s = computeHistoryStats(
+    [{ id: '1', polizaAt: 'x' }, { id: '2' }],
+    { cot: 8, pol: 3 }
+  );
+  eq(s.total, 10); eq(s.conPoliza, 4); eq(s.rate, 40);
 });
 
-test('setHistoryEstado: cambia estado, sincroniza confirmed y guarda citaFecha en agendada', () => {
-  localStorage._d = {};
-  saveHistoryEntry({ id: 'e1', client: 'A' });
-  eq(setHistoryEstado('e1', 'agendada', '2026-06-20'), true);
-  let e = loadHistory()[0];
-  eq(e.estado, 'agendada'); eq(e.citaFecha, '2026-06-20'); eq(e.confirmed, false);
-  setHistoryEstado('e1', 'concretada');
-  e = loadHistory()[0];
-  eq(e.estado, 'concretada'); eq(e.confirmed, true);
-});
-
-test('setHistoryEstado: al salir de agendada se limpia citaFecha (no queda fecha vieja)', () => {
-  localStorage._d = {};
-  saveHistoryEntry({ id: 'e1', client: 'A' });
-  setHistoryEstado('e1', 'agendada', '2026-06-20');
-  eq(loadHistory()[0].citaFecha, '2026-06-20');
-  setHistoryEstado('e1', 'desechada');
-  if (loadHistory()[0].citaFecha !== undefined) throw new Error('citaFecha debió limpiarse al salir de agendada');
-});
-
-test('setHistoryEstado con id falsy → false', () => {
-  eq(setHistoryEstado(undefined, 'concretada'), false);
-  eq(setHistoryEstado('', 'concretada'), false);
-});
-
-test('historyCitaHoy: agendada con cita = hoy → true; otra fecha o no-agendada → false', () => {
-  eq(historyCitaHoy({ estado: 'agendada', citaFecha: '2026-06-16' }, NOW), true);
-  eq(historyCitaHoy({ estado: 'agendada', citaFecha: '2026-06-20' }, NOW), false);
-  eq(historyCitaHoy({ estado: 'pendiente', citaFecha: '2026-06-16' }, NOW), false);
-  eq(historyCitaHoy({ estado: 'agendada' }, NOW), false); // sin citaFecha
-});
-
-// ---------- historyEntryValue ----------
-
+// ============ historyEntryValue ============
 test('historyEntryValue: campo valor formato PDF "10,000,000.00" → 10000000', () => {
   eq(historyEntryValue({ valor: '10,000,000.00' }), 10000000);
 });
-
 test('historyEntryValue: campo valor numérico directo', () => {
-  eq(historyEntryValue({ valor: 14500000 }), 14500000);
+  eq(historyEntryValue({ valor: 12500000 }), 12500000);
 });
-
 test('historyEntryValue: entrada vieja sin valor → se recupera de va= del guideUrl', () => {
-  const e = { guideUrl: 'https://x/explicacion/?c=Ana&va=22000000&sr=p' };
-  eq(historyEntryValue(e), 22000000);
+  eq(historyEntryValue({ guideUrl: 'https://x.test/explicacion/?c=Ana&va=18000000&p=BXY123' }), 18000000);
 });
-
 test('historyEntryValue: el campo valor tiene prioridad sobre el del link', () => {
-  const e = { valor: '8,000,000.00', guideUrl: 'https://x/?va=22000000' };
-  eq(historyEntryValue(e), 8000000);
+  eq(historyEntryValue({ valor: '9,000,000.00', guideUrl: 'https://x.test/?va=18000000' }), 9000000);
 });
-
 test('historyEntryValue: sin valor ni va → 0', () => {
-  eq(historyEntryValue({ guideUrl: 'https://x/?c=Ana' }), 0);
-  eq(historyEntryValue({}), 0);
-  eq(historyEntryValue(null), 0);
+  eq(historyEntryValue({ guideUrl: 'https://x.test/?c=Ana' }), 0);
 });
-
 test('umbral alto valor: 9,9M no califica, 10M sí', () => {
-  if (historyEntryValue({ valor: '9,900,000.00' }) >= 10000000) throw new Error('9,9M no debería calificar');
-  if (historyEntryValue({ valor: '10,000,000.00' }) < 10000000) throw new Error('10M debería calificar');
+  ok(historyEntryValue({ valor: 9900000 }) < STATS_HIGH_THRESHOLD);
+  ok(historyEntryValue({ valor: 10000000 }) >= STATS_HIGH_THRESHOLD);
 });
 
-// ---------- groupHistoryByMonth ----------
-
-test('groupHistoryByMonth: agrupa por mes y ordena del más reciente al más viejo', () => {
-  const arr = [
-    { date: '2026-06-10T10:00:00Z', confirmed: true },
-    { date: '2026-06-02T10:00:00Z', confirmed: false },
-    { date: '2026-04-15T10:00:00Z', confirmed: true }
-  ];
-  const g = groupHistoryByMonth(arr);
-  eq(g.length, 2, 'meses');
-  eq(g[0].key, '2026-06', 'primer mes (más reciente)');
-  eq(g[0].stats.total, 2, 'cotizaciones de junio');
-  eq(g[0].stats.concretada, 1, 'concretadas de junio');
-  eq(g[1].key, '2026-04', 'segundo mes');
+// ============ Agrupación por mes ============
+test('groupHistoryByMonth: agrupa y ordena del más reciente al más viejo', () => {
+  reset();
+  const g = groupHistoryByMonth([
+    { id: '1', date: '2026-07-10T10:00:00Z' },
+    { id: '2', date: '2026-09-02T10:00:00Z' },
+    { id: '3', date: '2026-07-22T10:00:00Z', polizaAt: 'x' }
+  ]);
+  eq(g.length, 2);
+  eq(g[0].key, '2026-09');
+  eq(g[1].key, '2026-07');
+  eq(g[1].stats.total, 2);
+  eq(g[1].stats.conPoliza, 1);
 });
 
-test('groupHistoryByMonth: entradas sin fecha caen en grupo "sin-fecha"', () => {
-  const g = groupHistoryByMonth([{ confirmed: true }, { date: '2026-06-01T10:00:00Z' }]);
-  const sf = g.find(function (x) { return x.key === 'sin-fecha'; });
-  if (!sf) throw new Error('debería existir grupo sin-fecha');
+test('groupHistoryByMonth: entradas sin fecha caen en "sin-fecha"', () => {
+  reset();
+  const g = groupHistoryByMonth([{ id: '1' }]);
+  eq(g[0].key, 'sin-fecha');
 });
 
-// ---------- ensureHistoryIds + setHistoryConfirmed ----------
+test('groupHistoryByMonth: un mes ya purgado del todo IGUAL aparece', () => {
+  reset();
+  localStorage.setItem('cotizador_sdi_resumen_v1', JSON.stringify({ '2026-05': { cot: 12, pol: 4 } }));
+  const g = groupHistoryByMonth([{ id: '1', date: '2026-09-02T10:00:00Z' }]);
+  const mayo = g.find(m => m.key === '2026-05');
+  ok(mayo, 'el mes purgado desapareció de las barras');
+  eq(mayo.stats.total, 12);
+  eq(mayo.stats.conPoliza, 4);
+});
 
+// ============ Póliza emitida ============
+test('historyTienePoliza: solo con polizaAt', () => {
+  eq(historyTienePoliza({ polizaAt: '2026-09-09T10:00:00Z' }), true);
+  eq(historyTienePoliza({}), false);
+  eq(historyTienePoliza(null), false);
+});
+
+test('marcarPolizaEmitida cruza por placa y cierra ESA cotización', () => {
+  sembrar([
+    { id: 'a', date: haceDias(5), plate: 'BXY123', client: 'Ana' },
+    { id: 'b', date: haceDias(6), plate: 'CXV002', client: 'Beto' }
+  ]);
+  const r = marcarPolizaEmitida({ plate: 'BXY123', poliza: '0101AUT123' });
+  eq(r.marcada, true); eq(r.creada, false);
+  const list = loadHistory();
+  ok(historyTienePoliza(list.find(e => e.id === 'a')), 'no cerró la cotización de la placa');
+  eq(historyTienePoliza(list.find(e => e.id === 'b')), false, 'cerró una que no era');
+  eq(list.find(e => e.id === 'a').poliza, '0101AUT123');
+});
+
+test('marcarPolizaEmitida tolera guiones y minúsculas en la placa', () => {
+  sembrar([{ id: 'a', date: haceDias(3), plate: 'BCS-123' }]);
+  const r = marcarPolizaEmitida({ plate: 'bcs123' });
+  eq(r.creada, false, 'no reconoció la misma placa escrita distinto');
+  ok(historyTienePoliza(loadHistory()[0]));
+});
+
+test('marcarPolizaEmitida es idempotente: reenviar no cuenta dos veces', () => {
+  sembrar([{ id: 'a', date: haceDias(3), plate: 'BXY123' }]);
+  marcarPolizaEmitida({ plate: 'BXY123' });
+  const primera = loadHistory()[0].polizaAt;
+  marcarPolizaEmitida({ plate: 'BXY123' });
+  const list = loadHistory();
+  eq(list.length, 1, 'duplicó el registro');
+  eq(list[0].polizaAt, primera, 'movió la fecha del cierre');
+  eq(computeHistoryStats(list).conPoliza, 1);
+});
+
+test('marcarPolizaEmitida crea entrada si el cliente nunca cotizó por la app', () => {
+  sembrar([{ id: 'a', date: haceDias(3), plate: 'BXY123' }]);
+  const r = marcarPolizaEmitida({ plate: 'ZZZ999', clientFull: 'MORA CHACON DIEGO', email: 'd@x.test' });
+  eq(r.creada, true);
+  const list = loadHistory();
+  eq(list.length, 2);
+  eq(list[0].origen, 'poliza');
+  ok(historyTienePoliza(list[0]));
+  eq(computeHistoryStats(list).conPoliza, 1);
+});
+
+test('marcarPolizaEmitida sin placa: no cierra a ciegas la primera que encuentre', () => {
+  sembrar([{ id: 'a', date: haceDias(3), plate: 'BXY123' }]);
+  const r = marcarPolizaEmitida({ plate: '' });
+  eq(r.creada, true, 'sin placa debe crear, nunca adivinar');
+  eq(historyTienePoliza(loadHistory().find(e => e.id === 'a')), false);
+});
+
+// ============ Purga a los 90 días ============
+test('purgarHistorial borra las SIN póliza de más de 90 días', () => {
+  sembrar([
+    { id: 'vieja', date: haceDias(120), plate: 'AAA111', client: 'Vieja' },
+    { id: 'nueva', date: haceDias(10),  plate: 'BBB222', client: 'Nueva' }
+  ]);
+  const r = purgarHistorial();
+  eq(r.purgadas, 1);
+  const vivas = loadHistoryVivas();
+  eq(vivas.length, 1);
+  eq(vivas[0].id, 'nueva');
+});
+
+test('🔴 purgarHistorial NUNCA se lleva una que llegó a póliza', () => {
+  sembrar([
+    { id: 'cliente', date: haceDias(400), plate: 'AAA111', client: 'Cliente', polizaAt: haceDias(390) },
+    { id: 'nadie',   date: haceDias(400), plate: 'BBB222', client: 'Nadie' }
+  ]);
+  const r = purgarHistorial();
+  eq(r.purgadas, 1, 'purgó de más');
+  const vivas = loadHistoryVivas();
+  eq(vivas.length, 1);
+  eq(vivas[0].id, 'cliente', 'se llevó al cliente real');
+});
+
+test('purgarHistorial respeta el límite exacto: 89 días se queda, 91 se va', () => {
+  sembrar([
+    { id: 'd89', date: haceDias(89), plate: 'AAA111' },
+    { id: 'd91', date: haceDias(91), plate: 'BBB222' }
+  ]);
+  purgarHistorial();
+  const vivas = loadHistoryVivas().map(e => e.id);
+  ok(vivas.indexOf('d89') !== -1, 'se llevó una de 89 días');
+  ok(vivas.indexOf('d91') === -1, 'dejó una de 91 días');
+});
+
+test('🔴 la lápida no conserva NINGÚN dato del cliente', () => {
+  sembrar([{
+    id: 'x', date: haceDias(200), plate: 'BXY123', client: 'Ana',
+    clientFull: 'RAMIREZ SOTO ANA', email: 'ana@x.test', vehicle: 'Toyota',
+    guideUrl: 'https://x.test/?c=Ana', valor: '10,000,000.00'
+  }]);
+  purgarHistorial();
+  const lapida = loadHistory()[0];
+  ok(esTombstone(lapida), 'no quedó lápida');
+  const json = JSON.stringify(lapida);
+  ['BXY123', 'Ana', 'RAMIREZ', 'ana@x.test', 'Toyota', 'guideUrl'].forEach(function (dato) {
+    ok(json.indexOf(dato) === -1, 'la lápida todavía tiene: ' + dato);
+  });
+  eq(lapida.id, 'x', 'la lápida necesita el id para que el borrado se propague');
+});
+
+test('purgarHistorial deja el conteo del mes en el resumen', () => {
+  const d = new Date(Date.now() - 200 * DIA);
+  const clave = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  sembrar([
+    { id: '1', date: d.toISOString(), plate: 'AAA111' },
+    { id: '2', date: d.toISOString(), plate: 'BBB222' }
+  ]);
+  purgarHistorial();
+  eq(loadResumen()[clave].cot, 2);
+});
+
+test('purgar dos veces no cuenta doble ni revive nada', () => {
+  sembrar([{ id: '1', date: haceDias(200), plate: 'AAA111' }]);
+  purgarHistorial();
+  const resumen1 = JSON.stringify(loadResumen());
+  const r2 = purgarHistorial();
+  eq(r2.purgadas, 0, 'volvió a purgar una lápida');
+  eq(JSON.stringify(loadResumen()), resumen1, 'contó dos veces el mismo mes');
+});
+
+test('la conversión histórica se mantiene después de purgar', () => {
+  // 4 cotizaciones viejas, 1 llegó a póliza = 25%.
+  sembrar([
+    { id: '1', date: haceDias(200), plate: 'A1', polizaAt: haceDias(190) },
+    { id: '2', date: haceDias(200), plate: 'A2' },
+    { id: '3', date: haceDias(200), plate: 'A3' },
+    { id: '4', date: haceDias(200), plate: 'A4' }
+  ]);
+  const antes = computeHistoryStats(loadHistoryVivas());
+  eq(antes.rate, 25);
+
+  purgarHistorial();
+  const res = loadResumen();
+  const global = { cot: 0, pol: 0 };
+  Object.keys(res).forEach(k => { global.cot += res[k].cot; global.pol += res[k].pol; });
+  const despues = computeHistoryStats(loadHistoryVivas(), global);
+  eq(despues.total, 4, 'se perdieron cotizaciones del histórico');
+  eq(despues.conPoliza, 1);
+  eq(despues.rate, 25, 'la conversión se distorsionó al purgar');
+});
+
+// ============ Lápidas y respaldo ============
+test('loadHistoryVivas esconde las lápidas; loadHistory las conserva', () => {
+  sembrar([{ id: '1', date: haceDias(1), plate: 'A1' }, { id: '2', date: haceDias(2), purged: true }]);
+  eq(loadHistory().length, 2, 'el respaldo necesita las lápidas');
+  eq(loadHistoryVivas().length, 1);
+});
+
+test('🔴 una cotización purgada NO vuelve al fusionar con el respaldo', () => {
+  const lapida  = { id: 'x', date: haceDias(200), purged: true, updatedAt: new Date().toISOString() };
+  const enDrive = { id: 'x', date: haceDias(200), plate: 'BXY123', client: 'Ana', updatedAt: haceDias(200) };
+  const fus = mergeHistories([lapida], [enDrive], Infinity);
+  eq(fus.length, 1);
+  ok(esTombstone(fus[0]), 'el respaldo resucitó una cotización borrada');
+  ok(JSON.stringify(fus[0]).indexOf('BXY123') === -1, 'volvieron los datos del cliente');
+});
+
+test('mergeResumenes se queda con el MAYOR de cada mes, no con la suma', () => {
+  const a = { '2026-07': { cot: 40, pol: 9 }, '2026-08': { cot: 10, pol: 2 } };
+  const b = { '2026-07': { cot: 48, pol: 10 } };
+  const m = mergeResumenes(a, b);
+  eq(m['2026-07'].cot, 48, 'sumar contaría doble el mismo mes desde dos equipos');
+  eq(m['2026-07'].pol, 10);
+  eq(m['2026-08'].cot, 10);
+});
+
+test('mergeResumenes tolera vacíos', () => {
+  eq(JSON.stringify(mergeResumenes(null, undefined)), '{}');
+  eq(mergeResumenes({ '2026-07': { cot: 3, pol: 1 } }, {})['2026-07'].cot, 3);
+});
+
+// ============ Utilidades que siguen ============
 test('ensureHistoryIds asigna id a entradas viejas y persiste', () => {
-  localStorage._d = {};
-  saveHistoryEntry({ client: 'A', date: '2026-06-01T10:00:00Z' });
-  const arr = ensureHistoryIds();
-  if (!arr[0].id) throw new Error('no asignó id');
-  // persistió: una segunda carga ya trae el id
-  if (loadHistory()[0].id !== arr[0].id) throw new Error('no persistió el id');
-});
-
-test('setHistoryConfirmed marca por id y persiste', () => {
-  localStorage._d = {};
-  saveHistoryEntry({ id: 'q1', client: 'B' });
-  eq(setHistoryConfirmed('q1', true), true, 'devuelve true');
-  eq(loadHistory()[0].confirmed, true, 'persistió confirmed');
-  setHistoryConfirmed('q1', false);
-  eq(loadHistory()[0].confirmed, false, 'se puede desmarcar');
-});
-
-test('setHistoryConfirmed con id inexistente → false', () => {
-  localStorage._d = {};
-  saveHistoryEntry({ id: 'q1', client: 'B' });
-  eq(setHistoryConfirmed('NOPE', true), false);
+  sembrar([{ date: haceDias(1), plate: 'A1' }, { date: haceDias(2), plate: 'A2' }]);
+  const l = ensureHistoryIds();
+  ok(l[0].id && l[1].id && l[0].id !== l[1].id);
+  ok(JSON.parse(localStorage.getItem('cotizador_sdi_history_v1'))[0].id, 'no persistió');
 });
 
 test('deleteHistoryEntry elimina por id y persiste', () => {
-  localStorage._d = {};
-  saveHistoryEntry({ id: 'q2', client: 'B' });
-  saveHistoryEntry({ id: 'q1', client: 'A' }); // unshift → [q1, q2]
-  eq(deleteHistoryEntry('q1'), true);
-  const arr = loadHistory();
-  eq(arr.length, 1);
-  eq(arr[0].id, 'q2');
+  sembrar([{ id: 'a', date: haceDias(1) }, { id: 'b', date: haceDias(2) }]);
+  eq(deleteHistoryEntry('a'), true);
+  eq(loadHistory().length, 1);
+  eq(loadHistory()[0].id, 'b');
 });
 
-test('deleteHistoryEntry con id inexistente → false, no toca el resto', () => {
-  localStorage._d = {};
-  saveHistoryEntry({ id: 'q1', client: 'A' });
-  eq(deleteHistoryEntry('NOPE'), false);
+test('deleteHistoryEntry con id inexistente o falsy → false', () => {
+  sembrar([{ id: 'a', date: haceDias(1) }]);
+  eq(deleteHistoryEntry('zzz'), false);
+  eq(deleteHistoryEntry(''), false);
+  eq(deleteHistoryEntry(undefined), false);
   eq(loadHistory().length, 1);
 });
 
 test('newHistoryId genera ids distintos', () => {
-  if (newHistoryId() === newHistoryId()) throw new Error('ids duplicados');
+  ok(newHistoryId() !== newHistoryId());
 });
-
-// ---------- historyDaysSince + historyNeedsFollowUp ----------
 
 test('historyDaysSince cuenta días transcurridos (floor)', () => {
-  eq(historyDaysSince({ date: '2026-06-13T12:00:00Z' }, NOW), 3);
-  eq(historyDaysSince({ date: '2026-06-16T12:00:00Z' }, NOW), 0);
-  eq(historyDaysSince({ date: '2026-06-01T12:00:00Z' }, NOW), 15);
+  eq(historyDaysSince({ date: haceDias(4) }), 4);
+  eq(historyDaysSince({ date: new Date().toISOString() }), 0);
 });
+
 test('historyDaysSince sin fecha → null', () => {
-  eq(historyDaysSince({}, NOW), null);
-  eq(historyDaysSince(null, NOW), null);
-});
-test('historyNeedsFollowUp: 4d sin confirmar y vigente → true', () => {
-  eq(historyNeedsFollowUp({ date: '2026-06-12T12:00:00Z', confirmed: false }, NOW), true);
-});
-test('historyNeedsFollowUp: 3d exactos → false (debe ser MÁS de 3)', () => {
-  eq(historyNeedsFollowUp({ date: '2026-06-13T12:00:00Z', confirmed: false }, NOW), false);
-});
-test('historyNeedsFollowUp: confirmada → false aunque tenga +3d', () => {
-  eq(historyNeedsFollowUp({ date: '2026-06-10T12:00:00Z', confirmed: true }, NOW), false);
-});
-test('historyNeedsFollowUp: vencida (≥15d) → false', () => {
-  eq(historyNeedsFollowUp({ date: '2026-05-20T12:00:00Z', confirmed: false }, NOW), false);
-});
-test('historyNeedsFollowUp: 14d (aún vigente) sin confirmar → true', () => {
-  eq(historyNeedsFollowUp({ date: '2026-06-02T12:00:00Z', confirmed: false }, NOW), true);
-});
-test('historyNeedsFollowUp: ya con followUpAt → false (un solo seguimiento)', () => {
-  eq(historyNeedsFollowUp({ date: '2026-06-12T12:00:00Z', confirmed: false, followUpAt: '2026-06-15T10:00:00Z' }, NOW), false);
-});
-test('historyNeedsFollowUp: sugerencia descartada (followUpDismissed) → false', () => {
-  eq(historyNeedsFollowUp({ date: '2026-06-12T12:00:00Z', followUpDismissed: true }, NOW), false);
+  eq(historyDaysSince({}), null);
 });
 
-test('dismissFollowUp: saca de las sugerencias sin cambiar el estado (sigue pendiente)', () => {
-  localStorage._d = {};
-  saveHistoryEntry({ id: 's1', date: '2026-06-12T12:00:00Z', client: 'A' }); // pendiente, 4d
-  eq(historyNeedsFollowUp(loadHistory()[0], NOW), true);
-  eq(dismissFollowUp('s1'), true);
-  const e = loadHistory()[0];
-  eq(e.followUpDismissed, true);
-  eq(historyEstado(e), 'pendiente');
-  eq(historyNeedsFollowUp(e, NOW), false);
-  eq(historyFollowUpState(e, NOW), null);
-});
-test('dismissFollowUp con id falsy/inexistente → false', () => {
-  localStorage._d = {};
-  saveHistoryEntry({ id: 's1', client: 'A' });
-  eq(dismissFollowUp(undefined), false);
-  eq(dismissFollowUp('NOPE'), false);
-});
-
-test('historyFollowUpState: solo pendientes (recién→seguir→seguido); otros estados → null', () => {
-  eq(historyFollowUpState({ date: '2026-06-14T12:00:00Z' }, NOW), null);                                         // 2d: recién
-  eq(historyFollowUpState({ date: '2026-06-12T12:00:00Z' }, NOW), 'seguir');                                      // 4d sin seguir
-  eq(historyFollowUpState({ date: '2026-06-12T12:00:00Z', followUpAt: '2026-06-15T10:00:00Z' }, NOW), 'seguido'); // seguida
-  eq(historyFollowUpState({ date: '2026-06-12T12:00:00Z', estado: 'agendada' }, NOW), null);                      // agendada: sin flujo
-  eq(historyFollowUpState({ date: '2026-06-12T12:00:00Z', estado: 'concretada' }, NOW), null);                    // concretada
-});
-
-test('setHistoryFollowUp marca followUpAt y persiste', () => {
-  localStorage._d = {};
-  saveHistoryEntry({ id: 'q1', client: 'A' });
-  eq(setHistoryFollowUp('q1', '2026-06-16T10:00:00Z'), true);
-  eq(loadHistory()[0].followUpAt, '2026-06-16T10:00:00Z');
-});
-test('setHistoryFollowUp con id inexistente → false', () => {
-  localStorage._d = {};
-  saveHistoryEntry({ id: 'q1', client: 'A' });
-  eq(setHistoryFollowUp('NOPE'), false);
-});
-
-test('setHistoryFollowUp con id falsy (undefined/"") → false sin tocar entradas legacy', () => {
-  localStorage._d = {};
-  saveHistoryEntry({ client: 'legacy-1' }); // sin id
-  saveHistoryEntry({ client: 'legacy-2' }); // sin id
-  eq(setHistoryFollowUp(undefined), false);
-  eq(setHistoryFollowUp(''), false);
-  if (loadHistory().some(function (e) { return e.followUpAt; })) throw new Error('marcó una entrada legacy por accidente');
-});
-
-test('ensureHistoryIds + setHistoryFollowUp: dos legacy → ids distintos, marca solo la correcta', () => {
-  localStorage._d = {};
-  saveHistoryEntry({ client: 'A' }); // legacy sin id
-  saveHistoryEntry({ client: 'B' }); // legacy sin id (unshift → [B, A])
-  const arr = ensureHistoryIds();
-  if (!arr[0].id || !arr[1].id || arr[0].id === arr[1].id) throw new Error('ids no asignados o no distintos');
-  setHistoryFollowUp(arr[0].id, '2026-06-16T10:00:00Z');
-  const marked = loadHistory().filter(function (e) { return e.followUpAt; });
-  eq(marked.length, 1);
-  eq(marked[0].id, arr[0].id);
-});
-
-test('setHistoryConfirmed con id falsy → false (mismo guard anti-legacy)', () => {
-  localStorage._d = {};
-  saveHistoryEntry({ client: 'legacy' });
-  eq(setHistoryConfirmed(undefined, true), false);
-  eq(setHistoryConfirmed('', true), false);
-});
-
-// ---------- buildWaFollowUpUrl ----------
-
-const fu = { client: 'Silvia', vehicle: 'Sedan 2019', agentName: 'Juan Carlos' };
-
+// ============ WhatsApp ============
 test('buildWaFollowUpUrl usa web.whatsapp.com/send/ (no wa.me)', () => {
-  const url = buildWaFollowUpUrl(fu, '88221348');
-  assertContains(url, 'https://web.whatsapp.com/send/?');
-  assertNotContains(url, 'wa.me');
-});
-
-test('buildWaFollowUpUrl: mensaje de seguimiento (no de compartir guía)', () => {
-  const url = buildWaFollowUpUrl(fu, '88221348');
-  assertContains(url, encodeURIComponent('¿Tuvo chance de revisarla?'));
-  assertContains(url, encodeURIComponent('Hola Silvia, le saluda Juan Carlos, su agente de seguros del INS.'));
+  const u = buildWaFollowUpUrl({ client: 'Ana', waCliente: '88221348' });
+  ok(u.indexOf('web.whatsapp.com/send/') !== -1);
+  ok(u.indexOf('wa.me') === -1);
 });
 
 test('buildWaFollowUpUrl antepone 506 al teléfono', () => {
-  assertContains(buildWaFollowUpUrl(fu, '8822-1348'), 'phone=50688221348&');
+  ok(buildWaFollowUpUrl({ client: 'Ana', waCliente: '88221348' }).indexOf('phone=50688221348') !== -1);
 });
 
 test('buildWaFollowUpUrl sin teléfono: solo text=, sin phone=', () => {
-  const url = buildWaFollowUpUrl(fu);
-  assertContains(url, 'text=');
-  assertNotContains(url, 'phone=');
+  const u = buildWaFollowUpUrl({ client: 'Ana' });
+  ok(u.indexOf('text=') !== -1);
+  ok(u.indexOf('phone=') === -1);
+});
+
+// ============ Lo retirado no puede seguir existiendo ============
+test('🔴 ya no existen los estados que se marcaban a mano', () => {
+  ['historyEstado', 'setHistoryEstado', 'setHistoryConfirmed', 'historyCitaHoy',
+   'historyNeedsFollowUp', 'historyFollowUpState', 'setHistoryFollowUp',
+   'dismissFollowUp'].forEach(function (fn) {
+    eq(typeof eval('typeof ' + fn + " !== 'undefined'"), 'boolean');
+    ok(eval("typeof " + fn) === 'undefined', 'sigue existiendo: ' + fn);
+  });
 });
 
 console.log(`\n${pass} pass, ${fail} fail`);
-process.exit(fail > 0 ? 1 : 0);
+process.exit(fail ? 1 : 0);

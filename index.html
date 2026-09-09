@@ -191,8 +191,10 @@
       </div>
       <div class="modal-body">
         <p class="modal-hint">
-          Conversión y embudo de tus cotizaciones enviadas desde este navegador.
-          Marcá el estado de cada una (Agendada con su fecha de cita, Concretada o Desechada).
+          Tus cotizaciones enviadas desde este navegador. No hay nada que marcar:
+          una cotización queda <strong>cerrada sola</strong> cuando le enviás la póliza desde
+          <strong>Póliza activa</strong>. Las que pasan <strong>90 días sin póliza</strong> se borran para que
+          el registro no crezca sin fin; las que llegaron a póliza se conservan siempre.
           Datos privados, solo en este navegador.
         </p>
 
@@ -218,36 +220,6 @@
       </div>
       <div class="modal-footer">
         <button class="btn btn-primary" id="btnStatsExit">Salir</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ======================== MODAL · AVISO DE SEGUIMIENTOS (al inicio) ======================== -->
-  <div class="modal-backdrop" id="avisoModal">
-    <div class="modal-card aviso-card">
-      <div class="modal-header">
-        <h2 class="modal-title">Para atender hoy</h2>
-        <button class="modal-close" id="btnAvisoClose" aria-label="Cerrar">×</button>
-      </div>
-      <div class="modal-body">
-        <div id="avisoCitasSection" style="display:none;">
-          <div class="aviso-sec-title">📅 Citas de hoy</div>
-          <p class="modal-hint" style="margin-bottom:12px;">Hoy tenés estas citas — marcá el resultado:</p>
-          <div id="avisoCitas"></div>
-        </div>
-        <div id="avisoSeguirSection" style="display:none;">
-          <div class="aviso-sec-title">⏳ Para seguir</div>
-          <p class="modal-hint" style="margin-bottom:12px;">
-            Llevan <strong>más de 3 días sin respuesta</strong> y siguen vigentes — momento ideal
-            para un único seguimiento. Se envía desde tu Gmail y no se repite.
-          </p>
-          <div id="avisoList"></div>
-        </div>
-      </div>
-      <div class="modal-footer aviso-footer">
-        <button class="btn btn-secondary" id="btnAvisoStats">Ver en estadísticas</button>
-        <button class="btn btn-secondary" id="btnAvisoLater">Ahora no</button>
-        <button class="btn btn-primary" id="btnAvisoSendAll">Enviar seguimiento</button>
       </div>
     </div>
   </div>
@@ -657,8 +629,20 @@
        toca la app se agrega una linea aca. -->
   <footer class="app-foot">
     <details>
-      <summary>Última actualización: 9 set 2026 — la placa de carga liviana ya sale en rojo</summary>
+      <summary>Última actualización: 9 set 2026 — estadísticas más simples y placa de carga liviana en rojo</summary>
       <ul>
+        <li><b>9 set 2026</b> — <b>Las estadísticas se simplificaron: ya no hay nada que marcar.</b>
+        Antes había que ir poniendo a mano si cada cotización estaba Pendiente, Agendada, Concretada o
+        Desechada. Eso se fue. Ahora la pantalla lleva <b>tres números</b>: cuántas cotizó, cuántas llegaron
+        a póliza y su conversión. Una cotización se marca sola como cerrada <b>cuando usted le envía la
+        póliza desde Póliza activa</b> — se cruza por la placa. Si el cliente nunca cotizó por la app, la
+        póliza igual suma.<br>
+        Para que el registro no se vuelva una lista interminable de gente que nunca llegó a ser cliente, las
+        cotizaciones <b>sin póliza se borran a los 90 días</b>; las que llegaron a póliza <b>se conservan
+        siempre</b>. De las borradas queda solo el conteo del mes, así que su histórico de conversión sigue
+        cuadrando.<br>
+        <b>También desaparecieron</b> el aviso de arranque con las citas del día, el recordatorio de
+        seguimiento a los 3 días y su correo automático. El botón de WhatsApp por cliente sigue ahí.</li>
         <li><b>9 set 2026</b> — <b>La placa de carga liviana vuelve a salir en rojo, como quedó aprobada.</b>
         El INS escribe la placa de una carga liviana sin el "CL" adelante (en el PDF aparece solo el número), así
         que la app la tomaba por una placa común y la pintaba de azul. Ahora lee la <b>clase de placa</b> que el

@@ -235,12 +235,17 @@
   <script src="../js/state.js"></script>
   <script src="../js/agent-profile.js"></script>
   <script src="../js/shortlink.js"></script>
+  <!-- history.js va DESPUÉS de shortlink (su acortarGuia delega ahí) y ANTES de
+       poliza-app: al enviar la póliza se cierra la cotización en el registro.
+       drive-sync detrás, para que ese cierre también viaje al respaldo. -->
+  <script src="../js/history.js"></script>
   <script src="../js/poliza-extract.js"></script>
   <script src="../js/email-marca.js"></script>
   <script src="../js/poliza-email.js"></script>
   <script src="../js/mime-builder.js"></script>
   <script src="../js/gmail-auth.js"></script>
   <script src="../js/standard-docs.js"></script>
+  <script src="../js/drive-sync.js"></script>
   <script src="../js/poliza-app.js"></script>
 
   <script>

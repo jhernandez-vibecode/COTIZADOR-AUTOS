@@ -505,7 +505,12 @@ Se eliminó por completo el módulo de "detalle de coberturas vigentes": botón 
 - **Ojo recargo ≠ marca asiática**: varias marcas chinas tienen filas "No Aplica" (MG, JAC, CHANGAN, BYD gasolina, ZXAUTO, FUSO, RENAULT/PEUGEOT gasolina, SUZUKI). El toggle 🌏 del cotizador debe marcarse SOLO si la fila marca×combustible aparece como "Sí aplica". El hint del toggle ya refiere a esta tabla (corregido 11 jun — antes listaba MG/JAC/CHANGAN como ejemplos de "aplica", lo cual era falso).
 - **Cotejada contra la fuente oficial el 11 jun 2026:** faltaba **SUZUKI** (Eléctrico + Híbrido, "No Aplica") → se agregó, la tabla pasó de 56 a **58 filas** y ahora coincide con el PDF del INS. **NO están en la fuente oficial** (no agregarlas sin documento nuevo): GWM/HAVAL, JETOUR, OMODA/JAECOO, EXEED.
 
-## Pestaña de estadísticas (📊)
+## Pestaña de estadísticas (📊) — ⚠️ HISTÓRICO: rehecha el 9 set 2026
+
+> 🔴 Lo que sigue describe el 📊 **anterior** (ciclo de estados a mano, seguimiento a 3 días, citas).
+> Todo eso se retiró: ver "El 📊 se simplificó" arriba. Se conserva por el detalle de `clientFull`,
+> del buscador y de la recuperación de valor legacy, que siguen vigentes.
+
 
 Botón **📊** en el header → modal ancho `statsModal`. **EN PROD 16 jun 2026** (commit `e71f82d`). **100% aditiva**: reutiliza el historial `localStorage` (`cotizador_sdi_history_v1`); no toca envío, correo ni PDF.
 
@@ -869,6 +874,96 @@ Los tres correos tenían emojis como entidad HTML (`&#128197;` calendario, `&#12
 `&#128222;` teléfono, `&#128680;` sirena, `&#128241;` móvil, `&#128193;` carpeta). Cada programa de correo los dibuja
 distinto. Salieron todos. **El `&#9888;` (⚠) del aviso de Uber se queda**: es un símbolo tipográfico, no un emoji.
 
+## 🔴 El 📊 se simplificó: la póliza es el único cierre (9 set 2026) — EN PROD
+
+JC: *"Cambiamos la zona de estadisticas a algo más simple, vamos a llevar solo el conteo de las cotizadas y las
+concretadas se cuentan con el envio de póliza activa, sino vamos a hacer una lista infinita de personas que ni si
+quiera llegan a ser cliente"*. Mockup aprobado antes de escribir código.
+
+### Lo que se fue
+
+El ciclo de estados que el agente marcaba a mano (**Pendiente / Agendada / Concretada / Desechada**), la **fecha
+de cita**, el **aviso "Para atender hoy"** del arranque y **todo el seguimiento a 3 días** (filtro ⏳, correo por
+fila, "Enviar todos"). Eran trabajo manual que no se hacía.
+
+- `history.js`: fuera `historyEstado`, `setHistoryEstado`, `setHistoryConfirmed`, `historyCitaHoy`,
+  `historyNeedsFollowUp`, `historyFollowUpState`, `setHistoryFollowUp`, `dismissFollowUp`.
+- `app.js`: fuera 14 funciones (`maybeShowAviso`, `_refreshAviso`, `sendAllFollowUps`, `sendFollowUpEmail`,
+  `_pendingFollowUps`, `_citasHoy`, `_onStatsListChange`, `_estadoOrden`…) y el modal `#avisoModal`.
+- `email-template.js`: **`buildFollowUpEmail` eliminada** (83 líneas), ya no la llamaba nadie.
+- `css/styles.css`: fuera `.estado-select`, `.cita-wrap/.cita-date`, todo `.aviso-*` y las insignias
+  `.fu/.seguido/.desest/.cita`.
+
+🔴 **Al mover accesos o quitar ids, comprobar con un clic real que los 3 modales abren.** Un
+`addEventListener` sobre un id inexistente lanza y se lleva el resto del `DOMContentLoaded` (el render cascade
+failure del proyecto). Se verificó que ningún id enganchado en `app.js` quedó huérfano en `index.html`.
+
+### Lo que quedó
+
+Tres números — **Cotizadas · Con póliza emitida · Conversión** — barras por mes, buscador por placa/apellido y
+tres chips (Todas · ⭐ Alto valor · ✓ Con póliza). Por fila: la marca **✓ Póliza emitida**, 💬 WhatsApp y 🗑.
+
+### El cierre lo pone la póliza, cruzando por placa
+
+**`marcarPolizaEmitida(datos)`** (history.js) la llama `poliza-app.js` al terminar el envío:
+
+| Caso | Qué hace |
+|---|---|
+| La placa está en el historial | Marca `polizaAt` en ESA cotización |
+| No está (nunca cotizó por la app, o ya se purgó) | **Crea** una entrada con `origen: 'poliza'` — es un cliente real y tiene que contar |
+| Se reenvía la misma póliza | No hace nada: es idempotente, no cuenta doble |
+| Llega sin placa | Crea, **nunca adivina** cuál cerrar |
+
+La placa se compara con `_normHistorySearch`, así que `BCS-123` ≈ `bcs123`.
+
+🔴 **`/polizas-activas/` ahora carga `history.js` y `drive-sync.js`** (antes no cargaba ninguno). `history.js`
+va después de `shortlink.js` y antes de `poliza-app.js`.
+
+### La purga a los 90 días
+
+**`purgarHistorial([dias][,now])`**, que corre sola y en silencio al arrancar la app (no es algo que el agente
+tenga que atender). Borra las cotizaciones **sin póliza** de más de `PURGA_DIAS = 90`.
+
+- 🔴 **Lo que llegó a póliza NO se purga nunca**, tenga la edad que tenga: es el cliente real y es lo que
+  sostiene la conversión.
+- 🔴 **De cada borrada queda una LÁPIDA** — `{id, date, purged:true, updatedAt}`, **cero datos del cliente**
+  (se van nombre, correo, teléfono, placa, vehículo y `guideUrl`). Sin ella, `mergeHistories` las traería de
+  vuelta desde Drive en el siguiente respaldo y el borrado sería una ilusión. **No hizo falta tocar el merge**:
+  la lápida tiene el `updatedAt` más nuevo, así que ya gana. Esto cierra de paso el pendiente viejo de que el
+  botón 🗑 no borraba de Drive.
+- **`loadHistoryVivas()`** es lo que ve el agente; **`loadHistory()` cruda** (con lápidas) se reserva para el
+  respaldo y la fusión. El 📊 y el 🕘 usan la primera.
+
+### El conteo por mes: por qué existe
+
+Lo levantó el propio mockup: si se borran las cotizaciones viejas sin póliza y un cliente cotiza en enero pero
+compra en junio, **esa venta ya no se puede cruzar por placa** y la conversión histórica se desdibuja. Por eso
+al purgar se guarda **solo el conteo del mes** en `cotizador_sdi_resumen_v1`:
+`{ "2026-07": { cot: 48, pol: 10 } }` — dos números, ningún dato personal.
+
+- `computeHistoryStats(entries, extra)` recibe ese conteo y lo suma; `groupHistoryByMonth` lo aplica por mes y
+  **muestra los meses de los que ya no queda ninguna cotización viva**.
+- **`mergeResumenes(a,b)` se queda con el MAYOR de cada mes, nunca con la suma**: dos equipos respaldando el
+  mismo mes ya purgado lo contarían doble.
+- El resumen viaja en el payload de Drive (`resumen`) y `_mismoContenido` lo compara, para no reescribir de
+  gusto (cada escritura empuja las versiones viejas de Drive hacia el borrado).
+
+### Verificación
+
+`tests/test-history-stats.js` **reescrito: 42 checks** (los 27 viejos probaban lo que se eliminó). Vigila que la
+purga no se lleve un cliente con póliza, que la lápida no conserve **ningún** dato, que un borrado no vuelva del
+respaldo, y que la conversión histórica siga cuadrando después de purgar.
+
+Smoke en localhost con datos inventados: purga automática al arrancar (se fue la vieja sin póliza, se quedó la
+vieja con póliza), cruce por placa con guion y minúsculas, cliente directo, reenvío sin duplicar, los tres
+chips, buscador por apellido, filtro por mes, el 🕘, móvil a 375 px y `/polizas-activas/` arrancando con los
+módulos nuevos. Cero errores de consola. **Suite: 18 archivos / 654 checks.**
+
+🔴 **La caché del navegador sirvió los `.js` viejos durante el smoke** y las funciones nuevas salían
+`undefined`. No era un bug: `fetch(url, {cache:'reload'})` sobre cada `<script src>` y recargar. Comprobar
+`typeof` de una función nueva ANTES de diagnosticar nada.
+
+---
 ## 🔴 La clase de placa la declara el INS (9 set 2026) — EN PROD
 
 JC: *"habiamos aprobado un mockup para cuando se cotizaban carga liviana, este no jalo la placa"*

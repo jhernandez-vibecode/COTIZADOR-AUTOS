@@ -289,6 +289,26 @@
 
       $('successMsg').textContent = 'El correo de póliza activa fue enviado a ' + to + '.';
 
+      // Cerrar la cotización en el registro del cotizador. Es el ÚNICO cierre
+      // que cuenta desde el 9 set 2026: el agente ya no marca estados a mano,
+      // y haberle mandado la póliza es la prueba de que el negocio se hizo.
+      // Se cruza por placa; si el cliente nunca cotizó por la app, entra igual
+      // al registro para que la póliza sume.
+      // Nada de esto puede tumbar el flujo: el correo YA salió.
+      try {
+        if (typeof marcarPolizaEmitida === 'function') {
+          var _p = currentEmailParams();
+          marcarPolizaEmitida({
+            plate:      _p.placa,
+            client:     _p.nombrePila,
+            clientFull: _p.cliente,
+            email:      to,
+            vehicle:    _p.vehiculo,
+            poliza:     _p.poliza
+          });
+        }
+      } catch (e) { console.warn('[poliza] no se pudo registrar el cierre:', e); }
+
       // Aviso por WhatsApp. Nada de esto debe poder tumbar el flujo: el correo
       // YA salió y la póliza está entregada.
       try {
