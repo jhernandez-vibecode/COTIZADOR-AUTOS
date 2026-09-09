@@ -710,12 +710,14 @@ const PURGA_DIAS = 90;
  *    para que el borrado se propague al respaldo. Sin el, mergeHistories las
  *    volveria a traer desde Drive en el siguiente respaldo.
  *
- * @param {number} [dias=PURGA_DIAS]
+ * @param {number} [dias=PURGA_DIAS] - 0 = todas las que no llegaron a póliza
  * @param {number} [nowMs] - para poder testearlo
  * @returns {{purgadas:number, meses:number}}
  */
 function purgarHistorial(dias, nowMs) {
-  const limite = (typeof dias === 'number' && dias > 0) ? dias : PURGA_DIAS;
+  // dias = 0 significa TODAS las que no llegaron a póliza, sin importar la edad:
+  // es la limpieza manual del ⚙. Por eso el guard es >= 0 y no > 0.
+  const limite = (typeof dias === 'number' && dias >= 0) ? dias : PURGA_DIAS;
   const ahora  = (typeof nowMs === 'number') ? nowMs : Date.now();
   const iso    = new Date(ahora).toISOString();
   const list   = ensureHistoryIds();

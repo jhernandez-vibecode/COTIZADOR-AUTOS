@@ -133,15 +133,29 @@ const VIEJAS = [
     ok(subido.indexOf('AAA111') !== -1, 'se subió sin la placa');
   });
 
-  await test('🔴 sin respaldo activado, la purga NO corre desde el arranque', async () => {
-    // La app ya no llama purgarHistorial() al arrancar: se comprueba en el
-    // fuente, porque es justo el llamador que causó la pérdida.
+  await test('🔴 la purga NO corre desde el arranque de la app', async () => {
+    // Hay exactamente DOS llamadores legítimos: driveBackup (automática, tras
+    // respaldar) y el botón del ⚙ (manual, que respalda antes). Lo que no puede
+    // volver es una llamada suelta en el arranque — fue la que perdió datos.
     const app = fs.readFileSync(path.join(__dirname, '..', 'js', 'app.js'), 'utf8');
-    const llamadas = (app.match(/purgarHistorial\s*\(/g) || []).length;
-    eq(llamadas, 0, 'app.js volvió a purgar por su cuenta');
+
+    // toda llamada en app.js tiene que estar dentro de limpiarRegistroSinPoliza
+    const ini = app.indexOf('async function limpiarRegistroSinPoliza');
+    ok(ini > 0, 'no está la limpieza manual');
+    const fin = app.indexOf('\n}', ini);
+    const dentro = app.slice(ini, fin);
+    const total = (app.match(/purgarHistorial\s*\(/g) || []).length;
+    const enLimpieza = (dentro.match(/purgarHistorial\s*\(/g) || []).length;
+    eq(total, enLimpieza, 'hay una llamada a purgarHistorial fuera de la limpieza manual');
+    eq(enLimpieza, 1, 'la limpieza manual debería purgar una sola vez');
+
+    // y la limpieza manual respalda ANTES de purgar
+    const iBackup = dentro.indexOf('driveBackup(');
+    const iPurga  = dentro.indexOf('purgarHistorial(');
+    ok(iBackup > 0 && iBackup < iPurga, 'la limpieza manual borra antes de respaldar');
 
     const drive = fs.readFileSync(path.join(__dirname, '..', 'js', 'drive-sync.js'), 'utf8');
-    ok(/purgarHistorial\s*\(/.test(drive), 'nadie llama a la purga');
+    ok(/purgarHistorial\s*\(/.test(drive), 'nadie llama a la purga automática');
   });
 
   await test('la purga no encadena un respaldo dentro del respaldo', async () => {

@@ -147,6 +147,19 @@
           </div>
         </div>
 
+        <div style="margin:18px 0 6px;padding-top:14px;border-top:1px solid var(--gray-200,#e5e7eb);">
+          <p style="margin:0;font-size:13px;font-weight:700;color:var(--navy,#0c2340);">🧹 Limpiar el registro</p>
+          <p style="margin:2px 0 0;font-size:11px;color:var(--gray-500,#64748b);">
+            Borra del registro <strong>todas las cotizaciones que no llegaron a póliza</strong>, de cualquier
+            fecha, y deja solo a sus clientes. Se guarda un respaldo en su Drive <strong>antes</strong> de
+            borrar, así que se puede recuperar desde las versiones anteriores del respaldo.
+            <strong>No se puede deshacer desde acá.</strong>
+          </p>
+          <div style="margin-top:10px;">
+            <button class="btn btn-secondary" id="btnLimpiarRegistro" type="button" style="color:var(--red);border-color:#fecaca;">Dejar solo las que llegaron a póliza</button>
+          </div>
+        </div>
+
         <div class="modal-info">
           <strong>Privacidad:</strong> tu configuración y tu control se guardan en este navegador (localStorage)
           y, si activás el respaldo, en la carpeta privada de tu propio Google Drive. No se envían a ningún
@@ -629,8 +642,13 @@
        toca la app se agrega una linea aca. -->
   <footer class="app-foot">
     <details>
-      <summary>Última actualización: 9 set 2026 — el seguimiento ya no se le ofrece a quien ya compró</summary>
+      <summary>Última actualización: 9 set 2026 — botón para dejar el registro solo con sus clientes</summary>
       <ul>
+        <li><b>9 set 2026</b> — <b>Nuevo botón para dejar el registro solo con sus clientes.</b> En
+        <b>Configuración ⚙</b>, debajo del respaldo, aparece <b>"Dejar solo las que llegaron a póliza"</b>:
+        borra de una vez todas las cotizaciones que no terminaron en póliza, de cualquier fecha.
+        <b>Antes de borrar guarda un respaldo en su Drive</b>, y si ese respaldo falla no borra nada. Ojo: se
+        lleva también las cotizaciones recientes, con su correo y su enlace de la guía.</li>
         <li><b>9 set 2026</b> — <b>El WhatsApp de seguimiento ya no aparece en clientes que ya compraron.</b>
         Ese botón manda un mensaje que pregunta <i>"¿tuvo chance de revisarla?"</i>, y se lo estaba ofreciendo
         también sobre cotizaciones con la póliza ya emitida. Ahora solo sale donde tiene sentido. En esas filas,

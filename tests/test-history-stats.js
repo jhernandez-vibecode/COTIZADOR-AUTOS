@@ -360,6 +360,52 @@ test('la conversión histórica se mantiene después de purgar', () => {
   eq(despues.rate, 25, 'la conversión se distorsionó al purgar');
 });
 
+// ============ Limpieza manual: dejar solo los clientes ============
+// JC (9 set 2026) pidió vaciar el registro de todo lo que no llegó a póliza,
+// de cualquier fecha. Se le advirtió que también se lleva las cotizaciones
+// recientes —su correo, su enlace, su WhatsApp— y lo ratificó. Se implementó
+// reusando purgarHistorial con umbral 0 en vez de una función aparte.
+
+test('purgarHistorial(0) borra TODAS las que no llegaron a póliza', () => {
+  sembrar([
+    { id: 'hoy',   date: haceDias(0),   plate: 'A1' },
+    { id: 'ayer',  date: haceDias(1),   plate: 'A2' },
+    { id: 'vieja', date: haceDias(300), plate: 'A3' },
+    { id: 'cli',   date: haceDias(0),   plate: 'A4', polizaAt: haceDias(0) }
+  ]);
+  const r = purgarHistorial(0);
+  eq(r.purgadas, 3, 'no se llevó las recientes, que es lo que JC pidió');
+  const vivas = loadHistoryVivas();
+  eq(vivas.length, 1);
+  eq(vivas[0].id, 'cli');
+});
+
+test('🔴 purgarHistorial(0) NO toca a un cliente, ni recién cerrado', () => {
+  sembrar([
+    { id: 'cli1', date: haceDias(0),   plate: 'A1', polizaAt: haceDias(0) },
+    { id: 'cli2', date: haceDias(500), plate: 'A2', polizaAt: haceDias(499) },
+    { id: 'cli3', date: haceDias(200), plate: 'A3', estado: 'concretada' }
+  ]);
+  eq(purgarHistorial(0).purgadas, 0, 'se llevó clientes reales');
+  eq(loadHistoryVivas().length, 3);
+});
+
+test('sin argumento sigue siendo la limpieza de 90 días, no la total', () => {
+  sembrar([
+    { id: 'reciente', date: haceDias(5),   plate: 'A1' },
+    { id: 'vieja',    date: haceDias(200), plate: 'A2' }
+  ]);
+  eq(purgarHistorial().purgadas, 1, 'la automática se llevó una reciente');
+  eq(loadHistoryVivas()[0].id, 'reciente');
+});
+
+test('la limpieza total también deja su conteo en el resumen', () => {
+  sembrar([{ id: 'x', date: haceDias(2), plate: 'A1' }]);
+  purgarHistorial(0);
+  const res = loadResumen();
+  eq(Object.keys(res).length, 1, 'se perdió el conteo del mes');
+});
+
 // ============ Lápidas y respaldo ============
 test('loadHistoryVivas esconde las lápidas; loadHistory las conserva', () => {
   sembrar([{ id: '1', date: haceDias(1), plate: 'A1' }, { id: '2', date: haceDias(2), purged: true }]);

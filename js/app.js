@@ -135,6 +135,8 @@ document.addEventListener('DOMContentLoaded', function () {
   if (_btnDriveSync) _btnDriveSync.addEventListener('click', driveSyncNow);
   var _btnDriveRestore = document.getElementById('btnDriveRestore');
   if (_btnDriveRestore) _btnDriveRestore.addEventListener('click', driveRestoreNow);
+  var _btnLimpiar = document.getElementById('btnLimpiarRegistro');
+  if (_btnLimpiar) _btnLimpiar.addEventListener('click', limpiarRegistroSinPoliza);
   // Barra de invitación (una vez) a activar el respaldo
   var _btnInviteAct = document.getElementById('btnDriveInviteActivate');
   if (_btnInviteAct) _btnInviteAct.addEventListener('click', driveSyncNow);
@@ -511,6 +513,69 @@ function renderHistory() {
 // salió entero. app.js conserva únicamente el enganche de sus botones.
 
 /**
+ * Limpieza manual del registro: borra TODAS las cotizaciones que no llegaron a
+ * póliza, de cualquier fecha, y deja solo a los clientes reales.
+ *
+ * Decisión de JC (9 set 2026). Se le advirtió que también se lleva las
+ * cotizaciones recientes —las de esta semana, con su correo y su enlace— y
+ * respondió que igual: quiere el registro solo con clientes.
+ *
+ * 🔴 Respalda ANTES de borrar y **aborta si el respaldo falla**. Es la misma
+ * regla que la purga automática: nada se borra sin estar arriba. Como el
+ * respaldo de Drive conserva versiones anteriores, esto es recuperable aunque
+ * desde la app no haya deshacer.
+ */
+async function limpiarRegistroSinPoliza() {
+  const btn = document.getElementById('btnLimpiarRegistro');
+  const vivas = loadHistoryVivas();
+  const aBorrar = vivas.filter(function (e) { return !historyTienePoliza(e); });
+
+  if (!aBorrar.length) {
+    showToast('No hay nada que limpiar: todas las cotizaciones del registro llegaron a póliza.', 'success');
+    return;
+  }
+
+  const quedan = vivas.length - aBorrar.length;
+  const msg = 'Se van a borrar ' + aBorrar.length +
+    (aBorrar.length === 1 ? ' cotización que no llegó' : ' cotizaciones que no llegaron') + ' a póliza.\n\n' +
+    'Quedarán ' + quedan + (quedan === 1 ? ' cliente' : ' clientes') + ' en el registro.\n\n' +
+    'Incluye las cotizaciones recientes: se pierde su correo, su enlace de la guía y el botón de WhatsApp.\n\n' +
+    'Antes de borrar se guarda un respaldo en tu Drive. ¿Continuar?';
+  if (!confirm(msg)) return;
+
+  const orig = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Respaldando…'; }
+
+  try {
+    // Nada se borra sin respaldo: si esto lanza, no se llega al borrado.
+    if (typeof driveBackupEnabled === 'function' && driveBackupEnabled()) {
+      await driveBackup();
+    } else {
+      const sinRed = confirm('Todavía no tenés activado el respaldo en Google Drive.\n\n' +
+        'Si borrás ahora, esas cotizaciones NO se van a poder recuperar de ninguna parte.\n\n' +
+        '¿Borrar igual?');
+      if (!sinRed) { showToast('Cancelado. Activá el respaldo con "Sincronizar ahora" y volvé a intentar.', 'error'); return; }
+    }
+
+    if (btn) btn.textContent = 'Limpiando…';
+    const r = purgarHistorial(0);   // 0 = todas las que no llegaron a póliza
+
+    // Subir las lápidas, para que el borrado no vuelva al restaurar.
+    if (typeof scheduleDriveBackup === 'function') scheduleDriveBackup();
+
+    showToast('Registro limpio: se borraron ' + r.purgadas + '. Quedan ' + quedan + '.', 'success');
+    if (typeof renderStats === 'function') renderStats();
+    if (typeof renderHistory === 'function') renderHistory();
+    if (typeof _refreshDriveStatus === 'function') _refreshDriveStatus();
+  } catch (e) {
+    console.error('[limpiar] ', e);
+    showToast('No se pudo respaldar en Drive, así que NO se borró nada: ' + e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = orig; }
+  }
+}
+
+/**
  * Valida y guarda el perfil del agente desde el modal.
  */
 function handleProfileSave() {

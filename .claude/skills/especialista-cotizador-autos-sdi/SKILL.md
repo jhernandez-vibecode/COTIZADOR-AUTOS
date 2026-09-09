@@ -991,6 +991,34 @@ _purgarLoYaRespaldado();                          // recién ahora se borra
 (purgar antes de escribir, purgar en un catch, que app.js vuelva a purgar, que la purga encadene respaldo) y el
 test caza los 4. Smoke sin Drive activado: 0 borradas, la de 200 días intacta.
 
+### Limpieza manual: `purgarHistorial(0)` desde el ⚙
+
+JC, 9 set 2026: *"podemos borrar de una vez ese historial sólo dejar las concretadas"*. Se le advirtió que eso
+**también se lleva las cotizaciones recientes** —su correo, su enlace de la guía y su botón de WhatsApp— y
+eligió igual la opción total. **Decisión tomada con el efecto a la vista; no reproponerla.**
+
+**No hay función nueva.** `purgarHistorial(dias)` ya hacía exactamente esto con otro umbral; solo se permitió el
+**0** (`dias >= 0` en vez de `> 0`), que significa "todas las que no llegaron a póliza, sin importar la edad".
+Sin `dias`, sigue siendo la automática de 90.
+
+Botón **"Dejar solo las que llegaron a póliza"** en el ⚙, bajo el respaldo. `limpiarRegistroSinPoliza()` en
+app.js:
+
+1. Cuenta y **confirma con el número exacto** de lo que se va a borrar y de lo que queda.
+2. 🔴 **Respalda ANTES y aborta si el respaldo falla** — misma regla que la purga automática.
+3. Si el agente **no tiene Drive**, avisa que no habrá forma de recuperarlas y pide una segunda confirmación.
+4. Purga, sube las lápidas y repinta.
+
+🔴 **Ahora hay DOS llamadores legítimos de `purgarHistorial`**: `driveBackup()` (automática, después de
+respaldar) y este botón (manual, que respalda antes). Lo que no puede volver es una llamada suelta en el
+arranque. El test lo vigila así: **toda llamada en app.js tiene que estar dentro de `limpiarRegistroSinPoliza`, y
+ahí `driveBackup` tiene que aparecer ANTES que `purgarHistorial`**. Verificado por mutación: mover la purga
+antes del respaldo hace fallar el test.
+
+4 checks en `test-history-stats.js` + el de `test-purga-respaldo.js`. Smoke con los 3 caminos: sin Drive y
+cancela (no borra), con Drive y **el respaldo fallando** (no borra), y respaldo OK (borra y deja los clientes,
+incluido uno con el `estado: 'concretada'` legacy).
+
 ### El conteo por mes: por qué existe
 
 Lo levantó el propio mockup: si se borran las cotizaciones viejas sin póliza y un cliente cotiza en enero pero
@@ -1014,7 +1042,7 @@ respaldo, y que la conversión histórica siga cuadrando después de purgar.
 Smoke en localhost con datos inventados: purga automática al arrancar (se fue la vieja sin póliza, se quedó la
 vieja con póliza), cruce por placa con guion y minúsculas, cliente directo, reenvío sin duplicar, los tres
 chips, buscador por apellido, filtro por mes, el 🕘, móvil a 375 px y `/polizas-activas/` arrancando con los
-módulos nuevos. Cero errores de consola. **Suite: 20 archivos / 688 checks.**
+módulos nuevos. Cero errores de consola. **Suite: 20 archivos / 696 checks.**
 
 🔴 **La caché del navegador sirvió los `.js` viejos durante el smoke** y las funciones nuevas salían
 `undefined`. No era un bug: `fetch(url, {cache:'reload'})` sobre cada `<script src>` y recargar. Comprobar
