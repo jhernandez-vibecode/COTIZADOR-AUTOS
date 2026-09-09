@@ -56,6 +56,8 @@
  * @param {string} params.interes        - clave del dropdown (propietario, cero-km, traspaso, compra) o ''
  * @param {string} params.notaAdicional  - texto opcional del agente (linebreaks se preservan)
  * @param {string} [params.plate]        - placa del vehículo (para explicador y tarjeta)
+ * @param {string} [params.plateClass]   - "Clase Placa" del PDF: decide la chapa roja de
+ *                                        carga liviana y el 0 km (ver email-marca.js)
  * @param {string|number} [params.year]  - año del vehículo (para explicador)
  * @param {string|number} [params.valor] - valor asegurado (para tarjeta vehiculo y explicador)
  * @param {string} [params.vehicleType]  - tipo crudo del PDF; se mapea a 'g' (gasolina) por default
@@ -99,6 +101,7 @@ function buildEmail(params) {
     ? '\n' + _tarjetaVehiculo({
         vehiculo: vehiculo || plate,
         plate: plate,
+        plateClass: p.plateClass,
         valor: valorFmt,
         fontFam: "'Space Grotesk','Helvetica Neue',Helvetica,Arial,sans-serif"
       })
@@ -108,7 +111,7 @@ function buildEmail(params) {
   const guideUrl = _buildGuideUrl({
     clientName:    nombre,
     vehicle:       vehiculo,
-    plate:         _placaEsRelleno(p.plate) ? '' : p.plate,
+    plate:         _placaEsRelleno(p.plate, p.plateClass) ? '' : p.plate,
     year:          p.year,
     vehicleType:   _detectVehicleType(p.vehicleType),
     origenAsia:    !!p.origenAsia,

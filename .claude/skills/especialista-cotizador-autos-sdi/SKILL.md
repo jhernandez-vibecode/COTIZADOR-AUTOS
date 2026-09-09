@@ -812,7 +812,7 @@ como matrícula**: banda "COSTA RICA" arriba y el número separado como se lee e
 | Tipo | Detección | Color |
 |---|---|---|
 | Particular | `AAA999` | navy `#0c2340` |
-| **Carga liviana** | prefijo `CL` + 3-7 dígitos | **rojo `#b91c1c`** (6,47:1 en los dos sentidos) |
+| **Carga liviana** | **`Clase Placa: CL-CARGA LIVIANA`** del PDF (9 set 2026), o el prefijo `CL` escrito a mano | **rojo `#b91c1c`** (6,47:1 en los dos sentidos) |
 | Motos, taxis, viejas de 6 números | cualquier otro | tal cual, en navy — **no se les inventa color** |
 
 🔴 **El cero kilómetros y el relleno `000111`.** Un 0 km no tiene placa: el INS lo identifica con "SIN" + los últimos
@@ -869,6 +869,70 @@ Los tres correos tenían emojis como entidad HTML (`&#128197;` calendario, `&#12
 `&#128222;` teléfono, `&#128680;` sirena, `&#128241;` móvil, `&#128193;` carpeta). Cada programa de correo los dibuja
 distinto. Salieron todos. **El `&#9888;` (⚠) del aviso de Uber se queda**: es un símbolo tipográfico, no un emoji.
 
+## 🔴 La clase de placa la declara el INS (9 set 2026) — EN PROD
+
+JC: *"habiamos aprobado un mockup para cuando se cotizaban carga liviana, este no jalo la placa"*
+(cotizacion `ASINS-170-142661`, MITSUBISHI L200, placa 306735 — salio en navy).
+
+**No era un caso aislado: las 40 cotizaciones de carga liviana de los ultimos meses salieron en navy.
+La chapa roja nunca funciono.** `_analizarPlaca` exigia que la placa llegara como `CL306735`, pero el INS
+escribe el numero PELADO y pone la clase en **un campo aparte que el cotizador nunca leyo**:
+
+```
+Clase Placa: CL-CARGA LIVIANA
+Numero de placa: 306735
+```
+
+**Medido sobre 370 cotizaciones reales** (los PDF de `Downloads`): el campo viene en el **100%** y toma tres
+valores — `PART-PARTICULAR` (282), `SIN - PLACA TEMPORAL` (48), `CL-CARGA LIVIANA` (40).
+
+### 🔴 Por que NO se puede inferir del formato
+
+Entre esas 370 hay **tres particulares con placa numerica pura** (`654615`, `845340`, `742786`), identicas en
+forma a una carga liviana. La regla "6 digitos = CL" les pintaria la chapa roja a **clientes particulares**.
+La clase del PDF es el unico dato que desambigua; el tipo de vehiculo ("Pick Up") tampoco alcanza.
+
+### Como quedo
+
+- `pdf-extract.js` → **`data.plateClass`**. El regex corta antes del campo siguiente por si dos caen en la
+  misma fila: `/Clase Placa:\s*(.+?)(?:\s+(?:N[uú]mero|Tipo|A[ñn]o)\b|$)/i`.
+- `email-marca.js` → **`_claseEsCL`** y **`_claseEsTemporal`**. `_analizarPlaca(placa, clase)` y
+  `_placaEsRelleno(placa, clase)` reciben la clase; **el segundo argumento es opcional y sin el se comportan
+  exactamente como antes** (los correos ya enviados no cambian).
+- Con clase CL, la chapa **antepone el `CL`** que el INS omite, para que el cliente vea SU matricula real
+  (`CL␉␉306735`, con los dos thin spaces del mockup). Si la placa no es numerica pura, va roja pero **sin
+  inventarle prefijo**.
+- `email-template.js` y `app.js` pasan `plateClass`. `_syncDataFromView2` no lo toca: es dato del INS, no
+  editable.
+
+### El cero kilometros dejo de adivinarse
+
+`SIN - PLACA TEMPORAL` es el valor oficial del 0 km. Antes se adivinaba por la forma del relleno (solo ceros,
+≤2 digitos distintos) y **se le escapaban 3 de 48**: `702145`, `6VD702`, `690309` — a esos clientes el correo
+les mostro como matricula un numero que el agente tecleo para poder cotizar. La heuristica **queda de
+respaldo** para cuando el correo se arma sin el dato.
+
+**Hallazgo de paso, corregido:** `_guideExtras()` (app.js) mandaba la placa **sin filtrar el relleno** al
+enlace del historial y del WhatsApp, mientras el correo ya mostraba "0 KM". Ahora filtra igual que `buildEmail`.
+
+### Verificacion
+
+| | antes | ahora |
+|---|---|---|
+| carga liviana en rojo | **0 / 40** | **40 / 40** |
+| particulares pintadas de rojo | 0 | **0** |
+| 0 km detectados | 45 / 48 | **48 / 48** |
+| placas reales tomadas por 0 km | 0 | **0** |
+
+`tests/test-placa-clase.js` (**45 checks**) — con **prueba de mutacion**: se rompieron las 5 piezas de la
+logica una por una y el test caza las 5. Smoke con **PDF.js real** en localhost sobre los tres tipos de PDF, y
+flujo completo en la app (cargar → vista 2 → vista 3): `S.data.plateClass` sobrevive el sync y el correo sale
+con la chapa roja. **Suite: 18 archivos / 657 checks.**
+
+🔴 **Los PDF de prueba tienen datos de clientes reales y NO entran al repo** — el smoke se corrio desde
+`.netlify/smoke/` (ruta ya ignorada) y la carpeta se borro al terminar.
+
+---
 ## Las coberturas del PDF (25 ago 2026, `c1721f0`) — EN PROD
 
 El cuerpo del correo dejó las tres frases genéricas ("Full Cobertura / Cero deducible / Asistencia 24/7") y pasó a
@@ -992,6 +1056,10 @@ firmadas con la licencia SUGESE del agente.
     reales) y el deducible de D/F/H va de ₡400.000 a ₡500.000. Todo sale del PDF o no se muestra.
 29. **`email-marca.js` es de los TRES correos** — un cambio ahí los toca a los tres. Y `buildEmail` **no** debe
     usar sus constantes `SDI_*`: los colores van literales en `email-template.js` (ver "Jornada 25 ago").
+31. 🔴 **La clase de placa sale del campo `Clase Placa` del PDF, NUNCA del formato** (9 set 2026) — el INS
+    escribe `306735` sin el `CL`, y hay particulares con placa numerica pura identicas en forma. Inferir por
+    el formato pinta de rojo la chapa de un cliente particular. Lo mismo el 0 km: `SIN - PLACA TEMPORAL` es
+    el dato oficial, la heuristica del relleno es solo respaldo.
 30. **Verificar SIEMPRE con PDF.js real y saltándose la caché** — el smoke del parser dio coberturas vacías y
     parecía un bug: era el navegador sirviendo el archivo viejo. Comprobar `typeof` la función antes de concluir.
 24. **Los montos de la guía del deducible son EJEMPLOS, no reglas** — ₡150.000/₡750.000 (Cobertura C con "N") y ₡400.000 (D, F y H con IDD) salen de un caso concreto. La nota gris que lo aclara **no se quita**, y esos números no se citan como universales en ningún correo ni en el explicador: el deducible real lo trae el PDF de cada cotización (param `dd`).

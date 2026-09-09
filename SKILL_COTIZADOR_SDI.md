@@ -13,6 +13,78 @@ description: >
 
 # Cotizador SDI — Checkpoint extendido (historico largo)
 
+## 9 set 2026 — la clase de placa la declara el INS, no el formato
+
+Reportado por JC con una captura del correo ya enviado: *"habiamos aprobado un muck up para cuando se
+cotizaban carga liviana, este no jalo la placa"*. Cotizacion `ASINS-170-142661` (MADRIGAL CARRANZA
+NATALIA, MITSUBISHI L200 2017, placa 306735): la chapa salio navy en vez de roja.
+
+### Diagnostico
+
+El detector era `/^(CL)(\d{3,7})$/` sobre el campo `plate`. Pero el INS **no escribe el prefijo ahi**:
+
+```
+Clase Placa: CL-CARGA LIVIANA      <- campo dedicado, el cotizador NUNCA lo leyo
+Numero de placa: 306735            <- lo que leia: el numero pelado
+```
+
+Barrido de los **370 PDF de cotizacion** de `Downloads` (pdfplumber): el campo `Clase Placa` esta en el
+**100%** y toma tres valores — `PART-PARTICULAR` (282), `SIN - PLACA TEMPORAL` (48), `CL-CARGA LIVIANA`
+(40). Auditoria de la funcion real contra esas 370: **las 40 de carga liviana salian en navy**. No era el
+caso de JC: era el 100% de los casos, desde que se aprobo el mockup el 25 ago.
+
+### Por que no se arreglo "por el formato"
+
+La tentacion era "6 digitos numericos = carga liviana". Entre las 370 hay **tres particulares con placa
+numerica pura** (`654615`, `845340`, `742786`), identicas en forma a una CL: esa regla les habria pintado
+la chapa roja a clientes particulares. El "Tipo de vehiculo" (`Pick Up (Doble Cabina)`) tampoco alcanza.
+La clase declarada por el INS es el unico dato que desambigua.
+
+### El cambio
+
+- `pdf-extract.js`: `data.plateClass`, con el regex cortando antes del campo siguiente por si dos caen en
+  la misma fila de `_groupByY`.
+- `email-marca.js`: `_claseEsCL` / `_claseEsTemporal`; `_analizarPlaca(placa, clase)` y
+  `_placaEsRelleno(placa, clase)`. **El segundo argumento es opcional**: sin el, comportamiento identico
+  al anterior — los correos ya enviados y los tests viejos no cambian (la suite quedo verde sin tocarlos).
+- La chapa **antepone el `CL`** que el INS omite (`CL` + 2 thin spaces + `306735`), porque la matricula
+  real del cliente si lo lleva. Placa CL con formato raro: roja, pero sin inventarle prefijo.
+- `email-template.js` + `app.js` pasan `plateClass`. `_syncDataFromView2` no lo toca (no es editable: es
+  dato del INS).
+
+### Dos hallazgos de paso, cerrados el mismo dia
+
+1. **El 0 km se adivinaba y se le escapaban 3 de 48.** `_placaEsRelleno` lo deducia de la forma del
+   relleno (solo ceros, ≤2 digitos distintos), asi que `702145`, `6VD702` y `690309` — declarados
+   `SIN - PLACA TEMPORAL` por el INS — pasaban como placas de verdad: al cliente se le mostro como su
+   matricula un numero que el agente tecleo para poder cotizar. Ahora manda la clase; la heuristica queda
+   de respaldo.
+2. **`_guideExtras()` no filtraba el relleno.** `buildEmail` mandaba `plate: ''` al explicador para un
+   0 km, pero el enlace del **historial y del boton de WhatsApp** salia con `p=000111`: el correo decia
+   "0 KM" y la guia mostraba la placa inventada. Misma regla en los dos caminos.
+
+### Verificacion
+
+| | antes | ahora |
+|---|---|---|
+| carga liviana en rojo | 0 / 40 | **40 / 40** |
+| particulares en rojo | 0 | **0** |
+| 0 km detectados | 45 / 48 | **48 / 48** |
+| placas reales tomadas por 0 km | 0 | **0** |
+
+- `tests/test-placa-clase.js`, **45 checks**. **Prueba de mutacion**: se rompieron las 5 piezas de la
+  logica una por una (detector CL, detector temporal, el paso de la clase en el correo, el filtro del
+  enlace, el campo del parser) y el test caza las 5. Un test que sigue verde con la logica rota no prueba
+  el bug.
+- **Smoke con PDF.js real** (no pdfplumber, no filas simuladas) en localhost:8931, sobre un PDF de cada
+  clase; y flujo completo en la app: cargar PDF → vista 2 → vista 3, comprobando que `S.data.plateClass`
+  sobrevive `_syncDataFromView2` y que la vista previa sale con la chapa roja y `p=306735` en la guia.
+- Suite: **18 archivos / 657 checks**.
+
+🔴 Los PDF usados tienen **datos de clientes reales**: el smoke se corrio desde `.netlify/smoke/` (ruta ya
+ignorada por git) y la carpeta se borro al terminar. Netlify sirve el repo sin build — un PDF de cliente
+commiteado queda publicado.
+
 ## 27 ago 2026 (2ª tanda) — el paso de la asistencia tambien es dinamico (`ba294c3`)
 
 Bug reportado por JC el mismo dia, probando el explicador dinamico recien publicado: *"si marco solo

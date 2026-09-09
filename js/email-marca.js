@@ -76,10 +76,17 @@ function _fileteSDI() {
  * @param {string} placa
  * @returns {{texto:string,color:string}}
  */
-function _analizarPlaca(placa) {
+function _analizarPlaca(placa, clase) {
   const p = String(placa || '').trim().toUpperCase().replace(/[\s-]/g, '');
   const cl = /^(CL)(\d{3,7})$/.exec(p);
   if (cl) return { texto: cl[1] + '&#8202;&#8202;' + cl[2], color: SDI_ROJO_CL };
+  // Carga liviana segun el PDF: el numero viene solo y la matricula real lleva
+  // el CL adelante, asi que se antepone para que el cliente vea SU placa.
+  if (_claseEsCL(clase)) {
+    return /^\d{3,7}$/.test(p)
+      ? { texto: 'CL' + '&#8202;&#8202;' + p, color: SDI_ROJO_CL }
+      : { texto: _escMarca(p), color: SDI_ROJO_CL };
+  }
   const par = /^([A-Z]{3})(\d{3})$/.exec(p);
   if (par) return { texto: par[1] + '&#8202;&#8202;' + par[2], color: SDI_NAVY };
   return { texto: _escMarca(p), color: SDI_NAVY };
@@ -93,7 +100,25 @@ function _analizarPlaca(placa) {
  * @param {string} placa
  * @returns {boolean}
  */
-function _placaEsRelleno(placa) {
+// El INS declara la clase de placa en su propio campo ("Clase Placa"), y es el
+// unico dato fiable. En "Numero de placa" la carga liviana llega como 306735
+// pelado, sin el prefijo CL, exactamente igual que una particular numerica:
+// adivinar por el formato pintaria de rojo la placa de un cliente particular
+// (hay 3 asi entre 370 cotizaciones reales). Valores vistos en el 100% de los
+// PDF: "PART-PARTICULAR", "CL-CARGA LIVIANA", "SIN - PLACA TEMPORAL".
+function _claseEsCL(clase) {
+  return /(^|[^A-Z])CL([^A-Z]|$)|CARGA\s*LIVIANA/i.test(String(clase || ''));
+}
+function _claseEsTemporal(clase) {
+  return /PLACA\s*TEMPORAL|^\s*SIN\b/i.test(String(clase || ''));
+}
+
+// Un cero kilometros no tiene placa: el agente teclea un relleno (000111) para
+// poder cotizar, y eso NUNCA se le imprime al cliente como su matricula. Si el
+// PDF trae la clase, manda ella; la heuristica queda de respaldo para los
+// correos que se arman sin ese dato.
+function _placaEsRelleno(placa, clase) {
+  if (_claseEsTemporal(clase)) return true;
   const p = String(placa || '').trim().toUpperCase().replace(/[\s-]/g, '');
   if (!p) return true;
   if (/^0+$/.test(p)) return true;
@@ -120,8 +145,8 @@ function _chapaHtml(texto, arriba, color, fontFam) {
  * @returns {string}
  */
 function _tarjetaVehiculo(o) {
-  const nuevo = _placaEsRelleno(o.plate);
-  const info = _analizarPlaca(o.plate);
+  const nuevo = _placaEsRelleno(o.plate, o.plateClass);
+  const info = _analizarPlaca(o.plate, o.plateClass);
   const chapa = nuevo
     ? _chapaHtml('0&#8202;KM', 'NUEVO', SDI_NAVY, o.fontFam)
     : _chapaHtml(info.texto, 'COSTA RICA', info.color, o.fontFam);
@@ -635,6 +660,7 @@ function _cuadrosDeducibles(partes, fontFam) {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     _fileteSDI: _fileteSDI, _analizarPlaca: _analizarPlaca, _placaEsRelleno: _placaEsRelleno,
+    _claseEsCL: _claseEsCL, _claseEsTemporal: _claseEsTemporal,
     _tarjetaVehiculo: _tarjetaVehiculo, _bloqueSobrio: _bloqueSobrio, _pieSDI: _pieSDI,
     _ahorroAnual: _ahorroAnual, _bloquePagos: _bloquePagos,
     _bloqueCoberturas: _bloqueCoberturas, _filasCoberturas: _filasCoberturas, _notaDeducibles: _notaDeducibles, _cuadrosDeducibles: _cuadrosDeducibles,
