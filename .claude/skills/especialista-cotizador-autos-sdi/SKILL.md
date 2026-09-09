@@ -1311,10 +1311,18 @@ Contrastadas con 5 PDF oficiales que entregó JC (viven en `OneDrive\ARCHIVO DIG
   2. **Nuevo esquema de Sustitución de Repuestos (SIN PLAN AÚN).** Quedan cuatro opciones: Vehículo en Garantía,
      Extensión de Garantía **Plus**, **Original Multimarca** y Alternativo Genérico/Usado. **Desaparece "Extensión
      de Garantía" a secas** y los topes de años/km se mudan de las Condiciones Generales a la Solicitud de Seguro.
-     Afecta a `_reposKind` y `_sustitucionText` (email-template.js), a `_parsePaymentMatrix`/`selectPriceColumn`
-     (pdf-extract.js, la matriz de 5 columnas de FORMA DE PAGO) y al texto fijo de la sección 4 del explicador
-     ("hasta 5 años o 60.000 km"). Desde el 28 los PDF pueden venir con otras etiquetas y **eso se rompe en
-     silencio**: el parser caería al genérico y el correo mostraría la fila equivocada.
+     🔴 **MEDIDO el 9 set 2026: el riesgo es MENOR de lo que decía esta ficha.** Se simuló el esquema V32 de 4
+     columnas contra el código real: **las 4 etiquetas nuevas caen en su columna correcta** y se declaran
+     confiables. `_reposKind` también las clasifica bien ("Original Multimarca" cae en `original`). Y cuando el
+     emparejamiento falla, la app **NO se rompe en silencio**: `_reposNote()` pinta un aviso ámbar pidiendo
+     verificar el tipo de repuesto. La afirmación anterior ("se rompe en silencio") era incorrecta.
+
+     **El único hueco real** es un PDF de transición: 4 columnas nuevas con el repuesto RETIRADO ("Extensión de
+     Garantía" a secas) en la página 1 — cae en la columna de "Plus" con score alto, o sea SIN aviso. Cubierto
+     en `tests/test-payment-matrix.js` (5 checks "V32"), que es el sitio a tocar si aparece un PDF así.
+
+     Queda por revisar el texto fijo de la sección 4 del explicador ("hasta 5 años o 60.000 km"), que es literal
+     y no depende del parser. `_reposFixedIndex` se apaga solo con 4 columnas, así que manda `_labelMatch`.
   🔴 **Los datos del dossier se verifican leyendo cada página COMO IMAGEN.** El emparejamiento
   servicio↔límite por coordenadas se equivoca en las filas apretadas (Salud Premium). Conteos correctos:
   11 · 8 · 16 · 30 · 7 · 21.
