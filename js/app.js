@@ -593,7 +593,7 @@ function handleProfileSave() {
     return;
   }
 
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (!email || !esEmailValido(email)) {
     showToast('Ingresa un correo valido. Recuerda: debe ser el mismo de tu cuenta Gmail.', 'error');
     document.getElementById('p-email').focus();
     return;
@@ -806,7 +806,7 @@ function validateView2() {
     document.getElementById('f-email').focus();
     return false;
   }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (!esEmailValido(email)) {
     showToast('El correo del cliente no parece valido. Verifica el formato (ejemplo: nombre@dominio.com).', 'error');
     document.getElementById('f-email').focus();
     return false;
@@ -936,7 +936,7 @@ function updatePreview() {
 async function handleSend() {
   // Re-validar el destinatario: es editable en la vista 3
   const toCheck = document.getElementById('m-to').value.trim();
-  if (!toCheck || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(toCheck)) {
+  if (!toCheck || !esEmailValido(toCheck)) {
     showToast('El correo del destinatario no parece valido. Verificalo antes de enviar.', 'error');
     document.getElementById('m-to').focus();
     return;
@@ -994,7 +994,10 @@ async function handleSend() {
       html:     html,
       attachments: attachments
     });
-    await sendEmail(raw);
+    // Reintenta una vez si el token se vencio con la pantalla abierta. El
+    // cotizador era el unico de los tres asistentes que NO lo hacia: el envio
+    // moria y habia que volver a subir el PDF.
+    await enviarConReintento(raw);
 
     // Registrar en el historial + habilitar compartir por WhatsApp.
     // Nada de esto debe poder tumbar el flujo: el correo YA salió.

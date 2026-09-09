@@ -1042,13 +1042,46 @@ respaldo, y que la conversión histórica siga cuadrando después de purgar.
 Smoke en localhost con datos inventados: purga automática al arrancar (se fue la vieja sin póliza, se quedó la
 vieja con póliza), cruce por placa con guion y minúsculas, cliente directo, reenvío sin duplicar, los tres
 chips, buscador por apellido, filtro por mes, el 🕘, móvil a 375 px y `/polizas-activas/` arrancando con los
-módulos nuevos. Cero errores de consola. **Suite: 20 archivos / 696 checks.**
+módulos nuevos. Cero errores de consola. **Suite: 21 archivos / 712 checks.**
 
 🔴 **La caché del navegador sirvió los `.js` viejos durante el smoke** y las funciones nuevas salían
 `undefined`. No era un bug: `fetch(url, {cache:'reload'})` sobre cada `<script src>` y recargar. Comprobar
 `typeof` de una función nueva ANTES de diagnosticar nada.
 
 ---
+## `js/wizard.js` — lo común de los tres asistentes (9 set 2026)
+
+Punto 3 de la revisión thermo-nuclear. Las tres pantallas de envío son el mismo asistente de 4 pasos con
+distinto contenido, y compartían código **por copia**:
+
+| Qué | Estaba |
+|---|---|
+| `setStep()` | **byte a byte idéntico** en `poliza-app.js` y `renovacion-app.js` |
+| El regex del correo | **5 veces** (app.js ×3, póliza, renovación) |
+| El reintento de token vencido | duplicado literal en dos… **y faltaba en el cotizador** |
+
+🔴 **Ese último era un bug real, no solo duplicación.** Si el token de Google caducaba con la pantalla abierta,
+póliza y renovación reintentaban solas, pero **el cotizador no**: el envío moría y había que volver a subir el
+PDF. Ahora los tres usan `enviarConReintento()`.
+
+- **`esEmailValido(v)`** — la única copia del regex. Laxo a propósito (`algo@algo.algo`): no valida existencia,
+  solo ataja el dedazo antes de que el agente crea que el correo salió.
+- **`correosInvalidos(v)`** — para el campo "Para" con varios correos por coma (plan familiar en renovaciones).
+- **`enviarConReintento(raw)`** — `getToken` → `sendEmail`, y si el error habla de 401/token/expirado,
+  `clearToken` + reintento. **Una sola vez**: si el segundo también falla, el problema no es el token y el
+  agente tiene que ver el error.
+- **`wizardSetStep(n)`** — el pintado de pasos. **No toca el estado del llamador**: cada pantalla guarda su
+  propio `state.step` y después llama acá, así que `setStep` queda como dos líneas en cada módulo.
+
+**Orden de carga: después de `gmail-auth.js`** (usa getToken/sendEmail/clearToken) y antes del `*-app.js`.
+Va en las **tres** páginas.
+
+`tests/test-wizard.js` (**15 checks**), con el DOM de los pasos simulado. Tres de esos checks son de guardia:
+recorren `js/` y fallan si el regex del correo, el reintento o el `setStep` **vuelven a copiarse** — que es
+exactamente como se llegó hasta acá. Smoke en las 3 páginas: cero errores de consola.
+
+---
+
 ## El 📊 salió de app.js: `js/stats-ui.js` (9 set 2026)
 
 De la revisión thermo-nuclear. `app.js` tenía **1410 líneas y seis responsabilidades** sin relación entre sí
@@ -1067,10 +1100,9 @@ limpio: no depende del flujo de cotización.
 - `tests/test-stats-ui.js` (**22 checks**) lo monta en un contexto `vm`. Antes este render no tenía test: estaba
   enterrado en app.js.
 
-**Lo que quedó pendiente de esa revisión** (por orden de valor): un `js/wizard.js` que borre el `setStep`
-byte-idéntico de `poliza-app.js` y `renovacion-app.js`, las **5 copias del regex de email** y el reintento de
-token duplicado; y decidir si 🕘 y 📊 siguen siendo dos pantallas — hoy describen la misma cotización con dos
-modelos distintos ("Vigente/Vencida" contra "Con póliza/Sin póliza").
+**Lo que queda de esa revisión:** decidir si 🕘 y 📊 siguen siendo dos pantallas — hoy describen la misma
+cotización con dos modelos distintos ("Vigente/Vencida" contra "Con póliza/Sin póliza") — y seguir bajando
+`app.js`, que quedó en ~1180 líneas. El `js/wizard.js` ya se hizo (ver arriba).
 
 ### El 💬 no se le ofrece a quien ya compró
 

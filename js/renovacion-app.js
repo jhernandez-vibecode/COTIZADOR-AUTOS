@@ -55,19 +55,11 @@
   }
 
   // ----- Navegación entre vistas -----
+  // El pintado de los pasos es identico en las tres pantallas: vive en
+  // js/wizard.js. Aca solo queda lo propio de este modulo, su `state.step`.
   function setStep(n) {
     state.step = n;
-    var views = document.querySelectorAll('.view');
-    for (var i = 0; i < views.length; i++) {
-      views[i].classList.toggle('active', views[i].id === ('view' + n));
-    }
-    var steps = document.querySelectorAll('#stepNav .step');
-    for (var j = 0; j < steps.length; j++) {
-      var s = parseInt(steps[j].getAttribute('data-step'), 10);
-      steps[j].classList.toggle('active', s === n);
-      steps[j].classList.toggle('done', s < n);
-    }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    wizardSetStep(n);
   }
 
   function setProgress(pct, label) {
@@ -636,7 +628,7 @@
     if (esSoloWa()) { irAvisoWa(); return; }
 
     var para = destinatarios();
-    var mal = para.filter(function (c) { return !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c); });
+    var mal = para.filter(function (c) { return !esEmailValido(c); });
     if (!para.length || mal.length) {
       showToast(mal.length ? ('Revisá este correo: ' + mal[0]) : 'Ingresá el correo del cliente.', 'error');
       $('m-to').focus(); return;
@@ -664,17 +656,7 @@
       });
 
       btn.textContent = 'Enviando…';
-      await getToken();
-      try {
-        await sendEmail(raw);
-      } catch (err) {
-        // token vencido a mitad: limpiar y reintentar una vez
-        if (/\b401\b|expir|token/i.test(err.message || '')) {
-          clearToken();
-          await getToken();
-          await sendEmail(raw);
-        } else { throw err; }
-      }
+      await enviarConReintento(raw);   // reintenta una vez si el token vencio
 
       var t4 = $('successTitle');
       if (t4) t4.textContent = '¡Comprobante enviado!';
