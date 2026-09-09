@@ -43,9 +43,9 @@ app.js. Suite: **20 archivos / 688 checks**. Smoke: los 3 modales abren con clic
 la fila cerrada muestra la poliza y no ofrece WhatsApp, la del cliente directo dice "sin cotizacion previa".
 Cero errores de consola.
 
-⚠️ **PENDIENTE para JC:** una entrada creada por poliza cuenta como "Cotizada" en los KPIs aunque ese cliente
-nunca cotizo. Se dejo asi porque cambiarlo altera lo que el aprobo ("si no esta, igual cuenta"), pero infla el
-numero de cotizadas.
+🔴 **DECIDIDO por JC el mismo dia: "Igual suma". NO reproponerlo.** Una entrada creada por el envio de una
+poliza cuenta como "Cotizada" aunque ese cliente nunca cotizara. Se le planteo que infla el numero y lo
+ratifico. La fila igual se distingue con "sin cotizacion previa".
 
 🔴 Escribir esta misma entrada con un heredoc de bash se comio todo el texto entre backticks y el script igual
 dijo "OK". Es la trampa de siempre: los parches con backticks van por Write a un `.cjs`, y despues se LEE lo que

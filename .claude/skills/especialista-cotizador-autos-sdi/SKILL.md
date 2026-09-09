@@ -1060,9 +1060,10 @@ Los campos `poliza` (número) y `origen` se escribían y no los leía nadie. En 
 dio uso en la fila: el número de póliza se muestra, y las entradas de un cliente que llegó directo dicen
 **"sin cotización previa"** para que su fecha no se lea como fecha de cotización.
 
-⚠️ **Queda una decisión para JC:** una entrada con `origen: 'poliza'` **cuenta como "Cotizada"** en los KPIs,
-aunque ese cliente nunca cotizó. Se dejó así porque cambiarlo altera lo que él aprobó ("si no está, igual
-cuenta"), pero infla el número de cotizadas.
+🔴 **DECIDIDO por JC (9 set 2026): igual suma. NO reproponerlo.** Una entrada creada por el envío de una póliza
+cuenta como **"Cotizada"** en los KPIs aunque ese cliente nunca haya cotizado por la app. Se le planteó que eso
+infla el número y respondió *"Igual suma"*. No es un descuido: es una decisión tomada con el efecto a la vista.
+La fila igual se distingue en pantalla con "sin cotización previa".
 
 ---
 
