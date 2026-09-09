@@ -163,6 +163,61 @@ test('historyTienePoliza: solo con polizaAt', () => {
   eq(historyTienePoliza(null), false);
 });
 
+// ============ Los cierres que el agente ya tenía marcados ============
+// El 9 set 2026, al quitar el ciclo de estados, historyTienePoliza() se quedó
+// mirando solo polizaAt — que es nuevo. Resultado en el 📊 de JC ese mismo día:
+// 0 con póliza y conversión 0%, con todos sus cierres históricos intactos en el
+// registro. Y la purga los tomaba por cotizaciones sin póliza.
+test('🔴 una concretada marcada a mano (estado) sigue contando como cerrada', () => {
+  eq(historyTienePoliza({ estado: 'concretada' }), true);
+});
+
+test('🔴 el confirmed:true legacy también cuenta', () => {
+  eq(historyTienePoliza({ confirmed: true }), true);
+});
+
+test('los estados que NO son cierre no cuentan', () => {
+  eq(historyTienePoliza({ estado: 'pendiente' }), false);
+  eq(historyTienePoliza({ estado: 'agendada' }), false);
+  eq(historyTienePoliza({ estado: 'desechada' }), false);
+  eq(historyTienePoliza({ confirmed: false }), false);
+});
+
+test('🔴 el histórico de JC no se cuenta en cero', () => {
+  // Su registro real: cierres viejos marcados a mano, ninguno con polizaAt.
+  const s = computeHistoryStats([
+    { id: '1', estado: 'concretada' },
+    { id: '2', confirmed: true },
+    { id: '3', estado: 'pendiente' },
+    { id: '4', estado: 'desechada' }
+  ]);
+  eq(s.total, 4);
+  eq(s.conPoliza, 2, 'los cierres marcados a mano se perdieron');
+  eq(s.rate, 50, 'la conversión salió en cero');
+});
+
+test('🔴 la purga NO se lleva una concretada marcada a mano', () => {
+  sembrar([
+    { id: 'viejo-cliente', date: haceDias(300), plate: 'AAA111', estado: 'concretada' },
+    { id: 'legacy-ok',     date: haceDias(300), plate: 'BBB222', confirmed: true },
+    { id: 'nunca-cerro',   date: haceDias(300), plate: 'CCC333', estado: 'pendiente' }
+  ]);
+  const r = purgarHistorial();
+  eq(r.purgadas, 1, 'se llevó clientes que ya estaban cerrados');
+  const vivas = loadHistoryVivas().map(e => e.id);
+  ok(vivas.indexOf('viejo-cliente') !== -1, 'purgó una concretada');
+  ok(vivas.indexOf('legacy-ok') !== -1, 'purgó una confirmed:true');
+  ok(vivas.indexOf('nunca-cerro') === -1);
+});
+
+test('marcarPolizaEmitida no re-marca una que ya estaba cerrada a mano', () => {
+  sembrar([{ id: 'a', date: haceDias(5), plate: 'BXY123', estado: 'concretada' }]);
+  const r = marcarPolizaEmitida({ plate: 'BXY123' });
+  eq(r.creada, false, 'duplicó un cliente que ya estaba cerrado');
+  eq(loadHistoryVivas().length, 1);
+  eq(computeHistoryStats(loadHistoryVivas()).conPoliza, 1, 'lo contó dos veces');
+});
+
 test('marcarPolizaEmitida cruza por placa y cierra ESA cotización', () => {
   sembrar([
     { id: 'a', date: haceDias(5), plate: 'BXY123', client: 'Ana' },

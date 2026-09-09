@@ -903,6 +903,28 @@ failure del proyecto). Se verificó que ningún id enganchado en `app.js` quedó
 Tres números — **Cotizadas · Con póliza emitida · Conversión** — barras por mes, buscador por placa/apellido y
 tres chips (Todas · ⭐ Alto valor · ✓ Con póliza). Por fila: la marca **✓ Póliza emitida**, 💬 WhatsApp y 🗑.
 
+### 🔴 Regresión del mismo día: los cierres viejos dejaron de contar
+
+JC, minutos después de publicar: *"borro el porcentaje de las concretadas, ahora sale en cero"*. **Era un
+reporte de bug, no una orden** — se leyó primero como "borrá el porcentaje" y se llegó a quitar la conversión;
+se revirtió y se fue a la causa.
+
+`historyTienePoliza()` miraba **solo `polizaAt`**, que es un campo NUEVO. Todos los cierres que JC ya tenía
+marcados a mano (`estado: 'concretada'`, o el `confirmed: true` más viejo) dejaron de contar: el 📊 mostró
+**0 con póliza y 0% de conversión** con el registro intacto.
+
+🔴 **Y era peor que un número mal:** `purgarHistorial()` usa la misma función, así que tomaba esos cierres por
+cotizaciones sin póliza y **se los podía llevar a los 90 días**. Clientes reales.
+
+```js
+return !!(e.polizaAt || e.estado === 'concretada' || e.confirmed === true);
+```
+
+**La lección:** al retirar un ciclo de estados no basta con borrar el código que lo escribía — hay que decidir
+qué pasa con los datos que ese ciclo YA dejó en el navegador de cada agente. O se migran (escribirles `polizaAt`)
+o se siguen leyendo. Se optó por leerlos, que no toca datos de nadie. Cubierto por 6 checks en
+`test-history-stats.js`, verificados por reversión: sin el fix, 4 fallan.
+
 ### El cierre lo pone la póliza, cruzando por placa
 
 **`marcarPolizaEmitida(datos)`** (history.js) la llama `poliza-app.js` al terminar el envío:
@@ -957,7 +979,7 @@ respaldo, y que la conversión histórica siga cuadrando después de purgar.
 Smoke en localhost con datos inventados: purga automática al arrancar (se fue la vieja sin póliza, se quedó la
 vieja con póliza), cruce por placa con guion y minúsculas, cliente directo, reenvío sin duplicar, los tres
 chips, buscador por apellido, filtro por mes, el 🕘, móvil a 375 px y `/polizas-activas/` arrancando con los
-módulos nuevos. Cero errores de consola. **Suite: 18 archivos / 654 checks.**
+módulos nuevos. Cero errores de consola. **Suite: 18 archivos / 660 checks.**
 
 🔴 **La caché del navegador sirvió los `.js` viejos durante el smoke** y las funciones nuevas salían
 `undefined`. No era un bug: `fetch(url, {cache:'reload'})` sobre cada `<script src>` y recargar. Comprobar

@@ -53,9 +53,12 @@
  *                  apellido. Entradas viejas no lo traen -> cae a `client`.
  *   - valor      : valor asegurado del vehiculo (para filtro de alto valor).
  *                  Entradas viejas no lo traen: se recupera del param `va` del guideUrl.
- *   - polizaAt   : ISO de cuando se le envio la POLIZA ACTIVA. Es lo unico que
- *                  marca una cotizacion como cerrada, y lo pone la app sola.
- *                  Una entrada con polizaAt NO se purga nunca.
+ *   - polizaAt   : ISO de cuando se le envio la POLIZA ACTIVA. Lo pone la app
+ *                  sola; el agente no marca nada. Una cotizacion cerrada NO se
+ *                  purga nunca.
+ *                  🔴 Cuentan tambien como cerradas las que el agente marco a
+ *                  mano antes del 9 set 2026 (`estado: 'concretada'` o el
+ *                  `confirmed: true` legacy). Ver historyTienePoliza().
  *   - poliza     : numero de poliza, si el PDF lo traia.
  *   - origen     : 'poliza' si el cliente nunca cotizo por la app y entro al
  *                  registro directamente por el envio de la poliza.
@@ -529,26 +532,27 @@ function buildWaFollowUpUrl(entry, phoneOverride) {
     + 'text=' + encodeURIComponent(msg);
 }
 
-// =====================================================================
-// FUSIÓN / RESPALDO (para sincronización con Google Drive — drive-sync.js)
-// Todo PURO y testeable: recibe/devuelve arrays, no toca la red.
-// =====================================================================
-
 /**
- * Clave de identidad de una entrada para deduplicar al fusionar. Prefiere el id
- * estable; si una entrada legacy no lo tiene, cae a una firma de sus datos.
- * @param {object} e
- * @returns {string}
- */
-/**
- * ¿Esta cotizacion llego a poliza? Lo pone marcarPolizaEmitida() cuando el
- * agente envia la poliza activa desde /polizas-activas/. El agente no marca
- * nada a mano: si mando la poliza, el negocio se cerro.
+ * ¿Esta cotizacion se cerro? Lo normal es `polizaAt`, que pone
+ * marcarPolizaEmitida() al enviar la poliza activa: el agente no marca nada a
+ * mano, si mando la poliza el negocio se hizo.
+ *
+ * 🔴 PERO cuenta tambien lo que el agente YA habia marcado a mano ANTES del
+ * 9 set 2026, cuando existia el ciclo de estados: `estado: 'concretada'` y el
+ * `confirmed: true` mas viejo todavia. Olvidarlo dejo el 📊 de JC con 0 polizas
+ * y la conversion en 0% el mismo dia del cambio — sus cierres historicos
+ * seguian en el registro, pero nadie los miraba. Y peor: purgarHistorial() los
+ * tomaba por cotizaciones sin poliza y podia llevarselos a los 90 dias.
+ *
+ * Quitar esta compatibilidad exige MIGRAR los datos primero (escribir polizaAt
+ * en las viejas), no solo borrar el codigo.
+ *
  * @param {object} e
  * @returns {boolean}
  */
 function historyTienePoliza(e) {
-  return !!(e && e.polizaAt);
+  if (!e) return false;
+  return !!(e.polizaAt || e.estado === 'concretada' || e.confirmed === true);
 }
 
 /**
@@ -738,6 +742,17 @@ function purgarHistorial(dias, nowMs) {
   return { purgadas: purgadas, meses: Object.keys(meses).length };
 }
 
+// =====================================================================
+// FUSIÓN / RESPALDO (para sincronización con Google Drive — drive-sync.js)
+// Todo PURO y testeable: recibe/devuelve arrays, no toca la red.
+// =====================================================================
+
+/**
+ * Clave de identidad de una entrada para deduplicar al fusionar. Prefiere el id
+ * estable; si una entrada legacy no lo tiene, cae a una firma de sus datos.
+ * @param {object} e
+ * @returns {string}
+ */
 function _entryKey(e) {
   if (e && e.id) return 'id:' + e.id;
   return 'k:' + [
