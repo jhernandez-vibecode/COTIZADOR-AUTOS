@@ -13,6 +13,68 @@ description: >
 
 # Cotizador SDI — Checkpoint extendido (historico largo)
 
+## 9 set 2026 (5ª tanda) — cierre de la revision: wizard.js, app.js < 1000 y una sola pantalla
+
+Los tres ultimos puntos del informe thermo-nuclear, en una sola jornada.
+
+### `js/wizard.js` (punto 3)
+
+`setStep()` estaba **byte a byte identico** en poliza-app.js y renovacion-app.js; el regex del correo aparecia
+**5 veces**; el reintento de token vencido estaba duplicado en dos pantallas **y faltaba en el cotizador**.
+
+🔴 Ese ultimo era un bug real: si el token de Google caducaba con la pantalla abierta, poliza y renovacion
+reintentaban solas pero el cotizador no — el envio moria y habia que **volver a subir el PDF**. Los tres usan
+ahora `enviarConReintento()`.
+
+Expone `esEmailValido`, `correosInvalidos` (el campo "Para" con varios correos del plan familiar),
+`enviarConReintento` y `wizardSetStep`. Este ultimo **no toca el estado del llamador**: cada pantalla guarda su
+`state.step` y despues llama, asi que `setStep` queda en dos lineas por modulo. Carga en las 3 paginas, despues
+de gmail-auth.js.
+
+**3 de los 15 checks son de guardia**: recorren `js/` y fallan si el regex, el reintento o el `setStep` vuelven
+a copiarse — que es exactamente como se llego hasta ahi. Un cuarto daba falso positivo con `gmail-auth.js` (ahi
+se DEFINE `clearToken`, no se copia) y se afino al patron del reintento.
+
+### `app.js` de 1238 a 968 lineas (punto 2, cierre)
+
+Salieron `js/history-ui.js` (el modal 🕘) y `js/datos-ui.js` (respaldo en Drive + limpieza). Drive y la limpieza
+van en el MISMO modulo porque los une un invariante: **nada se borra sin estar respaldado antes**. Separarlos
+volveria a dejar el borrado lejos de su red de seguridad.
+
+`history-ui.js` usaba el `_escapeHtml` de app.js, que se carga DESPUES: se le puso `_escHist` propio, como
+`stats-ui.js` con `_esc` y `email-marca.js` con `_escMarca`. **Es el patron del proyecto**: cinco lineas
+repetidas a cambio de que ningun modulo dependa del orden de carga.
+
+`test-purga-respaldo.js` empezo a fallar al mover la limpieza. **No era falso positivo: el test hacia bien su
+trabajo.** Se le apunto al archivo nuevo conservando el invariante, en vez de aflojarlo.
+
+### El 🕘 y el 📊 quedan en una sola pantalla (punto 6)
+
+JC: *"punto 6 dejá solo uno"*. Eran dos listas de la misma cotizacion con modelos distintos. `history-ui.js` se
+elimino a las pocas horas de crearse — su valor fue **aislar el 🕘 para poder fusionarlo con confianza**.
+
+Se transcribio (no se rehizo): 🔗 la guia, 📄 copiar su enlace, el correo del cliente en su propia linea, y
+"Restaurar de Drive" del vacio (solo con el registro vacio DE VERDAD, no cuando un filtro no da resultados). El
+badge de vigencia se **fundio en la marca**: "Sin poliza · vence en 9 d" / "Cotizacion vencida".
+
+🔴 **Lo que NO se llevo, y por que:** el 💬 de compartir la guia ("Te acabo de enviar por correo…") pertenece al
+momento del envio y sigue en la vista 4 — en un registro historico seria falso. Y "Borrar historial" usaba
+`clearHistory()` **sin dejar lapidas**, asi que volvia desde Drive al restaurar; lo cubre el boton del ⚙.
+
+El acceso paso a "Cotizaciones" y el modal a "📊 Cotizaciones enviadas". **Los ids `btnStats`/`statsModal`/
+`statsList` NO cambiaron**: app.js los engancha por id.
+
+### Como quedo la jornada
+
+| | Al empezar | Al cerrar |
+|---|---|---|
+| `app.js` | 1410 lineas, 6 responsabilidades | **968**, una |
+| Modulos nuevos | — | `stats-ui` 340 · `datos-ui` 202 · `wizard` 113 |
+| Suite | 612 checks | **722** |
+
+**Tres bugs reales aparecieron sin ser el objetivo:** la purga que borraba sin red, el envio del cotizador que
+no reintentaba, y el WhatsApp que le escribia "¿tuvo chance de revisarla?" a clientes que ya habian comprado.
+
 ## 9 set 2026 (4ª tanda) — el 📊 sale de app.js + dos limpiezas de la revision
 
 Puntos 4, 5 y 2 del informe thermo-nuclear.
