@@ -696,6 +696,13 @@ const PURGA_DIAS = 90;
  * Borra las cotizaciones SIN poliza mas viejas que `dias`, dejando solo el
  * conteo del mes en el resumen.
  *
+ * 🔴 LLAMARLA SOLO DESPUES DE UN RESPALDO CONFIRMADO (lo hace driveBackup).
+ * Esto borra datos de clientes y no hay deshacer. Vivio en el arranque de la
+ * app un solo dia — 9 set 2026 — y en ese dia un bug de historyTienePoliza()
+ * basto para que se llevara cierres reales: borraba primero y respaldaba 2,5 s
+ * despues, si es que el agente tenia Drive activado. Ahora el orden esta
+ * invertido y la garantia es estructural: lo que se borra ya esta en Drive.
+ *
  * 🔴 Lo que llego a poliza NO se toca nunca: es el cliente real y es el dato
  *    que sostiene la conversion.
  * 🔴 De cada borrada queda un tombstone (id + fecha, CERO datos del cliente)
@@ -738,7 +745,9 @@ function purgarHistorial(dias, nowMs) {
 
   _persistResumen(res);
   _persistHistory(list);
-  _afterHistoryChange();
+  // A proposito NO se llama _afterHistoryChange(): quien invoca esta funcion es
+  // driveBackup(), que ya esta respaldando. Dispararlo aqui encadenaria un
+  // respaldo dentro de otro. Las lapidas viajan a Drive en el siguiente.
   return { purgadas: purgadas, meses: Object.keys(meses).length };
 }
 

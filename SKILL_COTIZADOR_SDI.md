@@ -13,6 +13,43 @@ description: >
 
 # Cotizador SDI — Checkpoint extendido (historico largo)
 
+## 9 set 2026 (3ª tanda) — la purga se mueve al respaldo (revision thermo-nuclear)
+
+Hallazgo #1 de la revision de calidad que pidio JC al cerrar la jornada. `purgarHistorial()` se llamaba desde
+el `DOMContentLoaded` de app.js:
+
+1. Corria **en cada arranque**, silenciosa y sin confirmacion.
+2. `scheduleDriveBackup()` **retorna de inmediato si el agente no activo Drive** (drive-sync.js:332): un
+   agente sin respaldo **perdia datos sin ninguna red**.
+3. Aun con Drive, el respaldo iba **2,5 s DESPUES** del borrado y podia fallar (`_driveAutoOff`).
+
+O sea: borraba primero y respaldaba despues, ojala. Todo colgando de un unico predicado,
+`historyTienePoliza()` — que **ese mismo dia tuvo un bug** y se llevaba los cierres legacy.
+
+### El movimiento
+
+La purga dejo de ser una tarea del arranque y paso a ser **consecuencia del respaldo**. `driveBackup()` la
+llama en `_purgarLoYaRespaldado()` despues de confirmar la escritura, y tambien en el camino donde Drive ya
+tenia exactamente lo mismo. Si `_driveWrite` lanza, no se llega a esa linea.
+
+- El **orden** es parte del invariante: se sube el historial COMPLETO y recien despues se borra local. Al
+  reves, Drive recibiria las lapidas y los datos no quedarian en ningun lado.
+- `purgarHistorial()` dejo de llamar `_afterHistoryChange()`: la invoca el respaldo, encadenaria uno dentro
+  de otro. Las lapidas viajan en el siguiente respaldo, que es suficiente.
+- **Consecuencia aceptada:** sin Drive activado no se purga nunca. Perder clientes es peor que una lista
+  larga; para el tamano ya esta `HISTORY_MAX` y la invitacion a activar el respaldo.
+
+### Verificacion
+
+`tests/test-purga-respaldo.js` (6 checks) monta history.js + drive-sync.js en un contexto `vm` con `fetch` y
+`localStorage` simulados — es la primera vez que se testea drive-sync sin red. Prueba de **mutacion** con los
+4 caminos de vuelta al diseno peligroso: los caza los 4. Smoke en localhost sin Drive: 0 borradas, la
+cotizacion de 200 dias intacta, cero errores de consola. Suite: **19 archivos / 666 checks**.
+
+🔴 Un test que hacia `grep` del fuente buscando `_afterHistoryChange` daba falso positivo: encontraba el
+nombre dentro del comentario que explica que NO se llama. Se reemplazo por un test de comportamiento que
+espia `scheduleDriveBackup`. Un grep no es un test.
+
 ## 9 set 2026 (2ª tanda) — el 📊 se simplifico: la poliza es el unico cierre
 
 Pedido de JC a mitad de la jornada de la placa: *"Cambiamos la zona de estadisticas a algo más simple, vamos a

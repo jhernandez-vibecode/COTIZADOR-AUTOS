@@ -200,6 +200,30 @@ function _drivePayload(historyArr) {
  * @param {string} [token] - reusa un token ya obtenido (evita 2º popup)
  * @returns {Promise<true>}
  */
+/**
+ * Borra del navegador las cotizaciones viejas sin poliza. Se llama UNICAMENTE
+ * desde driveBackup y solo cuando el respaldo ya quedo confirmado en Drive, asi
+ * que es imposible borrar algo que no este respaldado.
+ *
+ * Consecuencia querida: un agente que no activo el respaldo NO pierde nada — su
+ * registro crece, y para eso esta el tope local HISTORY_MAX y la invitacion a
+ * activar Drive. Antes esto corria en el arranque y borraba con o sin respaldo.
+ *
+ * Nunca lanza: el respaldo ya salio bien y esto no puede convertirlo en error.
+ */
+function _purgarLoYaRespaldado() {
+  try {
+    if (typeof purgarHistorial !== 'function') return;
+    const r = purgarHistorial();
+    if (r.purgadas) {
+      console.info('[historial] purgadas ' + r.purgadas +
+                   ' cotizaciones sin poliza de mas de 90 dias (ya respaldadas)');
+    }
+  } catch (e) {
+    console.warn('[historial] no se pudo purgar:', e);
+  }
+}
+
 async function driveBackup(token) {
   const t  = token || await getDriveToken();
   const local = ensureHistoryIds();
@@ -236,11 +260,15 @@ async function driveBackup(token) {
   // paso ahorra red. `savedAt` cambia siempre, así que se comparan los datos.
   if (remoto && _mismoContenido(remoto, paraDrive)) {
     _setDriveLastBackup(new Date().toISOString());
+    _purgarLoYaRespaldado();   // Drive ya tiene exactamente esto
     return true;
   }
 
   await _driveWrite(t, _drivePayload(paraDrive));
   _setDriveLastBackup(new Date().toISOString());
+  // Recien ahora, con la escritura confirmada, se borra lo viejo del navegador.
+  // Si _driveWrite hubiera lanzado, no se llega aqui y no se borra nada.
+  _purgarLoYaRespaldado();
   return true;
 }
 

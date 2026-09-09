@@ -186,13 +186,10 @@ document.addEventListener('DOMContentLoaded', function () {
   if (savedProfile) {
     applyProfile(savedProfile);
     paintRailAgent();          // ya con los datos del agente aplicados
-    // Mantenimiento del registro: borra las cotizaciones sin póliza de más de
-    // 90 días (decisión de JC, 9 set 2026) dejando solo el conteo del mes.
-    // Silencioso: no es algo que el agente tenga que atender.
-    try {
-      const purga = purgarHistorial();
-      if (purga.purgadas) console.info('[historial] purgadas ' + purga.purgadas + ' cotizaciones sin póliza de más de 90 días');
-    } catch (e) { console.warn('[historial] no se pudo purgar:', e); }
+    // La limpieza del registro (cotizaciones sin póliza de más de 90 días) NO
+    // se hace acá: vive en driveBackup y corre solo cuando el respaldo quedó
+    // confirmado. Borrar en el arranque dejaba sin red al agente que no tiene
+    // Drive, y convertía cualquier bug del predicado en pérdida irreversible.
     // Invitación (una vez) a activar el respaldo en Drive si aún no lo hizo.
     maybeShowDriveInvite();
   } else {

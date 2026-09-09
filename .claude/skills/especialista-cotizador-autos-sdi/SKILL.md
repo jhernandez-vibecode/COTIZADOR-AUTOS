@@ -956,6 +956,38 @@ tenga que atender). Borra las cotizaciones **sin póliza** de más de `PURGA_DIA
 - **`loadHistoryVivas()`** es lo que ve el agente; **`loadHistory()` cruda** (con lápidas) se reserva para el
   respaldo y la fusión. El 📊 y el 🕘 usan la primera.
 
+### 🔴 La purga vive en `driveBackup()`, NO en el arranque
+
+Salió de la revisión thermo-nuclear del mismo día. En su primera versión `purgarHistorial()` se llamaba desde el
+`DOMContentLoaded` de `app.js`, y el orden era: **borrar primero, respaldar 2,5 s después** — y solo si el agente
+tenía Drive activado, porque `scheduleDriveBackup()` retorna de inmediato cuando no lo está. O sea: **un agente
+sin respaldo perdía datos sin ninguna red**, y cualquier bug del predicado se convertía en pérdida irreversible.
+Ese mismo día pasó: `historyTienePoliza()` no reconocía los cierres legacy y la purga se los podía llevar.
+
+Ahora la purga es **consecuencia del respaldo**: `driveBackup()` la llama en `_purgarLoYaRespaldado()`, después de
+confirmar la escritura (y también cuando Drive ya tenía exactamente lo mismo). Si `_driveWrite` lanza, no se llega
+a la línea. La garantía es estructural, no depende de un timer.
+
+```js
+await _driveWrite(t, _drivePayload(paraDrive));   // los datos COMPLETOS
+_setDriveLastBackup(new Date().toISOString());
+_purgarLoYaRespaldado();                          // recién ahora se borra
+```
+
+- 🔴 **El orden importa**: lo que se sube lleva las cotizaciones enteras. Purgar antes mandaría las lápidas a
+  Drive y los datos no quedarían en ninguna parte.
+- 🔴 **`purgarHistorial()` ya NO llama `_afterHistoryChange()`**: la invoca el respaldo, dispararlo ahí
+  encadenaría un respaldo dentro de otro.
+- **Consecuencia querida y aceptada:** el agente que no activó Drive **no purga nunca**. Su registro crece y lo
+  contiene `HISTORY_MAX`. Perder datos de clientes es peor que una lista larga.
+- La purga corre en el flujo natural: cada envío dispara respaldo, y "Sincronizar ahora" también.
+  `driveRestore()` **no** purga.
+
+`tests/test-purga-respaldo.js` (**6 checks**) monta history.js + drive-sync.js en un contexto `vm` con `fetch` y
+`localStorage` simulados. Verificado por **mutación**: se probaron los 4 caminos de vuelta al diseño peligroso
+(purgar antes de escribir, purgar en un catch, que app.js vuelva a purgar, que la purga encadene respaldo) y el
+test caza los 4. Smoke sin Drive activado: 0 borradas, la de 200 días intacta.
+
 ### El conteo por mes: por qué existe
 
 Lo levantó el propio mockup: si se borran las cotizaciones viejas sin póliza y un cliente cotiza en enero pero
@@ -979,7 +1011,7 @@ respaldo, y que la conversión histórica siga cuadrando después de purgar.
 Smoke en localhost con datos inventados: purga automática al arrancar (se fue la vieja sin póliza, se quedó la
 vieja con póliza), cruce por placa con guion y minúsculas, cliente directo, reenvío sin duplicar, los tres
 chips, buscador por apellido, filtro por mes, el 🕘, móvil a 375 px y `/polizas-activas/` arrancando con los
-módulos nuevos. Cero errores de consola. **Suite: 18 archivos / 660 checks.**
+módulos nuevos. Cero errores de consola. **Suite: 19 archivos / 666 checks.**
 
 🔴 **La caché del navegador sirvió los `.js` viejos durante el smoke** y las funciones nuevas salían
 `undefined`. No era un bug: `fetch(url, {cache:'reload'})` sobre cada `<script src>` y recargar. Comprobar
