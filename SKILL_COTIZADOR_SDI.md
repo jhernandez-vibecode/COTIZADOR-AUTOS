@@ -2501,3 +2501,52 @@ Copiado del SKILL router, que manda para lo vigente. El plan completo con el có
   🔴 **Los datos del dossier se verifican leyendo cada página COMO IMAGEN.** El emparejamiento
   servicio↔límite por coordenadas se equivoca en las filas apretadas (Salud Premium). Conteos correctos:
   11 · 8 · 16 · 30 · 7 · 21.
+
+---
+
+## Checkpoint 10 sep 2026 — el explicador en línea clara (`fb95067`)
+
+JC: *"vamos a actualizar la imagen solamente del explicador de autos"*. Se aplicó con el skill `imagen-de-marca-sdi`
+(v1.3) siguiendo su procedimiento: mockup local con capturas → artefacto para que lo viera → **6 ajustes de JC**
+(chips de cobertura con color, iconos de trazo de SASINS en asistencias, título del deducible en azul, tintes en
+repuestos y pasos, anual siempre resaltado) + **logo del INS en azul** → "dale" → localhost → prod. Tag de rollback
+**`pre-explicador-linea-clara-10sep`**. Los correos y la consola **no** se tocaron.
+
+- 🔴 **Solo la cara.** El `<script>` de `explicacion/index.html` es **byte a byte** el de antes (se comparó contra
+  `HEAD` al implementar). Todo va en el bloque **LÍNEA CLARA al final del `<style>`**, que gana por orden de fuente;
+  los `!important` son solo contra estilos en línea del HTML y cada uno dice por qué. Regla para el futuro: **si un
+  cambio de imagen necesita tocar el JS, no es un cambio de imagen.**
+- **HTML que sí cambió:** header en dos niveles (`.lc-top` + `.lc-nav`, conservando `.ins-logo`, `.pill-100`,
+  `.agent-info` y `.brand-text`), `.hero-cta` con dos píldoras, pie con `<img class="sdi-logo"
+  src="../img/sdi-logo-compacto.svg">` en lugar del SVG negativo pegado, sprite Lucide (trazo 1,5, el set de SASINS)
+  con `<use>` en las 7 asistencias, `data-cifra` en los 3 precios y **los emojis fuera del HTML estático** (los que
+  escribe el JS, como el 🎉 de la celebración, siguen ahí).
+- 🔴 **Dos enganches que dependen de un truco de CSS:** (1) `.agent-info` — el JS escribe `<b>nombre</b><br/>licencia`;
+  el CSS esconde el `<br>` y pone " · " con `b::after`. (2) `.bento-tile .letter::before{content:"Cobertura"}` — el JS
+  lee `textContent` de `.letter` (solo la letra) y el pseudo-elemento no lo contamina. Si alguien pasa ese texto al
+  HTML, `aplicarCoberturas` deja de encontrar la letra.
+- **Tipografía v1.3:** Google Sans Flex (500 titulares · 600 nombres · 400 texto) + Google Sans Code (cifras
+  secundarias). **Inter queda en el `<link>` solo para prestar el ₡** — verificado con zoom 2× en el mono chico, la
+  protagonista y los precios. El `div[style*="Space Grotesk"]` del bloque eléctrico se sobreescribe con `!important`.
+- **Logo del INS en azul:** `img/ins-logo-azul.png` (1200×284, 29 KB), generado del blanco con PIL conservando el
+  alpha, a pedido de JC ("si podés poner el logo del INS en azul o verde mejor"). El blanco `ins-logo.png` sigue para
+  los correos. Si lo quiere verde: recolorear y regenerar, no filtros CSS.
+- **`img/sdi-logo-compacto.svg` era el NEGATIVO blanco mal nombrado** (título "Compacto negativo") y nadie lo usaba;
+  ahora es el `02-sdi-logo-compacto.svg` del kit. `js/linea-clara-cifras.js` es copia literal de
+  `SDI-BRAND-KIT/linea-clara/`.
+- **Color:** producto navy `#0C2340` (regla 28×3, avatar) más seis tintes pálidos `--t-azul/verde/rosa/viol/oro/cyan`
+  con tinta ≥4,5:1, que pidió JC para dar vida. Van en chips, iconos y fondos; **ninguna cifra lleva color** (regla 6
+  de la línea clara se mantiene). El anual de pagos va en verde pálido con la etiqueta sólida
+  "Recomendado · 10 % de descuento".
+- **Copy:** el botón final pasó de "Agende su cita de Aseguramiento" a "Agendar mi cita de aseguramiento" (vos, como
+  el resto). La cinta dorada quedó `display:none` (el elemento sigue por el hook). "Tu plan" y "Tuyo" en repuestos
+  quedaron los dos.
+- **Smoke:** el Browser pane devolvía `innerWidth 0` (pane oculto: entorno, no bug — ver memoria "Pane: rAF
+  throttled"). Se verificó con un arnés de 4 iframes (1280, 375, `og=1&vt=e` con solo A y C, y enlace viejo sin
+  `cb`) servido desde `.netlify/smoke/` (ruta ignorada, borrada al terminar) y leído con `chrome --dump-dom`:
+  consola 0, fuentes cargadas, `scrollWidth == clientWidth`, pasos dinámicos correctos. 🔴 En headless con
+  `--virtual-time-budget` **las transiciones no avanzan** (`max-height` computado 0 en la tarjeta expandida): se
+  confirmó con captura, no con `getComputedStyle`.
+- `python -m http.server` del launch.json sirve sin `Cache-Control`; el explicador es un solo HTML con CSS/JS en
+  línea, así que alcanzó con `?_v=` en la URL. Para módulos `.js` externos usar `http-server -c-1`.
+

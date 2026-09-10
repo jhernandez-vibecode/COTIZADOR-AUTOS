@@ -5,7 +5,11 @@ description: ESPECIALISTA COTIZADOR AUTOS SDI — App web vanilla JS que extrae 
 
 # Especialista Cotizador SDI — Seguros Autos INS
 
-Leer COMPLETO antes de tocar código. Estado a **27 agosto 2026**: **el explicador ya es dinámico** — el paso 2
+Leer COMPLETO antes de tocar código. Estado a **10 septiembre 2026**: **el explicador (`/explicacion/`) estrena la línea
+clara SDI** — tipografía v1.3 (Google Sans Flex + Code), barra en dos niveles con el INS en azul, hero centrado, paneles
+sobre banda pálida, tintes pálidos que pidió JC y el pago anual siempre resaltado. Solo la cara: el JS es byte a byte el de
+antes. Commit `fb95067`, tag `pre-explicador-linea-clara-10sep`, verificado en producción. Ver "El explicador en línea
+clara". Los correos y la consola NO cambiaron de letra. Previo (**27 agosto 2026**): **el explicador ya es dinámico** — el paso 2
 (asistencia) solo aparece si la cotización trae Multiasistencia (G o M en el param `cb`), y los pasos 3
 (deducible) y 4 (repuestos) solo si trae cobertura al propio vehículo (D, F o H; el paso 3 estándar además exige
 IDD porque promete su reintegro), con renumeración completa del recorrido (dots, contador, hero, botones) cuando
@@ -91,7 +95,7 @@ App interna del agente INS Juan Carlos Hernández (licencia SUGESE 08-1318) para
   | `pageWidth` | 612 (Letter US) |
 
   Mensual y Deducción son justamente las 2 filas que `pdf-modify.js` tapa. La prima anual 570.891 es la misma del caso de control de la Cláusula 33 (ver esa sección).
-- Mockup de rediseño del explicador (parking, NO aplicado): `C:/Users/segur/mockup-c-final.html` — estilo "Digital claro y eficiente", DM Sans + íconos Lucide. Sigue siendo opción viable si JC pide rediseño completo.
+- ~~Mockup de rediseño del explicador (parking): `C:/Users/segur/mockup-c-final.html`~~ — **SUPERADO el 10 sep 2026**: el explicador ya se rediseñó con la línea clara SDI (skill `imagen-de-marca-sdi`). Ese archivo viejo ya no es referencia.
 - Git: usuario `jhernandez-vibecode` / jhernandez@segurosdelins.com, credenciales cacheadas. **Commit + push lo hace Claude**, no se le pasan comandos a JC.
 - **Leer PDFs: el lector nativo (pdftoppm/poppler) está ROTO** → usar Python (`pypdf` / `PyMuPDF` / `pdfplumber`, instalados). Tablas que son imagen: rasterizar con `fitz.get_pixmap()` y leer con Read.
 
@@ -117,7 +121,7 @@ App interna del agente INS Juan Carlos Hernández (licencia SUGESE 08-1318) para
 | OAuth Gmail | Google Identity Services (GIS) |
 | Envío Gmail | Gmail API v1 `/gmail/v1/users/me/messages/send` |
 | Persistencia | localStorage (perfil del agente + historial de envíos) |
-| Tipografía | Space Grotesk + Inter (estándar SDI, Google Fonts) |
+| Tipografía | Consola y correos: Space Grotesk + Inter. **Explicador (10 sep 2026): Google Sans Flex + Google Sans Code v1.3**, Inter solo presta el ₡ |
 
 **Zero build, zero npm.** CDN para todo. **Solo Gmail** — sin Outlook/MSAL/Graph.
 
@@ -1357,6 +1361,52 @@ firmadas con la licencia SUGESE del agente.
 **De paso:** la guía formateaba con `toLocaleString('es-CR')`, que separa los miles con **espacio**
 (`₡18 000 000`), mientras los montos escritos a mano usaban coma. Todo unificado a punto, como el correo.
 
+## El explicador en línea clara (10 sep 2026, `fb95067`) — EN PROD
+
+JC: *"vamos a actualizar la imagen solamente del explicador de autos"*. Se aplicó con el skill `imagen-de-marca-sdi`
+(v1.3) siguiendo su procedimiento: mockup local con capturas → artefacto para que lo viera → **6 ajustes de JC**
+(chips de cobertura con color, iconos de trazo de SASINS en asistencias, título del deducible en azul, tintes en
+repuestos y pasos, anual siempre resaltado) + **logo del INS en azul** → "dale" → localhost → prod. Tag de rollback
+**`pre-explicador-linea-clara-10sep`**. Los correos y la consola **no** se tocaron.
+
+- 🔴 **Solo la cara.** El `<script>` de `explicacion/index.html` es **byte a byte** el de antes (se comparó contra
+  `HEAD` al implementar). Todo va en el bloque **LÍNEA CLARA al final del `<style>`**, que gana por orden de fuente;
+  los `!important` son solo contra estilos en línea del HTML y cada uno dice por qué. Regla para el futuro: **si un
+  cambio de imagen necesita tocar el JS, no es un cambio de imagen.**
+- **HTML que sí cambió:** header en dos niveles (`.lc-top` + `.lc-nav`, conservando `.ins-logo`, `.pill-100`,
+  `.agent-info` y `.brand-text`), `.hero-cta` con dos píldoras, pie con `<img class="sdi-logo"
+  src="../img/sdi-logo-compacto.svg">` en lugar del SVG negativo pegado, sprite Lucide (trazo 1,5, el set de SASINS)
+  con `<use>` en las 7 asistencias, `data-cifra` en los 3 precios y **los emojis fuera del HTML estático** (los que
+  escribe el JS, como el 🎉 de la celebración, siguen ahí).
+- 🔴 **Dos enganches que dependen de un truco de CSS:** (1) `.agent-info` — el JS escribe `<b>nombre</b><br/>licencia`;
+  el CSS esconde el `<br>` y pone " · " con `b::after`. (2) `.bento-tile .letter::before{content:"Cobertura"}` — el JS
+  lee `textContent` de `.letter` (solo la letra) y el pseudo-elemento no lo contamina. Si alguien pasa ese texto al
+  HTML, `aplicarCoberturas` deja de encontrar la letra.
+- **Tipografía v1.3:** Google Sans Flex (500 titulares · 600 nombres · 400 texto) + Google Sans Code (cifras
+  secundarias). **Inter queda en el `<link>` solo para prestar el ₡** — verificado con zoom 2× en el mono chico, la
+  protagonista y los precios. El `div[style*="Space Grotesk"]` del bloque eléctrico se sobreescribe con `!important`.
+- **Logo del INS en azul:** `img/ins-logo-azul.png` (1200×284, 29 KB), generado del blanco con PIL conservando el
+  alpha, a pedido de JC ("si podés poner el logo del INS en azul o verde mejor"). El blanco `ins-logo.png` sigue para
+  los correos. Si lo quiere verde: recolorear y regenerar, no filtros CSS.
+- **`img/sdi-logo-compacto.svg` era el NEGATIVO blanco mal nombrado** (título "Compacto negativo") y nadie lo usaba;
+  ahora es el `02-sdi-logo-compacto.svg` del kit. `js/linea-clara-cifras.js` es copia literal de
+  `SDI-BRAND-KIT/linea-clara/`.
+- **Color:** producto navy `#0C2340` (regla 28×3, avatar) más seis tintes pálidos `--t-azul/verde/rosa/viol/oro/cyan`
+  con tinta ≥4,5:1, que pidió JC para dar vida. Van en chips, iconos y fondos; **ninguna cifra lleva color** (regla 6
+  de la línea clara se mantiene). El anual de pagos va en verde pálido con la etiqueta sólida
+  "Recomendado · 10 % de descuento".
+- **Copy:** el botón final pasó de "Agende su cita de Aseguramiento" a "Agendar mi cita de aseguramiento" (vos, como
+  el resto). La cinta dorada quedó `display:none` (el elemento sigue por el hook). "Tu plan" y "Tuyo" en repuestos
+  quedaron los dos.
+- **Smoke:** el Browser pane devolvía `innerWidth 0` (pane oculto: entorno, no bug — ver memoria "Pane: rAF
+  throttled"). Se verificó con un arnés de 4 iframes (1280, 375, `og=1&vt=e` con solo A y C, y enlace viejo sin
+  `cb`) servido desde `.netlify/smoke/` (ruta ignorada, borrada al terminar) y leído con `chrome --dump-dom`:
+  consola 0, fuentes cargadas, `scrollWidth == clientWidth`, pasos dinámicos correctos. 🔴 En headless con
+  `--virtual-time-budget` **las transiciones no avanzan** (`max-height` computado 0 en la tarjeta expandida): se
+  confirmó con captura, no con `getComputedStyle`.
+- `python -m http.server` del launch.json sirve sin `Cache-Control`; el explicador es un solo HTML con CSS/JS en
+  línea, así que alcanzó con `?_v=` en la URL. Para módulos `.js` externos usar `http-server -c-1`.
+
 ## Gotchas críticos
 
 0. **FORMA DE PAGO = matriz de 5 columnas (13 jul 2026)** — el PDF INS trae precios por tipo de repuesto. El parser DEBE elegir la columna del repuesto de la página 1 (`_parsePaymentMatrix`/`selectPriceColumn`); agarrar el primer número de cada fila (parser viejo) manda el precio equivocado. `_pageItems` necesita `w: i.width` para calcular el centro X de cada item. Verificar SIEMPRE con PDF.js real (no el preview congelado, gotcha #16): items reales → `_parsePaymentMatrix`. Si el agente edita el repuesto en vista 2, `_syncDataFromView2` re-selecciona la columna.
@@ -1489,7 +1539,7 @@ Contrastadas con 5 PDF oficiales que entregó JC (viven en `OneDrive\ARCHIVO DIG
 
 - ~~Las secciones 3 y 4 del explicador todavía no miran las coberturas~~ — **HECHO el 27 ago 2026** (`07d0f60`,
   aprobado por JC y verificado en prod). Ver "Pasos 3 y 4 dinámicos" en la sección del explicador.
-- **Decidir la tipografía de la CONSOLA.** Las 3 páginas cargan Poppins y `css/styles.css` pide `'Poppins','Inter'`,
+- **Decidir la tipografía de la CONSOLA.** (El explicador ya migró a la v1.3 el 10 sep; la consola y los correos siguen igual.) Las 3 páginas cargan Poppins y `css/styles.css` pide `'Poppins','Inter'`,
   mientras los correos y la documentación usan Space Grotesk. No se tocó porque cambia visualmente toda la app.
 - **El nombre del agente va sin tilde** (`CFG.FROM_NAME = 'Juan Carlos Hernandez Vargas'`); el logotipo dice
   *Hernández*. 🔴 Corregir el default **NO le llega a JC**: su perfil en localStorage gana (gotcha 2b). Tendría que
