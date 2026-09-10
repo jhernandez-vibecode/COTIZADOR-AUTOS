@@ -1,0 +1,263 @@
+/* =====================================================================
+   LÍNEA CLARA · consola del agente (10 sep 2026, mockup aprobado por JC)
+   Referencia: business.google.com/en-all/google-ads. Se carga DESPUÉS de
+   css/styles.css y SOLO en index.html: las sub-páginas no la enlazan.
+   Solo la cara: mismos ids y enganches de JS. Los !important van contra
+   estilos EN LÍNEA del HTML, y cada uno dice por qué.
+   Cara AGENTE: manda SDI (logo a color arriba); el INS no aparece.
+   ===================================================================== */
+:root{
+  --lc-blue:#0369A1; --lc-blue-ink:#02557F; --lc-blue-soft:#E8F1F8;
+  --lc-band:#EEF4F9; --lc-line:#DADCE0; --lc-line-btn:#8A939C; --lc-line-soft:#EDEFF2;
+  --lc-ink:#1B1F23; --lc-ink-2:#5A6570; --lc-ink-3:#6B7681;
+  --lc-ok-bg:#E9F5F0; --lc-ok-tx:#037D61; --lc-warn-tx:#B26A00;
+  --lc-prod:#0C2340;                       /* el navy del cotizador, ahora solo en la regla corta */
+  --lc-shadow:0 1px 2px rgba(27,31,35,.05); --lc-ease:cubic-bezier(.22,.61,.36,1);
+  /* los mismos seis tintes pálidos que JC pidió para el explicador */
+  --t-azul-bg:#E8F1F8;  --t-azul-tx:#0369A1;
+  --t-verde-bg:#E6F4EE; --t-verde-tx:#1E7A55;
+  --t-rosa-bg:#FCECEE;  --t-rosa-tx:#B03A48;
+  --t-viol-bg:#EFEBFA;  --t-viol-tx:#5D42B5;
+  --t-oro-bg:#FBF3DF;   --t-oro-tx:#8A5B00;
+  --t-cyan-bg:#E4F5F8;  --t-cyan-tx:#0E6E80;
+  /* tipografía SDI v1.3: Inter solo presta el ₡ */
+  --font-display:'Google Sans Flex','Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --font-body:'Google Sans Flex','Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --font-mono:'Google Sans Code',ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;
+}
+
+/* ---------- base ---------------------------------------------------- */
+body,body.page-cotizar{background:#fff;color:var(--lc-ink);font-family:var(--font-body);font-size:14px;font-optical-sizing:auto;
+  -webkit-font-smoothing:antialiased}
+.brand-title,.card-title,.drop-zone-title,.success-title,.modal-title,.ded-guide>summary,.ded-guide .ded-block-title,
+.rail-foot b,.hdr-agent,.stats-kpi-num{font-family:var(--font-display)}
+b,strong{font-weight:600}
+
+/* ---------- R3 · barra en dos niveles: SDI a color + agente / producto + pasos ---------- */
+.app-header{background:#fff;color:var(--lc-ink);box-shadow:none;border-bottom:1px solid var(--lc-line-soft)}
+.app-header::after{height:3px}                       /* el filete 60/25/10/5 se queda: es la firma SDI */
+.lc-top{background:#F8F9FA;height:52px}
+.lc-top .lc-wrap{max-width:1200px;margin:0 auto;padding:0 24px;height:100%;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand-mark{height:30px;width:auto;display:block}
+.brand-sep{display:none}
+.lc-top .meta{display:flex;align-items:center;gap:12px;font-size:12.5px;color:var(--lc-ink-2);white-space:nowrap;min-width:0}
+.lc-top .meta b{color:var(--lc-ink);font-weight:600}
+.lc-top .meta .lic{font-family:var(--font-mono);font-size:11.5px;color:var(--lc-ink-3)}
+.hdr-agent{background:var(--t-azul-bg);color:var(--t-azul-tx);font-weight:600;font-size:11.5px;width:32px;height:32px}
+.header-inner{height:64px;padding:0 24px;flex-wrap:nowrap}
+.brand{gap:10px;align-items:baseline}
+.brand-title{font-size:19px;font-weight:600;letter-spacing:-.025em;color:var(--lc-ink);white-space:nowrap}
+.brand-subtitle{opacity:1;color:var(--lc-ink-3);font-size:13px;margin:0;white-space:nowrap}
+/* los pasos, como enlaces de la barra */
+.step-nav{gap:8px}
+.step{color:var(--lc-ink-2);font-size:13.5px;font-weight:500}
+.step.active{color:var(--lc-blue)}
+.step.done{color:var(--lc-ok-tx)}
+.step-dot{width:26px;height:26px;background:#fff;border:1px solid var(--lc-line-btn);color:var(--lc-ink-2);font-family:var(--font-mono);font-size:11.5px;font-weight:600}
+.step.active .step-dot{background:var(--lc-blue);border-color:var(--lc-blue);color:#fff}
+.step.done .step-dot{background:var(--lc-ok-tx);border-color:var(--lc-ok-tx);color:#fff}
+.step-sep{width:18px;height:1px;background:var(--lc-line)}
+
+/* ---------- menú "Consola": banda pálida, píldora azul en el activo ---------- */
+.app-shell{background:linear-gradient(to right,#F8F9FA 0 238px,transparent 238px)}
+.side-rail{background:#F8F9FA;background-image:none;border-right:1px solid var(--lc-line-soft);scrollbar-color:var(--lc-line) transparent;padding:22px 14px 16px}
+.rail-sec{font-family:var(--font-body);font-size:11.5px;font-weight:600;letter-spacing:.02em;text-transform:none;color:var(--lc-ink-3);padding:16px 14px 6px}
+.rail-item{color:var(--lc-ink-2);font-weight:500;font-size:13.5px;border-radius:999px;padding:9px 14px;transition:background .15s ease,color .15s ease}
+.rail-item svg{stroke-width:1.5}
+.rail-item:hover{background:var(--lc-blue-soft);color:var(--lc-blue);transform:none}
+.rail-item.current{background:var(--lc-blue);color:#fff;font-weight:600}
+.rail-item.current::before{display:none}
+.rail-item .rail-ext{color:inherit;opacity:.7}
+.rail-item:focus-visible{outline:3px solid rgba(3,105,161,.35);outline-offset:2px}
+.rail-foot{border-top:1px solid var(--lc-line);color:var(--lc-ink-3);font-size:11px}
+.rail-foot b{color:var(--lc-ink);font-family:var(--font-body);font-size:12px}
+.rail-foot span{font-family:var(--font-mono)}
+/* la columna de contenido: la banda pálida, con el verde tenue que distingue "cotizar" (6 ago) */
+.app-shell>div:last-child{background:#F2F7F4;min-height:calc(100vh - var(--header-h))}
+
+/* ---------- tarjetas = paneles ---------- */
+.card{border:1px solid var(--lc-line);border-radius:24px;padding:30px 34px;box-shadow:var(--lc-shadow)}
+.card-title{font-size:20px;font-weight:500;letter-spacing:-.025em;color:var(--lc-ink);margin:0 0 18px;line-height:1.2}
+.card-title::before{content:"";display:block;width:28px;height:3px;border-radius:2px;background:var(--lc-prod);margin-bottom:12px}   /* R6 · regla corta */
+.card>p[style]{color:var(--lc-ink-3)!important}      /* la nota bajo el título de la vista 2 venía con color en línea */
+
+/* ---------- vista 1 · cargar ---------- */
+.drop-zone{border:1px dashed var(--lc-line-btn);border-radius:20px;background:var(--lc-band);padding:52px 24px;transition:border-color .15s,background .15s}
+.drop-zone:hover,.drop-zone.drag-over{border-color:var(--lc-blue);background:var(--lc-blue-soft);transform:none}
+.drop-zone-icon{color:var(--lc-blue);margin-bottom:12px;line-height:0}
+.drop-zone-icon svg{width:40px;height:40px;stroke-width:1.5}
+.drop-zone-title{font-size:18px;font-weight:600;letter-spacing:-.02em;color:var(--lc-ink)}
+.drop-zone-hint{color:var(--lc-ink-3);font-family:var(--font-mono);font-size:12px}
+.progress{border-radius:999px;background:var(--lc-line-soft);height:6px}
+.progress-bar{background:var(--lc-blue)}
+.progress-label{color:var(--lc-ink-3)}
+/* invitación al respaldo (traía navy EN LÍNEA) */
+#driveInvite[style]{background:var(--lc-band)!important;color:var(--lc-ink)!important;border-radius:20px!important;padding:16px 20px!important}
+#driveInvite>span[style]{display:none}
+#btnDriveInviteDismiss[style]{color:var(--lc-ink-3)!important}
+
+/* guía del deducible: lo operativo se destaca por tinte pálido y punto, no por cajas oscuras */
+.ded-guide{padding:22px 28px}
+.ded-guide>summary{font-size:15px;font-weight:600;color:var(--lc-ink);letter-spacing:-.01em}
+.ded-guide>summary:hover{color:var(--lc-blue)}
+.ded-guide .ded-guide-ico{display:none}
+.ded-guide .ded-guide-note{border-left:0;background:var(--lc-band);border-radius:14px;padding:12px 16px;color:var(--lc-ink-2)}
+.ded-guide .ded-block-title{color:var(--lc-ink);font-weight:600;font-size:16px;letter-spacing:-.02em}
+.ded-guide .ded-block-sub{color:var(--lc-ink-3)}
+.ded-guide .ded-row{color:var(--lc-ink);border-radius:16px;border:1px solid transparent}
+.ded-guide .ded-row--no{background:var(--t-rosa-bg)}
+.ded-guide .ded-row--pay{background:var(--t-oro-bg)}
+.ded-guide .ded-row--full{background:var(--t-verde-bg)}
+.ded-guide .ded-row--no .ded-sub{color:var(--t-rosa-tx)}
+.ded-guide .ded-row--pay .ded-sub{color:var(--t-oro-tx)}
+.ded-guide .ded-row--full .ded-sub{color:var(--t-verde-tx)}
+.ded-guide .ded-main{font-weight:600;font-size:14px}
+.ded-guide .ded-legend{border-top:1px solid var(--lc-line-soft);color:var(--lc-ink-3)}
+.ded-guide .ded-dot--no{background:var(--t-rosa-tx)}
+.ded-guide .ded-dot--pay{background:var(--t-oro-tx)}
+.ded-guide .ded-dot--full{background:var(--t-verde-tx)}
+@media (max-width:620px){ .ded-guide .ded-side--end{border-top-color:rgba(27,31,35,.08)} }
+
+/* ---------- formularios ---------- */
+.form-label{color:var(--lc-ink-3);font-weight:600;font-size:12px;letter-spacing:.01em}
+.form-control{border:1px solid var(--lc-line-btn);border-radius:10px;padding:10px 12px;font-size:13.5px;color:var(--lc-ink)}   /* R7 · borde ≥3:1 */
+.form-control:focus{border-color:var(--lc-blue);box-shadow:0 0 0 3px var(--lc-blue-soft)}
+.form-control[readonly]{background:var(--lc-band);color:var(--lc-ink-2);border-color:var(--lc-line)}
+#f-quote,#f-plate,#f-valor,#f-year{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.toggle-row{background:var(--lc-band);border:0;border-radius:20px;padding:14px 18px}
+.toggle-label{color:var(--lc-ink)}
+.toggle-label .toggle-icon{display:none}
+.toggle-label .toggle-hint{color:var(--lc-ink-3)}
+.toggle-label .toggle-suggest{background:#fff;border:1px solid var(--lc-line);border-radius:12px;color:var(--lc-ink-2)}
+.toggle-slider{background:var(--lc-line-btn)}
+.toggle-switch input:checked+.toggle-slider{background:var(--lc-blue)}
+.toggle-switch input:focus-visible+.toggle-slider{box-shadow:0 0 0 3px var(--lc-blue-soft)}
+
+/* ---------- vista 2 · precios y PDF ---------- */
+.price-table{border:1px solid var(--lc-line);border-radius:20px}
+.price-row{padding:12px 16px;border-bottom:1px solid var(--lc-line-soft);font-size:13.5px}
+.price-row-label{color:var(--lc-ink-2);font-weight:500}
+.price-row-value{font-family:var(--font-mono);font-weight:600;color:var(--lc-ink);font-variant-numeric:tabular-nums lining-nums}
+.price-row.removed{background:#fff;color:var(--lc-ink-3)}
+.price-row.removed .price-row-label,.price-row.removed .price-row-value{color:var(--lc-ink-3)}
+.price-row.removed::after{content:'No va en el PDF';transform:translateY(-50%);background:var(--lc-band);color:var(--lc-ink-3);
+  border-radius:999px;font-size:10.5px;font-weight:600;letter-spacing:0;padding:3px 9px;text-decoration:none}
+.price-row.removed .price-row-value{margin-right:112px}
+.price-row.anual{background:var(--t-verde-bg)}                        /* el anual siempre resaltado, como en el explicador */
+.price-row.anual .price-row-label,.price-row.anual .price-row-value{color:var(--t-verde-tx)}
+.price-row.anual .badge-discount{background:var(--t-verde-tx);border-radius:999px;font-size:10.5px;padding:2px 9px}
+#priceTable>div[style]{background:var(--lc-band)!important;border:0!important;border-radius:14px!important;color:var(--lc-ink-2)!important}   /* la nota del repuesto viene con estilo en línea */
+.deductibles{background:var(--lc-band);border-radius:20px;color:var(--lc-ink-2);padding:14px 18px;font-size:13px}
+.deductibles strong{color:var(--lc-ink)}
+.pdf-status{background:#fff;border:1px solid var(--lc-line);border-radius:20px;color:var(--lc-ink-2);padding:12px 12px 12px 18px}
+.pdf-status>span::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--lc-ok-tx);margin-right:9px;vertical-align:.1em}   /* R4 · estado con punto */
+
+/* ---------- vista 3 · correo ---------- */
+.preview-box{border:1px solid var(--lc-line);border-radius:20px}
+.pill{background:var(--t-azul-bg);color:var(--t-azul-tx);font-family:var(--font-mono);font-size:12px;font-weight:600}
+
+/* ---------- R7 · botones: píldoras de 44 px, un solo acento ---------- */
+.btn{border-radius:999px;min-height:44px;padding:0 22px;font-size:14.5px;font-weight:600;transition:background .15s ease,border-color .15s ease}
+.btn-primary{background:var(--lc-blue);border:1px solid var(--lc-blue)}
+.btn-primary:hover:not(:disabled){transform:none;box-shadow:none;background:var(--lc-blue-ink);border-color:var(--lc-blue-ink)}
+.btn-secondary{color:var(--lc-blue);border:1px solid var(--lc-blue);background:#fff}
+.btn-secondary:hover:not(:disabled){background:var(--lc-blue-soft)}
+.btn-send{background:var(--lc-blue);border:1px solid var(--lc-blue);min-height:48px;font-size:15px;padding:0 22px}
+.btn-send:hover:not(:disabled){background:var(--lc-blue-ink);transform:none;box-shadow:none}
+.btn-step{min-height:48px;padding:0 18px}
+.btn-step-num{background:rgba(255,255,255,.22)}
+.btn:focus-visible{outline:3px solid rgba(3,105,161,.35);outline-offset:2px}
+
+/* ---------- vista 4 · enviado ---------- */
+.success-icon{width:72px;height:72px;background:var(--t-verde-bg);color:var(--t-verde-tx);font-size:34px}
+.success-title{font-size:26px;font-weight:500;letter-spacing:-.025em;color:var(--lc-ink)}
+.success-msg{color:var(--lc-ink-2)}
+#waShareWrap span[style]{color:var(--lc-ink-3)!important}
+
+/* ---------- modales ---------- */
+.modal-backdrop{background:rgba(27,31,35,.5)}
+.modal-card{border-radius:24px;border:1px solid var(--lc-line);box-shadow:none}
+.modal-header{background:#fff;color:var(--lc-ink);border-bottom:1px solid var(--lc-line-soft);padding:20px 26px}
+.modal-title{font-size:19px;font-weight:600;letter-spacing:-.02em}
+.modal-close{color:var(--lc-ink-2);opacity:1;border:1px solid var(--lc-line-btn);border-radius:50%;width:32px;height:32px;font-size:20px;padding:0;display:grid;place-items:center}
+.modal-close:hover{background:var(--lc-blue-soft);color:var(--lc-blue)}
+.modal-body{padding:24px 26px}
+.modal-hint{color:var(--lc-ink-2)}
+.modal-hint.first-time{background:var(--lc-band);border:0;border-radius:14px;color:var(--lc-ink)}
+.modal-info{background:var(--lc-band);border-left:0;border-radius:14px;color:var(--lc-ink-2);padding:14px 18px}
+.modal-footer{background:#fff;border-top:1px solid var(--lc-line-soft);padding:16px 26px}
+.modal-body p[style*="--navy"]{color:var(--lc-ink)!important;font-family:var(--font-display);font-size:15px!important;font-weight:600!important;letter-spacing:-.01em}   /* rótulos de sección con color en línea */
+.modal-body p[style*="--gray-500"]{color:var(--lc-ink-3)!important;font-size:12px!important}
+.modal-body div[style*="border-top"]{border-top-color:var(--lc-line-soft)!important}
+
+/* ---------- 📊 Cotizaciones ---------- */
+.stats-card{max-width:800px}
+.stats-kpis{gap:12px}
+.stats-kpi{background:#fff;border:1px solid var(--lc-line);border-radius:20px;padding:18px 10px 14px}
+.stats-kpi.rate{background:var(--t-azul-bg);border-color:var(--t-azul-bg)}
+.stats-kpi-num,.stats-kpi.pol .stats-kpi-num,.stats-kpi.rate .stats-kpi-num{font-size:32px;font-weight:500;color:var(--lc-ink);letter-spacing:-.02em;font-variant-numeric:tabular-nums lining-nums}   /* R6 · la cifra en tinta */
+.stats-kpi-label,.stats-kpi.rate .stats-kpi-label{text-transform:none;letter-spacing:.01em;font-size:12px;color:var(--lc-ink-3);font-weight:500}
+.stats-kpi.rate .stats-kpi-label{color:var(--t-azul-tx)}
+.stats-section-title{text-transform:none;letter-spacing:.01em;font-size:12px;color:var(--lc-ink-3)}
+.stats-month{background:#fff;border:1px solid var(--lc-line);border-radius:14px;padding:8px 12px}
+.stats-month:hover{background:var(--lc-band)}
+.stats-month.active{border-color:var(--lc-blue);background:var(--lc-blue-soft)}
+.stats-month-label{color:var(--lc-ink);font-weight:600}
+.stats-month-bar-wrap{background:var(--lc-line-soft);height:10px}
+.stats-month-bar{background:var(--lc-blue)}
+.stats-month-bar.pol{background:var(--lc-ok-tx)}
+.stats-month-meta{font-family:var(--font-mono);font-size:11px;color:var(--lc-ink-3)}
+.stats-month-meta b,.stats-month-meta .pol-txt{color:var(--lc-ok-tx)}
+.stats-chip{border:1px solid var(--lc-line-btn);color:var(--lc-ink-2);min-height:36px;padding:0 16px;font-size:13px}
+.stats-chip:hover{border-color:var(--lc-blue);color:var(--lc-blue);background:var(--lc-blue-soft)}
+.stats-chip.active{background:var(--lc-blue);border-color:var(--lc-blue);color:#fff}
+.stats-search{border:1px solid var(--lc-line-btn);border-radius:999px;padding:10px 38px 10px 40px;font-size:13.5px}
+.stats-search:focus{box-shadow:0 0 0 3px var(--lc-blue-soft)}
+.stats-search-icon{color:var(--lc-ink-3);opacity:1;line-height:0;left:14px}
+.stats-search-icon svg{width:16px;height:16px;stroke-width:1.5}
+.stats-search-clear{background:var(--lc-band);color:var(--lc-ink-2)}
+.stats-search-count{color:var(--lc-ink-3)}
+.stat-row{border-bottom:1px solid var(--lc-line-soft);padding:12px 10px}
+.stat-row:hover{background:var(--lc-band)}
+.stat-row.con-poliza,.stat-row.con-poliza:hover{background:var(--t-verde-bg)}
+.stat-fecha{font-family:var(--font-mono);color:var(--lc-ink-3)}
+.stat-cli{color:var(--lc-ink)}
+.stat-meta,.stat-mail{color:var(--lc-ink-3)}
+.history-badge{font-weight:600;font-size:11px;padding:3px 10px}
+.history-badge.pol{background:#fff;color:var(--t-verde-tx)}
+.history-badge.esp{background:var(--lc-band);color:var(--lc-ink-2)}
+.history-badge.off{background:var(--lc-band);color:var(--lc-ink-3)}
+.history-btn{border:1px solid var(--lc-line);border-radius:999px;background:#fff}
+.history-btn:hover{background:var(--lc-blue-soft);border-color:var(--lc-blue)}
+.history-btn.danger:hover{background:var(--t-rosa-bg);border-color:var(--t-rosa-tx)}
+.history-empty{border:1px dashed var(--lc-line-btn);border-radius:20px;background:var(--lc-band);color:var(--lc-ink-2)}
+
+/* ---------- pie ---------- */
+.app-foot{border-top:1px solid var(--lc-line-soft);color:var(--lc-ink-3)}
+.app-foot summary{color:var(--lc-ink-2)}
+.app-foot b{color:var(--lc-ink)}
+
+/* ---------- movimiento: entrada suave, sin rebote ---------- */
+.rail-item{animation-timing-function:var(--lc-ease)}
+@media (prefers-reduced-motion:reduce){ .btn,.rail-item,.stats-chip,.form-control{transition:none} }
+
+/* ---------- angosto ---------- */
+@media (max-width:900px){
+  .app-shell>div:last-child{min-height:0}
+  /* en fila el rail mide lo que ocupan sus píldoras: con la altura de pantalla completa
+     de escritorio, flex-wrap repartía las filas en todo el alto y el activo se estiraba */
+  .side-rail{background:#F8F9FA;border-bottom:1px solid var(--lc-line-soft);height:auto;align-content:flex-start;padding:10px 12px}
+  .rail-item{padding:8px 14px}
+}
+@media (max-width:640px){
+  .lc-top .lc-wrap{padding:0 16px}
+  .lc-top .meta{display:none}
+  .header-inner{height:58px;padding:0 16px}
+  .brand-subtitle{display:none}
+  .brand-title{font-size:17px}
+  .step>span{display:none}
+  .step-sep{width:10px}
+  .card{padding:22px 18px;border-radius:20px}
+  .drop-zone{padding:36px 16px}
+  .ded-guide{padding:18px 16px}
+}

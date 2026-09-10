@@ -218,6 +218,13 @@ function paintRailAgent() {
   const elLic = document.getElementById('railAgentLic');
   if (elLic) elLic.textContent = lic ? ('Licencia SUGESE ' + lic) : '';
 
+  // Nivel 1 de la barra (linea clara, 10 sep 2026): mismo dato, mismo perfil.
+  // Van vacios en el HTML a proposito: nada hardcodeado a un agente.
+  const elTopName = document.getElementById('lcAgentName');
+  if (elTopName) elTopName.textContent = nombre;
+  const elTopLic = document.getElementById('lcAgentLic');
+  if (elTopLic) elTopLic.textContent = lic ? ('Lic. SUGESE ' + lic) : '';
+
   const elIni = document.getElementById('hdrAgentIni');
   if (elIni) {
     // Dos iniciales: del PDF del INS no salen, estas vienen del perfil que el
@@ -300,7 +307,7 @@ function closeProfileModal() {
 // responsabilidades sin relación. El 📊 solo necesita history.js, así que
 // salió entero. app.js conserva únicamente el enganche de sus botones.
 
-/**
+/**
  * Valida y guarda el perfil del agente desde el modal.
  */
 function handleProfileSave() {
