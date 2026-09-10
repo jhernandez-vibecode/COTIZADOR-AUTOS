@@ -185,7 +185,11 @@ document.addEventListener('DOMContentLoaded', function () {
     // Drive, y convertía cualquier bug del predicado en pérdida irreversible.
     // Invitación (una vez) a activar el respaldo en Drive si aún no lo hizo.
     maybeShowDriveInvite();
+    // "Qué hay de nuevo" tras una actualización (novedades.js).
+    if (typeof mostrarNovedades === 'function') mostrarNovedades();
   } else {
+    // Agente nuevo: no conoció la versión anterior, el aviso no le dice nada.
+    if (typeof marcarNovedadesVistas === 'function') marcarNovedadesVistas();
     openProfileModal(true);
   }
 

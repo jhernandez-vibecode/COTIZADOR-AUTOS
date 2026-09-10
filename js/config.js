@@ -49,5 +49,24 @@ const CFG = {
   DRIVE_BACKUP_NAME: 'cotizador-sdi-control.json',
 
   // Worker de PDF.js
-  PDFJS_WORKER: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
+  PDFJS_WORKER: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js',
+
+  // Aviso "Qué hay de nuevo" de la consola (el mismo patrón de la consola de
+  // Viajero, 28 ago 2026): al abrir la app después de una actualización aparece
+  // UNA tarjeta con los cambios; "Entendido" la marca vista (localStorage
+  // cotizador_sdi_novedades_v1 = version) y no vuelve a salir hasta la próxima.
+  // En cada release que el agente deba notar: subir `version` (la fecha del
+  // deploy), reescribir `items` en lenguaje de usuario (voseo, sin tecnicismos)
+  // y anotar lo mismo en el registro de cambios del pie de index.html.
+  // Solo la consola (index.html) la muestra; las sub-páginas no.
+  NOVEDADES: {
+    version: '2026-09-10',
+    fecha: '10 sep 2026',
+    items: [
+      '<b>El cotizador estrena la imagen de Seguros Digitales SDI</b>: fondo claro, letra nueva, el logotipo a color arriba con tu nombre y licencia, botones redondos azules y tarjetas blancas.',
+      '<b>La guía que recibe tu cliente también cambió de imagen</b>: el logo del INS arriba en azul, las coberturas con su color suave y el pago anual siempre resaltado. Los enlaces que ya enviaste se siguen viendo bien.',
+      '<b>Póliza activa, Renovación confirmada, Cancelación anticipada y Marcas con recargo</b> también tienen la imagen nueva.',
+      '<b>Todo funciona igual</b>: los mismos pasos, los mismos botones y los mismos correos. Solo se ve distinto.'
+    ]
+  }
 };

@@ -256,6 +256,10 @@
     <div>
   <main class="container">
 
+    <!-- ===== "Qué hay de nuevo" tras una actualización (lo pinta js/novedades.js
+         desde CFG.NOVEDADES; "Entendido" lo guarda como visto) ===== -->
+    <div id="novedades" role="status" hidden></div>
+
     <!-- ===== Invitación (una vez) a activar el respaldo en Drive ===== -->
     <div id="driveInvite" style="display:none;align-items:center;gap:14px;flex-wrap:wrap;margin:0 0 18px;background:var(--navy,#0c2340);color:#fff;border-radius:12px;padding:14px 16px;">
       <span style="font-size:22px;line-height:1;">☁️</span>
@@ -603,6 +607,9 @@
     <details>
       <summary>Última actualización: 10 set 2026 — Toda la app estrena la imagen de marca SDI</summary>
       <ul>
+        <li><b>10 set 2026</b> — <b>Al abrir el cotizador después de una actualización aparece un aviso de
+        "Qué hay de nuevo"</b> arriba de la carga del PDF, con lo que cambió. Con "Entendido" se va y no vuelve
+        a salir hasta la próxima novedad. El primero cuenta el cambio de imagen de hoy.</li>
         <li><b>10 set 2026</b> — <b>Las cuatro pantallas restantes también estrenan la imagen de marca SDI:</b>
         Póliza activa, Renovación confirmada, Cancelación anticipada y Marcas con recargo. Misma barra clara con el
         logo SDI y el botón para volver al cotizador, mismos botones y tarjetas. En Renovación, el aviso de si el
@@ -759,6 +766,7 @@
   <script src="js/standard-docs.js"></script>
   <script src="js/drive-sync.js"></script>
   <script src="js/datos-ui.js"></script>
+  <script src="js/novedades.js"></script>
   <script src="js/app.js"></script>
 
   <script>
