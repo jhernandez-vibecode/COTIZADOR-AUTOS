@@ -5,8 +5,10 @@ description: ESPECIALISTA COTIZADOR AUTOS SDI — App web vanilla JS que extrae 
 
 # Especialista Cotizador SDI — Seguros Autos INS
 
-Leer COMPLETO antes de tocar código. Estado a **10 septiembre 2026**: **la consola (`index.html`) y el explicador
-(`/explicacion/`) estrenan la línea clara SDI**. La consola va por `css/linea-clara-consola.css` (commit `c5cc457`, tag
+Leer COMPLETO antes de tocar código. Estado a **10 septiembre 2026**: **TODA la app está en la línea clara SDI** —
+consola, explicador y las cuatro sub-páginas (`/polizas-activas/`, `/renovaciones/`, `/cancelacion/`, `/marcas-recargo/`,
+commit `5f3719c`, tag `pre-subpaginas-linea-clara-10sep`; ver "Las sub-páginas en línea clara"). Solo los correos siguen
+aparte (Arial en el cliente). La consola (`index.html`) y el explicador (`/explicacion/`) fueron los primeros. La consola va por `css/linea-clara-consola.css` (commit `c5cc457`, tag
 `pre-consola-linea-clara-10sep`, hoja cargada solo en index.html; las sub-páginas siguen igual) — ver "La consola en
 línea clara". El explicador — tipografía v1.3 (Google Sans Flex + Code), barra en dos niveles con el INS en azul, hero centrado, paneles
 sobre banda pálida, tintes pálidos que pidió JC y el pago anual siempre resaltado. Solo la cara: el JS es byte a byte el de
@@ -123,7 +125,7 @@ App interna del agente INS Juan Carlos Hernández (licencia SUGESE 08-1318) para
 | OAuth Gmail | Google Identity Services (GIS) |
 | Envío Gmail | Gmail API v1 `/gmail/v1/users/me/messages/send` |
 | Persistencia | localStorage (perfil del agente + historial de envíos) |
-| Tipografía | **Consola y explicador (10 sep 2026): Google Sans Flex + Google Sans Code v1.3**, Inter solo presta el ₡. Sub-páginas (`/polizas-activas/`, `/renovaciones/`, `/cancelacion/`, `/marcas-recargo/`): todavía Poppins + Inter. Correos: Space Grotesk/Arial |
+| Tipografía | **Toda la app (10 sep 2026): Google Sans Flex + Google Sans Code v1.3**, Inter solo presta el ₡. Correos: Space Grotesk declarada, Arial en el cliente |
 
 **Zero build, zero npm.** CDN para todo. **Solo Gmail** — sin Outlook/MSAL/Graph.
 
@@ -1363,6 +1365,49 @@ firmadas con la licencia SUGESE del agente.
 **De paso:** la guía formateaba con `toLocaleString('es-CR')`, que separa los miles con **espacio**
 (`₡18 000 000`), mientras los montos escritos a mano usaban coma. Todo unificado a punto, como el correo.
 
+## Las sub-páginas en línea clara (10 sep 2026, `5f3719c`) — EN PROD
+
+JC: *"Dale con las sub-páginas también, con mockups"* → 12 capturas → *"Dale, implementalo igual que las otras"*.
+Tag de rollback **`pre-subpaginas-linea-clara-10sep`**. Con esto **toda la app está en la línea clara**; solo los
+correos quedan aparte (en el cliente van en Arial de todos modos).
+
+- **Una sola hoja para las cuatro**: `css/linea-clara-consola.css`, la misma de la consola, con un bloque
+  **SUB-PÁGINAS** al final (`body.page-poliza/renovacion/cancelacion/marcas`, `.lc-top .back-link`, adjuntos
+  `.doc-*`, recibos `.rec*`, `.estado-box`, canal `.canal-*`, `.wa-nota`, `.wa-prev`). Cancelación y Marcas llevan
+  además un bloque corto **LÍNEA CLARA dentro de su propio `<style>`** (resultado de la Cláusula 33; tabla de marcas).
+- 🔴 **La hoja compartida se enlaza DESPUÉS del `<style>` propio de cada página**, justo antes de `</head>`. La
+  primera pasada la puso tras `styles.css` y el `<style>` de la página ganaba por orden: el "← Cotizador" salía
+  **blanco sobre blanco** (`.back-link{color:#fff}` de la página) y el punto del `.estado-box` pisaba la primera
+  letra (su `padding` en línea). Regla: en una página con `<style>` propio, la hoja de sobreescritura va al final.
+- **Header en dos niveles sin ficha del agente**: `.lc-top` = logo SDI a color + píldora "← Cotizador";
+  `.header-inner` = producto + `#stepNav`. Los `*-app.js` de estas páginas no pintan nombre ni licencia y no se
+  escribe nada a mano (multi-agente).
+- 🔴 **`/marcas-recargo/` no carga `styles.css`**: su `<style>` define `.app-header{display:flex}` y no tiene
+  `.header-inner`. Por eso la hoja compartida declara `.app-header{display:block;padding:0}` y el bloque propio de
+  Marcas trae su `.header-inner` en flex. Si se le agrega otra pieza del header, hay que darle su CSS ahí.
+- **Cancelación**: el panel navy del resultado pasa a blanco; la devolución va en Flex 48 px **en tinta** (era verde:
+  regla 6, el color no pinta cifras); la fila activa de la tabla en verde pálido; `.btn-enviar` píldora azul.
+  **Corregido de paso un desborde que ya existía**: con la nota larga ("la prima devengada iguala o supera lo
+  pagado…") la columna `1fr` crecía sin límite porque `.result-row-value` era `nowrap` → `minmax(0,1fr)` y
+  `white-space:normal`. `.empty-icon` (🧮) se oculta por CSS porque **también lo escribe el JS** al reiniciar.
+- **Renovaciones**: `.estado-box` ok/bad/warn por tinte pálido + punto (`::before`), sin tocar las clases que pone
+  `renderEstado()`; `.canal-op.is-on` = píldora azul; `.wa-nota` en dorado pálido. El `[hidden]{display:none!important}`
+  de la página sigue mandando (trampa `[hidden]` vs display).
+- **Póliza activa**: `.doc-name`/`.doc-size` pasan a `display:block` (venían pegados en una línea); `.doc-ico` (📄 que
+  escribe `renderDocs()`) se vuelve un punto azul con `font-size:0`. La vista 4 conserva el **orden invertido** que
+  pidió JC el 5 ago (1 = otra póliza, 2 = WhatsApp).
+- **Marcas**: la cinta dorada se oculta (la fuente ya está en el pie), reglas con punto rosa/violeta, chips de
+  combustible en tintes, `.badge.si` rosa pálido, `thead` blanco, `.tbl-wrap{overflow-x:auto}` para móvil. Los "✓"
+  y "—" de las insignias los escribe `renderRows()` y quedan.
+- **Emojis estáticos fuera** (📄, 📎, 🖨️, 🌏, 💎, 🔍, 📋, ⭐); el texto de las reglas pasó de "el toggle 🌏 origen
+  asiático" a "el toggle «origen asiático»" porque los iconos de esos toggles ya no se ven en la consola.
+- **Smoke** (arnés en `.netlify/smoke/`, borrado): fuentes, cabecera blanca, `← Cotizador` en azul, `scrollWidth ==
+  clientWidth` a 1280 y 375 en las cuatro; en Renovaciones el clic real en "Solo WhatsApp" muestra `.wa-nota` y
+  oculta "Para", y vuelve; en Cancelación el clic real en Calcular pinta el resultado en blanco con la cifra en
+  tinta; en Marcas 58 filas y el chip "Recargo aplica" deja 43. Suite: 21 archivos en verde.
+- **Mockups**: cada página se armó como `_mockup.html` con un arnés `?vista=` (datos inventados) y se borró al
+  implementar. En Renovaciones la vista previa del correo sale vacía en el mockup: necesita un comprobante real.
+
 ## La consola en línea clara (10 sep 2026, `c5cc457`) — EN PROD
 
 JC pidió ver un mockup antes de decidir (*"la consola me gustaría ver un mock up"*) y aprobó las seis pantallas con
@@ -1573,7 +1618,7 @@ Contrastadas con 5 PDF oficiales que entregó JC (viven en `OneDrive\ARCHIVO DIG
 
 - ~~Las secciones 3 y 4 del explicador todavía no miran las coberturas~~ — **HECHO el 27 ago 2026** (`07d0f60`,
   aprobado por JC y verificado en prod). Ver "Pasos 3 y 4 dinámicos" en la sección del explicador.
-- ~~Decidir la tipografía de la CONSOLA~~ — **RESUELTO el 10 sep 2026**: `index.html` y el explicador van en v1.3. **Quedan las sub-páginas** (`/polizas-activas/`, `/renovaciones/`, `/cancelacion/`, `/marcas-recargo/`), que cargan `styles.css` sin la hoja nueva: si JC quiere la línea clara ahí, es enlazar `css/linea-clara-consola.css` en cada una, con mockup, y revisar su cabecera (no tienen rail ni `.lc-top`). Las 3 páginas cargan Poppins y `css/styles.css` pide `'Poppins','Inter'`,
+- ~~Decidir la tipografía de la CONSOLA~~ — **RESUELTO el 10 sep 2026**: toda la app va en v1.3, sub-páginas incluidas (`5f3719c`). `styles.css` sigue declarando Poppins como base, pero ninguna página la carga ya: la hoja `linea-clara-consola.css` la pisa en todas. Las 3 páginas cargaban Poppins y `css/styles.css` pide `'Poppins','Inter'`,
   mientras los correos y la documentación usan Space Grotesk. No se tocó porque cambia visualmente toda la app.
 - **El nombre del agente va sin tilde** (`CFG.FROM_NAME = 'Juan Carlos Hernandez Vargas'`); el logotipo dice
   *Hernández*. 🔴 Corregir el default **NO le llega a JC**: su perfil en localStorage gana (gotcha 2b). Tendría que
