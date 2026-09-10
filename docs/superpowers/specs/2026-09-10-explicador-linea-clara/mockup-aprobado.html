@@ -1,0 +1,3618 @@
+<title>Explicador de autos · Línea clara</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&family=Google+Sans+Code:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #0c2340;
+  --azul: #0369a1;
+  --azul-deep: #0c4a6e;
+  --green-fresh: #10b981;
+  --green-light: #34d399;
+  --green-deep: #059669;
+  --green-text: #047857;
+  --green-bg: #d1fae5;
+  --gold-bg: #fef3c7;
+  --gold-mid: #fbbf24;
+  --gold-deep: #f59e0b;
+  --gold-text: #78350f;
+  --cyan-light: #67e8f9;
+  --cyan-mid: #06b6d4;
+  --cyan-deep: #0e7490;
+  --cyan-bg: #ecfeff;
+  --rose-bg: #fff1f2;
+  --rose-mid: #f43f5e;
+  --rose-deep: #9f1239;
+  --rose-text: #881337;
+  --violet-bg: #f5f3ff;
+  --violet-mid: #8b5cf6;
+  --violet-deep: #5b21b6;
+  --violet-text: #4c1d95;
+  --bg: #f8fafc;
+  --border: #e0e7ef;
+  --muted: #64748b;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg);
+  color: #1e293b;
+  line-height: 1.55;
+}
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  .confetti { display: none; }
+}
+
+/* ============ HEADER ============ */
+.app-header {
+  background: var(--navy);
+  color: #fff;
+  padding: 14px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.brand { display: flex; align-items: center; gap: 14px; }
+.ins-logo {
+  height: 44px;
+  width: auto;
+  display: block;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .25));
+}
+@media (max-width: 600px) {
+  .ins-logo { height: 36px; }
+}
+.brand-text { display: flex; flex-direction: column; line-height: 1.15; }
+.brand-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+}
+.brand-sub { font-size: 11px; opacity: .65; margin-top: 2px; }
+.header-right { display: flex; align-items: center; gap: 10px; }
+.pill-100 {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(13, 148, 136, .15);
+  color: #5eead4;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid rgba(13, 148, 136, .3);
+}
+.agent-info { text-align: right; font-size: 10px; opacity: .8; line-height: 1.3; }
+.agent-info b { color: #fff; opacity: 1; }
+
+/* ============ CINTA DORADA ============ */
+.gold-ribbon {
+  background: linear-gradient(90deg, var(--gold-bg) 0%, #fefce8 50%, var(--gold-bg) 100%);
+  border-bottom: 1px solid #fde68a;
+  padding: 9px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--gold-text);
+}
+.gold-ribbon .star { color: #ca8a04; }
+.gold-ribbon b { color: #422006; font-weight: 700; }
+
+/* ============ STICKY NAV ============ */
+.sticky-nav {
+  position: sticky;
+  top: 14px;
+  z-index: 50;
+  margin: 14px auto;
+  max-width: 760px;
+  background: rgba(255, 255, 255, .92);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 4px 16px rgba(12, 35, 64, .08);
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity .3s ease-out, transform .3s ease-out;
+  pointer-events: none;
+}
+.sticky-nav.visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
+.sticky-nav .nav-label {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px; font-weight: 700;
+  color: var(--azul-deep);
+}
+.sticky-nav .nav-dots {
+  display: flex; gap: 4px; align-items: center; flex: 1; flex-wrap: wrap;
+}
+.sticky-dot {
+  display: flex; align-items: center; gap: 4px;
+  cursor: pointer;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 10px; font-weight: 600;
+  color: var(--muted);
+  transition: all .25s ease-out;
+  border: none; background: none;
+}
+.sticky-dot .num {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #cbd5e1; color: #fff;
+  display: grid; place-items: center;
+  font-size: 9px; font-weight: 700;
+  transition: all .25s ease-out;
+}
+.sticky-dot.active { background: #f0f9ff; color: var(--azul-deep); }
+.sticky-dot.active .num { background: var(--azul); transform: scale(1.15); }
+.sticky-dot.done .num { background: var(--green-fresh); }
+.sticky-dot:hover { background: #f1f5f9; }
+
+/* Mobile sticky nav: oculta labels, muestra solo números */
+@media (max-width: 720px) {
+  .sticky-nav {
+    margin: 10px;
+    padding: 6px 10px;
+    gap: 8px;
+  }
+  .sticky-nav .nav-label { display: none; }
+  .sticky-nav .nav-dots { gap: 6px; justify-content: center; }
+  .sticky-dot { padding: 4px; }
+  .sticky-dot span:not(.num) { display: none; }
+  .sticky-dot .num { width: 22px; height: 22px; font-size: 11px; }
+}
+
+/* ============ HERO ============ */
+.hero {
+  background: linear-gradient(180deg, #fff 0%, #f0f9ff 100%);
+  margin: 0 auto;
+  max-width: 880px;
+  padding: 36px 32px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.agent-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 5px 14px 5px 5px;
+  align-self: flex-start;
+  box-shadow: 0 2px 6px rgba(12, 35, 64, .06);
+}
+.avatar {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg, var(--azul), #0284c7);
+  color: #fff;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+}
+.agent-chip-info { display: flex; flex-direction: column; line-height: 1.15; }
+.agent-chip-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px; font-weight: 700;
+  color: var(--azul-deep);
+}
+.agent-chip-role { font-size: 10px; color: var(--muted); }
+
+.bubble {
+  background: linear-gradient(180deg, #fff 0%, #f8fbff 100%);
+  border: 1px solid var(--border);
+  border-radius: 16px 16px 16px 4px;
+  padding: 22px 26px 22px 30px;
+  box-shadow: 0 6px 22px rgba(12, 35, 64, .07), 0 1px 3px rgba(16, 185, 129, .08);
+  font-size: 15px;
+  color: #1e293b;
+  margin-left: 22px;
+  max-width: 92%;
+  position: relative;
+  overflow: hidden;
+}
+.bubble::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--azul), var(--green-fresh));
+}
+.bubble .greet {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--azul-deep);
+  letter-spacing: -0.01em;
+  display: block;
+  margin-bottom: 12px;
+}
+.bubble .greet .name {
+  color: var(--green-deep);
+  font-weight: 800;
+}
+.bubble b { color: var(--azul-deep); }
+.bubble .roadmap {
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: #f0f9ff;
+  border-radius: 10px;
+  border-left: 3px solid var(--azul);
+  font-size: 13px;
+  color: var(--azul-deep);
+}
+
+.progress-line {
+  display: flex; align-items: center; gap: 8px;
+  margin-left: 22px;
+  font-size: 11px; color: var(--muted);
+}
+.progress-line .label { font-weight: 600; }
+.progress-line .dots { display: flex; gap: 4px; }
+.progress-line .dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #cbd5e1;
+}
+.progress-line .dot.active { background: var(--azul); transform: scale(1.2); }
+.progress-line .step-label { color: var(--azul); font-weight: 600; }
+
+.cta-pill {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, var(--green-fresh), var(--green-deep));
+  color: #fff;
+  border-radius: 999px;
+  padding: 12px 22px;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: 0 6px 18px rgba(13, 148, 136, .3);
+  align-self: center;
+  margin-top: 8px;
+  cursor: pointer;
+  border: none;
+  font-family: 'Inter', sans-serif;
+}
+.cta-pill:hover { transform: translateY(-1px); }
+
+/* ============ MAIN ============ */
+main { max-width: 880px; margin: 0 auto; padding: 0 24px 60px; }
+
+.section {
+  margin-top: 28px;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity .4s ease-out, transform .4s ease-out;
+  scroll-margin-top: 100px; /* deja espacio para que el sticky nav no tape el título */
+}
+.section.in-view { opacity: 1; transform: translateY(0); }
+
+.section-header {
+  margin-bottom: 16px;
+}
+.section-num {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--azul);
+  background: #f0f9ff;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+.section-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--azul-deep);
+  margin: 8px 0 4px;
+  letter-spacing: -0.01em;
+}
+.section-sub {
+  font-size: 14px;
+  color: var(--muted);
+  margin: 0;
+}
+
+/* ============ SECCIÓN 1 — COBERTURAS BENTO ============ */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+@media (max-width: 600px) { .bento-grid { grid-template-columns: 1fr; } }
+.bento-tile {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all .25s ease-out;
+}
+.bento-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(12, 35, 64, .08);
+  border-color: var(--azul);
+}
+.bento-tile .letter {
+  display: inline-grid;
+  place-items: center;
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  color: #fff;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+.bento-tile.azul .letter { background: var(--azul); }
+.bento-tile.green .letter { background: var(--green-fresh); }
+.bento-tile.red .letter { background: #dc2626; }
+.bento-tile.purple .letter { background: #7c3aed; }
+.bento-tile h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--azul-deep);
+  margin: 0 0 4px;
+}
+.bento-tile .desc {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.45;
+  margin-bottom: 8px;
+}
+.bento-tile .amount {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--azul-deep);
+}
+/* Cabecera del bento con letra + chevron */
+.bento-tile .bento-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.bento-tile .bento-head .letter {
+  margin-bottom: 0;
+}
+.bento-tile .chevron {
+  color: var(--muted);
+  font-size: 14px;
+  transition: transform .25s ease-out, color .25s ease-out;
+  user-select: none;
+}
+.bento-tile.expanded .chevron {
+  transform: rotate(180deg);
+  color: var(--azul);
+}
+/* Detalle expandible */
+.bento-tile .bento-detail {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 1px solid transparent;
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.55;
+  transition: max-height .35s ease-out, opacity .25s ease-out, margin-top .35s ease-out, padding-top .35s ease-out;
+}
+.bento-tile .bento-detail b { color: var(--azul-deep); }
+.bento-tile.expanded {
+  border-color: var(--azul);
+  box-shadow: 0 6px 22px rgba(3, 105, 161, .12);
+}
+.bento-tile.expanded .bento-detail {
+  max-height: 800px;
+  opacity: 1;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top-color: var(--border);
+}
+/* Foco para accesibilidad por teclado */
+.bento-tile:focus-visible {
+  outline: 2px solid var(--azul);
+  outline-offset: 2px;
+}
+
+/* ============ SECCIÓN 2 — ASISTENCIA ============ */
+.tip-banner {
+  background: linear-gradient(90deg, #f0fdfa 0%, #ecfdf5 100%);
+  border: 1px solid var(--green-light);
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.tip-banner .bulb {
+  background: var(--green-fresh);
+  color: #fff;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 16px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, .3);
+}
+.tip-banner .text { font-size: 13px; color: #065f46; line-height: 1.5; }
+.tip-banner b { color: var(--green-text); font-weight: 700; }
+.tip-banner .small { display: block; font-size: 11px; color: var(--green-text); margin-top: 4px; opacity: .9; }
+
+.plan-toggle {
+  display: flex;
+  gap: 4px;
+  background: #f1f5f9;
+  border-radius: 8px;
+  padding: 4px;
+  margin-bottom: 14px;
+  font-size: 12px;
+}
+.plan-toggle .tab {
+  flex: 1;
+  text-align: center;
+  padding: 8px 12px;
+  border-radius: 6px;
+  color: var(--muted);
+  font-weight: 600;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+}
+.plan-toggle .tab.active {
+  background: var(--green-fresh);
+  color: #fff;
+}
+
+.svc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+}
+.svc-row {
+  display: flex; align-items: center; gap: 10px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+}
+.svc-row .icon {
+  width: 28px; height: 28px;
+  background: var(--gold-bg);
+  border-radius: 6px;
+  display: grid; place-items: center;
+  color: var(--gold-deep);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.svc-row .name { flex: 1; font-weight: 600; color: #1e293b; }
+.svc-row .qty { font-size: 10px; color: var(--muted); white-space: nowrap; }
+
+/* ============ SECCIÓN 3 — IDD ============ */
+.idd-card {
+  background: linear-gradient(135deg, var(--navy), var(--azul-deep));
+  color: #fff;
+  border-radius: 14px;
+  padding: 26px;
+  position: relative;
+  overflow: hidden;
+}
+.idd-card::before {
+  content: '';
+  position: absolute;
+  right: -50px; top: -50px;
+  width: 180px; height: 180px;
+  background: radial-gradient(circle, rgba(16, 185, 129, .15), transparent 70%);
+  border-radius: 50%;
+}
+.idd-top { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding-bottom: 16px; border-bottom: 1px dashed rgba(255,255,255,.15); position: relative; }
+.idd-label { font-size: 11px; color: #93c5fd; text-transform: uppercase; letter-spacing: 0.05em; }
+.idd-compare { display: flex; align-items: center; gap: 18px; margin-top: 10px; }
+.idd-col-from { text-align: left; }
+.idd-col-from .small { font-size: 10px; opacity: .7; }
+.idd-col-from .from {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 28px; font-weight: 700;
+  color: #fca5a5;
+  text-decoration: line-through;
+}
+.idd-arrow { font-size: 22px; color: var(--gold-mid); }
+.idd-col-to { text-align: left; }
+.idd-col-to .small { font-size: 10px; opacity: .7; }
+.idd-col-to .to {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 42px; font-weight: 800;
+  color: var(--green-light);
+  line-height: 1;
+}
+.idd-side { text-align: right; font-size: 10px; color: #93c5fd; line-height: 1.4; }
+
+.idd-rules {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  position: relative;
+}
+@media (max-width: 600px) { .idd-rules { grid-template-columns: 1fr; } }
+.idd-rule {
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 8px;
+  padding: 14px;
+  display: flex; gap: 10px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.idd-rule .icon {
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+.idd-rule.ok .icon { background: var(--green-fresh); color: #fff; }
+.idd-rule.warn .icon { background: var(--gold-mid); color: #422006; }
+.idd-rule b { color: #fff; }
+.idd-rule .meta { font-size: 10px; color: #93c5fd; margin-top: 4px; }
+
+/* ============ SECCIÓN 4 — REPUESTOS ============ */
+.s4-block {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.s4-header {
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+  color: #fff;
+  padding: 24px 28px;
+  position: relative;
+  overflow: hidden;
+}
+.s4-header::before {
+  content: ''; position: absolute;
+  right: -40px; top: -40px;
+  width: 180px; height: 180px;
+  background: radial-gradient(circle, rgba(16, 185, 129, .15), transparent 70%);
+  border-radius: 50%;
+}
+.s4-header .num-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(16, 185, 129, .15);
+  color: var(--green-light);
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px; font-weight: 700;
+  border: 1px solid rgba(16, 185, 129, .3);
+  margin-bottom: 12px;
+  position: relative;
+}
+.s4-header h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 8px;
+  position: relative;
+}
+.s4-header .perso { font-size: 14px; color: #94a3b8; position: relative; }
+.s4-header .perso b { color: #fff; font-weight: 600; }
+
+.s4-body { padding: 26px 28px; display: flex; flex-direction: column; gap: 22px; }
+
+.s4-intro {
+  background: #f0f9ff;
+  border-left: 4px solid var(--azul);
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: var(--azul-deep);
+}
+
+.sub-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+.sub-card h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 17px;
+  color: var(--azul-deep);
+  margin: 0 0 6px;
+  display: flex; align-items: center; gap: 10px;
+}
+.sub-num {
+  display: inline-grid; place-items: center;
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  background: #f0f9ff;
+  color: var(--azul);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+}
+.sub-card .lead { font-size: 13px; color: var(--muted); margin: 0 0 14px; }
+
+.qrow {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+.qrow.match {
+  background: linear-gradient(90deg, #fffbeb 0%, #fef3c7 100%);
+  border: 2px solid var(--gold-mid);
+  box-shadow: 0 0 0 4px rgba(251, 191, 36, .15);
+  transform: scale(1.01);
+}
+.qrow .age-icon {
+  display: grid; place-items: center;
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+.qrow .age-icon.fresh { background: var(--green-fresh); }
+.qrow .age-icon.good  { background: var(--azul); }
+.qrow .age-icon.plus  { background: var(--gold-deep); }
+.qrow .age-icon.older { background: #dc2626; }
+.qrow .age { font-weight: 700; color: var(--azul-deep); }
+.qrow .place { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.badge-q {
+  background: var(--green-bg);
+  color: var(--green-text);
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.badge-q.gen { background: #fee2e2; color: #991b1b; }
+.qrow.match .badge-q.match-tag {
+  background: var(--gold-mid);
+  color: #422006;
+  font-size: 10px;
+  margin-right: 6px;
+}
+.you-tag {
+  display: inline-block;
+  background: #422006;
+  color: var(--gold-mid);
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 4px;
+  margin-left: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* === Eléctricos === */
+.electric {
+  background: linear-gradient(180deg, #f0f9ff 0%, var(--cyan-bg) 100%);
+  border: 2px solid var(--cyan-light);
+  border-radius: 14px;
+  padding: 22px;
+  position: relative;
+  margin-top: 4px;
+}
+.electric::before {
+  content: '⚡';
+  position: absolute;
+  top: -16px; left: 22px;
+  background: linear-gradient(135deg, var(--cyan-mid), #0891b2);
+  color: #fff;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 16px;
+  box-shadow: 0 4px 14px rgba(6, 182, 212, .4);
+}
+.electric .always-tag {
+  position: absolute;
+  top: -10px; right: 16px;
+  background: #fff;
+  color: var(--cyan-deep);
+  border: 1px solid var(--cyan-light);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.electric h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  color: var(--cyan-deep);
+  font-size: 18px;
+  margin: 8px 0 8px;
+  display: flex; align-items: center; gap: 10px;
+}
+.sub-num-elec {
+  display: inline-grid; place-items: center;
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--cyan-deep);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px; font-weight: 700;
+  border: 1px solid var(--cyan-light);
+}
+.electric .lead { color: #155e75; font-size: 13px; margin-bottom: 14px; }
+.electric .lead b { color: #164e63; }
+
+.battery-card {
+  background: #fff;
+  border: 1px solid var(--cyan-light);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+.battery-card .label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--cyan-deep);
+  font-weight: 700;
+}
+.battery-card .key {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 26px; font-weight: 800;
+  color: #155e75;
+  margin: 4px 0 6px;
+}
+.battery-card .key .of-value { font-size: 13px; color: var(--muted); font-weight: 500; }
+.battery-card .desc { font-size: 13px; color: #155e75; }
+.battery-card .desc b { color: #164e63; }
+.battery-card .ej {
+  background: var(--cyan-bg);
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 12px;
+  color: #155e75;
+  margin-top: 8px;
+}
+.battery-card .ej b { color: #164e63; }
+
+.depr-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+@media (max-width: 600px) { .depr-grid { grid-template-columns: repeat(2, 1fr); } }
+.depr-tile {
+  background: #fff;
+  border: 2px solid;
+  border-radius: 10px;
+  padding: 12px 8px;
+  text-align: center;
+}
+.depr-tile .pct {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+}
+.depr-tile .age { font-size: 10px; margin-top: 6px; color: var(--muted); font-weight: 600; }
+.depr-tile.t1 { border-color: var(--green-light); }
+.depr-tile.t1 .pct { color: var(--green-text); }
+.depr-tile.t2 { border-color: var(--cyan-light); }
+.depr-tile.t2 .pct { color: var(--cyan-deep); }
+.depr-tile.t3 { border-color: var(--gold-mid); }
+.depr-tile.t3 .pct { color: #92400e; }
+.depr-tile.t4 { border-color: #fb923c; }
+.depr-tile.t4 .pct { color: #9a3412; }
+
+.who-chooses {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 13px;
+  color: #475569;
+}
+.who-chooses .icon {
+  background: var(--azul);
+  color: #fff;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  flex-shrink: 0;
+  font-weight: 700;
+}
+.who-chooses b { color: var(--azul-deep); }
+
+/* ============ STEP NAV BUTTONS (en cada sección) ============ */
+.step-nav-btns {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 28px;
+  flex-wrap: wrap;
+}
+.step-nav-btns.right-only { justify-content: flex-end; }
+.step-btn {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--azul-deep);
+  cursor: pointer;
+  transition: all .25s ease-out;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.step-btn:hover {
+  border-color: var(--azul);
+  background: #f0f9ff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(12, 35, 64, .08);
+}
+.step-btn.next {
+  background: linear-gradient(135deg, var(--azul), var(--azul-deep));
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 14px rgba(3, 105, 161, .25);
+}
+.step-btn.next:hover {
+  background: linear-gradient(135deg, var(--azul-deep), var(--navy));
+  box-shadow: 0 8px 22px rgba(3, 105, 161, .35);
+}
+@media (max-width: 600px) {
+  .step-btn { flex: 1; justify-content: center; padding: 12px 14px; font-size: 12px; }
+}
+
+/* ============ SECCIÓN 5 — PRICING ============ */
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  align-items: stretch;
+}
+@media (max-width: 600px) { .pricing-grid { grid-template-columns: 1fr; } }
+.price-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 22px 18px;
+  text-align: center;
+  position: relative;
+}
+.price-card .label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+}
+.price-card .price {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--azul-deep);
+  margin: 8px 0 4px;
+}
+.price-card .freq { font-size: 12px; color: var(--muted); }
+.price-card.featured {
+  background: linear-gradient(135deg, var(--green-fresh), var(--green-deep));
+  color: #fff;
+  border: none;
+  transform: scale(1.04);
+  box-shadow: 0 10px 30px rgba(16, 185, 129, .3);
+}
+.price-card.featured .label,
+.price-card.featured .price,
+.price-card.featured .freq { color: #fff; }
+.price-card.featured .badge-rec {
+  position: absolute;
+  top: -10px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--gold-mid);
+  color: #422006;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* ============ SECCIÓN — QUÉ PASARÁ EL DÍA DE LA CITA ============ */
+.cita-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+.cita-step {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 22px;
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 18px;
+  align-items: start;
+  transition: all .25s ease-out;
+  position: relative;
+}
+.cita-step:hover {
+  border-color: var(--azul);
+  box-shadow: 0 6px 22px rgba(12, 35, 64, .08);
+  transform: translateY(-1px);
+}
+.cita-step .num-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--azul), var(--azul-deep));
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  box-shadow: 0 4px 12px rgba(3, 105, 161, .25);
+}
+.cita-step .step-body { display: flex; flex-direction: column; gap: 4px; }
+.cita-step .step-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--azul-deep);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: -0.01em;
+}
+.cita-step .step-title .emoji { font-size: 20px; }
+.cita-step .step-desc {
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.6;
+  margin: 0;
+}
+.cita-step .step-desc b { color: var(--azul-deep); font-weight: 700; }
+@media (max-width: 600px) {
+  .cita-step { padding: 14px 16px; grid-template-columns: 38px 1fr; gap: 14px; }
+  .cita-step .num-circle { width: 36px; height: 36px; font-size: 15px; }
+  .cita-step .step-title { font-size: 15px; }
+}
+
+.cita-pay-methods {
+  margin-top: 18px;
+  background: linear-gradient(180deg, #f0f9ff 0%, #fff 100%);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px 22px;
+}
+.cita-pay-methods .pay-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--azul-deep);
+  margin: 0 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cita-pay-methods .pay-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+@media (max-width: 600px) { .cita-pay-methods .pay-grid { grid-template-columns: 1fr; } }
+.cita-pay-methods .pay-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #475569;
+  padding: 8px 12px;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  line-height: 1.4;
+}
+.cita-pay-methods .pay-item .ico { font-size: 14px; flex-shrink: 0; }
+.cita-pay-methods .pay-link {
+  color: var(--azul);
+  text-decoration: none;
+  font-weight: 600;
+}
+.cita-pay-methods .pay-link:hover { text-decoration: underline; }
+
+/* ============ CIERRE ============ */
+.closing {
+  background: linear-gradient(180deg, #f0f9ff, #fff);
+  border-radius: 16px;
+  padding: 36px 28px;
+  text-align: center;
+  border: 1px solid var(--border);
+  margin-top: 28px;
+}
+.closing .msg {
+  font-size: 15px;
+  color: #475569;
+  max-width: 540px;
+  margin: 0 auto;
+}
+.closing .signature {
+  font-family: 'Space Grotesk', sans-serif;
+  font-style: italic;
+  color: var(--azul-deep);
+  font-size: 16px;
+  margin-top: 14px;
+}
+.closing .signature .lic {
+  font-size: 12px;
+  font-style: normal;
+  color: var(--muted);
+  display: block;
+  margin-top: 4px;
+}
+.cta-rect {
+  background: linear-gradient(135deg, var(--green-fresh), var(--green-deep));
+  color: #fff;
+  padding: 16px 32px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  margin-top: 18px;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, .35);
+  border: none;
+  cursor: pointer;
+  transition: transform .2s, box-shadow .2s;
+}
+.cta-rect:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(16, 185, 129, .45);
+}
+.diff-line {
+  font-size: 12px;
+  color: var(--gold-text);
+  margin-top: 18px;
+  font-style: italic;
+}
+.social-proof {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+.social-proof .stars {
+  color: var(--gold-deep);
+  font-size: 18px;
+  letter-spacing: 4px;
+  margin-bottom: 6px;
+}
+.social-proof p {
+  font-size: 13px;
+  color: var(--muted);
+  font-style: italic;
+  margin: 0;
+}
+
+/* ============ FOOTER ============ */
+.footer {
+  background: var(--navy);
+  color: #cbd5e1;
+  padding: 32px 24px;
+  text-align: center;
+  margin-top: 40px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.footer .sdi-logo {
+  display: block;
+  height: 56px;
+  width: auto;
+  margin: 0 auto 16px;
+  opacity: 0.92;
+}
+@media (max-width: 600px) {
+  .footer .sdi-logo { height: 44px; margin-bottom: 12px; }
+}
+.footer .bold { color: #fff; font-weight: 700; }
+.footer a { color: #93c5fd; text-decoration: none; }
+.footer .copyright {
+  border-top: 1px solid rgba(255,255,255,.1);
+  padding-top: 16px;
+  margin-top: 14px;
+  font-size: 11px;
+  color: #94a3b8;
+  max-width: 720px;
+  margin-left: auto; margin-right: auto;
+}
+
+/* ============ FLOATING NAV ============ */
+.float-nav {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 60;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px;
+  display: inline-flex;
+  gap: 4px;
+  box-shadow: 0 8px 22px rgba(12, 35, 64, .15);
+  align-items: center;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity .3s, transform .3s;
+}
+.float-nav.visible { opacity: 1; transform: translateY(0); }
+.float-nav button {
+  background: transparent;
+  border: none;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--azul-deep);
+  font-size: 14px;
+  display: grid; place-items: center;
+  transition: background .2s;
+}
+.float-nav button:hover { background: #f0f9ff; }
+.float-nav button:disabled { opacity: 0.3; cursor: not-allowed; }
+.float-nav .ctr {
+  align-self: center;
+  padding: 0 10px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* ============ CELEBRATION OVERLAY ============ */
+.celeb-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(12, 35, 64, .88);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  overflow: hidden;
+}
+.celeb-backdrop.active { display: flex; }
+
+.celeb-modal {
+  position: relative;
+  max-width: 540px;
+  width: 100%;
+  text-align: center;
+  padding: 48px 32px 38px;
+  color: #fff;
+}
+.celeb-close {
+  position: absolute;
+  top: -10px; right: 0;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.2);
+  color: #fff;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  cursor: pointer;
+  font-size: 20px;
+  transition: background .2s;
+}
+.celeb-close:hover { background: rgba(255,255,255,.2); }
+
+.confetti {
+  position: absolute;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  opacity: 0;
+  animation: confetti-fall 4s ease-out infinite;
+}
+.confetti.c1 { top: 0%; left: 8%;  background: var(--green-light); animation-delay: 0s; }
+.confetti.c2 { top: 5%; left: 20%; background: var(--gold-mid); animation-delay: 0.4s; }
+.confetti.c3 { top: 0%; left: 35%; background: #60a5fa; animation-delay: 0.8s; }
+.confetti.c4 { top: 6%; left: 50%; background: var(--green-fresh); animation-delay: 1.2s; }
+.confetti.c5 { top: 0%; left: 65%; background: var(--gold-mid); animation-delay: 1.6s; }
+.confetti.c6 { top: 8%; left: 78%; background: #f472b6; animation-delay: 0.2s; }
+.confetti.c7 { top: 0%; left: 90%; background: var(--green-light); animation-delay: 1.0s; }
+.confetti.c8 { top: 12%; left: 15%; background: var(--gold-mid); animation-delay: 1.8s; }
+.confetti.c9 { top: 4%; left: 45%; background: #60a5fa; animation-delay: 0.6s; }
+.confetti.c10 { top: 10%; left: 70%; background: var(--green-fresh); animation-delay: 2.2s; }
+@keyframes confetti-fall {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 0; }
+  10%  { opacity: 1; }
+  100% { transform: translateY(400px) rotate(360deg); opacity: 0; }
+}
+
+/* Anillo de progreso 1/2 */
+.celeb-ring-wrap {
+  position: relative;
+  width: 100px; height: 100px;
+  margin: 0 auto 20px;
+  animation: ring-appear 0.5s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes ring-appear {
+  0%   { transform: scale(0); opacity: 0; }
+  60%  { transform: scale(1.08); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.celeb-ring-svg {
+  width: 100px; height: 100px;
+  transform: rotate(-90deg);
+}
+.celeb-ring-bg {
+  fill: none;
+  stroke: rgba(255,255,255,.1);
+  stroke-width: 6;
+}
+.celeb-ring-progress {
+  fill: none;
+  stroke: var(--green-fresh);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-dasharray: 238.76;
+  stroke-dashoffset: 238.76;
+  animation: ring-draw 1.2s 0.3s ease-out forwards;
+}
+@keyframes ring-draw { to { stroke-dashoffset: 119.38; } }
+.celeb-ring-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.celeb-ring-pct {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+}
+.celeb-ring-lbl {
+  font-size: 9px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+}
+
+.celeb-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0 0 8px;
+  animation: fade-up 0.5s 0.3s ease-out backwards;
+}
+.celeb-title .name {
+  background: linear-gradient(180deg, transparent 60%, rgba(251, 191, 36, .4) 60%);
+  padding: 0 6px;
+}
+.celeb-sub {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: #94a3b8;
+  max-width: 400px;
+  margin: 0 auto 18px;
+  animation: fade-up 0.5s 0.45s ease-out backwards;
+}
+
+/* Lista de dos pasos */
+.celeb-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 auto 20px;
+  max-width: 340px;
+  text-align: left;
+  animation: fade-up 0.5s 0.55s ease-out backwards;
+}
+.celeb-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+.celeb-step.done-step {
+  background: rgba(16,185,129,.1);
+  border: 1px solid rgba(16,185,129,.2);
+}
+.celeb-step.pending-step {
+  background: rgba(251,191,36,.08);
+  border: 1px solid rgba(251,191,36,.3);
+}
+.celeb-step-icon {
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  display: grid; place-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.celeb-step-icon.ok   { background: var(--green-fresh); color: #fff; }
+.celeb-step-icon.pend {
+  background: var(--gold-mid);
+  color: #422006;
+  animation: pulse-pend 1.8s ease-in-out infinite;
+}
+@keyframes pulse-pend {
+  0%,100% { box-shadow: 0 0 0 0 rgba(251,191,36,.5); }
+  50%      { box-shadow: 0 0 0 7px rgba(251,191,36,0); }
+}
+.celeb-step-text { flex: 1; }
+.celeb-step-text b { display: block; font-weight: 600; color: #e2e8f0; margin-bottom: 2px; }
+.celeb-step-text span { font-size: 11px; color: #64748b; }
+.celeb-step-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.celeb-step-badge.ok   { background: rgba(16,185,129,.15); color: #34d399; }
+.celeb-step-badge.pend { background: rgba(251,191,36,.15); color: #fbbf24; }
+
+/* CTA dorado */
+.celeb-cta-link {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff;
+  border-radius: 999px;
+  padding: 14px 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 6px 22px rgba(245,158,11,.45);
+  animation: fade-up 0.5s 0.7s ease-out backwards;
+  transition: transform .2s ease-out, box-shadow .2s ease-out;
+}
+.celeb-cta-link:hover,
+.celeb-cta-link:active {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(245,158,11,.55);
+}
+.celeb-cta-link .arrow { transition: transform .2s ease-out; }
+.celeb-cta-link:hover .arrow { transform: translateX(4px); }
+.celeb-cta-hint {
+  font-size: 11px;
+  color: #475569;
+  margin-top: 8px;
+  animation: fade-up 0.5s 0.85s ease-out backwards;
+}
+
+.celeb-signature {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255,255,255,.1);
+  animation: fade-up 0.5s 0.9s ease-out backwards;
+}
+.celeb-avatar {
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg, var(--azul), #0284c7);
+  color: #fff;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  border: 2px solid rgba(255,255,255,.2);
+}
+.celeb-sig-text { text-align: left; font-size: 12px; color: #cbd5e1; }
+.celeb-sig-text b { color: #fff; font-family: 'Space Grotesk', sans-serif; font-size: 13px; }
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============ SECCIÓN EXTRA · ORIGEN ASIÁTICO ============ */
+.card-asia {
+  background: linear-gradient(180deg, #fef2f2 0%, var(--rose-bg) 100%);
+  border: 2px solid #fda4af;
+  border-radius: 14px;
+  padding: 22px;
+  margin-top: 4px;
+}
+.card-asia h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  color: var(--rose-deep);
+  font-size: 19px;
+  margin: 0 0 8px;
+}
+.card-asia > p {
+  margin: 0 0 14px;
+  font-size: 13.5px;
+  color: var(--rose-text);
+}
+.card-asia .ded-card {
+  background: #fff;
+  border: 1px solid #fda4af;
+  border-radius: 10px;
+  padding: 16px;
+}
+.card-asia .ded-card .lbl {
+  font-size: 11px;
+  color: var(--rose-deep);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.card-asia .ded-card .val {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--rose-deep);
+  margin-top: 4px;
+}
+.card-asia .ded-card .min {
+  font-size: 12.5px;
+  color: var(--rose-text);
+  margin-top: 6px;
+}
+
+/* ============ SECCIÓN EXTRA · ALTA GAMA ============ */
+.card-gama {
+  background: linear-gradient(180deg, #faf5ff 0%, var(--violet-bg) 100%);
+  border: 2px solid #c4b5fd;
+  border-radius: 14px;
+  padding: 22px;
+  margin-top: 4px;
+  position: relative;
+}
+.card-gama::before {
+  content: "💎";
+  position: absolute;
+  top: -12px; right: 22px;
+  background: var(--violet-mid); color: #fff;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-size: 14px;
+  box-shadow: 0 4px 14px rgba(139, 92, 246, .4);
+}
+.card-gama h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  color: var(--violet-deep);
+  font-size: 19px;
+  margin: 0 0 8px;
+}
+.card-gama > p {
+  margin: 0 0 14px;
+  font-size: 13.5px;
+  color: var(--violet-text);
+}
+.card-gama .min-asegurado {
+  background: #fff;
+  border: 1px solid #c4b5fd;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.card-gama .min-asegurado .ico { font-size: 22px; }
+.card-gama .min-asegurado .txt-lbl {
+  font-size: 10px;
+  color: var(--violet-deep);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.card-gama .min-asegurado .txt-val {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--violet-deep);
+}
+.card-gama .tier-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 4px;
+}
+.card-gama .tier {
+  background: #fff;
+  border: 1px solid #c4b5fd;
+  border-radius: 10px;
+  padding: 14px;
+}
+.card-gama .tier .rng {
+  font-size: 10.5px;
+  color: var(--violet-deep);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.card-gama .tier .pct {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--violet-deep);
+  margin: 2px 0;
+  line-height: 1;
+}
+.card-gama .tier .min-line {
+  font-size: 11.5px;
+  color: var(--violet-text);
+  margin-top: 4px;
+}
+
+/* ============ BLOQUE IDD compartido ============ */
+.card-asia .idd-box,
+.card-gama .idd-box {
+  margin-top: 14px;
+  background: #fff;
+  border: 1px solid #fda4af;
+  border-left: 4px solid var(--rose-mid);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.card-gama .idd-box.gama {
+  border-color: #c4b5fd;
+  border-left-color: var(--violet-mid);
+}
+.idd-box .idd-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.idd-box .idd-ico {
+  font-size: 22px;
+  background: var(--rose-bg);
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  flex-shrink: 0;
+}
+.idd-box.gama .idd-ico { background: var(--violet-bg); }
+.idd-box .idd-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 14.5px;
+  color: var(--rose-deep);
+}
+.idd-box.gama .idd-title { color: var(--violet-deep); }
+.idd-box .idd-sub { font-size: 11.5px; color: var(--muted); }
+.idd-box .idd-text {
+  font-size: 13px;
+  color: #334155;
+  margin: 6px 0 12px;
+  line-height: 1.55;
+}
+.idd-box .ej-label {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-style: italic;
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+.idd-box .ej-table {
+  display: grid;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 10px;
+  font-size: 11.5px;
+  background: #fafafa;
+}
+.idd-box .ej-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1.4fr 1fr 1fr;
+  border-bottom: 1px solid #e2e8f0;
+}
+.idd-box .ej-row:last-child { border-bottom: none; }
+.idd-box .ej-row > div {
+  padding: 8px 10px;
+  border-right: 1px solid #e2e8f0;
+}
+.idd-box .ej-row > div:last-child { border-right: none; }
+.idd-box .ej-row > div small {
+  display: block;
+  font-size: 9.5px;
+  color: var(--muted);
+  margin-top: 1px;
+}
+.idd-box .ej-head {
+  background: #f1f5f9;
+  font-weight: 700;
+  color: var(--navy);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.idd-box .ej-row .zero { color: var(--green-deep); font-weight: 700; }
+.idd-box .ej-row .pay { color: var(--rose-mid); font-weight: 700; }
+.idd-box.gama .ej-row .pay { color: var(--violet-deep); }
+.idd-box .warn-line {
+  margin-top: 6px;
+  padding: 9px 11px;
+  background: var(--gold-bg);
+  border: 1px solid #fde68a;
+  border-radius: 6px;
+  font-size: 11.5px;
+  color: var(--gold-text);
+  line-height: 1.5;
+}
+.idd-box .warn-line b { color: #422006; }
+
+@media (max-width: 600px) {
+  .card-gama .tier-grid { grid-template-columns: 1fr; }
+  .idd-box .ej-row { grid-template-columns: 1fr 1fr; }
+  .idd-box .ej-head { display: none; }
+  .idd-box .ej-row > div { padding: 6px 8px; }
+}
+
+/* =====================================================================
+   LÍNEA CLARA · re-skin de la guía (10 sep 2026)
+   Referencia: business.google.com/en-all/google-ads. Blanco y aire,
+   píldoras, esquinas grandes, un solo acento (azul SDI #0369A1).
+   Este bloque va DE ÚLTIMO a propósito: reescribe por orden de fuente,
+   sin tocar lógica, ids ni enganches de JS. Las 10 reglas de JC están
+   anotadas como (R1)…(R10) donde mandan. Los !important van SOLO contra
+   estilos en línea del HTML, y cada uno dice por qué.
+   Cara CLIENTE: el logo del INS arriba; SDI al pie como plataforma.
+   ===================================================================== */
+:root{
+  --lc-blue:#0369A1;          /* R7 · acento ÚNICO de botones */
+  --lc-blue-ink:#02557F;      /* hover / pressed */
+  --lc-blue-soft:#E8F1F8;     /* tinte de hover en botones de contorno */
+  --lc-band:#EEF4F9;          /* R1 · banda pálida, solo para agrupar */
+  --lc-line:#DADCE0;          /* R5 · hairline de tarjeta */
+  --lc-line-btn:#8A939C;      /* R7 · borde de control, 3.1:1 sobre blanco */
+  --lc-line-soft:#EDEFF2;     /* divisores internos */
+  --lc-ink:#1B1F23;
+  --lc-ink-2:#5A6570;
+  --lc-ink-3:#6B7681;         /* 4.6:1 sobre blanco: el gris más claro para texto */
+  --lc-ok-bg:#E9F5F0;         /* R4 · píldora de estado */
+  --lc-ok-tx:#037D61;
+  --lc-warn-tx:#B26A00;       /* solo en un punto de 6-8 px, nunca sobre cifras */
+  /* R6 · color del producto: el navy del cotizador de autos. Entra solo como
+     chip, regla 28×3 o tinte al pasar el mouse. Nunca pinta un monto. */
+  --lc-prod:#0C2340;
+  --lc-prod-tint:#E4E7EA;
+  --lc-prod-tint:color-mix(in srgb, var(--lc-prod) 11%, white);
+  --lc-r-xl:32px;             /* R5 · panel sobre banda */
+  --lc-r-lg:24px;             /* bloques informativos */
+  --lc-r-md:20px;             /* R5 · tarjeta */
+  --lc-shadow:0 1px 2px rgba(27,31,35,.05);   /* la única sombra permitida */
+  --lc-ease:cubic-bezier(.22,.61,.36,1);      /* R9 · sin rebote */
+  /* R10 · tipografía SDI v1.3 (10 sep 2026): la familia de Google Ads, ya libre (OFL).
+     Inter va segunda SOLO para prestar el ₡ (U+20A1), que Google Sans Flex no trae. */
+  --font-display:'Google Sans Flex','Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --font-body:'Google Sans Flex','Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --font-mono:'Google Sans Code',ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;
+}
+
+/* ---------- base (R1) ------------------------------------------------ */
+html,body{background:#fff;color:var(--lc-ink)}
+body{font-family:var(--font-body);font-size:14.5px;line-height:1.5;font-optical-sizing:auto;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+h1,h2,h3{font-family:var(--font-display);font-weight:500;letter-spacing:-.025em;line-height:1.18;color:var(--lc-ink)}
+b,strong{font-weight:600}
+.lc-wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+
+/* ---------- R3 · barra en dos niveles --------------------------------- */
+.app-header{display:block;padding:0;background:#fff;color:var(--lc-ink);gap:0}
+.lc-top{background:#F8F9FA;height:52px}
+.lc-top .lc-wrap{display:flex;align-items:center;justify-content:space-between;height:100%;gap:16px}
+.ins-logo{height:26px;filter:brightness(0);opacity:.86}      /* el PNG hosteado es blanco: en tinta sobre claro */
+.header-right{gap:14px}
+.pill-100{background:var(--lc-ok-bg);color:var(--lc-ok-tx);border:0;padding:7px 15px;font-size:12.5px;font-weight:600;letter-spacing:.01em;gap:8px}
+.pill-100::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0}   /* R4 · el punto, sin emoji */
+.agent-info{text-align:right;font-size:12.5px;opacity:1;color:var(--lc-ink-2);line-height:1.3;white-space:nowrap}
+.agent-info b{color:var(--lc-ink);font-weight:600}
+.agent-info b::after{content:" · ";color:var(--lc-ink-3);font-weight:400}   /* una sola línea: el JS escribe <b>nombre</b><br/>licencia */
+.agent-info br{display:none}
+.lc-nav{border-bottom:1px solid var(--lc-line-soft);height:64px;background:#fff}
+.lc-nav .lc-wrap{display:flex;align-items:center;justify-content:space-between;height:100%;gap:16px}
+.brand{gap:0;min-width:0}
+.brand-text{flex-direction:row;align-items:baseline;gap:10px;line-height:1.2;min-width:0}
+.brand-title{font-family:var(--font-display);font-size:19px;font-weight:600;letter-spacing:-.025em;color:var(--lc-ink);white-space:nowrap}
+.brand-sub{font-size:13px;color:var(--lc-ink-3);opacity:1;margin:0;white-space:nowrap}
+.lc-pill-sm{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:0 18px;border-radius:999px;
+  background:#fff;color:var(--lc-blue);border:1px solid var(--lc-blue);font-family:var(--font-body);font-size:13.5px;font-weight:600;
+  cursor:pointer;white-space:nowrap;transition:background .15s ease}
+.lc-pill-sm:hover{background:var(--lc-blue-soft)}
+.gold-ribbon{display:none}      /* R1 · sin cintas de color; el agente ya está en la barra y en el hero */
+
+/* ---------- barra flotante del recorrido ------------------------------ */
+.sticky-nav{top:12px;background:rgba(255,255,255,.96);border:1px solid var(--lc-line);box-shadow:0 2px 8px rgba(27,31,35,.06);padding:6px 12px}
+.sticky-nav .nav-label{font-family:var(--font-body);color:var(--lc-ink-3);font-weight:600;font-size:11.5px;letter-spacing:.02em}
+.sticky-dot{color:var(--lc-ink-2);font-weight:500;font-size:11.5px;transition:background .15s ease,color .15s ease}
+.sticky-dot .num{background:#fff;border:1px solid var(--lc-line-btn);color:var(--lc-ink-2);font-family:var(--font-mono);font-size:9.5px;font-weight:600;transition:none}
+.sticky-dot.active{background:var(--lc-blue-soft);color:var(--lc-blue)}
+.sticky-dot.active .num{background:var(--lc-blue);border-color:var(--lc-blue);color:#fff;transform:none}
+.sticky-dot.done .num{background:var(--lc-ok-tx);border-color:var(--lc-ok-tx);color:#fff}
+.sticky-dot:hover{background:var(--lc-blue-soft)}
+
+/* ---------- R2 · hero: titular grande y centrado, gris, dos píldoras --- */
+.hero{background:#fff;max-width:840px;padding:52px 28px 48px;align-items:center;text-align:center;gap:18px}
+.agent-chip{align-self:center;background:#fff;border:1px solid var(--lc-line);box-shadow:none;padding:5px 16px 5px 5px;gap:10px}
+.avatar{width:30px;height:30px;background:var(--lc-prod-tint);color:var(--lc-prod);font-family:var(--font-display);font-weight:600;font-size:12px}
+.agent-chip-info{text-align:left}
+.agent-chip-name{font-family:var(--font-body);font-size:13px;font-weight:600;color:var(--lc-ink)}
+.agent-chip-role{font-size:11.5px;color:var(--lc-ink-3)}
+.bubble{background:#fff;border:0;border-radius:0;padding:0;box-shadow:none;margin:0 auto;max-width:62ch;font-size:17px;color:var(--lc-ink-2);line-height:1.6;overflow:visible}
+.bubble::before{display:none}
+.bubble .greet{font-family:var(--font-display);font-size:clamp(36px,4.2vw,50px);font-weight:500;color:var(--lc-ink);letter-spacing:-.025em;line-height:1.06;text-wrap:balance;margin-bottom:16px}
+.bubble .greet .name{color:var(--lc-ink);font-weight:500}
+.bubble b{color:var(--lc-ink);font-weight:600}
+.bubble .roadmap{margin:18px auto 0;background:var(--lc-band);border:0;border-left:0;border-radius:var(--lc-r-md);padding:14px 18px;font-size:13.5px;color:var(--lc-ink-2);text-align:left;line-height:1.6}
+.bubble .roadmap b{color:var(--lc-ink)}
+.progress-line{margin:0;align-self:center;border:1px solid var(--lc-line);border-radius:999px;padding:7px 14px;font-size:12px;color:var(--lc-ink-3);gap:10px}
+.progress-line .label{color:var(--lc-ink-3);font-weight:500}
+.progress-line .dot{background:var(--lc-line);width:7px;height:7px}
+.progress-line .dot.active{background:var(--lc-blue);transform:none}
+.progress-line .step-label{color:var(--lc-ink);font-weight:600}
+.hero-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:6px}
+.cta-pill{background:var(--lc-blue);color:#fff;box-shadow:none;font-family:var(--font-body);font-size:14.5px;font-weight:600;min-height:44px;padding:0 22px;margin:0;border:1px solid var(--lc-blue);transition:background .15s ease}
+.cta-pill:hover{transform:none;background:var(--lc-blue-ink);border-color:var(--lc-blue-ink)}
+.cta-pill.out{background:#fff;color:var(--lc-blue)}
+.cta-pill.out:hover{background:var(--lc-blue-soft)}
+
+/* ---------- R1/R5 · banda pálida + paneles r32 ------------------------- */
+main{max-width:none;padding:44px 24px 56px;background:var(--lc-band)}
+.section{max-width:880px;margin:0 auto 22px;background:#fff;border:1px solid var(--lc-line);border-radius:var(--lc-r-xl);padding:38px 40px 34px;
+  box-shadow:var(--lc-shadow);transform:translateY(9px);transition:opacity .5s var(--lc-ease),transform .5s var(--lc-ease)}   /* R9 · entrada suave, sin rebote */
+.section-header{margin-bottom:22px}
+.section-num{display:block;background:none;padding:0;border-radius:0;font-family:var(--font-body);font-size:12px;letter-spacing:.02em;color:var(--lc-ink-3);font-weight:600}
+.section-num::before{content:"";display:block;width:28px;height:3px;border-radius:2px;background:var(--lc-prod);margin-bottom:12px}   /* R6 · regla corta */
+.section-num[style]{background:none!important;color:var(--lc-ink-3)!important}   /* s3a, s3b y la cita traían fondo de color EN LÍNEA */
+.section-title{font-family:var(--font-display);font-size:28px;font-weight:500;color:var(--lc-ink);letter-spacing:-.025em;margin:6px 0 6px;line-height:1.18}
+.section-sub{font-size:14.5px;color:var(--lc-ink-2);line-height:1.6}
+.section-sub b{color:var(--lc-ink);font-weight:600}
+
+/* ---------- sección 1 · coberturas ------------------------------------- */
+.bento-grid{gap:14px}
+.bento-tile{border:1px solid var(--lc-line);border-radius:var(--lc-r-md);padding:18px 18px 16px;transition:background .2s var(--lc-ease),border-color .2s var(--lc-ease)}
+.bento-tile:hover{transform:none;box-shadow:none;background:var(--lc-prod-tint);border-color:var(--lc-prod)}   /* R6 · el tinte, solo al pasar el mouse */
+.bento-tile .letter,.bento-tile.azul .letter,.bento-tile.green .letter,.bento-tile.red .letter,.bento-tile.purple .letter{
+  width:auto;height:auto;padding:4px 11px;border-radius:999px;background:var(--lc-prod-tint);color:var(--lc-prod);
+  font-family:var(--font-body);font-size:11.5px;font-weight:600;letter-spacing:.01em;display:inline-flex}
+.bento-tile .letter::before{content:"Cobertura";margin-right:4px}   /* el JS lee textContent, que no incluye el ::before; en flex el espacio final se pierde */
+.bento-tile.expanded .letter,.bento-tile:hover .letter{background:#fff}
+.bento-tile .chevron{color:var(--lc-ink-3)}
+.bento-tile.expanded .chevron{color:var(--lc-blue)}
+.bento-tile h3{font-family:var(--font-display);font-size:17px;font-weight:600;letter-spacing:-.02em;color:var(--lc-ink)}
+.bento-tile .desc{font-size:13px;color:var(--lc-ink-3);line-height:1.5}
+.bento-tile .amount{font-family:var(--font-mono);font-size:17px;font-weight:600;letter-spacing:-.02em;color:var(--lc-ink);font-variant-numeric:tabular-nums lining-nums}   /* R8 · secundarias en mono */
+.bento-tile .bento-detail{color:var(--lc-ink-2);font-size:13.5px}
+.bento-tile .bento-detail b{color:var(--lc-ink);font-weight:600}
+.bento-tile.expanded{border-color:var(--lc-prod);box-shadow:none;background:var(--lc-prod-tint)}
+.bento-tile.expanded .bento-detail{border-top-color:var(--lc-line)}
+.bento-tile:focus-visible{outline:3px solid rgba(3,105,161,.35);outline-offset:2px}
+
+/* ---------- sección 2 · asistencia ------------------------------------- */
+.tip-banner{background:var(--lc-band);border:0;border-radius:var(--lc-r-md);padding:16px 18px;gap:0}
+.tip-banner .bulb{display:none}
+.tip-banner .text{font-size:13.5px;color:var(--lc-ink-2);line-height:1.6}
+.tip-banner b{color:var(--lc-ink);font-weight:600}
+.tip-banner .small{color:var(--lc-ink-2);font-size:13px;opacity:1;margin-top:4px}
+.plan-toggle{background:none;padding:0;gap:8px;border-radius:0;margin-bottom:16px;flex-wrap:wrap}
+.plan-toggle .tab{flex:0 1 auto;min-height:38px;padding:0 18px;border-radius:999px;border:1px solid var(--lc-line-btn);background:#fff;color:var(--lc-ink-2);
+  font-family:var(--font-body);font-size:13.5px;font-weight:600;transition:background .15s ease,border-color .15s ease,color .15s ease}   /* R7 · borde ≥3:1 */
+.plan-toggle .tab.active{background:var(--lc-blue);border-color:var(--lc-blue);color:#fff}
+.svc-grid{gap:10px}
+.svc-row{border:1px solid var(--lc-line);border-radius:14px;padding:12px 14px;font-size:13px}
+.svc-row .icon{display:none}
+.svc-row .name{font-weight:500;color:var(--lc-ink)}
+.svc-row .qty{font-family:var(--font-mono);font-size:11.5px;color:var(--lc-ink-3)}
+
+/* ---------- sección 3 · deducible (IDD) -------------------------------- */
+.idd-card{background:#fff;color:var(--lc-ink);border:1px solid var(--lc-line);border-radius:var(--lc-r-lg);padding:30px 34px}
+.idd-card::before{display:none}
+.idd-top{border-bottom:1px solid var(--lc-line-soft);padding-bottom:20px;align-items:flex-start}
+.idd-label{color:var(--lc-ink-3);text-transform:none;letter-spacing:.01em;font-size:12.5px;font-weight:500}
+.idd-compare{gap:22px;margin-top:8px;align-items:flex-end}
+.idd-col-from .small,.idd-col-to .small{font-size:12.5px;opacity:1;color:var(--lc-ink-3)}
+.idd-col-from .from{font-family:var(--font-mono);font-size:22px;font-weight:500;color:var(--lc-ink-3);text-decoration:line-through;font-variant-numeric:tabular-nums lining-nums;line-height:1.2}
+.idd-arrow{color:var(--lc-ink-3);font-size:20px;padding-bottom:8px}
+.idd-col-to .to{font-family:var(--font-display);font-size:clamp(36px,4.5vw,50px);font-weight:500;color:var(--lc-ink);letter-spacing:-.02em;font-variant-numeric:tabular-nums lining-nums;line-height:1.1}   /* R8 · la protagonista */
+.idd-side{background:var(--lc-prod-tint);color:var(--lc-prod);border-radius:999px;padding:6px 12px;font-size:11.5px;font-weight:600;text-align:center;line-height:1.3;white-space:nowrap}
+.idd-rules{gap:12px;margin-top:20px}
+.idd-rule{background:#fff;border:1px solid var(--lc-line);border-radius:var(--lc-r-md);padding:16px 18px;font-size:13.5px;color:var(--lc-ink-2);gap:12px;line-height:1.55}
+.idd-rule .icon,.idd-rule.ok .icon,.idd-rule.warn .icon{width:auto;height:auto;font-size:0;border-radius:0;background:none;padding-top:7px}
+.idd-rule .icon::before{content:"";display:block;width:8px;height:8px;border-radius:50%}
+.idd-rule.ok .icon::before{background:var(--lc-ok-tx)}
+.idd-rule.warn .icon::before{background:var(--lc-warn-tx)}   /* R6 · lo que empeora: un punto ámbar, no rojo */
+.idd-rule b{color:var(--lc-ink);font-weight:600}
+.idd-rule b[style]{color:var(--lc-ink)!important}   /* "asegurado" venía dorado EN LÍNEA, pensado para el navy */
+.idd-rule .meta{color:var(--lc-ink-3);font-size:12px}
+
+/* ---------- sección 3 · variantes asiático / alta gama ------------------ */
+.card-asia,.card-gama{background:#fff;border:1px solid var(--lc-line);border-radius:var(--lc-r-lg);padding:30px 34px}
+.card-gama::before{display:none}
+.card-asia h3,.card-gama h3{font-family:var(--font-display);color:var(--lc-ink);font-size:20px;font-weight:600;letter-spacing:-.02em}
+.card-asia>p,.card-gama>p{color:var(--lc-ink-2);font-size:14px}
+.card-asia>p b,.card-gama>p b{color:var(--lc-ink)}
+.card-asia .ded-card,.card-gama .min-asegurado,.card-gama .tier{background:#fff;border:1px solid var(--lc-line);border-radius:var(--lc-r-md)}
+.card-asia .ded-card .lbl,.card-gama .min-asegurado .txt-lbl,.card-gama .tier .rng{text-transform:none;letter-spacing:.01em;color:var(--lc-ink-3);font-size:12.5px;font-weight:500}
+.card-asia .ded-card .val{font-family:var(--font-display);color:var(--lc-ink);font-size:30px;font-weight:500;letter-spacing:-.02em}
+.card-asia .ded-card .min{color:var(--lc-ink-2)}
+.card-asia .ded-card .min b{color:var(--lc-ink)}
+.card-gama .min-asegurado .ico{display:none}
+.card-gama .min-asegurado .txt-val{font-family:var(--font-mono);color:var(--lc-ink);font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
+.card-gama .tier .pct{font-family:var(--font-display);color:var(--lc-ink);font-weight:500;font-size:34px;letter-spacing:-.02em}
+.card-gama .tier .min-line{color:var(--lc-ink-2)}
+.card-gama .tier .min-line b{color:var(--lc-ink)}
+.card-asia .idd-box,.card-gama .idd-box,.card-gama .idd-box.gama{background:var(--lc-band);border:0;border-left:0;border-radius:var(--lc-r-md);padding:18px 20px}
+.idd-box .idd-ico{display:none}
+.idd-box .idd-title,.idd-box.gama .idd-title{font-family:var(--font-display);color:var(--lc-ink);font-weight:600;font-size:15px}
+.idd-box .idd-sub{color:var(--lc-ink-3)}
+.idd-box .idd-text{color:var(--lc-ink-2)}
+.idd-box .idd-text b{color:var(--lc-ink)}
+.idd-box .ej-label{color:var(--lc-ink-3);font-style:normal}
+.idd-box .ej-table{border:1px solid var(--lc-line);border-radius:14px;background:#fff;font-size:12.5px;overflow:hidden}
+.idd-box .ej-row{border-bottom:1px solid var(--lc-line-soft)}
+.idd-box .ej-row>div{border-right:1px solid var(--lc-line-soft);font-family:var(--font-mono);font-variant-numeric:tabular-nums lining-nums;color:var(--lc-ink)}
+.idd-box .ej-head{background:#fff;color:var(--lc-ink-3);text-transform:none;letter-spacing:.01em;font-size:11.5px;font-weight:600}
+.idd-box .ej-head>div{font-family:var(--font-body)}
+.idd-box .ej-row>div small{color:var(--lc-ink-3);font-family:var(--font-body);font-size:10.5px}
+.idd-box .ej-row .zero,.idd-box .ej-row .pay,.idd-box.gama .ej-row .pay{color:var(--lc-ink);font-weight:600}   /* R6 · el color no pinta la cifra */
+.idd-box .ej-row .zero::before,.idd-box .ej-row .pay::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px;vertical-align:.1em}
+.idd-box .ej-row .zero::before{background:var(--lc-ok-tx)}
+.idd-box .ej-row .pay::before{background:var(--lc-warn-tx)}
+.idd-box .warn-line{background:#fff;border:1px solid var(--lc-line);border-radius:14px;color:var(--lc-ink-2);font-size:12.5px;padding:11px 14px}
+.idd-box .warn-line b{color:var(--lc-ink)}
+
+/* ---------- sección 4 · repuestos ------------------------------------- */
+.s4-block{border:1px solid var(--lc-line);border-radius:var(--lc-r-lg);overflow:visible}
+.s4-header{background:#fff;color:var(--lc-ink);padding:26px 28px 4px}
+.s4-header::before{display:none}
+.s4-header .num-badge{background:var(--lc-prod-tint);color:var(--lc-prod);border:0;font-size:11.5px;font-weight:600;padding:4px 11px;letter-spacing:.01em}
+.s4-header h2{font-family:var(--font-display);font-size:22px;font-weight:600;letter-spacing:-.02em;color:var(--lc-ink)}
+.s4-header .perso{color:var(--lc-ink-2)}
+.s4-header .perso b{color:var(--lc-ink);font-weight:600}
+.s4-body{padding:18px 28px 26px}
+.s4-intro{background:var(--lc-band);border-left:0;border-radius:var(--lc-r-md);padding:14px 18px;color:var(--lc-ink-2);font-size:13.5px;line-height:1.6}
+.s4-intro b{color:var(--lc-ink)}
+.sub-card{border:1px solid var(--lc-line);border-radius:var(--lc-r-md);padding:22px}
+.sub-card h3{font-family:var(--font-display);color:var(--lc-ink);font-weight:600;font-size:17px}
+.sub-num,.sub-num-elec{background:var(--lc-prod-tint);color:var(--lc-prod);border:0;border-radius:999px;font-family:var(--font-body);font-size:12px}
+.sub-card .lead{color:var(--lc-ink-3)}
+.qrow{grid-template-columns:1fr auto;background:#fff;border:1px solid var(--lc-line);border-radius:14px;padding:14px 16px;margin-bottom:10px;font-size:13.5px}
+.qrow .age-icon{display:none}
+.qrow.match{background:var(--lc-prod-tint);border:1px solid var(--lc-prod);box-shadow:none;transform:none}
+.qrow .age{font-weight:600;color:var(--lc-ink)}
+.qrow .place{color:var(--lc-ink-3);font-size:12px}
+.badge-q,.badge-q.gen{background:var(--lc-band);color:var(--lc-ink-2);font-weight:600;font-size:11.5px;padding:4px 11px}
+.qrow.match .badge-q{background:#fff}
+.qrow.match .badge-q.match-tag{background:var(--lc-prod);color:#fff;font-size:11px}
+.you-tag{background:var(--lc-prod);color:#fff;text-transform:none;letter-spacing:.01em;font-size:10.5px;font-weight:600;border-radius:999px;padding:2px 8px}
+
+.electric{background:#fff;border:1px solid var(--lc-line);border-radius:var(--lc-r-lg);padding:24px;margin-top:0}
+.electric::before{display:none}
+.electric h3{font-family:var(--font-display);color:var(--lc-ink);font-weight:600;font-size:17px;margin-top:0}
+.electric .lead{color:var(--lc-ink-3)}
+.electric .lead b{color:var(--lc-ink)}
+.battery-card{border:1px solid var(--lc-line);border-radius:var(--lc-r-md);padding:18px}
+.battery-card .label{text-transform:none;letter-spacing:.01em;color:var(--lc-ink-3);font-weight:500;font-size:12.5px}
+.battery-card .key{font-family:var(--font-display);color:var(--lc-ink);font-weight:500;font-size:28px;letter-spacing:-.02em}
+.battery-card .key span[style]{color:inherit!important}   /* el "40%" venía verde EN LÍNEA: la cifra no lleva color */
+.battery-card .key .of-value{color:var(--lc-ink-3);font-size:14px}
+.battery-card .desc{color:var(--lc-ink-2)}
+.battery-card .desc b{color:var(--lc-ink)}
+.battery-card .ej{background:var(--lc-band);color:var(--lc-ink-2);border-radius:12px}
+.battery-card .ej b{color:var(--lc-ink)}
+/* dos <div> con estilo EN LÍNEA dentro de .electric: el rótulo pedía Space Grotesk (ya no carga) y el aviso traía la caja dorada */
+.electric>div[style*="Space Grotesk"]{font-family:var(--font-body)!important;color:var(--lc-ink-3)!important;font-size:12.5px!important;font-weight:600!important}
+.electric>div[style*="gold-bg"]{background:var(--lc-band)!important;border-left:0!important;border-radius:var(--lc-r-md)!important;color:var(--lc-ink-2)!important;padding:14px 18px!important}
+.electric>div[style*="gold-bg"] b{color:var(--lc-ink)}
+.depr-grid{gap:10px}
+.depr-tile,.depr-tile.t1,.depr-tile.t2,.depr-tile.t3,.depr-tile.t4{border:1px solid var(--lc-line);border-radius:14px}
+.depr-tile .pct,.depr-tile.t1 .pct,.depr-tile.t2 .pct,.depr-tile.t3 .pct,.depr-tile.t4 .pct{font-family:var(--font-display);color:var(--lc-ink);font-weight:500}
+.depr-tile .age{color:var(--lc-ink-3)}
+.who-chooses{background:var(--lc-band);border:0;border-radius:var(--lc-r-md);color:var(--lc-ink-2);padding:16px 18px;line-height:1.6}
+.who-chooses .icon{display:none}
+.who-chooses b{color:var(--lc-ink)}
+
+/* ---------- R7 · botones entre pasos ---------------------------------- */
+.step-nav-btns{margin-top:30px}
+.step-btn{border:1px solid var(--lc-blue);border-radius:999px;min-height:44px;padding:0 22px;font-family:var(--font-body);font-size:14.5px;font-weight:600;
+  color:var(--lc-blue);background:#fff;transition:background .15s ease,border-color .15s ease}
+.step-btn:hover{transform:none;box-shadow:none;background:var(--lc-blue-soft);border-color:var(--lc-blue)}
+.step-btn.next{background:var(--lc-blue);color:#fff;border:1px solid var(--lc-blue);box-shadow:none}
+.step-btn.next:hover{background:var(--lc-blue-ink);border-color:var(--lc-blue-ink);box-shadow:none}
+
+/* ---------- sección 5 · pagos (R8 · la protagonista en Flex) ------------ */
+.pricing-grid{gap:14px}
+.price-card{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;border:1px solid var(--lc-line);border-radius:var(--lc-r-md);padding:24px 18px 22px;
+  transition:background .2s var(--lc-ease),border-color .2s var(--lc-ease)}
+.price-card:hover{background:var(--lc-prod-tint);border-color:var(--lc-prod)}
+.price-card .label{text-transform:none;letter-spacing:.01em;color:var(--lc-ink-3);font-weight:500;font-size:13px}
+.price-card .price{font-family:var(--font-display);font-size:30px;font-weight:500;color:var(--lc-ink);letter-spacing:-.02em;font-variant-numeric:tabular-nums lining-nums;margin:6px 0 2px}
+.price-card .freq{color:var(--lc-ink-3)}
+.price-card.featured{background:#fff;color:var(--lc-ink);border:1px solid var(--lc-prod);transform:none;box-shadow:none}
+.price-card.featured .label,.price-card.featured .freq{color:var(--lc-ink-3)}
+.price-card.featured .price{color:var(--lc-ink)}
+.price-card.featured .badge-rec{position:static;transform:none;display:inline-flex;background:var(--lc-prod-tint);color:var(--lc-prod);font-size:11.5px;font-weight:600;padding:4px 11px;margin-bottom:12px;letter-spacing:.01em}
+
+/* ---------- el día de la cita ------------------------------------------ */
+.cita-step{border:1px solid var(--lc-line);border-radius:var(--lc-r-md);grid-template-columns:40px 1fr;gap:16px;transition:background .2s var(--lc-ease),border-color .2s var(--lc-ease)}
+.cita-step:hover{transform:none;box-shadow:none;background:var(--lc-prod-tint);border-color:var(--lc-prod)}
+.cita-step .num-circle{width:36px;height:36px;background:#fff;border:1px solid var(--lc-line-btn);color:var(--lc-ink);box-shadow:none;font-family:var(--font-mono);font-size:14px;font-weight:600}
+.cita-step .step-title{font-family:var(--font-display);color:var(--lc-ink);font-weight:600}
+.cita-step .step-title .emoji{display:none}
+.cita-step .step-desc{color:var(--lc-ink-2)}
+.cita-step .step-desc b{color:var(--lc-ink);font-weight:600}
+.cita-pay-methods{background:var(--lc-band);border:0;border-radius:var(--lc-r-md)}
+.cita-pay-methods .pay-title{font-family:var(--font-body);color:var(--lc-ink-3);font-size:12px;font-weight:600;letter-spacing:.02em}
+.cita-pay-methods .pay-item{border:1px solid var(--lc-line);border-radius:12px;color:var(--lc-ink-2);font-size:12.5px}
+.cita-pay-methods .pay-item .ico{display:none}
+.cita-pay-methods .pay-link{color:var(--lc-blue);font-family:var(--font-mono);font-size:12px}
+
+/* ---------- cierre ------------------------------------------------------ */
+.closing{background:#fff;border:1px solid var(--lc-line);border-radius:var(--lc-r-xl);padding:44px 28px 36px;max-width:880px;margin:0 auto;box-shadow:var(--lc-shadow)}
+.closing .msg{color:var(--lc-ink-2);font-size:16px;line-height:1.6;text-wrap:balance}
+.closing .signature{font-family:var(--font-display);font-style:normal;color:var(--lc-ink);font-weight:600}
+.closing .signature .lic{color:var(--lc-ink-3);font-weight:400;font-family:var(--font-body)}
+.cta-rect{background:var(--lc-blue);border:1px solid var(--lc-blue);border-radius:999px;padding:0 26px;min-height:48px;font-family:var(--font-body);font-size:15px;font-weight:600;box-shadow:none;transition:background .15s ease}
+.cta-rect:hover{transform:none;box-shadow:none;background:var(--lc-blue-ink);border-color:var(--lc-blue-ink)}
+.social-proof{border-top:1px solid var(--lc-line-soft)}
+.social-proof .stars{color:var(--lc-ink-3);font-size:15px;letter-spacing:3px}
+.social-proof p{color:var(--lc-ink-3);font-style:normal}
+
+/* ---------- pie: SDI como plataforma ------------------------------------ */
+.footer{background:#fff;color:var(--lc-ink-2);border-top:1px solid var(--lc-line-soft);margin-top:0;padding:36px 24px 44px;font-size:12.5px}
+.footer .sdi-logo{height:40px;opacity:1;margin-bottom:14px}
+.footer .bold{color:var(--lc-ink);font-weight:600}
+.footer a{color:var(--lc-blue);font-family:var(--font-mono);font-size:12px}
+.footer .copyright{border-top:1px solid var(--lc-line-soft);color:var(--lc-ink-3);font-size:11.5px}
+
+/* ---------- contador flotante ------------------------------------------- */
+.float-nav{border:1px solid var(--lc-line);box-shadow:0 2px 8px rgba(27,31,35,.08)}
+.float-nav button{color:var(--lc-ink-2)}
+.float-nav button:hover{background:var(--lc-blue-soft);color:var(--lc-blue)}
+.float-nav .ctr{font-family:var(--font-mono);color:var(--lc-ink-3)}
+
+/* ---------- celebración: panel blanco r32, sin confeti ni rebote --------- */
+.celeb-backdrop{background:rgba(27,31,35,.55);backdrop-filter:blur(6px)}
+.celeb-modal{background:#fff;border:1px solid var(--lc-line);border-radius:var(--lc-r-xl);color:var(--lc-ink);padding:44px 32px 34px}
+.confetti{display:none}
+.celeb-close{top:14px;right:14px;background:#fff;border:1px solid var(--lc-line-btn);color:var(--lc-ink-2)}
+.celeb-close:hover{background:var(--lc-blue-soft)}
+@keyframes lcIn{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:none}}
+.celeb-ring-wrap{animation:lcIn .5s var(--lc-ease) both}
+.celeb-ring-bg{stroke:var(--lc-line-soft)}
+.celeb-ring-progress{stroke:var(--lc-blue)}
+.celeb-ring-pct{font-family:var(--font-display);color:var(--lc-ink);font-weight:500}
+.celeb-ring-lbl{color:var(--lc-ink-3);text-transform:none;letter-spacing:.01em;font-size:11px}
+.celeb-title{font-family:var(--font-display);font-weight:500;color:var(--lc-ink);letter-spacing:-.025em}
+.celeb-title .name{background:none;padding:0}
+.celeb-sub{color:var(--lc-ink-2);font-family:var(--font-body)}
+.celeb-step{border-radius:14px}
+.celeb-step.done-step{background:#fff;border:1px solid var(--lc-line)}
+.celeb-step.pending-step{background:var(--lc-band);border:1px solid transparent}
+.celeb-step-icon,.celeb-step-icon.ok,.celeb-step-icon.pend{font-size:0;width:10px;height:10px;border-radius:50%;animation:none;margin:0 9px}
+.celeb-step-icon.ok{background:var(--lc-ok-tx)}
+.celeb-step-icon.pend{background:var(--lc-warn-tx)}
+.celeb-step-text b{color:var(--lc-ink)}
+.celeb-step-text span{color:var(--lc-ink-3)}
+.celeb-step-badge.ok{background:var(--lc-ok-bg);color:var(--lc-ok-tx)}
+.celeb-step-badge.pend{background:#fff;border:1px solid var(--lc-line-btn);color:var(--lc-ink-2)}
+.celeb-cta-link{background:var(--lc-blue);box-shadow:none;font-family:var(--font-body);font-size:14.5px;font-weight:600;min-height:44px;padding:0 22px;border:1px solid var(--lc-blue)}
+.celeb-cta-link:hover,.celeb-cta-link:active{transform:none;box-shadow:none;background:var(--lc-blue-ink)}
+.celeb-cta-hint{color:var(--lc-ink-3)}
+.celeb-signature{border-top:1px solid var(--lc-line-soft)}
+.celeb-avatar{background:var(--lc-prod-tint);color:var(--lc-prod);border:0;font-family:var(--font-display)}
+.celeb-sig-text{color:var(--lc-ink-2)}
+.celeb-sig-text b{color:var(--lc-ink);font-family:var(--font-display)}
+
+/* ---------- ajustes de JC (10 sep, sobre el mockup): color tenue con trabajo ---
+   Seis tintes pálidos, cada uno con su tinta ≥4.5:1 sobre blanco. Van en chips,
+   iconos y fondos de tarjeta; NUNCA sobre una cifra (R6 se mantiene). */
+:root{
+  --t-azul-bg:#E8F1F8;  --t-azul-tx:#0369A1;
+  --t-verde-bg:#E6F4EE; --t-verde-tx:#1E7A55;
+  --t-rosa-bg:#FCECEE;  --t-rosa-tx:#B03A48;
+  --t-viol-bg:#EFEBFA;  --t-viol-tx:#5D42B5;
+  --t-oro-bg:#FBF3DF;   --t-oro-tx:#8A5B00;
+  --t-cyan-bg:#E4F5F8;  --t-cyan-tx:#0E6E80;
+}
+/* el logo del INS en azul SDI (PNG propio, sin filtros) */
+.ins-logo{filter:none;opacity:1;height:28px}
+/* 1 · chips de cobertura: cada letra con su tinte (las clases azul/green/red/purple ya venían) */
+.bento-tile.azul .letter{background:var(--t-azul-bg);color:var(--t-azul-tx)}
+.bento-tile.green .letter{background:var(--t-verde-bg);color:var(--t-verde-tx)}
+.bento-tile.red .letter{background:var(--t-rosa-bg);color:var(--t-rosa-tx)}
+.bento-tile.purple .letter{background:var(--t-viol-bg);color:var(--t-viol-tx)}
+.bento-tile:hover,.bento-tile.expanded{background:var(--lc-band);border-color:var(--lc-line-btn)}
+.bento-tile.expanded .letter,.bento-tile:hover .letter{background:#fff}
+.bento-tile.azul:hover,.bento-tile.azul.expanded{border-color:var(--t-azul-tx)}
+.bento-tile.green:hover,.bento-tile.green.expanded{border-color:var(--t-verde-tx)}
+.bento-tile.red:hover,.bento-tile.red.expanded{border-color:var(--t-rosa-tx)}
+.bento-tile.purple:hover,.bento-tile.purple.expanded{border-color:var(--t-viol-tx)}
+/* 2 · asistencias: iconos de trazo (el set de SASINS, Lucide 1.5) sobre tinte */
+.svc-row .icon{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;font-size:0}
+.svc-row .icon .ico{width:17px;height:17px;stroke-width:1.5}
+.svc-row .icon.t-oro{background:var(--t-oro-bg);color:var(--t-oro-tx)}
+.svc-row .icon.t-rosa{background:var(--t-rosa-bg);color:var(--t-rosa-tx)}
+.svc-row .icon.t-viol{background:var(--t-viol-bg);color:var(--t-viol-tx)}
+.svc-row .icon.t-cyan{background:var(--t-cyan-bg);color:var(--t-cyan-tx)}
+.svc-row .icon.t-azul{background:var(--t-azul-bg);color:var(--t-azul-tx)}
+.svc-row .icon.t-verde{background:var(--t-verde-bg);color:var(--t-verde-tx)}
+.svc-row{gap:12px}
+/* 3 · deducible: el título más grande y en azul; el chip de beneficio en verde tenue */
+.idd-label{font-family:var(--font-display);font-size:21px;font-weight:600;letter-spacing:-.02em;color:var(--lc-blue);line-height:1.2}
+.idd-side{background:var(--t-verde-bg);color:var(--t-verde-tx)}
+/* 4 · repuestos: vuelven los cuadritos por nivel, en tenue; la fila del cliente en dorado pálido */
+.qrow{grid-template-columns:32px 1fr auto}
+.qrow .age-icon,.qrow .age-icon.fresh,.qrow .age-icon.good,.qrow .age-icon.plus,.qrow .age-icon.older{display:grid;border-radius:9px;font-size:13px}
+.qrow .age-icon.fresh{background:var(--t-verde-bg);color:var(--t-verde-tx)}
+.qrow .age-icon.good{background:var(--t-azul-bg);color:var(--t-azul-tx)}
+.qrow .age-icon.plus{background:var(--t-oro-bg);color:var(--t-oro-tx)}
+.qrow .age-icon.older{background:var(--t-rosa-bg);color:var(--t-rosa-tx)}
+.badge-q{background:var(--t-verde-bg);color:var(--t-verde-tx)}
+.badge-q.gen{background:var(--t-rosa-bg);color:var(--t-rosa-tx)}
+.qrow.match{background:var(--t-oro-bg);border-color:var(--t-oro-tx)}
+.qrow.match .age-icon.plus{background:#fff}
+.qrow.match .badge-q{background:#fff;color:var(--t-verde-tx)}
+.qrow.match .badge-q.match-tag,.you-tag{background:var(--t-oro-tx);color:#fff}
+.sub-num{background:var(--t-azul-bg);color:var(--t-azul-tx)}
+.sub-num-elec{background:var(--t-cyan-bg);color:var(--t-cyan-tx)}
+.s4-header .num-badge{background:var(--t-azul-bg);color:var(--t-azul-tx)}
+.depr-tile.t1 .pct{color:var(--t-verde-tx)} .depr-tile.t2 .pct{color:var(--t-cyan-tx)}
+.depr-tile.t3 .pct{color:var(--t-oro-tx)}   .depr-tile.t4 .pct{color:var(--t-rosa-tx)}
+/* 5 · pagos: el anual siempre resaltado, con el 10 % de descuento a la vista */
+.price-card:hover{background:var(--lc-band);border-color:var(--lc-line-btn)}
+.price-card.featured,.price-card.featured:hover{background:var(--t-verde-bg);border:1px solid var(--t-verde-tx)}
+.price-card.featured .label,.price-card.featured .freq{color:var(--t-verde-tx)}
+.price-card.featured .badge-rec{background:var(--t-verde-tx);color:#fff;font-size:12px}
+/* 6 · pasos en tenue: la regla corta de cada sección y los números de la cita */
+#s1 .section-num::before{background:var(--t-azul-tx)}
+#s2 .section-num::before{background:var(--t-verde-tx)}
+#s3 .section-num::before,#s3a .section-num::before,#s3b .section-num::before{background:var(--t-oro-tx)}
+#s4 .section-num::before{background:var(--t-cyan-tx)}
+#s5 .section-num::before{background:var(--t-verde-tx)}
+#qtcita .section-num::before{background:var(--t-viol-tx)}
+.cita-step .num-circle{border:0}
+.cita-step:nth-child(1) .num-circle{background:var(--t-azul-bg);color:var(--t-azul-tx)}
+.cita-step:nth-child(2) .num-circle{background:var(--t-verde-bg);color:var(--t-verde-tx)}
+.cita-step:nth-child(3) .num-circle{background:var(--t-viol-bg);color:var(--t-viol-tx)}
+.cita-step:nth-child(4) .num-circle{background:var(--t-oro-bg);color:var(--t-oro-tx)}
+.cita-step:hover{background:var(--lc-band);border-color:var(--lc-line-btn)}
+.avatar,.celeb-avatar{background:var(--t-azul-bg);color:var(--t-azul-tx)}
+
+/* ---------- móvil ------------------------------------------------------- */
+@media (max-width:720px){
+  .sticky-nav{margin:10px;padding:5px 10px}
+  .sticky-dot .num{font-size:10.5px}
+}
+@media (max-width:640px){
+  .lc-wrap{padding:0 16px}
+  .lc-top .agent-info{display:none}
+  .lc-nav{height:58px}
+  .brand-title{font-size:17px}
+  .brand-sub{display:none}
+  .lc-pill-sm{min-height:36px;padding:0 14px;font-size:13px}
+  .hero{padding:40px 20px 34px;gap:16px}
+  .bubble{font-size:16px}
+  .bubble .greet{font-size:34px}
+  main{padding:22px 12px 40px}
+  .section{padding:26px 18px 22px;border-radius:24px;margin-bottom:14px}
+  .section-title{font-size:24px}
+  .idd-card,.card-asia,.card-gama,.electric{padding:22px 18px;border-radius:20px}
+  .idd-top{flex-direction:column;gap:12px}
+  .idd-side{align-self:flex-start}
+  .s4-header{padding:22px 18px 2px}
+  .s4-body{padding:14px 18px 22px}
+  .sub-card{padding:18px 16px}
+  .qrow{grid-template-columns:32px 1fr;gap:8px 12px}   /* la etiqueta larga de repuestos baja a su propia línea (sin sr: 4 filas) */
+  .qrow>:last-child{grid-column:2;justify-self:start}
+  .step-btn{flex:1;justify-content:center;padding:0 14px;font-size:14px}
+  .closing{padding:34px 20px 28px;border-radius:24px}
+  .footer{padding:30px 18px 36px}
+}
+
+</style>
+<script>
+/* ==========================================================================
+   linea-clara-cifras.js — Regla 9: las cifras suben desde cero UNA sola vez
+   --------------------------------------------------------------------------
+   Transcrito de ebi-polizas/assets/kpi-cinta.js (en producción desde el
+   9 sep 2026). Único cambio: el selector es genérico — cualquier elemento
+   con el atributo data-cifra — para servir a todas las apps SDI.
+
+   No calcula NADA. La app sigue escribiendo el valor final en el mismo id de
+   siempre; este archivo solo observa ese cambio y hace que la cifra suba
+   desde cero una única vez, la primera vez que aparece.
+
+   Por qué con MutationObserver y no llamando a una función: así no hay que
+   tocar el JS de ninguna app. Si este archivo no carga, las cifras se ven
+   igual, quietas.
+
+   Uso: <span id="statPrima" data-cifra>…</span> + <script src="linea-clara-cifras.js" defer>
+   Respeta `prefers-reduced-motion`. Se carga con defer.
+   ========================================================================== */
+(function () {
+  'use strict';
+
+  var DURACION = 900;
+  var quieto = false;
+  try {
+    quieto = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  } catch (e) {}
+
+  // "₡3.646.202.751" → { prefijo:'₡', n:3646202751 } · "67" → { prefijo:'', n:67 }
+  function leerCifra(texto) {
+    var t = String(texto || '').trim();
+    if (!t || t === '—') return null;
+    var digitos = t.replace(/[^\d]/g, '');
+    if (!digitos) return null;
+    var i = t.search(/\d/);
+    return { prefijo: t.slice(0, i), sufijo: '', n: parseInt(digitos, 10), original: t };
+  }
+
+  function agrupar(n) {
+    try { return n.toLocaleString('de-DE'); } catch (e) { return String(n); }
+  }
+
+  function animar(el, dato) {
+    var t0 = null;
+    el.classList.add('is-entrando');
+    // Forzar el primer frame antes de soltar la transición de opacidad.
+    requestAnimationFrame(function paso(t) {
+      if (t0 === null) t0 = t;
+      var p = Math.min(1, (t - t0) / DURACION);
+      var s = 1 - Math.pow(1 - p, 3);          // salida suave, sin sobrepaso
+      el.style.opacity = String(Math.min(1, p * 2.2));
+      el.style.transform = 'translateY(' + (6 * (1 - s)).toFixed(2) + 'px)';
+      el.textContent = dato.prefijo + agrupar(Math.round(dato.n * s));
+      if (p < 1) {
+        requestAnimationFrame(paso);
+      } else {
+        el.textContent = dato.original;        // el valor exacto que escribió la app
+        el.classList.remove('is-entrando');
+        el.style.opacity = '';
+        el.style.transform = '';
+        el.style.willChange = '';
+      }
+    });
+  }
+
+  function vigilar(el) {
+    if (el.dataset.animado === 'si') return;
+
+    var intentar = function () {
+      if (el.dataset.animado === 'si') return true;
+      var dato = leerCifra(el.textContent);
+      if (!dato) return false;
+      el.dataset.animado = 'si';
+      if (quieto) return true;                 // se queda con el valor final, quieto
+      animar(el, dato);
+      return true;
+    };
+
+    if (intentar()) return;
+
+    var obs = new MutationObserver(function () {
+      if (intentar()) obs.disconnect();
+    });
+    obs.observe(el, { childList: true, characterData: true, subtree: true });
+
+    // Red de seguridad: si en 6 s nadie escribió nada, se deja de observar.
+    setTimeout(function () { obs.disconnect(); }, 6000);
+  }
+
+  function iniciar() {
+    var cifras = document.querySelectorAll('[data-cifra]');
+    for (var i = 0; i < cifras.length; i++) vigilar(cifras[i]);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', iniciar);
+  } else {
+    iniciar();
+  }
+})();
+
+</script>
+
+<!-- Iconos de trazo (Lucide, 1.5) para las asistencias: mismo set que usa SASINS -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="i-truck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></symbol>
+  <symbol id="i-car" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.4 2.9A3.7 3.7 0 0 0 2 12v4c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15.5 7.5 2.3 2.3a1 1 0 0 0 1.4 0l2.1-2.1a1 1 0 0 0 0-1.4L19 4"/><path d="m21 2-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/></symbol>
+  <symbol id="i-fuel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="15" y1="22" y2="22"/><line x1="4" x2="14" y1="9" y2="9"/><path d="M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18"/><path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2a2 2 0 0 0 2-2V9.83a2 2 0 0 0-.59-1.42L18 5"/></symbol>
+  <symbol id="i-disc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="2"/></symbol>
+  <symbol id="i-battery-charging" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 7h1a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2"/><path d="M6 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h1"/><path d="m11 7-3 5h4l-3 5"/><line x1="22" x2="22" y1="11" y2="13"/></symbol>
+  <symbol id="i-life-buoy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="4"/></symbol>
+</svg>
+
+<!-- HEADER -->
+<header class="app-header">
+  <!-- Nivel 1: el INS arriba (cara cliente) + estado + agente/licencia -->
+  <div class="lc-top">
+    <div class="lc-wrap">
+      <img class="ins-logo" src="data:image/png;base64,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" alt="Instituto Nacional de Seguros" />
+      <div class="header-right">
+        <span class="pill-100">Proceso 100 % digital</span>
+        <div class="agent-info">
+          Agente: <b>Juan Carlos Hernández</b><br/>
+          Lic. SUGESE 08-1318
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Nivel 2: nombre del producto + píldora de acción -->
+  <div class="lc-nav">
+    <div class="lc-wrap">
+      <div class="brand">
+        <div class="brand-text">
+          <span class="brand-title">Guía de tu cotización</span>
+          <span class="brand-sub">Seguro de automóviles</span>
+        </div>
+      </div>
+      <button class="lc-pill-sm" type="button" onclick="document.querySelector('.cta-rect').scrollIntoView({behavior:'smooth',block:'center'})">Agendar mi cita</button>
+    </div>
+  </div>
+</header>
+
+<!-- CINTA DORADA -->
+<div class="gold-ribbon">
+  <span class="star">✦</span>
+  <span>Una herramienta diseñada por <b>Juan Carlos Hernández</b> para acompañar a sus clientes en cada decisión de seguro</span>
+</div>
+
+<!-- STICKY NAV -->
+<nav class="sticky-nav" id="stickyNav">
+  <span class="nav-label">Recorrido</span>
+  <div class="nav-dots">
+    <button class="sticky-dot active" data-target="s1"><span class="num">1</span><span>Cubre</span></button>
+    <button class="sticky-dot" data-target="s2"><span class="num">2</span><span>Asistencia</span></button>
+    <button class="sticky-dot" data-target="s3"><span class="num">3</span><span>Deducible</span></button>
+    <button class="sticky-dot" data-target="s4"><span class="num">4</span><span>Repuestos</span></button>
+    <button class="sticky-dot" data-target="s5"><span class="num">5</span><span>Pagos</span></button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="agent-chip">
+    <div class="avatar">JC</div>
+    <div class="agent-chip-info">
+      <span class="agent-chip-name">Juan Carlos Hernández</span>
+      <span class="agent-chip-role">Tu agente · Te acompaña paso a paso</span>
+    </div>
+  </div>
+
+  <div class="bubble">
+    <span class="greet">¡Hola, <span class="name">Silvia Mariel</span>!</span>
+    Te preparé esta <b>guía visual personalizada</b> para que entendamos juntos tu cotización del <b><span class="bubble-vehicle">Sedan 2019, placa BRK454</span></b>.
+    <div class="roadmap">
+      <b>Tu recorrido en 5 pasos:</b><br/>
+      qué cubre tu cotización · asistencia 24/7 · cómo te protege ante un choque · qué pasa con los repuestos · y al final, las <b>3 opciones de pago</b> para que elijas la que más te conviene.
+    </div>
+  </div>
+
+  <div class="progress-line">
+    <span class="label">Tu recorrido:</span>
+    <div class="dots">
+      <span class="dot active"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+    </div>
+    <span class="step-label">Paso 1 de 5</span>
+  </div>
+
+  <div class="hero-cta">
+    <button class="cta-pill" onclick="document.getElementById('s1').scrollIntoView({behavior:'smooth'})">Empezar la guía</button>
+    <button class="cta-pill out" onclick="document.querySelector('.cta-rect').scrollIntoView({behavior:'smooth',block:'center'})">Agendar mi cita</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main>
+
+  <!-- ============ SECCIÓN 1 — COBERTURAS ============ -->
+  <section class="section" id="s1">
+    <div class="section-header">
+      <span class="section-num">Sección 1 · Tu recorrido</span>
+      <h2 class="section-title">¿Qué incluye tu cobertura?</h2>
+      <p class="section-sub">Toca cada tarjeta para ver qué cubre exactamente. Los montos se calculan sobre tu valor asegurado de ₡10.000.000.</p>
+    </div>
+
+    <div class="bento-grid">
+      <div class="bento-tile azul" role="button" tabindex="0" aria-expanded="false">
+        <div class="bento-head">
+          <span class="letter">A</span>
+          <span class="chevron" aria-hidden="true">▾</span>
+        </div>
+        <h3>Daños a Personas</h3>
+        <p class="desc">Responsabilidad civil si causás un accidente con lesiones o muerte de terceros.</p>
+        <div class="amount">₡300.000.000</div>
+        <div class="bento-detail">
+          Si causás un accidente y otras personas resultan <b>lesionadas o fallecidas</b>, esta cobertura paga la responsabilidad civil hasta ₡300 millones por evento. Cubre además un <b>25% extra por daño moral probado</b> y los <b>honorarios y servicios médicos no amparados por el SOA</b> (Seguro Obligatorio Automotor).<br/><br/>
+          <b>Sin deducible</b> — vos no ponés un colón.
+        </div>
+      </div>
+
+      <div class="bento-tile azul" role="button" tabindex="0" aria-expanded="false">
+        <div class="bento-head">
+          <span class="letter">C</span>
+          <span class="chevron" aria-hidden="true">▾</span>
+        </div>
+        <h3>Daños a Propiedad</h3>
+        <p class="desc">Daños a otros vehículos, postes, muros, casas o cualquier propiedad ajena.</p>
+        <div class="amount">₡100.000.000</div>
+        <div class="bento-detail">
+          Si con tu vehículo dañás <b>propiedad ajena</b> (otro carro, postes, muros, casas, comercios), esta cobertura paga por esos daños hasta ₡100 millones por evento.<br/><br/>
+          <b>Cómo funciona el deducible gracias a la cobertura N en C:</b><br/>
+          • Si el daño al tercero es <b>menor a ₡750.000</b>, vos pagás solo un deducible mínimo de <b>₡150.000</b> y el INS cubre la diferencia.<br/>
+          • Si el daño al tercero es <b>mayor a ₡750.000</b>, la cobertura paga el <b>100% sin deducible</b> para vos.
+        </div>
+      </div>
+
+      <div class="bento-tile green" role="button" tabindex="0" aria-expanded="false">
+        <div class="bento-head">
+          <span class="letter">D</span>
+          <span class="chevron" aria-hidden="true">▾</span>
+        </div>
+        <h3>Colisión y Vuelco</h3>
+        <p class="desc">Pérdidas directas, súbitas y accidentales de tu vehículo por choque o vuelco.</p>
+        <div class="amount">₡10.000.000</div>
+        <div class="bento-detail">
+          Cubre las pérdidas directas, súbitas y accidentales que sufra tu vehículo a causa de <b>colisión o vuelco</b>, así como la <b>rotura o desprendimiento con daño de los cristales</b> de forma accidental y materialmente comprobable.<br/><br/>
+          Hasta el valor asegurado. Aplica deducible — pero recordá que con la <b>cobertura IDD</b> ese deducible te lo reintegramos en hasta 2 eventos al año.
+        </div>
+      </div>
+
+      <div class="bento-tile green" role="button" tabindex="0" aria-expanded="false">
+        <div class="bento-head">
+          <span class="letter">F</span>
+          <span class="chevron" aria-hidden="true">▾</span>
+        </div>
+        <h3>Robo y/o Hurto</h3>
+        <p class="desc">Pérdidas accidentales por robo o hurto total o parcial del vehículo.</p>
+        <div class="amount">₡10.000.000</div>
+        <div class="bento-detail">
+          Cubre las pérdidas directas, súbitas y accidentales por <b>robo o hurto total o parcial del vehículo</b>, los daños que resulten de la <b>tentativa</b> de producir esos delitos, el robo o hurto del <b>equipo especial asegurado</b>, y el <b>uso indebido, hurto de uso o retención indebida</b>.<br/><br/>
+          Hasta el valor asegurado. Aplica deducible — y la cobertura IDD te puede reintegrar ese deducible.
+        </div>
+      </div>
+
+      <div class="bento-tile red" role="button" tabindex="0" aria-expanded="false">
+        <div class="bento-head">
+          <span class="letter">B</span>
+          <span class="chevron" aria-hidden="true">▾</span>
+        </div>
+        <h3>Gastos Médicos Familiares</h3>
+        <p class="desc">Atención médica para vos y tu familia si resultan lesionados en un accidente.</p>
+        <div class="amount">₡15.000.000</div>
+        <div class="bento-detail">
+          Si tenés un accidente de tránsito en territorio costarricense, esta cobertura paga los <b>gastos médicos</b> tuyos, de tu cónyuge o de cualquier familiar hasta tercer grado de consanguinidad o afinidad que viajara <b>dentro de la cabina del vehículo</b>.<br/><br/>
+          La atención se brinda al <b>100% en el Hospital del Trauma del INS</b> (o en las instalaciones médicas que el INS señale). Opera en exceso del Seguro Obligatorio Automotor. <b>No aplica deducible.</b>
+        </div>
+      </div>
+
+      <div class="bento-tile purple" role="button" tabindex="0" aria-expanded="false">
+        <div class="bento-head">
+          <span class="letter">H</span>
+          <span class="chevron" aria-hidden="true">▾</span>
+        </div>
+        <h3>Riesgos Adicionales</h3>
+        <p class="desc">Naturaleza, vandalismo, incendio, animales y otros riesgos al vehículo.</p>
+        <div class="amount">₡10.000.000</div>
+        <div class="bento-detail">
+          Cubre los daños al vehículo a consecuencia de:<br/>
+          • <b>Inundación</b> (desbordamientos de ríos, lagos, alcantarillado público).<br/>
+          • <b>Ciclón, huracán, tornado, tormenta</b> (declarados formalmente por las autoridades).<br/>
+          • <b>Temblor, terremoto, deslizamiento, hundimiento o derrumbe</b>.<br/>
+          • <b>Explosión externa</b>.<br/>
+          • <b>Vandalismo</b>: rayonazos, raspones, líquidos corrosivos, manchas de pintura, golpes, lanzamiento de piedras, proyectiles o balas.<br/>
+          • Daños durante <b>transporte terrestre o acuático</b> y maniobras de carga/descarga.<br/>
+          • <b>Caída de aeronaves</b> o sus partes.<br/>
+          • <b>Rayo o incendio</b> por cualquier causa.<br/>
+          • Levantamiento accidental de la <b>tapa del motor</b>.<br/>
+          • Daños provocados por <b>animales</b> (sean o no del Asegurado).<br/><br/>
+          Hasta el valor asegurado. Aplica deducible.
+        </div>
+      </div>
+    </div>
+
+    <nav class="step-nav-btns right-only">
+      <button class="step-btn next" data-target="s2">Siguiente: Asistencia 24/7 →</button>
+    </nav>
+  </section>
+
+  <!-- ============ SECCIÓN 2 — ASISTENCIA ============ -->
+  <section class="section" id="s2">
+    <div class="section-header">
+      <span class="section-num">Sección 2 · Tu recorrido</span>
+      <h2 class="section-title">Tu asistencia 24/7 en carretera</h2>
+      <p class="section-sub">Cobertura G y M — siempre que necesites ayuda en la calle, te respaldamos.</p>
+    </div>
+
+    <div class="tip-banner">
+      <div class="bulb">💡</div>
+      <div class="text">
+        <b>Buena noticia:</b> tienes asistencia 24/7 incluida.
+        <span class="small">El alcance del plan se ajusta a la antigüedad de tu vehículo. Para tu Sedan 2019 (7 años) te toca el <b>Plan Básico</b>.</span>
+      </div>
+    </div>
+
+    <div class="plan-toggle">
+      <button class="tab">Plan Plus (0-6 años)</button>
+      <button class="tab active">Plan Básico (7-15 años) · Tu plan</button>
+    </div>
+
+    <div class="svc-grid">
+      <div class="svc-row"><div class="icon t-oro"><svg class="ico"><use href="#i-truck"/></svg></div><div class="name">Remolque por avería</div><div class="qty">6× · $175</div></div>
+      <div class="svc-row"><div class="icon t-rosa"><svg class="ico"><use href="#i-car"/></svg></div><div class="name">Remolque por accidente</div><div class="qty">7× · $175</div></div>
+      <div class="svc-row"><div class="icon t-viol"><svg class="ico"><use href="#i-key"/></svg></div><div class="name">Cerrajería</div><div class="qty">4× · $125</div></div>
+      <div class="svc-row"><div class="icon t-cyan"><svg class="ico"><use href="#i-fuel"/></svg></div><div class="name">Envío combustible</div><div class="qty">4× · costo</div></div>
+      <div class="svc-row"><div class="icon t-azul"><svg class="ico"><use href="#i-disc"/></svg></div><div class="name">Cambio de llanta</div><div class="qty">4× · $100</div></div>
+      <div class="svc-row"><div class="icon t-verde"><svg class="ico"><use href="#i-battery-charging"/></svg></div><div class="name">Paso de corriente</div><div class="qty">3× · $100</div></div>
+      <div class="svc-row"><div class="icon t-oro"><svg class="ico"><use href="#i-life-buoy"/></svg></div><div class="name">Mini-rescate (atoramiento)</div><div class="qty">3× · $100</div></div>
+    </div>
+
+    <nav class="step-nav-btns">
+      <button class="step-btn prev" data-target="s1">← Coberturas</button>
+      <button class="step-btn next" data-target="s3">Siguiente: Deducible →</button>
+    </nav>
+  </section>
+
+  <!-- ============ SECCIÓN 3 — IDD ============ -->
+  <section class="section" id="s3">
+    <div class="section-header">
+      <span class="section-num">Sección 3 · Tu recorrido</span>
+      <h2 class="section-title">Tu protección al deducible (IDD + N en C)</h2>
+      <p class="section-sub">El deducible es lo que normalmente debes pagar de tu bolsillo en cualquier choque. Con la IDD, ese monto baja a cero.</p>
+    </div>
+
+    <div class="idd-card">
+      <div class="idd-top">
+        <div>
+          <div class="idd-label">Tu deducible en cualquier choque</div>
+          <div class="idd-compare">
+            <div class="idd-col-from">
+              <div class="small">Sin IDD</div>
+              <div class="from dd-amt">₡400.000</div>
+            </div>
+            <div class="idd-arrow">→</div>
+            <div class="idd-col-to">
+              <div class="small">Con IDD</div>
+              <div class="to">₡0</div>
+            </div>
+          </div>
+        </div>
+        <div class="idd-side">
+          Beneficio exclusivo IDD + N en C
+        </div>
+      </div>
+
+      <div class="idd-rules">
+        <div class="idd-rule ok">
+          <div class="icon">✓</div>
+          <div>
+            <b>Daño mayor a <span class="dd-amt">₡400.000</span></b><br/>
+            La IDD se activa: tú no pagas el deducible, te lo reintegramos.
+            <div class="meta">Hasta 2 choques al año</div>
+          </div>
+        </div>
+        <div class="idd-rule warn">
+          <div class="icon">!</div>
+          <div>
+            <b>Daño menor a <span class="dd-amt">₡400.000</span></b><br/>
+            Corre por cuenta del <b style="color:var(--gold-mid);">asegurado</b>. La IDD se activa solo cuando el daño supera el deducible.
+            <div class="meta">Reparaciones pequeñas</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="step-nav-btns">
+      <button class="step-btn prev" data-target="s2">← Asistencia</button>
+      <button class="step-btn next" data-target="s4">Siguiente: Repuestos →</button>
+    </nav>
+  </section>
+
+  <!-- ============ SECCIÓN 3 · ORIGEN ASIÁTICO (sustituye s3 si og=1) ============ -->
+  <section class="section" id="s3a" style="display:none;">
+    <div class="section-header">
+      <span class="section-num" style="background:var(--rose-bg);color:var(--rose-deep);">Sección 3 · Deducible diferenciado</span>
+      <h2 class="section-title">Tu deducible — vehículo de origen asiático</h2>
+      <p class="section-sub">El INS aplica un esquema de deducible adaptado a las marcas con un perfil de siniestralidad distinto al promedio del mercado.</p>
+    </div>
+
+    <div class="card-asia">
+      <h3>Deducible aplicable en daño directo</h3>
+      <p>Para la cobertura de <b>daño directo</b>, en caso de un siniestro cubierto vos asumís el porcentaje siguiente del valor del daño:</p>
+      <div class="ded-card">
+        <div class="lbl">Deducible único</div>
+        <div class="val">20% del valor del daño</div>
+        <div class="min">Con un mínimo de <b>₡500.000</b> o <b>US$830</b> según la moneda de la póliza.</div>
+      </div>
+
+      <div class="idd-box">
+        <div class="idd-head">
+          <span class="idd-ico">🛡</span>
+          <div>
+            <div class="idd-title">¿Tu póliza incluye la IDD por ₡500.000?</div>
+            <div class="idd-sub">Indemnización del Deducible — reembolsa el deducible hasta ese monto</div>
+          </div>
+        </div>
+        <p class="idd-text">La IDD2 te <b>reintegra hasta ₡500.000</b> del deducible en cada evento cubierto. Sin embargo, como el deducible mínimo de tu vehículo es <b>20% del daño</b>, en daños grandes el deducible supera los ₡500.000 y la diferencia queda <b>a tu cargo</b>.</p>
+
+        <div class="ej-label">Ejemplos ilustrativos (cifras hipotéticas para entender el cálculo):</div>
+        <div class="ej-table">
+          <div class="ej-row ej-head">
+            <div>Valor del daño</div>
+            <div>Deducible (20% mín ₡500k)</div>
+            <div>IDD2 reembolsa</div>
+            <div>Tú pagás</div>
+          </div>
+          <div class="ej-row">
+            <div>₡1.000.000</div>
+            <div>₡500.000 <small>(aplica mínimo)</small></div>
+            <div>₡500.000</div>
+            <div class="zero">₡0</div>
+          </div>
+          <div class="ej-row">
+            <div>₡4.000.000</div>
+            <div>₡800.000 <small>(20%)</small></div>
+            <div>₡500.000</div>
+            <div class="pay">₡300.000</div>
+          </div>
+          <div class="ej-row">
+            <div>₡10.000.000</div>
+            <div>₡2.000.000 <small>(20%)</small></div>
+            <div>₡500.000</div>
+            <div class="pay">₡1.500.000</div>
+          </div>
+        </div>
+
+        <div class="warn-line">
+          ⚠ <b>Importante:</b> daños cuyo deducible aplicable supere los ₡500.000 generan un diferencial a cargo del asegurado, aún teniendo contratada la IDD2.
+        </div>
+      </div>
+    </div>
+
+    <nav class="step-nav-btns">
+      <button class="step-btn prev" data-target="s2">← Asistencia</button>
+      <button class="step-btn next" data-target="s4">Siguiente: Repuestos →</button>
+    </nav>
+  </section>
+
+  <!-- ============ SECCIÓN 3 · ALTA GAMA (sustituye s3 si ag=1) ============ -->
+  <section class="section" id="s3b" style="display:none;">
+    <div class="section-header">
+      <span class="section-num" style="background:var(--violet-bg);color:var(--violet-deep);">Sección 3 · Vehículo de alta gama</span>
+      <h2 class="section-title">Tu deducible — vehículo de alta gama</h2>
+      <p class="section-sub">El INS aplica un esquema de aseguramiento adaptado al perfil de los vehículos de alta gama, con un deducible escalonado según el monto de la pérdida.</p>
+    </div>
+
+    <div class="card-gama">
+      <h3>Tu cobertura paso a paso</h3>
+      <p>La cobertura de <b>daño directo</b> aplica con dos reglas diferenciadas según el tamaño del siniestro:</p>
+
+      <div class="min-asegurado">
+        <span class="ico">📊</span>
+        <div>
+          <div class="txt-lbl">Suma asegurada mínima</div>
+          <div class="txt-val">₡50.000.000 / US$90.909</div>
+        </div>
+      </div>
+
+      <div class="tier-grid">
+        <div class="tier">
+          <div class="rng">Si la pérdida ≤ ₡6.000.000</div>
+          <div class="pct">10%</div>
+          <div class="min-line">Con mínimo de <b>₡500.000 / US$830</b></div>
+        </div>
+        <div class="tier">
+          <div class="rng">Si la pérdida &gt; ₡6.000.000</div>
+          <div class="pct">20%</div>
+          <div class="min-line">Sin tope mínimo adicional</div>
+        </div>
+      </div>
+
+      <div class="idd-box gama">
+        <div class="idd-head">
+          <span class="idd-ico">🛡</span>
+          <div>
+            <div class="idd-title">¿Tu póliza incluye la IDD por ₡500.000?</div>
+            <div class="idd-sub">Indemnización del Deducible — reembolsa el deducible hasta ese monto</div>
+          </div>
+        </div>
+        <p class="idd-text">La IDD2 te <b>reintegra hasta ₡500.000</b> del deducible. En pérdidas pequeñas la IDD absorbe todo el deducible, pero en pérdidas mayores a ₡6.000.000 (cuando aplica el 20%) la diferencia queda <b>a tu cargo</b>.</p>
+
+        <div class="ej-label">Ejemplos ilustrativos (cifras hipotéticas para entender el cálculo):</div>
+        <div class="ej-table">
+          <div class="ej-row ej-head">
+            <div>Valor del daño</div>
+            <div>Deducible</div>
+            <div>IDD2 reembolsa</div>
+            <div>Tú pagás</div>
+          </div>
+          <div class="ej-row">
+            <div>₡3.000.000 <small>(≤ ₡6M)</small></div>
+            <div>₡500.000 <small>(10% mín)</small></div>
+            <div>₡500.000</div>
+            <div class="zero">₡0</div>
+          </div>
+          <div class="ej-row">
+            <div>₡5.000.000 <small>(≤ ₡6M)</small></div>
+            <div>₡500.000 <small>(10%)</small></div>
+            <div>₡500.000</div>
+            <div class="zero">₡0</div>
+          </div>
+          <div class="ej-row">
+            <div>₡10.000.000 <small>(&gt; ₡6M)</small></div>
+            <div>₡2.000.000 <small>(20%)</small></div>
+            <div>₡500.000</div>
+            <div class="pay">₡1.500.000</div>
+          </div>
+        </div>
+
+        <div class="warn-line">
+          ⚠ <b>Importante:</b> en pérdidas mayores a ₡6.000.000 el deducible (20%) supera ampliamente los ₡500.000 de la IDD2 — el diferencial queda a cargo del asegurado.
+        </div>
+      </div>
+    </div>
+
+    <nav class="step-nav-btns">
+      <button class="step-btn prev" data-target="s2">← Asistencia</button>
+      <button class="step-btn next" data-target="s4">Siguiente: Repuestos →</button>
+    </nav>
+  </section>
+
+  <!-- ============ SECCIÓN 4 — REPUESTOS ============ -->
+  <section class="section" id="s4">
+    <div class="section-header">
+      <span class="section-num">Sección 4 · Tu recorrido</span>
+      <h2 class="section-title">¿Qué pasa con los repuestos si chocás?</h2>
+      <p class="section-sub">Según el año de tu vehículo y la cobertura que tenés, acá te marco el plan de repuestos que te corresponde.</p>
+    </div>
+
+    <div class="s4-block">
+      <div class="s4-header">
+        <div class="num-badge">Tu vehículo</div>
+        <h2>Calidad de tu repuesto, garantizada</h2>
+        <div class="perso">Para tu <b>Sedan 2019, placa BRK454</b>, esto es lo que el INS te garantiza.</div>
+      </div>
+
+      <div class="s4-body">
+        <div class="s4-intro">
+          ⓘ El tipo de repuesto que recibes <b>depende de la antigüedad de tu vehículo</b> y de la opción que cotizaste. Te muestro la tuya destacada.
+        </div>
+
+        <!-- A. CALIDAD -->
+        <div class="sub-card">
+          <h3><span class="sub-num">A</span>Calidad del repuesto según tu carro</h3>
+          <p class="lead">El INS clasifica los repuestos en 4 niveles según la edad del vehículo y la cobertura adquirida.</p>
+
+          <div class="qrow">
+            <div class="age-icon fresh">✦</div>
+            <div>
+              <div class="age">Carro nuevo (≤3 años, ≤36,000 km)</div>
+              <div class="place">Agencia oficial de la marca</div>
+            </div>
+            <span class="badge-q">Repuesto Original</span>
+          </div>
+
+          <div class="qrow">
+            <div class="age-icon good">★</div>
+            <div>
+              <div class="age">Extensión de Garantía (≤5 años, ≤60,000 km)</div>
+              <div class="place">Agencia oficial o taller autorizado</div>
+            </div>
+            <span class="badge-q">Repuesto Original</span>
+          </div>
+
+          <div class="qrow match">
+            <div class="age-icon plus">★</div>
+            <div>
+              <div class="age">
+                Extensión de Garantía Plus (≤8 años, ≤80,000 km)
+                <span class="you-tag">Tu plan</span>
+              </div>
+              <div class="place">Agencia oficial o taller autorizado</div>
+            </div>
+            <div>
+              <span class="badge-q match-tag">Tuyo</span>
+              <span class="badge-q">Repuesto Original</span>
+            </div>
+          </div>
+
+          <div class="qrow">
+            <div class="age-icon older">○</div>
+            <div>
+              <div class="age">Más de 3 años o más de 36,000 km (sin extensión)</div>
+              <div class="place">Taller multimarca o especializado</div>
+            </div>
+            <span class="badge-q gen">Alternativo / Genérico o usado</span>
+          </div>
+        </div>
+
+        <!-- B. ELÉCTRICOS -->
+        <div class="electric">
+          <h3><span class="sub-num-elec">B</span>Cobertura especial para tu vehículo eléctrico</h3>
+          <p class="lead">
+            Las baterías son el componente <b>más caro</b> de un vehículo eléctrico. El INS tiene una <b>cobertura especial</b> diseñada para protegerte ante un siniestro que afecte la batería de tu carro.
+          </p>
+
+          <div class="battery-card">
+            <div class="label">Cobertura especial de batería</div>
+            <div class="key">Hasta <span style="color:var(--green-text);">40%</span> <span class="of-value">del valor de tu vehículo</span></div>
+            <div class="desc">
+              Si el siniestro requiere <b>reemplazar completamente la batería</b>, el INS cubre hasta el 40% del valor asegurado. Sobre ese 40% se aplica un <b>porcentaje según la antigüedad del vehículo</b>.
+            </div>
+            <div class="ej">
+              <b>Ejemplo:</b> Vehículo eléctrico de ₡15M → cobertura batería máxima = <b>₡6.000.000</b> (40%). Sobre ese monto aplica el % de la tabla de abajo según la edad del carro.
+            </div>
+          </div>
+
+          <div style="font-family:'Space Grotesk',sans-serif;color:var(--cyan-deep);font-size:13px;font-weight:700;margin-bottom:8px;">
+            Porcentaje cubierto según edad del vehículo:
+          </div>
+          <div class="depr-grid">
+            <div class="depr-tile t1"><div class="pct">100%</div><div class="age">0 – 24 meses</div></div>
+            <div class="depr-tile t2"><div class="pct">80%</div><div class="age">25 – 48 meses</div></div>
+            <div class="depr-tile t3"><div class="pct">60%</div><div class="age">49 – 72 meses</div></div>
+            <div class="depr-tile t4"><div class="pct">50%</div><div class="age">73 – 96 meses</div></div>
+          </div>
+          <div style="margin-top:14px;padding:12px 14px;background:var(--gold-bg);border-left:3px solid var(--gold-deep);border-radius:8px;font-size:12.5px;color:var(--gold-text);line-height:1.5;">
+            ⚠ <b>Importante:</b> a partir de los <b>9 años de antigüedad</b>, la batería de alta tensión queda <b>excluida de cobertura</b> — el INS no indemniza su sustitución (Condiciones Generales del Seguro de Automóviles).
+          </div>
+        </div>
+
+        <!-- C. QUIÉN ELIGE -->
+        <div class="who-chooses">
+          <div class="icon">i</div>
+          <div>
+            <b>¿Quién elige dónde comprar el repuesto?</b><br/>
+            El INS selecciona el proveedor y puede pagar directamente al distribuidor. El plazo de entrega puede ser de <b>hasta 20 días hábiles</b>. Si el repuesto no está disponible en Costa Rica, el INS calcula el costo con base en <b>importación + flete + impuestos</b>.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="step-nav-btns">
+      <button class="step-btn prev" data-target="s3">← Deducible</button>
+      <button class="step-btn next" data-target="s5">Siguiente: Tus 3 opciones →</button>
+    </nav>
+  </section>
+
+  <!-- ============ SECCIÓN 5 — PRICING ============ -->
+  <section class="section" id="s5">
+    <div class="section-header">
+      <span class="section-num">Sección 5 · Tu recorrido</span>
+      <h2 class="section-title">Tus 3 opciones de pago</h2>
+      <p class="section-sub">Elegí la modalidad que mejor se ajuste a tu bolsillo. El pago anual incluye un 10% de descuento.</p>
+    </div>
+
+    <div class="pricing-grid">
+      <div class="price-card">
+        <div class="label">Trimestral</div>
+        <div class="price" data-cifra>₡158.423</div>
+        <div class="freq">cada 3 meses</div>
+      </div>
+      <div class="price-card">
+        <div class="label">Semestral</div>
+        <div class="price" data-cifra>₡308.283</div>
+        <div class="freq">cada 6 meses</div>
+      </div>
+      <div class="price-card featured">
+        <div class="badge-rec">Recomendado · 10 % de descuento</div>
+        <div class="label">Anual</div>
+        <div class="price" data-cifra>₡570.891</div>
+        <div class="freq">1 sola vez</div>
+      </div>
+    </div>
+
+    <nav class="step-nav-btns">
+      <button class="step-btn prev" data-target="s4">← Repuestos</button>
+      <button class="step-btn next" data-target="qtcita">Avanzar →</button>
+    </nav>
+  </section>
+
+  <!-- ============ SECCIÓN — QUÉ PASARÁ EL DÍA DE LA CITA ============ -->
+  <section class="section" id="qtcita">
+    <div class="section-header">
+      <span class="section-num" style="background:var(--cyan-bg);color:var(--cyan-deep);">¿Qué pasará el día de tu cita?</span>
+      <h2 class="section-title">Tu aseguramiento es 100% virtual</h2>
+      <p class="section-sub">No necesitás ir a ninguna oficina. Todo se hace desde tu celular o computadora, en cuatro pasos sencillos.</p>
+    </div>
+
+    <div class="cita-steps">
+      <!-- Paso 1 -->
+      <div class="cita-step">
+        <div class="num-circle">1</div>
+        <div class="step-body">
+          <div class="step-title"><span class="emoji">🚗</span>Prepárate</div>
+          <p class="step-desc">A la hora agendada, tené tu vehículo a mano — <b>en un lugar iluminado y limpio</b>. Vamos a tomar fotos del exterior para registrar el estado antes de activar la póliza.</p>
+        </div>
+      </div>
+
+      <!-- Paso 2 -->
+      <div class="cita-step">
+        <div class="num-circle">2</div>
+        <div class="step-body">
+          <div class="step-title"><span class="emoji">📸</span>Sube tus fotos</div>
+          <p class="step-desc">Te enviaremos un <b>Código QR a tu correo</b>. Escanéalo con tu celular y cargá las fotos del auto directamente desde ahí — sin descargar aplicaciones.</p>
+        </div>
+      </div>
+
+      <!-- Paso 3 -->
+      <div class="cita-step">
+        <div class="num-circle">3</div>
+        <div class="step-body">
+          <div class="step-title"><span class="emoji">📲</span>Aceptación digital</div>
+          <p class="step-desc">Una vez revisadas las fotos, te enviaremos la póliza. La aceptás desde tu celular ingresando un <b>Token de seguridad</b>. Sin papeles físicos, sin firmas presenciales.</p>
+        </div>
+      </div>
+
+      <!-- Paso 4 -->
+      <div class="cita-step">
+        <div class="num-circle">4</div>
+        <div class="step-body">
+          <div class="step-title"><span class="emoji">💳</span>Pago y listo</div>
+          <p class="step-desc">Realizás el pago y <b>tu vehículo queda asegurado al instante</b>. Recibís la póliza en tu correo.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Métodos de pago -->
+    <div class="cita-pay-methods">
+      <div class="pay-title">Métodos de pago disponibles</div>
+      <div class="pay-grid">
+        <div class="pay-item"><span class="ico">💳</span>Tarjeta — link de pago seguro</div>
+        <div class="pay-item"><span class="ico">📱</span>SINPE Móvil</div>
+        <div class="pay-item"><span class="ico">🏦</span>Transferencia a cuentas del INS</div>
+        <div class="pay-item"><span class="ico">🌐</span><a class="pay-link" href="https://insenlinea.grupoins.com/" target="_blank" rel="noopener">insenlinea.grupoins.com</a></div>
+      </div>
+    </div>
+
+    <nav class="step-nav-btns">
+      <button class="step-btn prev" data-target="s5">← Pagos</button>
+      <button class="step-btn next" onclick="document.querySelector('.cta-rect').scrollIntoView({behavior:'smooth',block:'center'})">Agendar mi cita ✓</button>
+    </nav>
+  </section>
+
+  <!-- ============ CIERRE ============ -->
+  <div class="closing">
+    <p class="msg">Silvia Mariel, espero que esta guía te haya ayudado a entender tu cotización con claridad. Si tenés cualquier duda, hablemos.</p>
+    <div class="signature">
+      — Juan Carlos Hernández
+      <span class="lic">Tu agente · Lic. SUGESE 08-1318</span>
+    </div>
+    <button class="cta-rect" onclick="openCelebration()">
+      Agendar mi cita de aseguramiento
+    </button>
+
+    <div class="social-proof">
+      <div class="stars">★★★★★</div>
+      <p>Miles de conductores ya están protegidos con nuestro proceso digital</p>
+    </div>
+  </div>
+
+</main>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <!-- Logo SDI oficial (variante NEGATIVO). Va PEGADO aca y no enlazado con
+       <img> a proposito: un SVG cargado como imagen se dibuja aislado y no puede
+       pedir Space Grotesk, asi que el wordmark caia a la fuente del sistema y
+       salia ~9% mas ancho — o sea, deformado. Pegado hereda la fuente de la
+       pagina, que ya la carga. El archivo ../img/sdi-logo.svg sigue existiendo
+       para quien lo necesite; este bloque tiene que ser identico a el.
+       OJO: esto es la marca de la PLATAFORMA, al pie. El logo del INS va
+       ARRIBA, en el header (.ins-logo), y no se toca: esta es la cara del
+       cliente y ahi el INS manda. -->
+  <img class="sdi-logo" src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4NCjxzdmcgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2aWV3Qm94PSIwIDAgMTg0IDkwIiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IlNlZ3Vyb3MgRGlnaXRhbGVzIFNESSI+DQogIDx0aXRsZT5TREkgwrcgTG9nbyBjb21wYWN0bzwvdGl0bGU+DQogIDxkZXNjPlNpbiB0YWdsaW5lLCBwYXJhIGhlYWRlcnMgeSBlc3BhY2lvcyByZWR1Y2lkb3MuIFdvcmRtYXJrIGVuIGN1cnZhcyAoUXVlc3RyaWFsKTogbm8gZGVwZW5kZSBkZSBxdWUgbGEgZnVlbnRlIGVzdGUgaW5zdGFsYWRhLiBCYXJyYSBhIGxhIG1pc21hIGFsdHVyYSBxdWUgbGFzIGxldHJhcywgNCBmcmFuamFzIGRlIDYuMTUgY29uIGh1ZWNvcyBkZSAxMC4zMy48L2Rlc2M+DQoNCiAgPHBhdGggZD0iTTM2LjA3NiA3NC42NTZRMjguMDQgNzQuNjU2IDIzLjAzOCA3Mi40ODNRMTguMDM2IDcwLjMxIDE1LjUzNSA2Ni40NTZRMTMuMDM0IDYyLjYwMjAwMDAwMDAwMDAwNCAxMi42MjQgNTcuNzYzOTk5OTk5OTk5OTk2SDE5LjAyUTE5LjI2NiA2MS43IDIxLjY0NCA2NC4xMTlRMjQuMDIyIDY2LjUzOCAyNy45MTcgNjcuNjg2UTMxLjgxMiA2OC44MzQgMzYuNDg2MDAwMDAwMDAwMDA0IDY4LjgzNFE0My4zNzQgNjguODM0IDQ3LjM5MiA2Ni40MTVRNTEuNDEwMDAwMDAwMDAwMDA0IDYzLjk5NiA1MS40MTAwMDAwMDAwMDAwMDQgNTkuMjRRNTEuNDEwMDAwMDAwMDAwMDA0IDU2LjM3MDAwMDAwMDAwMDAwNSA0OS40MDEgNTQuNjA3UTQ3LjM5MiA1Mi44NDM5OTk5OTk5OTk5OTQgNDQuMDcxIDUxLjY5NlE0MC43NSA1MC41NDggMzYuODE0IDQ5LjYwNTAwMDAwMDAwMDAwNFEzMi44NzggNDguNjYyIDI4LjkwMSA0Ny41OTYwMDAwMDAwMDAwMDRRMjQuOTI0IDQ2LjUzIDIxLjYwMyA0NC44OVExOC4yODIgNDMuMjUgMTYuMjczIDQwLjY2N1ExNC4yNjQgMzguMDgzOTk5OTk5OTk5OTk2IDE0LjI2NCAzNC4wNjU5OTk5OTk5OTk5OTVRMTQuMjY0IDI3LjQyNCAxOS4zODkwMDAwMDAwMDAwMDMgMjMuMjQxOTk5OTk5OTk5OTk3UTI0LjUxNDAwMDAwMDAwMDAwMyAxOS4wNTk5OTk5OTk5OTk5OTUgMzQuNjgyIDE5LjA1OTk5OTk5OTk5OTk5NVE0MS44OTc5OTk5OTk5OTk5OTYgMTkuMDU5OTk5OTk5OTk5OTk1IDQ2LjU3MiAyMS4yMzI5OTk5OTk5OTk5OTdRNTEuMjQ2IDIzLjQwNiA1My41ODMgMjYuOTMyUTU1LjkyIDMwLjQ1OCA1Ni4xNjYwMDAwMDAwMDAwMDQgMzQuNTU4SDQ5Ljg1MjAwMDAwMDAwMDAwNFE0OS4zNiAzMC40NTggNDUuNzUxOTk5OTk5OTk5OTk1IDI3LjYyODk5OTk5OTk5OTk5OFE0Mi4xNDQgMjQuNzk5OTk5OTk5OTk5OTk3IDM0LjY4MiAyNC43OTk5OTk5OTk5OTk5OTdRMzAuMDkgMjQuNzk5OTk5OTk5OTk5OTk3IDI3LjIyIDI1LjcwMTk5OTk5OTk5OTk5OFEyNC4zNSAyNi42MDQgMjIuODMzMDAwMDAwMDAwMDAyIDI4LjAzODk5OTk5OTk5OTk5OFEyMS4zMTYwMDAwMDAwMDAwMDMgMjkuNDczOTk5OTk5OTk5OTk3IDIwLjc4MyAzMS4wMzE5OTk5OTk5OTk5OTZRMjAuMjUgMzIuNTg5OTk5OTk5OTk5OTk2IDIwLjI1IDMzLjk4NFEyMC4yNSAzNi42OSAyMi4yNTkgMzguMzcwOTk5OTk5OTk5OTk1UTI0LjI2OCA0MC4wNTIgMjcuNTg5IDQxLjE1OVEzMC45MSA0Mi4yNjYgMzQuOTI4IDQzLjE2OFEzOC45NDYgNDQuMDcgNDIuOTIzIDQ1LjE3N1E0Ni45IDQ2LjI4NCA1MC4yMjEwMDAwMDAwMDAwMDQgNDcuOTY1UTUzLjU0MiA0OS42NDYgNTUuNTUxIDUyLjI2OTk5OTk5OTk5OTk5NlE1Ny41NiA1NC44OTQgNTcuNTYgNTguOTk0UTU3LjU2IDY2LjUzOCA1MS44MiA3MC41OTcwMDAwMDAwMDAwMVE0Ni4wOCA3NC42NTYgMzYuMDc2IDc0LjY1NlpNNjQuNTcyIDc0LjBWMTkuNzE2SDg3LjQ1UTkyLjI4ODAwMDAwMDAwMDAxIDE5LjcxNiA5Ni43NTcgMjEuNTYxUTEwMS4yMjYgMjMuNDA2IDEwNC43NTIgMjYuOTMyUTEwOC4yNzc5OTk5OTk5OTk5OSAzMC40NTggMTEwLjMyOCAzNS40NTk5OTk5OTk5OTk5OTRRMTEyLjM3OCA0MC40NjE5OTk5OTk5OTk5OTYgMTEyLjM3OCA0Ni44NTgwMDAwMDAwMDAwMDRRMTEyLjM3OCA1My4yNTQgMTEwLjMyOCA1OC4yNTZRMTA4LjI3Nzk5OTk5OTk5OTk5IDYzLjI1Nzk5OTk5OTk5OTk5NiAxMDQuNzUyIDY2Ljc4Mzk5OTk5OTk5OTk5UTEwMS4yMjYgNzAuMzEgOTYuNzU3IDcyLjE1NVE5Mi4yODgwMDAwMDAwMDAwMSA3NC4wIDg3LjQ1IDc0LjBaTTcwLjcyMiA2OC4xNzhIODcuMjA0MDAwMDAwMDAwMDFROTMuMDI2MDAwMDAwMDAwMDEgNjguMTc4IDk3LjI5IDY1LjIyNlExMDEuNTU0IDYyLjI3NCAxMDMuODkxIDU3LjQzNlExMDYuMjI4MDAwMDAwMDAwMDEgNTIuNTk4IDEwNi4yMjgwMDAwMDAwMDAwMSA0Ni44NTgwMDAwMDAwMDAwMDRRMTA2LjIyODAwMDAwMDAwMDAxIDQxLjAzNiAxMDMuODkxIDM2LjE5OFExMDEuNTU0IDMxLjM2IDk3LjI5IDI4LjQ0ODk5OTk5OTk5OTk5OFE5My4wMjYwMDAwMDAwMDAwMSAyNS41Mzc5OTk5OTk5OTk5OTcgODcuMjA0MDAwMDAwMDAwMDEgMjUuNTM3OTk5OTk5OTk5OTk3SDcwLjcyMlpNMTE5LjcxNzk5OTk5OTk5OTk5IDc0LjBWMTkuNzE2SDEyNS44NjhWNzQuMFoiIGZpbGw9IiMwMzY5QTEiLz4NCg0KICA8ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgxNDMuODcsIDE5LjA2KSI+DQogICAgPHJlY3QgeD0iMCIgeT0iMC4wIiB3aWR0aD0iMzAuMCIgaGVpZ2h0PSI2LjE1IiByeD0iMS41IiBmaWxsPSIjMDM2OUExIi8+DQogICAgPHJlY3QgeD0iMCIgeT0iMTYuNDgiIHdpZHRoPSIzMC4wIiBoZWlnaHQ9IjYuMTUiIHJ4PSIxLjUiIGZpbGw9IiMwRDk0ODgiLz4NCiAgICA8cmVjdCB4PSIwIiB5PSIzMi45NiIgd2lkdGg9IjMwLjAiIGhlaWdodD0iNi4xNSIgcng9IjEuNSIgZmlsbD0iI0VBNTgwQyIvPg0KICAgIDxyZWN0IHg9IjAiIHk9IjQ5LjQ1IiB3aWR0aD0iMzAuMCIgaGVpZ2h0PSI2LjE1IiByeD0iMS41IiBmaWxsPSIjQzlBMjI3Ii8+DQogIDwvZz4NCjwvc3ZnPg0K" alt="Seguros Digitales SDI" />
+  <div class="bold">Esta aplicación pertenece a Seguros Digitales SDI®.</div>
+  <div>Visítenos en <a href="https://www.segurosdelins.com">www.segurosdelins.com</a></div>
+  <div class="copyright">
+    © 2026 Propiedad Intelectual de Juan Carlos Hernandez Vargas. Todos los derechos reservados. Esta plataforma es una herramienta de uso exclusivo para los clientes vinculados a la Licencia Sugese 08-1318. Queda prohibida su reproducción o uso por terceros sin autorización expresa del titular.
+  </div>
+</footer>
+
+<!-- FLOATING NAV -->
+<div class="float-nav" id="floatNav">
+  <button id="floatPrev" title="Anterior">←</button>
+  <span class="ctr"><span id="floatCtr">1</span> / 5</span>
+  <button id="floatNext" title="Siguiente">→</button>
+</div>
+
+<!-- CELEBRATION OVERLAY -->
+<div class="celeb-backdrop" id="celebBackdrop">
+  <div class="celeb-modal">
+    <button class="celeb-close" onclick="closeCelebration()" title="Cerrar">×</button>
+
+    <div class="confetti c1"></div>
+    <div class="confetti c2"></div>
+    <div class="confetti c3"></div>
+    <div class="confetti c4"></div>
+    <div class="confetti c5"></div>
+    <div class="confetti c6"></div>
+    <div class="confetti c7"></div>
+    <div class="confetti c8"></div>
+    <div class="confetti c9"></div>
+    <div class="confetti c10"></div>
+
+    <!-- Anillo de progreso 1/2 -->
+    <div class="celeb-ring-wrap">
+      <svg class="celeb-ring-svg" viewBox="0 0 88 88">
+        <circle class="celeb-ring-bg" cx="44" cy="44" r="38"/>
+        <circle class="celeb-ring-progress" cx="44" cy="44" r="38"/>
+      </svg>
+      <div class="celeb-ring-inner">
+        <div class="celeb-ring-pct">1/2</div>
+        <div class="celeb-ring-lbl">pasos</div>
+      </div>
+    </div>
+
+    <h2 class="celeb-title">¡Muy bien,<br/><span class="name">Jonathan</span>! 🎉</h2>
+    <p class="celeb-sub">Completaste el paso 1 de 2. Tu cita aún está pendiente.</p>
+
+    <div class="celeb-steps">
+      <div class="celeb-step done-step">
+        <div class="celeb-step-icon ok">✓</div>
+        <div class="celeb-step-text">
+          <b>Revisaste tu cotización</b>
+          <span id="celebVehicle">tu vehículo</span>
+        </div>
+        <div class="celeb-step-badge ok">Listo</div>
+      </div>
+      <div class="celeb-step pending-step">
+        <div class="celeb-step-icon pend">📅</div>
+        <div class="celeb-step-text">
+          <b>Agenda tu cita</b>
+          <span id="celebStepConfirm">Confirma con Juan Carlos</span>
+        </div>
+        <div class="celeb-step-badge pend">Pendiente</div>
+      </div>
+    </div>
+
+    <a class="celeb-cta-link" id="celebGoForm" href="https://forms.gle/tqSaZBDcZfNgNktC7" target="_blank" rel="noopener">
+      <span>Completar — Agendar mi cita</span>
+      <span class="arrow">→</span>
+    </a>
+    <p class="celeb-cta-hint">Solo toma 1 minuto · Recibirás confirmación por correo</p>
+
+    <div class="celeb-signature">
+      <div class="celeb-avatar">JC</div>
+      <div class="celeb-sig-text">
+        <b id="celebSigName">Tu agente Juan Carlos Hernandez te acompaña</b><br/>
+        desde este momento hasta la activación de tu póliza y el seguimiento continuo de tu seguro.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============ URL PARAMS ============
+// MOCKUP: datos de ejemplo embebidos
+const _params = new URLSearchParams(location.search);
+// MOCKUP: el visor agrega su propio query; los datos de ejemplo rellenan lo que falte
+new URLSearchParams('n=Juan%20Carlos%20Hern%C3%A1ndez%20Vargas&l=08-1318&w=www.segurosdelins.com&c=Silvia%20Mariel&v=Sedan%202019&p=BRK454&y=2019&va=10000000&sr=p&dd=400000&pt=158423&ps=308283&pa=570891&cb=A-300000000.B-15000000.C-100000000.D.F.H.G.M.N.IDD').forEach(function(v,k){ if (!_params.has(k)) _params.set(k,v); });
+const data = {
+  // Agente
+  n:  _params.get('n')  || 'Juan Carlos Hernandez Vargas',
+  l:  _params.get('l')  || '08-1318',
+  w:  _params.get('w')  || 'www.segurosdelins.com',
+  a:  _params.get('a')  || 'https://forms.gle/tqSaZBDcZfNgNktC7',
+  // Cliente
+  c:  _params.get('c')  || '',
+  // Vehículo
+  v:  _params.get('v')  || '',
+  p:  _params.get('p')  || '',
+  y:  parseInt(_params.get('y'), 10) || null,
+  vt: _params.get('vt') || 'g',
+  og: _params.get('og') === '1',
+  ag: _params.get('ag') === '1',
+  // Cotización
+  va: parseInt(_params.get('va'), 10) || null,
+  sr: _params.get('sr') || null,
+  pa: _params.get('pa') || null,
+  ps: _params.get('ps') || null,
+  pt: _params.get('pt') || null,
+  // cb: las coberturas que trae ESTA cotización, para mostrar las mismas que
+  // el correo. Formato "A-300000000.B-15000000.C.G.M".
+  cb: _params.get('cb') || null
+};
+
+const fmt = (n) => '₡' + Number(n).toLocaleString('de-DE');
+
+// ===== [GUIA-CB-PURO] — lógica pura, sin DOM. El test
+// tests/test-explicador-secciones.js extrae este bloque por los marcadores
+// y lo evalúa en Node; si lo movés, mové los dos marcadores con él. =====
+
+/**
+ * Parsea el param `cb` ("A-300000000.B-15000000.C.G.M") a un mapa
+ * {CODIGO: monto|null}. Devuelve null si no viene o no se le entiende nada —
+ * y null significa "no tocar la guía", nunca "guía en blanco".
+ */
+function _parseCbMapa(cb) {
+  if (!cb) return null;
+  var mapa = {};
+  String(cb).split('.').forEach(function (t) {
+    var p = t.split('-');
+    var cod = String(p[0] || '').toUpperCase();
+    if (/^[A-Z]+$/.test(cod)) mapa[cod] = (p[1] && /^\d+$/.test(p[1])) ? Number(p[1]) : null;
+  });
+  return Object.keys(mapa).length ? mapa : null;
+}
+
+/**
+ * Decide qué pasos de la guía le aplican a ESTA cotización.
+ *
+ * El deducible y los repuestos hablan del daño al PROPIO vehículo, que lo
+ * cubren D (colisión/vuelco), F (robo) y H (riesgos adicionales). Una
+ * cotización sin ninguna de las tres no tiene deducible propio que explicar
+ * ni repuestos que reponer — mostrarle esos pasos al cliente es hablarle de
+ * algo que no contrató.
+ *
+ * El paso del deducible ESTÁNDAR además PROMETE el reintegro de la IDD
+ * ("con la IDD baja a cero"), así que exige que la IDD venga en la
+ * cotización. Las variantes asiático/alta gama solo describen el esquema
+ * del deducible, que aplica con o sin IDD.
+ *
+ * El paso de la asistencia habla de la Multiasistencia en carretera, que es
+ * la cobertura G (y M, su extendida). Una cotización sin G ni M no tiene
+ * asistencia que prometer — el paso diría "tienes asistencia 24/7 incluida"
+ * sobre algo que el cliente no contrató.
+ *
+ * @param {Object|null} mapa - lo que devuelve _parseCbMapa
+ * @returns {Object|null} {asistencia, deducible, deducibleDif, repuestos} o
+ *                        null si no hay dato (enlaces viejos: no se toca nada)
+ */
+function _seccionesQueAplican(mapa) {
+  if (!mapa) return null;
+  var propio = ['D', 'F', 'H'].some(function (c) { return c in mapa; });
+  return {
+    asistencia:   ('G' in mapa) || ('M' in mapa),
+    deducible:    propio && ('IDD' in mapa),
+    deducibleDif: propio,
+    repuestos:    propio
+  };
+}
+// ===== [/GUIA-CB-PURO] =====
+
+/**
+ * Deja en la sección 1 SOLO las coberturas que trae la cotización, con el
+ * monto que trae el PDF.
+ *
+ * 🔴 Por qué existe: esta guía tenía seis tarjetas escritas a mano (A, C, D,
+ * F, B, H) y las mostraba siempre. A un cliente que cotizó sin colisión, sin
+ * robo y sin riesgos adicionales le enseñaba las tres igual, con montos
+ * calculados sobre su valor asegurado — que se leen como reales. El correo ya
+ * mostraba solo lo contratado, así que la guía lo contradecía.
+ *
+ * 🔴 Sin el parámetro no se toca nada: los correos enviados antes de esto no
+ * lo llevan, y esos clientes tienen que seguir viendo la guía como siempre.
+ *
+ * @param {string} cb - "A-300000000.B-15000000.C.G.M" (código y, tras un
+ *                      guion, el monto cuando el PDF lo trae)
+ */
+function aplicarCoberturas(cb) {
+  // Un parámetro ilegible no puede dejar la guía en blanco: mejor no tocarla.
+  var mapa = _parseCbMapa(cb);
+  if (!mapa) return;
+
+  var quedan = 0;
+  document.querySelectorAll('#s1 .bento-tile').forEach(function (tile) {
+    var letraEl = tile.querySelector('.letter');
+    var letra = letraEl ? letraEl.textContent.trim().toUpperCase() : '';
+    if (!letra) return;
+
+    if (!(letra in mapa)) { tile.remove(); return; }   // no la contrató
+    quedan++;
+
+    var monto = mapa[letra];
+    if (!monto) return;
+
+    var el = tile.querySelector('.amount');
+    if (!el) return;
+    var antes = Number(String(el.textContent).replace(/[^\d]/g, '')) || 0;
+    var nuevo = fmt(monto);
+    if (antes === monto) return;
+    el.textContent = nuevo;
+
+    // El detalle repite el monto con sus palabras ("hasta ₡300 millones").
+    // Si se cambia solo la cifra de arriba, el detalle queda mintiendo.
+    var det = tile.querySelector('.bento-detail');
+    if (!det || !antes) return;
+    var enMillones = function (n) {
+      var m = n / 1000000;
+      return (Math.round(m * 10) / 10).toString().replace('.', ',');
+    };
+    det.innerHTML = det.innerHTML
+      .split('₡' + enMillones(antes) + ' millones').join('₡' + enMillones(monto) + ' millones')
+      .split('₡' + antes.toLocaleString('de-DE')).join(nuevo)
+      .split('₡' + antes.toLocaleString('en-US')).join(nuevo);
+  });
+
+  // Si por lo que sea no quedó ninguna, se deja la sección como estaba en vez
+  // de mostrarle al cliente un hueco.
+  if (!quedan) return;
+
+  var s1Sub = document.querySelector('#s1 .section-sub');
+  if (s1Sub) {
+    s1Sub.innerHTML = 'Toca cada tarjeta para ver el detalle. Estas son las coberturas que trae tu cotización, ' +
+                      'con el monto de cada una.';
+  }
+}
+
+/**
+ * Oculta los pasos que no le aplican a esta cotización (asistencia,
+ * deducible y/o repuestos, según _seccionesQueAplican) y renumera el
+ * recorrido.
+ *
+ * 🔴 Por qué existe: la sección 1 ya mostraba solo lo contratado, pero el
+ * deducible y los repuestos seguían fijos — a un cliente sin colisión, robo
+ * ni riesgos adicionales se le explicaba el deducible de esas coberturas y
+ * la sustitución de repuestos, que aplican al daño al propio vehículo.
+ *
+ * 🔴 Sin el parámetro `cb` (enlaces ya enviados) no se toca nada: la guía
+ * queda con sus 5 pasos de siempre, byte a byte.
+ */
+function aplicarSecciones(mapa) {
+  var q = _seccionesQueAplican(mapa);
+  if (!q) return;
+
+  var oculto = false;
+  if (!q.asistencia) {
+    var s2 = document.getElementById('s2');
+    if (s2) s2.style.display = 'none';
+    oculto = true;
+  }
+  // Con og/ag la sección activa es la variante (s3a/s3b); sin flags, la
+  // estándar. Si el paso no aplica se esconden las tres por parejo.
+  var okPaso3 = (data.og || data.ag) ? q.deducibleDif : q.deducible;
+  if (!okPaso3) {
+    ['s3', 's3a', 's3b'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+    oculto = true;
+  }
+  if (!q.repuestos) {
+    var s4 = document.getElementById('s4');
+    if (s4) s4.style.display = 'none';
+    oculto = true;
+  }
+  // Solo se renumera si algo se escondió: con todo visible la guía queda
+  // idéntica a la estática (y los enlaces viejos ni pasan por acá).
+  if (oculto) renumerarGuia();
+}
+
+// Nombres que usan la barra de pasos y los botones entre secciones. Las
+// variantes del deducible (s3a asiático / s3b alta gama) comparten nombre.
+var _NOMBRE_PASO = { s1: 'Coberturas', s2: 'Asistencia', s3: 'Deducible', s3a: 'Deducible', s3b: 'Deducible', s4: 'Repuestos', s5: 'Pagos' };
+var _NOMBRE_NEXT = { s2: 'Asistencia 24/7', s3: 'Deducible', s3a: 'Deducible', s3b: 'Deducible', s4: 'Repuestos', s5: 'Tus 3 opciones' };
+var _FRASE_PASO  = { s1: 'qué cubre tu cotización', s2: 'asistencia 24/7', s3: 'cómo te protege ante un choque', s3a: 'cómo te protege ante un choque', s3b: 'cómo te protege ante un choque', s4: 'qué pasa con los repuestos' };
+
+/**
+ * Rearma el recorrido con los pasos que quedaron visibles: numera las
+ * secciones y los dots, esconde los dots huérfanos, re-encadena los botones
+ * anterior/siguiente, y ajusta el hero (recorrido, puntos, "Paso 1 de N")
+ * y el contador flotante. El "Avanzar" de Pagos hacia la cita no se toca.
+ */
+function renumerarGuia() {
+  var visibles = ['s1', 's2', 's3', 's3a', 's3b', 's4', 's5']
+    .map(function (id) { return document.getElementById(id); })
+    .filter(function (el) { return el && el.style.display !== 'none'; });
+  var total = visibles.length;
+
+  visibles.forEach(function (sec, i) {
+    // Numeración del rótulo de cada sección
+    var badge = sec.querySelector('.section-num');
+    if (badge) badge.innerHTML = badge.innerHTML.replace(/Sección \d+/, 'Sección ' + (i + 1));
+    // Botones anterior / siguiente re-encadenados a los pasos visibles
+    if (i > 0) {
+      var prev = sec.querySelector('.step-btn.prev');
+      if (prev) {
+        prev.dataset.target = visibles[i - 1].id;
+        prev.textContent = '← ' + _NOMBRE_PASO[visibles[i - 1].id];
+      }
+    }
+    if (i < total - 1) {
+      var next = sec.querySelector('.step-btn.next[data-target]');
+      if (next) {
+        next.dataset.target = visibles[i + 1].id;
+        next.textContent = 'Siguiente: ' + _NOMBRE_NEXT[visibles[i + 1].id] + ' →';
+      }
+    }
+  });
+
+  // Dots del recorrido: esconder los de pasos ocultos y renumerar el resto.
+  // (display directo, no [hidden]: .sticky-dot ya tiene display propio.)
+  var dots = [];
+  document.querySelectorAll('.sticky-dot').forEach(function (dot) {
+    var idx = visibles.indexOf(document.getElementById(dot.dataset.target));
+    if (idx === -1) { dot.style.display = 'none'; return; }
+    var num = dot.querySelector('.num');
+    if (num) num.textContent = idx + 1;
+    dots.push(dot);
+  });
+  // El script de navegación (corre después) toma estas dos listas en lugar
+  // de las estáticas de 5 pasos.
+  window._dotsGuia = dots;
+  window._pasosGuia = visibles.map(function (el) { return el.id; });
+
+  // Contador flotante "n / total"
+  var ctr = document.querySelector('.float-nav .ctr');
+  if (ctr) ctr.innerHTML = '<span id="floatCtr">1</span> / ' + total;
+
+  // Hero: puntos de progreso, "Paso 1 de N" y el texto del recorrido
+  document.querySelectorAll('.progress-line .dot').forEach(function (d, i) {
+    if (i >= total) d.remove();
+  });
+  var stepLabel = document.querySelector('.progress-line .step-label');
+  if (stepLabel) stepLabel.textContent = 'Paso 1 de ' + total;
+  var roadmap = document.querySelector('.bubble .roadmap');
+  if (roadmap) {
+    var frases = visibles.slice(0, -1).map(function (el) { return _FRASE_PASO[el.id]; }).filter(Boolean);
+    roadmap.innerHTML = '<b>Tu recorrido en ' + total + ' pasos:</b><br/>' +
+      frases.join(' · ') + ' · y al final, las <b>3 opciones de pago</b> para que elijas la que más te conviene.';
+  }
+}
+const initials = (name) => name.split(/\s+/).filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase() || 'JC';
+
+// Escapa HTML para inserciones via innerHTML — los params del URL son
+// input no confiable (cualquiera puede armar un link con ?n=<script>...).
+const esc = (s) => String(s == null ? '' : s)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+// El link de agenda viene del param `a` — solo se acepta http(s),
+// nunca javascript: u otros esquemas ejecutables.
+function safeHttpUrl(u) {
+  try {
+    const parsed = new URL(String(u), location.origin);
+    if (parsed.protocol === 'https:' || parsed.protocol === 'http:') return parsed.href;
+  } catch (e) {}
+  return null;
+}
+
+// ============ APLICAR PERSONALIZACIÓN AL DOM ============
+function applyPersonalization() {
+  // Agente: header info
+  const agentInfo = document.querySelector('.agent-info');
+  if (agentInfo) agentInfo.innerHTML = `Agente: <b>${esc(data.n)}</b><br/>Lic. SUGESE ${esc(data.l)}`;
+  // Avatar JC del header → iniciales
+  document.querySelectorAll('.avatar, .celeb-avatar').forEach(el => el.textContent = initials(data.n));
+  // Chip del agente
+  const chipName = document.querySelector('.agent-chip-name');
+  if (chipName) chipName.textContent = data.n;
+  // Cinta dorada
+  const ribbon = document.querySelector('.gold-ribbon b');
+  if (ribbon) ribbon.textContent = data.n;
+  // Footer
+  document.querySelectorAll('.footer .copyright').forEach(el => {
+    el.innerHTML = `© ${new Date().getFullYear()} Propiedad Intelectual de ${esc(data.n)}. Todos los derechos reservados. Esta plataforma es una herramienta de uso exclusivo para los clientes vinculados a la Licencia Sugese ${esc(data.l)}. Queda prohibida su reproducción o uso por terceros sin autorización expresa del titular.`;
+  });
+  const webLink = document.querySelector('.footer a[href*="seguros"]');
+  if (webLink) {
+    webLink.href = 'https://' + String(data.w).replace(/^https?:\/\//i, '');
+    webLink.textContent = data.w;
+  }
+
+  // Cliente: greeting
+  const greetName = document.querySelector('.bubble .greet .name');
+  if (greetName) greetName.textContent = data.c || 'Cliente';
+  // Bubble — vehículo+placa (usa span dedicado, no string-replace frágil)
+  const bubbleVehicle = document.querySelector('.bubble-vehicle');
+  if (bubbleVehicle && (data.v || data.p)) {
+    const veh = data.v || 'tu vehículo';
+    const plt = data.p ? `, placa ${data.p}` : '';
+    bubbleVehicle.textContent = `${veh}${plt}`;
+  }
+  // Cierre — saludo personalizado
+  const closingMsg = document.querySelector('.closing .msg');
+  if (closingMsg && data.c) {
+    closingMsg.innerHTML = `${esc(data.c)}, espero que esta guía te haya ayudado a entender tu cotización con claridad. Si tenés cualquier duda, hablemos.`;
+  }
+  const closingSig = document.querySelector('.closing .signature');
+  if (closingSig) {
+    closingSig.innerHTML = `— ${esc(data.n)}<span class="lic">Tu agente · Lic. SUGESE ${esc(data.l)}</span>`;
+  }
+  // Celebración — título y pasos
+  const celebTitle = document.querySelector('.celeb-title');
+  if (celebTitle) {
+    celebTitle.innerHTML = `¡Muy bien,<br/><span class="name">${esc(data.c || 'Cliente')}</span>! 🎉`;
+  }
+  const celebVehicle = document.getElementById('celebVehicle');
+  if (celebVehicle && data.v) {
+    celebVehicle.textContent = data.v;
+  }
+  // Celebración — link de agendar (cada agente tiene su propio Google Form)
+  const celebForm = document.getElementById('celebGoForm');
+  if (celebForm && data.a) {
+    const safeAgenda = safeHttpUrl(data.a);
+    if (safeAgenda) celebForm.href = safeAgenda;
+  }
+  // Celebración — paso "Confirma con X" y firma "Tu agente X te acompaña"
+  const celebStepConfirm = document.getElementById('celebStepConfirm');
+  if (celebStepConfirm) celebStepConfirm.textContent = `Confirma con ${data.n}`;
+  const celebSigName = document.getElementById('celebSigName');
+  if (celebSigName) celebSigName.textContent = `Tu agente ${data.n} te acompaña`;
+
+  // Sección 1 — montos D, F, H usan valor asegurado
+  if (data.va) {
+    const valFmt = fmt(data.va);
+    document.querySelectorAll('.bento-tile.green .amount, .bento-tile.purple .amount').forEach(el => {
+      el.textContent = valFmt;
+    });
+    // Subtitle de sección 1
+    const s1Sub = document.querySelector('#s1 .section-sub');
+    if (s1Sub) s1Sub.innerHTML = `Toca cada tarjeta para ver el detalle. Los montos se calculan sobre tu valor asegurado de <b>${valFmt}</b>.`;
+  }
+
+  // Sección 1 — SOLO las coberturas que trae la cotización.
+  // 🔴 Esta guía tenía sus seis tarjetas escritas a mano y las mostraba
+  // siempre. A un cliente que cotizó sin colisión, sin robo y sin riesgos
+  // adicionales le enseñaba las tres igual, con montos calculados sobre su
+  // valor asegurado — que parecen de verdad. El correo ya se cuidaba de no
+  // hacerlo; los dos tienen que decir lo mismo.
+  // Sin el parámetro (enlaces enviados antes de esto) no se toca nada.
+  aplicarCoberturas(data.cb);
+
+  // Sección 2 — auto-seleccionar plan según edad
+  if (data.y) {
+    const edad = new Date().getFullYear() - data.y;
+    const isPlus = edad <= 6;
+    const tabs = document.querySelectorAll('.plan-toggle .tab');
+    if (tabs.length === 2) {
+      tabs[0].classList.toggle('active', isPlus);
+      tabs[1].classList.toggle('active', !isPlus);
+    }
+    // Personalizar el copy del banner
+    const bannerSmall = document.querySelector('.tip-banner .small');
+    if (bannerSmall) {
+      bannerSmall.innerHTML = `El alcance del plan se ajusta a la antigüedad de tu vehículo. Para tu ${esc(data.v || 'vehículo')} (${edad} años) te toca el <b>Plan ${isPlus ? 'Plus' : 'Básico'}</b>.`;
+    }
+  }
+
+  // Sección 4 — mostrar solo la fila del cliente según sr
+  if (data.sr) {
+    const map = { '0': 0, 'g': 1, 'p': 2, 'n': 3 };
+    const rows = document.querySelectorAll('#s4 .qrow');
+    const idx = map[data.sr];
+    if (rows.length === 4 && idx !== undefined) {
+      rows.forEach((r, i) => {
+        if (i !== idx) {
+          r.style.display = 'none';
+        } else {
+          r.classList.add('match');
+        }
+      });
+      const intro = document.querySelector('#s4 .s4-intro');
+      if (intro) intro.innerHTML = 'ⓘ Este es el plan de repuestos que cubre tu póliza según la antigüedad de tu vehículo y la cobertura que cotizaste.';
+      const lead = document.querySelector('#s4 .sub-card .lead');
+      if (lead) lead.textContent = 'Este es el nivel que aplica para tu póliza:';
+    }
+  }
+  // Header sección 4: vehículo+placa
+  const s4perso = document.querySelector('.s4-header .perso');
+  if (s4perso && (data.v || data.p)) {
+    const veh = data.v || 'tu vehículo';
+    const plt = data.p ? `, placa ${data.p}` : '';
+    s4perso.innerHTML = `Para tu <b>${esc(veh + plt)}</b>, esto es lo que el INS te garantiza.`;
+  }
+
+  // Sección eléctricos: solo visible si vt=e (vehículo eléctrico).
+  // El agente lo marca con un toggle en el cotizador antes de enviar el correo.
+  const electricSection = document.querySelector('.electric');
+  if (electricSection && data.vt !== 'e') {
+    electricSection.style.display = 'none';
+  }
+
+  // Sección 3 estándar — deducible real del PDF (param dd).
+  // Si no viene (correos viejos o extracción fallida), queda el ₡400.000
+  // del HTML estático, comportamiento histórico.
+  const dd = parseInt(_params.get('dd'), 10);
+  if (dd && dd > 0) {
+    const ddFmt = fmt(dd);
+    document.querySelectorAll('#s3 .dd-amt').forEach(el => { el.textContent = ddFmt; });
+  }
+
+  // Condiciones especiales · sustituyen la Sección 3 (deducible estándar)
+  // cuando el agente marca uno de los dos toggles en el cotizador.
+  const s3       = document.getElementById('s3');
+  const s3a      = document.getElementById('s3a');
+  const s3b      = document.getElementById('s3b');
+  const dotS3    = document.querySelector('.sticky-dot[data-target="s3"]');
+  if (data.og || data.ag) {
+    if (s3) s3.style.display = 'none';
+    if (data.og && s3a) s3a.style.display = '';
+    if (data.ag && s3b) s3b.style.display = '';
+    // Re-apuntar el dot del paso 3 hacia la primera sección sustituta
+    if (dotS3) dotS3.setAttribute('data-target', data.og ? 's3a' : 's3b');
+  }
+
+  // Sección 5 — 3 precios reales
+  const priceCards = document.querySelectorAll('.pricing-grid .price-card .price');
+  if (priceCards.length === 3) {
+    if (data.pt) priceCards[0].textContent = '₡' + Number(data.pt).toLocaleString('de-DE');
+    if (data.ps) priceCards[1].textContent = '₡' + Number(data.ps).toLocaleString('de-DE');
+    if (data.pa) priceCards[2].textContent = '₡' + Number(data.pa).toLocaleString('de-DE');
+    // Si todos faltan, mostrar mensaje
+    if (!data.pt && !data.ps && !data.pa) {
+      const grid = document.querySelector('.pricing-grid');
+      if (grid) grid.innerHTML = '<p style="text-align:center;color:#64748b;font-size:14px;padding:20px;">Consulta a tu agente las opciones de pago disponibles.</p>';
+    }
+  }
+
+  // Pasos 3 (deducible) y 4 (repuestos) — solo si la cotización trae
+  // cobertura al propio vehículo. Va DESPUÉS del bloque og/ag de arriba,
+  // porque decide sobre la variante del deducible que quedó activa.
+  aplicarSecciones(_parseCbMapa(data.cb));
+}
+
+// Aplicar al cargar
+applyPersonalization();
+
+// ============ STICKY NAV + INTERSECTION OBSERVER ============
+const sections = document.querySelectorAll('.section');
+// Si aplicarSecciones escondió pasos, renumerarGuia dejó en window._dotsGuia /
+// window._pasosGuia las listas de lo que quedó visible. Sin eso (enlaces
+// viejos, sin `cb`), las estáticas de siempre.
+const stickyDots = window._dotsGuia || document.querySelectorAll('.sticky-dot');
+const stickyNav = document.getElementById('stickyNav');
+const floatNav = document.getElementById('floatNav');
+const floatCtr = document.getElementById('floatCtr');
+const floatPrev = document.getElementById('floatPrev');
+const floatNext = document.getElementById('floatNext');
+
+let currentSection = 0;
+const sectionIds = window._pasosGuia || ['s1', 's2', 's3', 's4', 's5'];
+
+window.addEventListener('scroll', () => {
+  const scrolled = window.scrollY > 200;
+  stickyNav.classList.toggle('visible', scrolled);
+  floatNav.classList.toggle('visible', scrolled);
+});
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('in-view');
+      const idx = sectionIds.indexOf(entry.target.id);
+      if (idx !== -1) {
+        currentSection = idx;
+        updateActiveStates();
+      }
+    }
+  });
+}, {
+  // threshold bajo para que las secciones largas (s4) hagan fade-in apenas
+  // entran al viewport en mobile, sin esperar a estar 30% visibles.
+  threshold: 0.01,
+  rootMargin: '0px 0px -10% 0px'
+});
+sections.forEach(s => observer.observe(s));
+
+function updateActiveStates() {
+  stickyDots.forEach((dot, i) => {
+    dot.classList.remove('active', 'done');
+    if (i < currentSection) dot.classList.add('done');
+    if (i === currentSection) dot.classList.add('active');
+  });
+  floatCtr.textContent = currentSection + 1;
+  floatPrev.disabled = currentSection === 0;
+  floatNext.disabled = currentSection === sectionIds.length - 1;
+}
+
+stickyDots.forEach(dot => {
+  dot.addEventListener('click', () => {
+    document.getElementById(dot.dataset.target).scrollIntoView({ behavior: 'smooth' });
+  });
+});
+
+document.querySelectorAll('.step-btn[data-target]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.getElementById(btn.dataset.target).scrollIntoView({ behavior: 'smooth' });
+  });
+});
+
+// ============ BENTO COBERTURAS — expand/collapse interactivo ============
+// Single-open: tocar una tarjeta cierra las demás (mejor para mobile, evita scroll caotico).
+const bentoTiles = document.querySelectorAll('.bento-tile');
+function toggleBento(tile) {
+  const wasOpen = tile.classList.contains('expanded');
+  bentoTiles.forEach(t => {
+    t.classList.remove('expanded');
+    t.setAttribute('aria-expanded', 'false');
+  });
+  if (!wasOpen) {
+    tile.classList.add('expanded');
+    tile.setAttribute('aria-expanded', 'true');
+  }
+}
+bentoTiles.forEach(tile => {
+  tile.addEventListener('click', () => toggleBento(tile));
+  tile.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      toggleBento(tile);
+    }
+  });
+});
+
+floatPrev.addEventListener('click', () => {
+  if (currentSection > 0) document.getElementById(sectionIds[currentSection - 1]).scrollIntoView({ behavior: 'smooth' });
+});
+floatNext.addEventListener('click', () => {
+  if (currentSection < sectionIds.length - 1) document.getElementById(sectionIds[currentSection + 1]).scrollIntoView({ behavior: 'smooth' });
+});
+
+// ============ CELEBRATION OVERLAY ============
+// El URL del Google Form vive en el <a id="celebGoForm" href="..."> del HTML.
+// Al ser un <a> nativo con target="_blank", el tap del usuario preserva el
+// "user gesture" en mobile — no hay popup blocker (a diferencia de un
+// window.open desde setTimeout, que iOS/Android bloquean por seguridad).
+function openCelebration() {
+  document.getElementById('celebBackdrop').classList.add('active');
+}
+function closeCelebration() {
+  document.getElementById('celebBackdrop').classList.remove('active');
+}
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeCelebration();
+});
+</script>
+
