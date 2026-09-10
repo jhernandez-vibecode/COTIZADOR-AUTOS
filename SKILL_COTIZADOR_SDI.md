@@ -2550,3 +2550,37 @@ repuestos y pasos, anual siempre resaltado) + **logo del INS en azul** → "dale
 - `python -m http.server` del launch.json sirve sin `Cache-Control`; el explicador es un solo HTML con CSS/JS en
   línea, así que alcanzó con `?_v=` en la URL. Para módulos `.js` externos usar `http-server -c-1`.
 
+---
+
+## Checkpoint 10 sep 2026 (tarde) — la consola en línea clara (`c5cc457`)
+
+JC pidió ver un mockup antes de decidir (*"la consola me gustaría ver un mock up"*) y aprobó las seis pantallas con
+*"Dale, implementalo igual que el explicador"*. Tag de rollback **`pre-consola-linea-clara-10sep`**.
+
+- **Hoja de sobreescritura, no reescritura:** `css/linea-clara-consola.css`, enlazada DESPUÉS de `styles.css` y
+  **SOLO en `index.html`**. `styles.css` no se tocó: las sub-páginas la cargan sin la hoja nueva y siguen con su
+  cabecera navy (verificado en el smoke: `/polizas-activas/` da `rgb(12,35,64)` y no enlaza la hoja).
+- **HTML que cambió (solo el header):** dos niveles — `.lc-top` (logo `img/sdi-logo-compacto.svg` a color,
+  `#lcAgentName`, `#lcAgentLic`, `#hdrAgentIni`) y `.header-inner` (producto + `#stepNav` con los mismos `.step[data-step]`).
+  El SVG del logo pegado en el HTML se fue: el compacto a color como `<img>`. Emojis estáticos fuera (📄 del drop-zone
+  → SVG de trazo, ✓, 📎, 📊, 📨, ☁️, 🧹, 🔎 → SVG). **Los que escribe `stats-ui.js`** (🔗 📄 💬 🗑, "⭐ Alto valor",
+  "✓ Con póliza") **siguen**: son JS y JC no pidió tocarlo.
+- 🔴 **El único cambio de JS:** `paintRailAgent()` pinta también `#lcAgentName` / `#lcAgentLic` desde `CFG`. Los dos
+  van **vacíos en el HTML a propósito** — el mockup los traía con el nombre de JC escrito a mano y eso se lo habría
+  mostrado a otro agente. Regla multi-agente: nada del agente escrito en el HTML.
+- **Lo que reescribe la hoja:** rail sobre `#F8F9FA` con el activo en píldora azul (mismos ids `btnStats`/`btnSettings`),
+  columna de contenido `#F2F7F4` (conserva la distinción verde de "cotizar" del 6 ago), tarjetas r24 con regla 28×3,
+  formularios con borde `#8A939C`, botones píldora de un solo azul (`.btn-send` también: el verde se fue), precios con
+  `::after` "No va en el PDF" (gris, en vez del sello rojo ELIMINADO) y el anual en verde pálido, guía del deducible con
+  los tintes `--t-*` del explicador, modales con cabecera blanca y cierre redondo, 📊 con cifras en tinta.
+- **`!important` solo contra estilos en línea**, cada uno anotado: `#driveInvite` (navy en línea), `#priceTable>div[style]`
+  (la nota del repuesto), los `<p style>` de las secciones del modal ⚙, `.card>p[style]`, `#waShareWrap span[style]`.
+- 🔴 **Hallazgo de paso (móvil):** `.side-rail` conserva `height:calc(100vh - var(--header-h))` en la media query de
+  ≤900 px de `styles.css`, y como pasa a `flex-wrap`, las filas se repartían todo el alto y el ítem activo se estiraba.
+  La hoja nueva lo corrige (`height:auto; align-content:flex-start`) **solo para index.html**; en `styles.css` sigue así
+  para las sub-páginas que no tienen rail (no les afecta).
+- `--header-h` se sigue midiendo (`_syncHeaderHeight`): con dos niveles + filete da **120 px** en escritorio y 114 en móvil.
+- **Smoke:** arnés en `.netlify/smoke/` (ignorado, borrado) con un **perfil inventado** en localStorage para probar el
+  multi-agente: nombre y licencia del nivel 1 salieron del perfil; `btnStats` y `btnSettings` abren y cierran por clic
+  real; `scrollWidth == clientWidth` a 1280 y 360; fuentes cargadas. Suite: 21 archivos en verde.
+

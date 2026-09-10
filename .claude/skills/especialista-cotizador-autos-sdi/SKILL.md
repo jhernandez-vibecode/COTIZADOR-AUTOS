@@ -5,8 +5,10 @@ description: ESPECIALISTA COTIZADOR AUTOS SDI — App web vanilla JS que extrae 
 
 # Especialista Cotizador SDI — Seguros Autos INS
 
-Leer COMPLETO antes de tocar código. Estado a **10 septiembre 2026**: **el explicador (`/explicacion/`) estrena la línea
-clara SDI** — tipografía v1.3 (Google Sans Flex + Code), barra en dos niveles con el INS en azul, hero centrado, paneles
+Leer COMPLETO antes de tocar código. Estado a **10 septiembre 2026**: **la consola (`index.html`) y el explicador
+(`/explicacion/`) estrenan la línea clara SDI**. La consola va por `css/linea-clara-consola.css` (commit `c5cc457`, tag
+`pre-consola-linea-clara-10sep`, hoja cargada solo en index.html; las sub-páginas siguen igual) — ver "La consola en
+línea clara". El explicador — tipografía v1.3 (Google Sans Flex + Code), barra en dos niveles con el INS en azul, hero centrado, paneles
 sobre banda pálida, tintes pálidos que pidió JC y el pago anual siempre resaltado. Solo la cara: el JS es byte a byte el de
 antes. Commit `fb95067`, tag `pre-explicador-linea-clara-10sep`, verificado en producción. Ver "El explicador en línea
 clara". Los correos y la consola NO cambiaron de letra. Previo (**27 agosto 2026**): **el explicador ya es dinámico** — el paso 2
@@ -121,7 +123,7 @@ App interna del agente INS Juan Carlos Hernández (licencia SUGESE 08-1318) para
 | OAuth Gmail | Google Identity Services (GIS) |
 | Envío Gmail | Gmail API v1 `/gmail/v1/users/me/messages/send` |
 | Persistencia | localStorage (perfil del agente + historial de envíos) |
-| Tipografía | Consola y correos: Space Grotesk + Inter. **Explicador (10 sep 2026): Google Sans Flex + Google Sans Code v1.3**, Inter solo presta el ₡ |
+| Tipografía | **Consola y explicador (10 sep 2026): Google Sans Flex + Google Sans Code v1.3**, Inter solo presta el ₡. Sub-páginas (`/polizas-activas/`, `/renovaciones/`, `/cancelacion/`, `/marcas-recargo/`): todavía Poppins + Inter. Correos: Space Grotesk/Arial |
 
 **Zero build, zero npm.** CDN para todo. **Solo Gmail** — sin Outlook/MSAL/Graph.
 
@@ -1361,6 +1363,38 @@ firmadas con la licencia SUGESE del agente.
 **De paso:** la guía formateaba con `toLocaleString('es-CR')`, que separa los miles con **espacio**
 (`₡18 000 000`), mientras los montos escritos a mano usaban coma. Todo unificado a punto, como el correo.
 
+## La consola en línea clara (10 sep 2026, `c5cc457`) — EN PROD
+
+JC pidió ver un mockup antes de decidir (*"la consola me gustaría ver un mock up"*) y aprobó las seis pantallas con
+*"Dale, implementalo igual que el explicador"*. Tag de rollback **`pre-consola-linea-clara-10sep`**.
+
+- **Hoja de sobreescritura, no reescritura:** `css/linea-clara-consola.css`, enlazada DESPUÉS de `styles.css` y
+  **SOLO en `index.html`**. `styles.css` no se tocó: las sub-páginas la cargan sin la hoja nueva y siguen con su
+  cabecera navy (verificado en el smoke: `/polizas-activas/` da `rgb(12,35,64)` y no enlaza la hoja).
+- **HTML que cambió (solo el header):** dos niveles — `.lc-top` (logo `img/sdi-logo-compacto.svg` a color,
+  `#lcAgentName`, `#lcAgentLic`, `#hdrAgentIni`) y `.header-inner` (producto + `#stepNav` con los mismos `.step[data-step]`).
+  El SVG del logo pegado en el HTML se fue: el compacto a color como `<img>`. Emojis estáticos fuera (📄 del drop-zone
+  → SVG de trazo, ✓, 📎, 📊, 📨, ☁️, 🧹, 🔎 → SVG). **Los que escribe `stats-ui.js`** (🔗 📄 💬 🗑, "⭐ Alto valor",
+  "✓ Con póliza") **siguen**: son JS y JC no pidió tocarlo.
+- 🔴 **El único cambio de JS:** `paintRailAgent()` pinta también `#lcAgentName` / `#lcAgentLic` desde `CFG`. Los dos
+  van **vacíos en el HTML a propósito** — el mockup los traía con el nombre de JC escrito a mano y eso se lo habría
+  mostrado a otro agente. Regla multi-agente: nada del agente escrito en el HTML.
+- **Lo que reescribe la hoja:** rail sobre `#F8F9FA` con el activo en píldora azul (mismos ids `btnStats`/`btnSettings`),
+  columna de contenido `#F2F7F4` (conserva la distinción verde de "cotizar" del 6 ago), tarjetas r24 con regla 28×3,
+  formularios con borde `#8A939C`, botones píldora de un solo azul (`.btn-send` también: el verde se fue), precios con
+  `::after` "No va en el PDF" (gris, en vez del sello rojo ELIMINADO) y el anual en verde pálido, guía del deducible con
+  los tintes `--t-*` del explicador, modales con cabecera blanca y cierre redondo, 📊 con cifras en tinta.
+- **`!important` solo contra estilos en línea**, cada uno anotado: `#driveInvite` (navy en línea), `#priceTable>div[style]`
+  (la nota del repuesto), los `<p style>` de las secciones del modal ⚙, `.card>p[style]`, `#waShareWrap span[style]`.
+- 🔴 **Hallazgo de paso (móvil):** `.side-rail` conserva `height:calc(100vh - var(--header-h))` en la media query de
+  ≤900 px de `styles.css`, y como pasa a `flex-wrap`, las filas se repartían todo el alto y el ítem activo se estiraba.
+  La hoja nueva lo corrige (`height:auto; align-content:flex-start`) **solo para index.html**; en `styles.css` sigue así
+  para las sub-páginas que no tienen rail (no les afecta).
+- `--header-h` se sigue midiendo (`_syncHeaderHeight`): con dos niveles + filete da **120 px** en escritorio y 114 en móvil.
+- **Smoke:** arnés en `.netlify/smoke/` (ignorado, borrado) con un **perfil inventado** en localStorage para probar el
+  multi-agente: nombre y licencia del nivel 1 salieron del perfil; `btnStats` y `btnSettings` abren y cierran por clic
+  real; `scrollWidth == clientWidth` a 1280 y 360; fuentes cargadas. Suite: 21 archivos en verde.
+
 ## El explicador en línea clara (10 sep 2026, `fb95067`) — EN PROD
 
 JC: *"vamos a actualizar la imagen solamente del explicador de autos"*. Se aplicó con el skill `imagen-de-marca-sdi`
@@ -1539,7 +1573,7 @@ Contrastadas con 5 PDF oficiales que entregó JC (viven en `OneDrive\ARCHIVO DIG
 
 - ~~Las secciones 3 y 4 del explicador todavía no miran las coberturas~~ — **HECHO el 27 ago 2026** (`07d0f60`,
   aprobado por JC y verificado en prod). Ver "Pasos 3 y 4 dinámicos" en la sección del explicador.
-- **Decidir la tipografía de la CONSOLA.** (El explicador ya migró a la v1.3 el 10 sep; la consola y los correos siguen igual.) Las 3 páginas cargan Poppins y `css/styles.css` pide `'Poppins','Inter'`,
+- ~~Decidir la tipografía de la CONSOLA~~ — **RESUELTO el 10 sep 2026**: `index.html` y el explicador van en v1.3. **Quedan las sub-páginas** (`/polizas-activas/`, `/renovaciones/`, `/cancelacion/`, `/marcas-recargo/`), que cargan `styles.css` sin la hoja nueva: si JC quiere la línea clara ahí, es enlazar `css/linea-clara-consola.css` en cada una, con mockup, y revisar su cabecera (no tienen rail ni `.lc-top`). Las 3 páginas cargan Poppins y `css/styles.css` pide `'Poppins','Inter'`,
   mientras los correos y la documentación usan Space Grotesk. No se tocó porque cambia visualmente toda la app.
 - **El nombre del agente va sin tilde** (`CFG.FROM_NAME = 'Juan Carlos Hernandez Vargas'`); el logotipo dice
   *Hernández*. 🔴 Corregir el default **NO le llega a JC**: su perfil en localStorage gana (gotcha 2b). Tendría que
