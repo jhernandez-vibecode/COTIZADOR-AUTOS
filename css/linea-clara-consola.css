@@ -34,7 +34,7 @@ body,body.page-cotizar{background:#fff;color:var(--lc-ink);font-family:var(--fon
 b,strong{font-weight:600}
 
 /* ---------- R3 · barra en dos niveles: SDI a color + agente / producto + pasos ---------- */
-.app-header{background:#fff;color:var(--lc-ink);box-shadow:none;border-bottom:1px solid var(--lc-line-soft)}
+.app-header{display:block;padding:0;background:#fff;color:var(--lc-ink);box-shadow:none;border-bottom:1px solid var(--lc-line-soft)}   /* marcas-recargo lo tenía en flex */
 .app-header::after{height:3px}                       /* el filete 60/25/10/5 se queda: es la firma SDI */
 .lc-top{background:#F8F9FA;height:52px}
 .lc-top .lc-wrap{max-width:1200px;margin:0 auto;padding:0 24px;height:100%;display:flex;align-items:center;justify-content:space-between;gap:16px}
@@ -261,3 +261,67 @@ b,strong{font-weight:600}
   .drop-zone{padding:36px 16px}
   .ded-guide{padding:18px 16px}
 }
+
+/* =====================================================================
+   SUB-PÁGINAS (10 sep 2026): /polizas-activas/, /renovaciones/, /cancelacion/
+   y /marcas-recargo/ enlazan esta MISMA hoja después de la suya. Todo lo de
+   arriba les aplica (header, tarjetas, formularios, botones); acá va solo lo
+   que ellas tienen y la consola no. Clases propias de cada página: no tocan
+   index.html.
+   ===================================================================== */
+/* el fondo tenue que distingue cada pantalla (6 ago) se conserva, en pálido */
+body.page-poliza{background:#EEF4F9}
+body.page-renovacion{background:#FBF6EC}
+body.page-cancelacion{background:#F3F4F6}
+body.page-marcas{background:#fff}
+/* nivel 1 de las sub-páginas: logo SDI + volver (no llevan rail ni ficha del agente) */
+.lc-top .back-link,.app-header .btn-secondary.no-print{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:38px;padding:0 18px;
+  border-radius:999px;background:#fff;color:var(--lc-blue);border:1px solid var(--lc-blue);font-size:13.5px;font-weight:600;opacity:1;
+  text-decoration:none;white-space:nowrap;transition:background .15s ease}
+.back-link:hover,.app-header .btn-secondary.no-print:hover{background:var(--lc-blue-soft);opacity:1}
+.header-inner>div[style*="display:flex"]{display:contents!important}   /* el envoltorio en línea del "← Cotizador" viejo */
+.pol-note{color:var(--lc-ink-3);font-size:12.5px}
+.pol-note b{color:var(--lc-ink)}
+/* adjuntos */
+.doc-item{border:1px solid var(--lc-line);border-radius:14px;padding:11px 14px}
+.doc-ico{font-size:0;width:10px;height:10px;border-radius:50%;background:var(--lc-blue);flex:none}
+.doc-name{color:var(--lc-ink);display:block}
+.doc-size{color:var(--lc-ink-3);font-family:var(--font-mono);font-size:11px;display:block;margin-top:2px}
+.doc-badge{text-transform:none;letter-spacing:.01em;font-size:11px;font-weight:600}
+.doc-badge.up{background:var(--t-azul-bg);color:var(--t-azul-tx)}
+.doc-badge.std{background:var(--t-verde-bg);color:var(--t-verde-tx)}
+.doc-remove{color:var(--lc-ink-3);border-radius:999px}
+.doc-remove:hover{background:var(--t-rosa-bg);color:var(--t-rosa-tx)}
+.doc-empty{border:1px dashed var(--lc-line-btn);border-radius:16px;color:var(--lc-ink-3)}
+.preview-frame{border:1px solid var(--lc-line);border-radius:20px;background:#fff}
+/* renovaciones: estado del comprobante (guard D7) por tinte + punto, no por caja de color */
+.estado-box{border-radius:16px;border:1px solid var(--lc-line);background:#fff;color:var(--lc-ink-2);padding:13px 16px 13px 36px;position:relative}
+.estado-box::before{content:"";position:absolute;left:16px;top:19px;width:8px;height:8px;border-radius:50%}
+.estado-box.ok{background:var(--t-verde-bg);border-color:transparent;color:var(--lc-ink)}     .estado-box.ok::before{background:var(--t-verde-tx)}
+.estado-box.bad{background:var(--t-rosa-bg);border-color:transparent;color:var(--lc-ink)}     .estado-box.bad::before{background:var(--t-rosa-tx)}
+.estado-box.warn{background:var(--t-oro-bg);border-color:transparent;color:var(--lc-ink)}     .estado-box.warn::before{background:var(--t-oro-tx)}
+.estado-box b{color:var(--lc-ink)}
+.rec{border:1px solid var(--lc-line);border-radius:20px;padding:16px 18px}
+.rec-pill{font-family:var(--font-body);font-size:11px;letter-spacing:.01em;font-weight:600;padding:4px 11px}
+.rec-pill.ok{background:var(--t-verde-bg);color:var(--t-verde-tx)}
+.rec-pill.bad{background:var(--t-rosa-bg);color:var(--t-rosa-tx)}
+.rec-n{color:var(--lc-ink-3)}
+.rec-n .mono,.rec-f input,.rec-total{font-family:var(--font-mono)}
+.rec-del{color:var(--lc-ink-3);border-radius:999px}
+.rec-del:hover{background:var(--t-rosa-bg);color:var(--t-rosa-tx)}
+.rec-f>span{text-transform:none;letter-spacing:.01em;font-size:11.5px;font-weight:600;color:var(--lc-ink-3)}
+.rec-f input{border-radius:10px}
+.rec-aseg{color:var(--lc-ink-3)} .rec-aseg b{color:var(--lc-ink)}
+.rec-total{color:var(--lc-ink);border-top:1px solid var(--lc-line);font-size:15px}
+.canal-sw{background:none;padding:0;gap:8px;border-radius:0}
+.canal-op{border:1px solid var(--lc-line-btn);border-radius:999px;background:#fff;color:var(--lc-ink-2);min-height:40px;padding:0 16px}
+.canal-op.is-on{background:var(--lc-blue);color:#fff;box-shadow:none;border-color:var(--lc-blue)}
+.wa-nota{background:var(--t-oro-bg);border:0;border-radius:16px;color:var(--lc-ink)}
+.wa-nota p{color:var(--lc-ink-2)}
+.wa-nota svg{color:var(--t-oro-tx)}
+.wa-nota .btn[style]{border-radius:999px!important;min-height:38px;padding:0 16px!important}   /* el botón de descargar trae medidas en línea */
+.wa-prev-wrap{background:var(--lc-band);border-radius:20px}
+.wa-prev{background:#fff;border-radius:14px;box-shadow:none;border:1px solid var(--lc-line);color:var(--lc-ink)}
+.form-row span[style*="--gray-500"]{color:var(--lc-ink-3)!important}   /* ayudas bajo los campos, con color en línea */
+.form-label span[style*="--gray-500"]{color:var(--lc-ink-3)!important}
+.card[style*="margin-top"]{margin-top:24px!important}

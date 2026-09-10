@@ -8,7 +8,7 @@
   <link rel="icon" type="image/svg+xml" href="../img/favicon.svg" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&family=Google+Sans+Code:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/styles.css" />
 
   <style>
@@ -212,36 +212,65 @@
       .calc-main { margin: 0; padding: 12px; }
       .result-card { background: var(--navy) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
+
+    /* ===== LÍNEA CLARA (10 sep 2026): el panel de resultado deja el navy. Va DE ÚLTIMO
+       para ganar por orden; la hoja compartida ../css/linea-clara-consola.css hace el resto. ===== */
+    .calc-main{max-width:1100px}
+    .calc-main>.grid-2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}   /* 1fr a secas deja crecer la columna con un valor largo sin cortar */
+    .result-row{flex-wrap:wrap}
+    .result-row-value{white-space:normal}
+    .result-card{background:#fff;color:var(--lc-ink);border:1px solid var(--lc-line);border-radius:24px;padding:30px 34px;box-shadow:var(--lc-shadow)}
+    .result-card::before,.result-card::after{display:none}
+    .result-client{background:var(--lc-band);border-radius:16px;padding:14px 18px}
+    .result-client-name{font-family:var(--font-display);font-size:17px;font-weight:600;letter-spacing:-.02em}
+    .result-client-meta{opacity:1;color:var(--lc-ink-3);font-family:var(--font-mono);font-size:11.5px}
+    .scenario-badge{font-weight:600;letter-spacing:.01em;padding:5px 12px}
+    .badge-s1{background:var(--t-verde-bg);color:var(--t-verde-tx)}
+    .badge-s2{background:var(--t-oro-bg);color:var(--t-oro-tx)}
+    .badge-s3a{background:var(--t-azul-bg);color:var(--t-azul-tx)}
+    .badge-s3b{background:var(--t-viol-bg);color:var(--t-viol-tx)}
+    .result-label{opacity:1;color:var(--lc-ink-3);text-transform:none;letter-spacing:.01em;font-size:12.5px;font-weight:500}
+    .result-amount{font-family:var(--font-display);font-size:48px;font-weight:500;color:var(--lc-ink);letter-spacing:-.02em;font-variant-numeric:tabular-nums lining-nums}  /* la cifra en tinta, nunca en color */
+    .result-currency{opacity:1;color:var(--lc-ink-3)}
+    .result-divider{border-top-color:var(--lc-line-soft)}
+    .result-row-label{opacity:1;color:var(--lc-ink-2)}
+    .result-row-value{font-family:var(--font-mono);color:var(--lc-ink);font-variant-numeric:tabular-nums}
+    .result-row-value.accent,.result-row-value.positive{color:var(--lc-ink)}
+    .factor-tbl{border:1px solid var(--lc-line);border-radius:14px}
+    .factor-tbl-row{background:#fff;border-bottom-color:var(--lc-line-soft);font-family:var(--font-mono);color:var(--lc-ink-2)}
+    .factor-tbl-row.active{background:var(--t-verde-bg)}
+    .factor-tbl-row.active .ftl,.factor-tbl-row.active .ftv{color:var(--t-verde-tx)}
+    .ftl{opacity:1}
+    .btn-enviar{background:var(--lc-blue);border:1px solid var(--lc-blue);border-radius:999px;min-height:48px;font-size:14.5px;font-weight:600;transition:background .15s ease}
+    .btn-enviar:hover:not(:disabled){background:var(--lc-blue-ink);transform:none}
+    .send-success{background:var(--t-verde-bg);color:var(--t-verde-tx);border-radius:14px}
+    .empty-state{border:1px dashed var(--lc-line-btn);border-radius:24px;background:var(--lc-band);color:var(--lc-ink-2)}
+    .empty-icon{display:none}   /* el emoji también lo escribe el JS al reiniciar: se oculta, no se toca */
+    .disclaimer,.note-box{background:var(--lc-band);opacity:1;color:var(--lc-ink-3);border-radius:14px;padding:12px 16px}
+    .note-box{color:var(--lc-ink-2)}
+    .form-row div[style*="--gray-500"]{color:var(--lc-ink-3)!important}   /* ayudas con color en línea */
+    .btn[style*="width:100%"]{border-radius:999px!important}
+    @media print{ .app-header{background:#fff!important} .result-card{background:#fff!important;border:1px solid #999} }
   </style>
+  <link rel="stylesheet" href="../css/linea-clara-consola.css" />
 </head>
-<body>
+<body class="page-cancelacion">
 
 <!-- ══════════════════════ HEADER ══════════════════════ -->
 <header class="app-header">
-  <div class="header-inner">
-    <div class="brand">
-      <svg class="brand-mark" viewBox="0 0 184 90" role="img" aria-label="Seguros Digitales SDI">
-        <path d="M36.076 74.656Q28.04 74.656 23.038 72.483Q18.036 70.31 15.535 66.456Q13.034 62.602000000000004 12.624 57.763999999999996H19.02Q19.266 61.7 21.644 64.119Q24.022 66.538 27.917 67.686Q31.812 68.834 36.486000000000004 68.834Q43.374 68.834 47.392 66.415Q51.410000000000004 63.996 51.410000000000004 59.24Q51.410000000000004 56.370000000000005 49.401 54.607Q47.392 52.843999999999994 44.071 51.696Q40.75 50.548 36.814 49.605000000000004Q32.878 48.662 28.901 47.596000000000004Q24.924 46.53 21.603 44.89Q18.282 43.25 16.273 40.667Q14.264 38.083999999999996 14.264 34.065999999999995Q14.264 27.424 19.389000000000003 23.241999999999997Q24.514000000000003 19.059999999999995 34.682 19.059999999999995Q41.897999999999996 19.059999999999995 46.572 21.232999999999997Q51.246 23.406 53.583 26.932Q55.92 30.458 56.166000000000004 34.558H49.852000000000004Q49.36 30.458 45.751999999999995 27.628999999999998Q42.144 24.799999999999997 34.682 24.799999999999997Q30.09 24.799999999999997 27.22 25.701999999999998Q24.35 26.604 22.833000000000002 28.038999999999998Q21.316000000000003 29.473999999999997 20.783 31.031999999999996Q20.25 32.589999999999996 20.25 33.984Q20.25 36.69 22.259 38.370999999999995Q24.268 40.052 27.589 41.159Q30.91 42.266 34.928 43.168Q38.946 44.07 42.923 45.177Q46.9 46.284 50.221000000000004 47.965Q53.542 49.646 55.551 52.269999999999996Q57.56 54.894 57.56 58.994Q57.56 66.538 51.82 70.59700000000001Q46.08 74.656 36.076 74.656ZM64.572 74.0V19.716H87.45Q92.28800000000001 19.716 96.757 21.561Q101.226 23.406 104.752 26.932Q108.27799999999999 30.458 110.328 35.459999999999994Q112.378 40.461999999999996 112.378 46.858000000000004Q112.378 53.254 110.328 58.256Q108.27799999999999 63.257999999999996 104.752 66.78399999999999Q101.226 70.31 96.757 72.155Q92.28800000000001 74.0 87.45 74.0ZM70.722 68.178H87.20400000000001Q93.02600000000001 68.178 97.29 65.226Q101.554 62.274 103.891 57.436Q106.22800000000001 52.598 106.22800000000001 46.858000000000004Q106.22800000000001 41.036 103.891 36.198Q101.554 31.36 97.29 28.448999999999998Q93.02600000000001 25.537999999999997 87.20400000000001 25.537999999999997H70.722ZM119.71799999999999 74.0V19.716H125.868V74.0Z" fill="#FFFFFF"/>
-
-        <g transform="translate(143.87, 19.06)">
-        <rect x="0" y="0.0" width="30.0" height="6.15" rx="1.5" fill="#0369A1"/>
-        <rect x="0" y="16.48" width="30.0" height="6.15" rx="1.5" fill="#0D9488"/>
-        <rect x="0" y="32.96" width="30.0" height="6.15" rx="1.5" fill="#EA580C"/>
-        <rect x="0" y="49.45" width="30.0" height="6.15" rx="1.5" fill="#C9A227"/>
-        </g>
-        </svg>
-        <div class="brand-sep"></div>
-      <div>
+    <div class="lc-top">
+      <div class="lc-wrap">
+        <img class="brand-mark" src="../img/sdi-logo-compacto.svg" alt="Seguros Digitales SDI" />
+        <a href="../" class="back-link no-print" title="Volver al cotizador">← Cotizador</a>
+      </div>
+    </div>
+    <div class="header-inner">
+      <div class="brand">
         <div class="brand-title">Calculadora de Cancelación</div>
         <div class="brand-subtitle">Devolución por cancelación anticipada · Cláusula 33</div>
       </div>
     </div>
-    <a href="../" class="btn btn-secondary no-print"
-       style="font-size:13px;padding:8px 16px;color:#fff;border-color:rgba(255,255,255,.25);background:rgba(255,255,255,.08);">
-      ← Cotizador
-    </a>
-  </div>
-</header>
+  </header>
 
 <!-- ══════════════════════ MAIN ══════════════════════ -->
 <main class="calc-main">
@@ -319,7 +348,7 @@
 
       <button class="btn btn-secondary no-print" id="btnPrint"
               style="width:100%;margin-top:10px;display:none;">
-        🖨️ Imprimir resultado
+        Imprimir resultado
       </button>
 
       <button class="btn btn-secondary no-print" id="btnReset"

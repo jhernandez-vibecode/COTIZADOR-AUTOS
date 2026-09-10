@@ -7,7 +7,7 @@
 <link rel="icon" type="image/svg+xml" href="../img/favicon.svg" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&family=Google+Sans+Code:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
   --navy: #0b1d3a;
@@ -266,20 +266,69 @@ tbody tr.hidden { display: none; }
 .sources b { color: var(--navy); font-family: 'Poppins', sans-serif; }
 .sources ul { margin: 6px 0 0; padding-left: 20px; }
 .sources li { margin-bottom: 2px; }
+
+/* ===== LÍNEA CLARA (10 sep 2026). Esta página no carga styles.css: la hoja compartida
+   ../css/linea-clara-consola.css se enlaza DESPUÉS de este <style> y trae header, botones y
+   tipografía; acá va lo propio de la tabla. ===== */
+body{background:#fff;color:var(--lc-ink)}
+/* esta página no carga styles.css: el nivel 2 del header necesita su propio flex */
+.header-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;max-width:1200px;margin:0 auto}
+.brand{display:flex;align-items:baseline;gap:10px}
+.ribbon{display:none}                       /* la fuente ya está en el pie de la página */
+h1{font-family:var(--font-display);font-size:28px;font-weight:500;letter-spacing:-.025em;color:var(--lc-ink)}
+.subtitle{color:var(--lc-ink-2);font-size:14.5px}
+.rule-card{border:1px solid var(--lc-line);border-radius:20px;padding:18px 20px}
+.rule-card.asia,.rule-card.gama{border-left:1px solid var(--lc-line)}
+.rule-card .rule-title{font-family:var(--font-display);font-weight:600;font-size:16px;letter-spacing:-.02em}
+.rule-card .rule-title::before{content:"";width:8px;height:8px;border-radius:50%;flex:none}
+.rule-card.asia .rule-title{color:var(--lc-ink)} .rule-card.asia .rule-title::before{background:var(--t-rosa-tx)}
+.rule-card.gama .rule-title{color:var(--lc-ink)} .rule-card.gama .rule-title::before{background:var(--t-viol-tx)}
+.rule-card .rule-sub{color:var(--lc-ink-3)}
+.rule-card .rule-text{color:var(--lc-ink-2)} .rule-card .rule-text b{color:var(--lc-ink)}
+.filters{border:1px solid var(--lc-line);border-radius:20px;padding:12px 14px}
+.filters .search{border:1px solid var(--lc-line-btn);border-radius:999px;padding:9px 16px;font-family:var(--font-body)}
+.filters .search:focus{outline:none;border-color:var(--lc-blue);box-shadow:0 0 0 3px var(--lc-blue-soft)}
+.chip{border:1px solid var(--lc-line-btn);background:#fff;color:var(--lc-ink-2);min-height:36px;display:inline-flex;align-items:center;padding:0 16px;font-size:13px}
+.chip:hover{background:var(--lc-blue-soft);border-color:var(--lc-blue);color:var(--lc-blue)}
+.chip.active,.chip.aplica.active,.chip.no-aplica.active{background:var(--lc-blue);border-color:var(--lc-blue);color:#fff}
+.result-count{color:var(--lc-ink-3);font-family:var(--font-mono);font-size:11.5px}
+.tbl-wrap{border:1px solid var(--lc-line);border-radius:20px;box-shadow:none;overflow-x:auto}
+thead th{background:#fff;color:var(--lc-ink-3);font-family:var(--font-body);font-size:11.5px;text-transform:none;letter-spacing:.01em;font-weight:600;border-bottom:1px solid var(--lc-line)}
+tbody td{border-top:1px solid var(--lc-line-soft);color:var(--lc-ink)}
+tbody tr:hover{background:var(--lc-band)}
+.marca{font-family:var(--font-display);color:var(--lc-ink);font-weight:600}
+.comb{border-radius:999px;padding:3px 10px;font-weight:600}
+.comb.gasolina{background:var(--t-oro-bg);color:var(--t-oro-tx)}
+.comb.diesel{background:var(--lc-band);color:var(--lc-ink-2)}
+.comb.electrico{background:var(--t-cyan-bg);color:var(--t-cyan-tx)}
+.comb.hibrido{background:var(--t-verde-bg);color:var(--t-verde-tx)}
+.badge{font-weight:600}
+.badge.si{background:var(--t-rosa-bg);color:var(--t-rosa-tx);border:0}
+.badge.no{background:var(--lc-band);color:var(--lc-ink-2);border:0}
+.ded-text{font-family:var(--font-mono);color:var(--lc-ink-2)}
+.empty{color:var(--lc-ink-3)}
+.sources{border:1px solid var(--lc-line);border-radius:20px;color:var(--lc-ink-2)}
+.sources b{color:var(--lc-ink);font-family:var(--font-body)}
+@media (max-width:640px){ .container{padding:20px 16px 48px} h1{font-size:24px} }
 </style>
+<link rel="stylesheet" href="../css/linea-clara-consola.css">
 </head>
-<body>
+<body class="page-marcas">
 
 <header class="app-header">
-  <div class="brand">
-    <div class="brand-logo">SDI</div>
-    <div>
-      <div class="brand-title">Marcas con deducible diferenciado</div>
-      <div class="brand-sub">Referencia INS · Cotizador SDI</div>
+    <div class="lc-top">
+      <div class="lc-wrap">
+        <img class="brand-mark" src="../img/sdi-logo-compacto.svg" alt="Seguros Digitales SDI" />
+        <a href="../" class="back-link no-print" title="Volver al cotizador">← Volver al cotizador</a>
+      </div>
     </div>
-  </div>
-  <a class="back-link" href="../">← Volver al cotizador</a>
-</header>
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-title">Marcas con deducible diferenciado</div>
+        <div class="brand-subtitle">Referencia INS · Cotizador SDI</div>
+      </div>
+    </div>
+  </header>
 
 <div class="ribbon">
   ⭐ Fuente oficial &mdash; <b>Circulares INS 0186-2025 y 0324-2025</b>
@@ -293,20 +342,20 @@ tbody tr.hidden { display: none; }
   <!-- 2 REGLAS RESUMEN -->
   <div class="rules-grid">
     <div class="rule-card asia">
-      <div class="rule-title">🌏 Regla por marca / origen</div>
+      <div class="rule-title">Regla por marca / origen</div>
       <div class="rule-sub">Aplica según la tabla de abajo</div>
-      <div class="rule-text">Deducible <b>único 20% del daño, mínimo ₡500.000 / $830</b> en cobertura de daño directo. La presencia de una marca en la tabla determina si activás el toggle <b>🌏 origen asiático</b> en el cotizador.</div>
+      <div class="rule-text">Deducible <b>único 20% del daño, mínimo ₡500.000 / $830</b> en cobertura de daño directo. La presencia de una marca en la tabla determina si activás el toggle <b>«origen asiático»</b> en el cotizador.</div>
     </div>
     <div class="rule-card gama">
-      <div class="rule-title">💎 Regla por alta gama</div>
+      <div class="rule-title">Regla por alta gama</div>
       <div class="rule-sub">Independiente de la marca</div>
-      <div class="rule-text">Aplica cuando la <b>suma asegurada ≥ ₡50.000.000</b>. Deducible <b>escalonado: 10% mín ₡500k</b> en pérdidas ≤ ₡6M, <b>20%</b> en pérdidas mayores. Activá el toggle <b>💎 alta gama</b> según la suma, no según la marca.</div>
+      <div class="rule-text">Aplica cuando la <b>suma asegurada ≥ ₡50.000.000</b>. Deducible <b>escalonado: 10% mín ₡500k</b> en pérdidas ≤ ₡6M, <b>20%</b> en pérdidas mayores. Activá el toggle <b>«alta gama»</b> según la suma, no según la marca.</div>
     </div>
   </div>
 
   <!-- FILTROS -->
   <div class="filters">
-    <input type="text" class="search" id="search" placeholder="🔍 Buscar marca (ej. BYD, Mercedes, MG)" autocomplete="off">
+    <input type="text" class="search" id="search" placeholder="Buscar marca (ej. BYD, Mercedes, MG)" autocomplete="off">
     <div class="chips" id="chips">
       <span class="chip active" data-filter="all">Todas</span>
       <span class="chip aplica" data-filter="si">Recargo aplica</span>
@@ -334,7 +383,7 @@ tbody tr.hidden { display: none; }
 
   <!-- FUENTES -->
   <div class="sources">
-    <b>📋 Fuentes</b>
+    <b>Fuentes</b>
     <ul>
       <li><b>Circular INS 0186-2025</b> — Actualizaciones al Seguro Voluntario de Automóviles (deducible alta gama escalonado, suma asegurada mínima ₡50M).</li>
       <li><b>Circular INS 0324-2025</b> — Recargo en daño directo para marcas chinas y de alta siniestralidad (20% mín ₡500.000).</li>
