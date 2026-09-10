@@ -1132,7 +1132,7 @@ la dependencia de orden.
 toast → config → state → agent-profile → shortlink → history →
 stats-ui → history-ui → router → pdf-extract → pdf-modify → email-marca →
 email-template → gmail-auth → wizard → mime-builder → standard-docs →
-drive-sync → datos-ui → app
+drive-sync → datos-ui → novedades → app
 ```
 
 Regla: **cada UI va después del módulo de datos del que depende, y todas antes de `app.js`**, que engancha los
@@ -1364,6 +1364,26 @@ firmadas con la licencia SUGESE del agente.
 
 **De paso:** la guía formateaba con `toLocaleString('es-CR')`, que separa los miles con **espacio**
 (`₡18 000 000`), mientras los montos escritos a mano usaban coma. Todo unificado a punto, como el correo.
+
+## Aviso "Qué hay de nuevo" (10 sep 2026, `cf234c4`) — EN PROD
+
+JC: *"ponele el anuncio de inicio… de que se actualizó la imagen para que lo vean los agentes que lo usan"*.
+**Transcripción** del patrón ya aprobado en la consola de Viajero (28 ago), no un diseño nuevo.
+
+- **Fuente única `CFG.NOVEDADES { version, fecha, items[] }`** en `js/config.js`. Los `items` son HTML de
+  confianza (`<b>`), voseo y lenguaje de usuario.
+- **`js/novedades.js`** (orden: después de `datos-ui.js`, antes de `app.js`): `mostrarNovedades()` pinta la
+  tarjeta en `#novedades` (arriba de la carga del PDF, dentro de `<main>`), `novedadesVisto()` la quita y guarda
+  la versión en **`localStorage cotizador_sdi_novedades_v1`**, `marcarNovedadesVistas()` marca sin mostrar.
+- `app.js` la llama en el arranque, **con guard `typeof`** (render cascade failure): con perfil → mostrar; **sin
+  perfil (agente nuevo) → se marca vista sin mostrarse**, porque no conoció la versión anterior.
+- Estilo en `linea-clara-consola.css` (banda pálida, rótulo azul, "Entendido" como `btn-secondary`). 🔴 **Sin
+  `display` sobre `#novedades`**: se esconde con el atributo `hidden` (trampa `[hidden]` vs display).
+- 🔴 **Ritual de cada release que el agente deba notar:** subir `version` (fecha del deploy), reescribir `items`
+  y anotar lo mismo en el pie `footer.app-foot`. Solo `index.html`; las sub-páginas no lo muestran.
+- Smoke en localhost (`http-server -c-1`, perfil inventado, localStorage restaurado): aparece → clic real en
+  Entendido → no reaparece al recargar; 375 px sin desborde; agente nuevo no lo ve; consola 0 errores; suite en verde.
+  El `config.js` salió de caché la primera vez (`CFG.NOVEDADES` undefined): `fetch(...,{cache:'reload'})` y recargar.
 
 ## Las sub-páginas en línea clara (10 sep 2026, `5f3719c`) — EN PROD
 
