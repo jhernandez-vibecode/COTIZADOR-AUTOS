@@ -60,9 +60,10 @@ const CFG = {
   // y anotar lo mismo en el registro de cambios del pie de index.html.
   // Solo la consola (index.html) la muestra; las sub-páginas no.
   NOVEDADES: {
-    version: '2026-09-13',
+    version: '2026-09-13b',
     fecha: '13 sep 2026',
     items: [
+      '<b>El correo de Renovación confirmada también cambió de imagen</b>: tarjeta del vehículo con la placa dibujada y el número de póliza, sello "Pago aplicado", el monto grande con el período y el comprobante, los pasos ante un evento con los teléfonos a la derecha, y las mismas tarjetas de Viaje y Estudiantil con icono. Con varios recibos, la tabla y el total van en blanco y negro.',
       '<b>El correo de Póliza activa cambió de imagen</b>: después del saludo va la tarjeta del vehículo con la placa dibujada (roja si es carga liviana) y el número de póliza; luego el sello "Póliza activa", los documentos adjuntos y debajo el Centro de Asistencia Digital.',
       '<b>Botones redondos azules, sin cajas con barra de color</b>, teléfonos de emergencia grandes y un icono sencillo en Seguro de Viaje y Seguro Estudiantil.',
       '<b>Los textos y los enlaces son los mismos</b>; solo cambia cómo se ve. El de Viaje dice ahora "fuera del país".'

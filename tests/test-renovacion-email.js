@@ -49,22 +49,44 @@ var html = buildRenovacionEmail(base);
 
 // ---------- Contenido esencial ----------
 ok('doctype',        /^<!DOCTYPE html>/.test(html));
-ok('saludo',         /Hola Carlos Andrés,/.test(html));
+ok('saludo',         /Hola<\/p>[\s\S]{0,200}Carlos Andrés,<\/p>/.test(html));   // rótulo HOLA + nombre grande (13 sep 2026)
 ok('titulo',         /Su renovación está confirmada/.test(html));
 ok('poliza',         html.indexOf('0101AUT100000001') !== -1);
-ok('placa',          html.indexOf('BXY123') !== -1);
+ok('placa',          html.indexOf('BXY&#8202;&#8202;123') !== -1);   // chapa dibujada, navy (particular)
 ok('vehiculo',       html.indexOf('TOYOTA YARIS 2019') !== -1);
 ok('comprobante',    html.indexOf('R202608108000001') !== -1);
 ok('monto',          html.indexOf('₡92.555') !== -1);
-ok('badge-pagado',   html.indexOf('>PAGADO<') !== -1);
+ok('badge-pagado',   /&#9679;&nbsp; Pago aplicado/.test(html));   // sello verde pálido (texto de JC, 13 sep 2026)
 ok('pago-aplicado',  /fue aplicado correctamente/.test(html));
-ok('periodo-pagado', /Período pagado/.test(html) && html.indexOf('30/08/2026') !== -1 && html.indexOf('30/11/2026') !== -1);
+ok('periodo-pagado', /Per&iacute;odo pagado/.test(html) && html.indexOf('30/08/2026') !== -1 && html.indexOf('30/11/2026') !== -1);
 ok('fecha-pago',     /Fecha de pago/.test(html) && html.indexOf('10/08/2026') !== -1);
 ok('logo-ins',       html.indexOf('img/ins-logo.png') !== -1);
 
 // El ajuste que pidió JC: "Adjunto encontrará…" en su PROPIO párrafo, con aire,
 // para que no se lea como un solo bloque de texto pegado a la confirmación.
-ok('adjunto-parrafo-aparte', /<p style="margin:10px 0 0;">Adjunto encontrará el comprobante/.test(html));
+ok('adjunto-parrafo-aparte', /<p style="margin:10px 0 0;[^"]*">Adjunto encontrar&aacute; el comprobante/.test(html));
+
+// ---------- Línea clara SDI (13 sep 2026): mismo bloque que Póliza activa ----------
+ok('lc-filete',         html.indexOf('#C9A227') !== -1 && html.indexOf('#0D9488') !== -1); // filete de marca bajo el header
+ok('lc-tarjeta',        /Veh&iacute;culo asegurado/.test(html));                               // tarjeta compartida con la cotización
+ok('lc-poliza-en-tarjeta', /P&oacute;liza N\.&ordm; <b[^>]*>0101AUT100000001<\/b>/.test(html));
+ok('lc-orden-tarjeta-antes-confirmacion', html.indexOf('Veh&iacute;culo asegurado') < html.indexOf('fue aplicado correctamente'));
+ok('lc-orden-pago-antes-evento', html.indexOf('Detalle del pago') < html.indexOf('ocurre un evento'));
+ok('lc-orden-evento-antes-asistencia', html.indexOf('ocurre un evento') < html.indexOf('Centro de Asistencia Digital'));
+ok('lc-iconos-xsell',   html.indexOf('/img/ico-viaje.png') !== -1 && html.indexOf('/img/ico-estudiantil.png') !== -1);
+ok('lc-iconos-hosteados', !/src="data:/.test(html) && !/<svg/i.test(html));                  // Gmail: solo PNG con URL absoluta
+ok('lc-sin-barra-izq',  !/border-left/.test(html));                                            // el tic de plantilla que pidió quitar JC
+ok('lc-sin-emojis',     !/&#9992;|&#65039;|&#9989;|&#128663;/.test(html));
+ok('lc-pildoras',       /border-radius:999px;padding:13px 26px/.test(html));                  // CTA de asistencia en píldora
+ok('lc-viaje-fuera',    /aventura fuera del pa&iacute;s/.test(html) && !/dentro y fuera/.test(html));
+ok('lc-terceros-regla-arriba', /border-top:3px solid #C9A227/.test(html));
+ok('lc-banda-asistencia', /bgcolor="#eef4f9"/.test(html));
+ok('lc-telefonos-tinta', /font-size:16px;font-weight:700;color:#0c2340;white-space:nowrap;">911</.test(html));
+ok('lc-monto-mono',     /JetBrains Mono[^>]*font-size:30px;font-weight:700;color:#0c2340;[^>]*>₡92\.555/.test(html));   // el ₡ de Space Grotesk pisa el dígito
+ok('lc-sin-navy-card',  !/background:#0c2340;border-radius:12px/.test(html));                 // la tarjeta navy del comprobante se fue
+// Placa CL: la chapa sale roja, como en la póliza activa.
+var htmlCL = buildRenovacionEmail(Object.assign({}, base, { placa: 'CL-612977' }));
+ok('lc-placa-CL-roja',  htmlCL.indexOf('CL&#8202;&#8202;612977') !== -1 && htmlCL.indexOf('#b91c1c') !== -1);
 
 // ---------- Es un correo de CONFIANZA, no de cobro ----------
 ok('NO-pague-antes',   !/pague antes|antes del vencimiento|fecha l[ií]mite/i.test(html));
@@ -126,11 +148,12 @@ ok('nota-ausente-sin-texto', !/Nota de su agente/.test(html));
 
 // ---------- Datos faltantes: nada queda colgando ----------
 var minimo = buildRenovacionEmail({ nombrePila: 'Ana' });
-ok('min-sin-crash',     minimo.indexOf('Hola Ana,') !== -1);
-ok('min-sin-poliza-no', !/póliza No\. <b/.test(minimo));
+ok('min-sin-crash',     /Hola<\/p>[\s\S]{0,200}Ana,<\/p>/.test(minimo));
+ok('min-sin-poliza-no', !/P&oacute;liza N\.&ordm; <b/.test(minimo));
+ok('min-sin-tarjeta',   !/Veh&iacute;culo asegurado/.test(minimo));   // sin recibo no hay tarjeta vacía
 ok('min-sin-undefined', !/undefined|NaN|null/.test(minimo));
 var sinVehiculo = buildRenovacionEmail(Object.assign({}, base, { vehiculo: '' }));
-ok('sin-vehiculo-frase', /su vehículo placa <b style="color:#0c2340;">BXY123/.test(sinVehiculo));
+ok('sin-vehiculo-tarjeta', /Su vehículo<\/p>/.test(sinVehiculo) && sinVehiculo.indexOf('BXY&#8202;&#8202;123') !== -1);
 
 // ---------- XSS ----------
 var evil = buildRenovacionEmail({ nombrePila: '<img src=x onerror=alert(1)>', poliza: 'X', placa: 'P',
@@ -168,9 +191,12 @@ var htmlMulti = buildRenovacionEmail({
   recibos: tresRecibos, fechaPago: '10/08/2026'
 });
 
-ok('multi-plural-polizas',  /sus 3 pólizas de automóviles/.test(htmlMulti));
-ok('multi-plural-vehiculos', /sus vehículos continúan protegidos/.test(htmlMulti));
-ok('multi-plural-adjuntos', /Adjunto encontrará los comprobantes de pago oficiales del INS/.test(htmlMulti));
+ok('multi-plural-polizas',  /sus 3 p&oacute;lizas de autom&oacute;viles/.test(htmlMulti));
+ok('multi-plural-vehiculos', /sus veh&iacute;culos contin&uacute;an protegidos/.test(htmlMulti));
+ok('multi-plural-adjuntos', /Adjunto encontrar&aacute; los comprobantes de pago oficiales del INS/.test(htmlMulti));
+ok('multi-sin-tarjeta',     !/Veh&iacute;culo asegurado/.test(htmlMulti));   // varios vehículos: manda la tabla
+ok('multi-recibos-pagados', /Recibos pagados/.test(htmlMulti) && !/Detalle del pago/.test(htmlMulti));
+ok('multi-sin-barra-izq',   !/border-left/.test(htmlMulti));
 ok('multi-total-label',     /Total pagado/.test(htmlMulti));
 ok('multi-total-sumado',    htmlMulti.indexOf('₡316.755') !== -1);   // 92.555 + 78.300 + 145.900
 ok('multi-cuenta-recibos',  /3 recibos/.test(htmlMulti));
@@ -201,7 +227,7 @@ var familiar = buildRenovacionEmail({
     { poliza: '0101AUT200000002', placa: 'ZWT456', montoTexto: '₡78.300', monto: 78300, asegurado: 'Mora Vega Lucía' }
   ]
 });
-ok('familiar-saludo-dueno',  /Hola Carlos,/.test(familiar));
+ok('familiar-saludo-dueno',  /Hola<\/p>[\s\S]{0,200}Carlos,<\/p>/.test(familiar));
 ok('familiar-col-asegurado', familiar.indexOf('>Asegurado<') !== -1);
 ok('familiar-ambos-nombres', familiar.indexOf('Ramírez Soto Carlos Andrés') !== -1 && familiar.indexOf('Mora Vega Lucía') !== -1);
 ok('familiar-total',         familiar.indexOf('₡170.855') !== -1);
@@ -210,7 +236,7 @@ ok('familiar-total',         familiar.indexOf('₡170.855') !== -1);
 var unoArray = buildRenovacionEmail({ nombrePila: 'Carlos Andrés', numComprobante: 'R202608108000001', fechaPago: '10/08/2026',
   recibos: [{ poliza: '0101AUT100000001', placa: 'BXY123', vehiculo: 'TOYOTA YARIS 2019',
               periodoDesde: '30/08/2026', periodoHasta: '30/11/2026', montoTexto: '₡92.555', monto: 92555 }] });
-ok('uno-array-singular',   /su póliza No\./.test(unoArray) && !/sus 2|sus 1 pólizas/.test(unoArray));
+ok('uno-array-singular',   /de su p&oacute;liza <b/.test(unoArray) && /su veh&iacute;culo contin&uacute;a protegido/.test(unoArray) && !/sus 2|sus 1 p&oacute;lizas/.test(unoArray));
 ok('uno-array-monto-label', /Monto pagado/.test(unoArray) && !/Total pagado/.test(unoArray));
 ok('uno-array-comprobante', unoArray.indexOf('R202608108000001') !== -1);
 ok('uno-array-sin-tabla',   unoArray.indexOf('>Asegurado<') === -1);

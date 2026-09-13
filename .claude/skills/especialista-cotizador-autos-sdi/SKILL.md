@@ -5,7 +5,7 @@ description: ESPECIALISTA COTIZADOR AUTOS SDI — App web vanilla JS que extrae 
 
 # Especialista Cotizador SDI — Seguros Autos INS
 
-Leer COMPLETO antes de tocar código. Estado a **13 septiembre 2026**: **el correo de Póliza activa estrena la línea clara** (orden nuevo, tarjeta del vehículo compartida, iconos PNG en el cross-sell; ver "El correo de Póliza activa en línea clara"). Previo (**10 septiembre 2026**): **TODA la app está en la línea clara SDI** —
+Leer COMPLETO antes de tocar código. Estado a **13 septiembre 2026**: **los correos de Póliza activa y de Renovación confirmada estrenan la línea clara** (orden nuevo, tarjeta del vehículo compartida, iconos PNG en el cross-sell; ver "El correo de Póliza activa en línea clara" y "El correo de Renovación confirmada en línea clara"; con este segundo, los TRES correos de la consola van en línea clara). Previo (**10 septiembre 2026**): **TODA la app está en la línea clara SDI** —
 consola, explicador y las cuatro sub-páginas (`/polizas-activas/`, `/renovaciones/`, `/cancelacion/`, `/marcas-recargo/`,
 commit `5f3719c`, tag `pre-subpaginas-linea-clara-10sep`; ver "Las sub-páginas en línea clara"). Solo los correos siguen
 aparte (Arial en el cliente). La consola (`index.html`) y el explicador (`/explicacion/`) fueron los primeros. La consola va por `css/linea-clara-consola.css` (commit `c5cc457`, tag
@@ -1413,8 +1413,44 @@ WhatsApp, la extracción y la pantalla siguen iguales.
   barra, sin emojis, copy de Viaje). Smoke en localhost (`/polizas-activas/`, perfil inventado): la función real
   arma el correo con la ficha del agente del perfil, 0 errores de consola; render del HTML real con Chrome headless
   igual al mockup aprobado. Suite: 21 archivos en verde.
-- Pendiente que quedó a la vista: **`renovacion-email.js` conserva 3 `border-left` y el emoji ✈️** del cross-sell
-  viejo. No se tocó (alcance literal: un correo, no tres); si JC quiere, se le aplica el mismo bloque `xsell`.
+- El pendiente que dejó a la vista (`renovacion-email.js` con 3 `border-left` y el emoji ✈️) se cerró la misma
+  tarde: ver "El correo de Renovación confirmada en línea clara".
+
+## El correo de Renovación confirmada en línea clara (13 sep 2026) — EN PROD
+
+JC, la misma tarde del correo de Póliza activa: *"Aplicá al correo de 'Recibo de pago' el mismo rediseño en línea
+clara SDI… Como siempre: mockup previo con datos inventados, yo apruebo, después localhost y prod"*. Mockup generado
+con la función REAL y datos inventados (tres estados: un recibo con placa CL, plan familiar de 3 recibos, un recibo
+con nota) → aprobado con un ajuste: el sello dice **"Pago aplicado"** (se propuso "Renovación pagada"). Tag de
+rollback **`pre-renovacion-linea-clara-13sep`**. Solo `buildRenovacionEmail` cambió; el WhatsApp, el canal
+"Solo WhatsApp", la extracción, el guard D7 y la pantalla siguen iguales.
+
+- **Orden nuevo (calcado de Póliza activa):** header navy + `_fileteSDI()` (subtítulo "Seguros del INS · Póliza de
+  Automóviles", antes "Su protección al volante") → saludo (rótulo HOLA + nombre grande) → **`_tarjetaVehiculo`
+  compartida** con rótulo "Vehículo asegurado" y el N.º de póliza en `extra` (chapa roja si la placa trae `CL`) →
+  sello "● Pago aplicado" en verde pálido + párrafo de confirmación + "Adjunto encontrará…" en párrafo aparte →
+  **"Detalle del pago"** (rótulo sobre regla: monto grande en **JetBrains Mono** —el ₡ de Space Grotesk se monta
+  sobre el dígito—, "Incluye IVA", y período pagado / fecha de pago / N.º de comprobante en dos columnas con el valor
+  en tinta) → **"¿Qué hacer si ocurre un evento?"** como tabla de dos columnas: el paso a la izquierda (título +
+  texto) y el teléfono grande en tinta a la derecha (911 · 800-800-8000 · 800-800-8001) → aviso de terceros con
+  **regla dorada ARRIBA** (`border-top:3px solid #C9A227`; salió del paso 02, donde iba como texto corrido) →
+  Centro de Asistencia Digital (banda `#eef4f9`, píldora azul, párrafo "Todo esto, paso a paso y a un clic…") →
+  nota del agente (fondo `#f8fafc`, sin barra) → cross-sell con el helper `xsell` (iconos PNG hosteados) → firma →
+  `_pieSDI`.
+- **Varios recibos:** no hay tarjeta del vehículo (son varios vehículos); la reemplaza el bloque **"Recibos
+  pagados"**: tabla en blanco y negro (Póliza · Asegurado si difieren · Placa · Período pagado · Monto) + "Total
+  pagado" grande en mono + "Incluye IVA · N recibos · Fecha de pago". La tarjeta navy con filete dorado del 10 ago
+  se fue.
+- **Con un recibo el párrafo ya no repite vehículo, placa ni número de póliza** (van en la tarjeta): "el pago de la
+  renovación de su póliza fue aplicado correctamente y su vehículo continúa protegido, sin interrupciones".
+- 🔴 **Sin `border-left`** (`lc-sin-barra-izq` y `multi-sin-barra-izq`), **sin emojis** (✈️ y ✅ fuera) y **sin las
+  constantes `SDI_*`**: paleta literal dentro de la función, como en los otros dos correos. Los tres correos de la
+  consola (cotización, Póliza activa, Renovación confirmada) quedan en línea clara.
+- Tests: `test-renovacion-email.js` **143 checks** (22 nuevos `lc-*` + variantes multi/CL; 12 checks viejos
+  adaptados a la forma nueva: saludo en dos líneas, placa dibujada con `&#8202;`, sello, entidades HTML). Suite: 21
+  archivos en verde. Smoke en localhost (`/renovaciones/`, perfil inventado en `localStorage`): la función real arma
+  el correo con la ficha del agente del perfil, sin la licencia del dueño, 0 errores de consola.
+- Mockup: https://claude.ai/code/artifact/a4b511d4-907c-42b3-8f90-8a615ae69eb6 (artefacto privado de JC).
 
 ## Las sub-páginas en línea clara (10 sep 2026, `5f3719c`) — EN PROD
 
