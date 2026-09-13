@@ -2662,7 +2662,7 @@ WhatsApp, la extracción y la pantalla siguen iguales.
 - El pendiente que dejó a la vista (`renovacion-email.js` con 3 `border-left` y el emoji ✈️) se cerró la misma
   tarde: ver "El correo de Renovación confirmada en línea clara".
 
-## El correo de Renovación confirmada en línea clara (13 sep 2026) — EN PROD
+## El correo de Renovación confirmada en línea clara (13 sep 2026) — EN PROD, ✅ SELLADO (smoke de JC en prod PASADO el 13 sep, commit `c0369c2`)
 
 JC, la misma tarde del correo de Póliza activa: *"Aplicá al correo de 'Recibo de pago' el mismo rediseño en línea
 clara SDI… Como siempre: mockup previo con datos inventados, yo apruebo, después localhost y prod"*. Mockup generado
