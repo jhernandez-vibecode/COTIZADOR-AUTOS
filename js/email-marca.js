@@ -141,7 +141,10 @@ function _chapaHtml(texto, arriba, color, fontFam) {
 
 /**
  * Tarjeta del vehiculo: el dato del cliente con su placa al lado.
- * @param {object} o - {vehiculo, plate, valor, fontFam}
+ * @param {object} o - {vehiculo, plate, plateClass, valor, fontFam, rotulo, extra}
+ *   rotulo: texto del rotulo (default "Cotización para vehículo"; la poliza
+ *           activa manda "Vehículo asegurado"). extra: HTML ya escapado que va
+ *           bajo el vehiculo (la poliza activa pone ahi el numero de poliza).
  * @returns {string}
  */
 function _tarjetaVehiculo(o) {
@@ -156,9 +159,10 @@ function _tarjetaVehiculo(o) {
   return '        <tr><td style="padding:4px 32px 0;">\n' +
     '          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;">' +
     '<tr><td valign="middle" style="padding:16px 0;">' +
-      '<p style="margin:0;font-size:10px;color:' + SDI_GRIS + ';letter-spacing:0.1em;text-transform:uppercase;font-weight:700;">Cotizaci&oacute;n para veh&iacute;culo</p>' +
+      '<p style="margin:0;font-size:10px;color:' + SDI_GRIS + ';letter-spacing:0.1em;text-transform:uppercase;font-weight:700;">' + (o.rotulo || 'Cotizaci&oacute;n para veh&iacute;culo') + '</p>' +
       '<p style="margin:5px 0 0;font-family:' + o.fontFam + ';font-size:19px;font-weight:700;color:' + SDI_NAVY + ';line-height:1.2;">' + _escMarca(o.vehiculo || 'Tu veh\u00edculo') + '</p>' +
       (o.valor ? '<p style="margin:4px 0 0;font-size:12.5px;color:' + SDI_GRIS + ';">Valor asegurado <b style="color:#0c4a6e;">&#8353;' + _escMarca(o.valor) + '</b></p>' : '') +
+      (o.extra || '') +
       nota +
     '</td>' + chapa + '</tr></table>\n        </td></tr>';
 }

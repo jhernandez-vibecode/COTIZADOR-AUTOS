@@ -60,13 +60,12 @@ const CFG = {
   // y anotar lo mismo en el registro de cambios del pie de index.html.
   // Solo la consola (index.html) la muestra; las sub-páginas no.
   NOVEDADES: {
-    version: '2026-09-10',
-    fecha: '10 sep 2026',
+    version: '2026-09-13',
+    fecha: '13 sep 2026',
     items: [
-      '<b>El cotizador estrena la imagen de Seguros Digitales SDI</b>: fondo claro, letra nueva, el logotipo a color arriba con tu nombre y licencia, botones redondos azules y tarjetas blancas.',
-      '<b>La guía que recibe tu cliente también cambió de imagen</b>: el logo del INS arriba en azul, las coberturas con su color suave y el pago anual siempre resaltado. Los enlaces que ya enviaste se siguen viendo bien.',
-      '<b>Póliza activa, Renovación confirmada, Cancelación anticipada y Marcas con recargo</b> también tienen la imagen nueva.',
-      '<b>Todo funciona igual</b>: los mismos pasos, los mismos botones y los mismos correos. Solo se ve distinto.'
+      '<b>El correo de Póliza activa cambió de imagen</b>: después del saludo va la tarjeta del vehículo con la placa dibujada (roja si es carga liviana) y el número de póliza; luego el sello "Póliza activa", los documentos adjuntos y debajo el Centro de Asistencia Digital.',
+      '<b>Botones redondos azules, sin cajas con barra de color</b>, teléfonos de emergencia grandes y un icono sencillo en Seguro de Viaje y Seguro Estudiantil.',
+      '<b>Los textos y los enlaces son los mismos</b>; solo cambia cómo se ve. El de Viaje dice ahora "fuera del país".'
     ]
   }
 };

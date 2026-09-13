@@ -2629,3 +2629,36 @@ correos quedan aparte (en el cliente van en Arial de todos modos).
 - **Mockups**: cada página se armó como `_mockup.html` con un arnés `?vista=` (datos inventados) y se borró al
   implementar. En Renovaciones la vista previa del correo sale vacía en el mockup: necesita un comprobante real.
 
+---
+
+## El correo de Póliza activa en línea clara (13 sep 2026) — EN PROD
+
+JC: *"A la plantilla de envío de la póliza le vamos a meter el estilo SDI y vamos a cambiar el orden de los
+elementos… como siempre mockup previo"*. Mockup con dos cabeceras (A blanca, B navy) → eligió **B, igual al correo
+de cotización**. Tag de rollback **`pre-poliza-linea-clara-13sep`**. Solo `buildPolizaActivaEmail` cambió; el
+WhatsApp, la extracción y la pantalla siguen iguales.
+
+- **Orden nuevo:** header navy + `_fileteSDI()` → saludo (rótulo HOLA + nombre grande) → **`_tarjetaVehiculo`
+  compartida** con rótulo "Vehículo asegurado" y el N.º de póliza debajo (la chapa sale roja si la placa trae `CL`)
+  → sello "● Póliza activa" en verde pálido + párrafo → documentación adjunta → **Centro de Asistencia Digital
+  debajo de los documentos** (banda pálida `#eef4f9`, píldora azul) → contactos de emergencia (teléfonos en tinta,
+  tabla de dos columnas) → aviso de terceros con **regla dorada ARRIBA** (`border-top:3px solid #C9A227`) → nota
+  del agente (fondo `#f8fafc`, sin barra) → cross-sell → firma → `_pieSDI`.
+- **`_tarjetaVehiculo` ganó dos parámetros opcionales:** `rotulo` (default el de la cotización) y `extra` (HTML ya
+  escapado bajo el vehículo). Sin ellos se comporta byte a byte como antes; el test de la cotización lo cubre.
+- **Iconos del cross-sell = PNG alojados en el sitio:** `img/ico-viaje.png` (avión) e `img/ico-estudiantil.png`
+  (birrete), Lucide a trazo 1,5 en `#0369A1`, 96×96 mostrados a 24 px dentro de un círculo pálido de 48. La URL se
+  deriva de `CFG.LOGO_URL` (misma carpeta que el logo del INS). Gmail bloquea SVG y base64 pero sí muestra PNG
+  hosteado con URL absoluta; con imágenes bloqueadas queda el círculo vacío y el texto completo. **Para regenerarlos:**
+  Chrome headless con `--default-background-color=00000000` sobre el SVG de Lucide (`plane`, `graduation-cap`).
+- **Copy:** el de Viaje dice **"Proteja su próxima aventura fuera del país"** (JC quitó "dentro y"). Trato de usted y
+  "Hola {nombre}," se conservan. Emojis fuera (✈️, ✅); el check de los documentos es `&#10003;` tipográfico.
+- 🔴 **Sin `border-left` en todo el correo** (el test `lc-sin-barra-izq` lo vigila) y **sin las constantes `SDI_*`**:
+  la paleta va literal dentro de la función, como en `buildEmail`.
+- Tests: `test-poliza-email.js` **70 checks** (14 nuevos `lc-*`: orden, filete, tarjeta, iconos hosteados, sin
+  barra, sin emojis, copy de Viaje). Smoke en localhost (`/polizas-activas/`, perfil inventado): la función real
+  arma el correo con la ficha del agente del perfil, 0 errores de consola; render del HTML real con Chrome headless
+  igual al mockup aprobado. Suite: 21 archivos en verde.
+- Pendiente que quedó a la vista: **`renovacion-email.js` conserva 3 `border-left` y el emoji ✈️** del cross-sell
+  viejo. No se tocó (alcance literal: un correo, no tres); si JC quiere, se le aplica el mismo bloque `xsell`.
+

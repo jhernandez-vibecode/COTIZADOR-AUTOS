@@ -38,10 +38,11 @@ var html = buildPolizaActivaEmail({
   notaAdicional: ''
 });
 
-ok('saludo',            /Hola Marco Andrés,/.test(html));
+ok('saludo',            /Hola<\/p>[\s\S]{0,200}Marco Andrés,<\/p>/.test(html));   // rótulo HOLA + nombre grande (13 sep 2026)
 ok('poliza',            html.indexOf('0101AUT221211200') !== -1);
 ok('vehiculo',          html.indexOf('NISSAN FRONTIER 2023') !== -1);
-ok('placa',             html.indexOf('CL-612977') !== -1);
+ok('placa',             html.indexOf('CL&#8202;&#8202;612977') !== -1);     // chapa dibujada, sin el guion
+ok('placa-CL-roja',     html.indexOf('#b91c1c') !== -1);
 ok('activa',            /ya se encuentra activa/i.test(html));
 ok('asistencia-base',   html.indexOf('https://appasistenciaseguroautos.netlify.app/?a=jc') !== -1);
 ok('asistencia-agente', html.indexOf('n=Juan%20Carlos%20Hernandez%20Vargas') !== -1
@@ -49,7 +50,7 @@ ok('asistencia-agente', html.indexOf('n=Juan%20Carlos%20Hernandez%20Vargas') !==
                         && html.indexOf('wa=50688221348') !== -1
                         && html.indexOf('em=jhernandez%40segurosdelins.com') !== -1
                         && html.indexOf('lic=08-1318') !== -1);
-ok('pwa-tip',           /Añadir a pantalla de inicio/i.test(html));
+ok('pwa-tip',           /A(ñ|&ntilde;)adir a pantalla de inicio/i.test(html));
 ok('emergencia-8000',   html.indexOf('800-800-8000') !== -1);
 ok('emergencia-911',    html.indexOf('911') !== -1);
 ok('emergencia-8001',   html.indexOf('800-800-8001') !== -1);
@@ -63,6 +64,21 @@ ok('firma-tel',         html.indexOf('8822-1348') !== -1);
 ok('firma-correo',      html.indexOf('jhernandez@segurosdelins.com') !== -1);
 ok('footer-sdi',        /Seguros Digitales SDI/.test(html));
 ok('doctype',           /^<!DOCTYPE html>/.test(html));
+
+// --- Rediseño línea clara SDI (13 sep 2026) ---
+ok('lc-filete',         html.indexOf('#C9A227') !== -1 && html.indexOf('#0D9488') !== -1); // filete de marca bajo el header
+ok('lc-tarjeta',        /Veh&iacute;culo asegurado/.test(html));                               // tarjeta compartida con la cotización
+ok('lc-poliza-en-tarjeta', /P&oacute;liza N\.&ordm; <b[^>]*>0101AUT221211200<\/b>/.test(html));
+ok('lc-sello-activa',   /&#9679;&nbsp; P&oacute;liza activa/.test(html));
+ok('lc-orden-docs-antes-asistencia', html.indexOf('Documentaci&oacute;n adjunta') < html.indexOf('Centro de Asistencia Digital'));
+ok('lc-orden-tarjeta-antes-confirmacion', html.indexOf('Veh&iacute;culo asegurado') < html.indexOf('ya se encuentra activa'));
+ok('lc-iconos-xsell',   html.indexOf('/img/ico-viaje.png') !== -1 && html.indexOf('/img/ico-estudiantil.png') !== -1);
+ok('lc-iconos-hosteados', !/src="data:/.test(html) && !/<svg/i.test(html));                  // Gmail: solo PNG con URL absoluta
+ok('lc-sin-barra-izq',  !/border-left/.test(html));                                            // el tic de plantilla que pidió quitar JC
+ok('lc-sin-emojis',     !/&#9992;|&#65039;|&#9989;|&#128663;/.test(html));
+ok('lc-pildoras',       /border-radius:999px;padding:13px 26px/.test(html));                  // CTA de asistencia en píldora
+ok('lc-viaje-fuera',    /aventura fuera del pa&iacute;s/.test(html) && !/dentro y fuera/.test(html)); // pedido de JC 13 sep
+ok('lc-terceros-regla-arriba', /border-top:3px solid #C9A227/.test(html));
 
 // XSS: un dato malicioso debe quedar escapado
 var evil = buildPolizaActivaEmail({ nombrePila: '<img src=x onerror=alert(1)>', poliza: 'X', vehiculo: 'V', placa: 'P' });

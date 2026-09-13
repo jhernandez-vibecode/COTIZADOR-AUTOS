@@ -12,9 +12,10 @@
  *   ASSIST_URL (Centro de Asistencia; se le embeben los datos del agente por URL),
  *   XSELL_VIAJE_URL / XSELL_ESTUDIANTIL_URL (botones "Comprar" del cross-sell).
  *
- * Email-friendly: tablas anidadas + estilos inline + texto/color. Sin imágenes
- * salvo el logo INS del encabezado (hosteado). El footer SDI se recrea en HTML
- * (Gmail bloquea SVG/base64), igual que en email-template.js.
+ * Email-friendly: tablas anidadas + estilos inline. Imágenes solo hosteadas en el
+ * sitio (logo INS, logo SDI del pie, iconos del cross-sell): Gmail bloquea SVG y
+ * base64. Rediseño en línea clara SDI el 13 sep 2026 (orden nuevo, sin barras a
+ * la izquierda, píldoras, tarjeta del vehículo compartida con la cotización).
  *
  * API: buildPolizaActivaEmail({ nombrePila, cliente, poliza, vehiculo, placa,
  *                               notaAdicional }) -> string HTML
@@ -127,6 +128,12 @@ function buildPolizaActivaEmail(params) {
   var fontFam  = "'Space Grotesk','Helvetica Neue',Helvetica,Arial,sans-serif";
   var fontBody = "'Inter','Helvetica Neue',Helvetica,Arial,sans-serif";
 
+  // Paleta (literal, como en email-template.js: buildEmail no usa las SDI_* de
+  // email-marca.js para no depender del orden de <script> ni romper el eval de
+  // los tests).
+  var NAVY = '#0c2340', AZUL = '#0369a1', VERDE = '#047857', GRIS = '#64748b';
+  var LINEA = '#e2e8f0', BANDA = '#eef4f9';
+
   // Datos del agente (perfil → CFG)
   var agente   = CFG.FROM_NAME  || 'Juan Carlos Hernandez Vargas';
   var lic      = CFG.LICENSE    || '08-1318';
@@ -138,6 +145,12 @@ function buildPolizaActivaEmail(params) {
   // config.js ya trae su sitio, así que a él sí le sale.
   var web      = String(CFG.WEBSITE == null ? '' : CFG.WEBSITE).replace(/^https?:\/\//i, '').trim();
   var logoUrl  = CFG.LOGO_URL   || 'https://cotizador.appsegurosdigitales.com/img/ins-logo.png';
+  // Iconos del cross-sell: PNG alojados en el sitio, igual que el logo del INS
+  // (Gmail bloquea SVG y base64; una imagen hosteada con URL absoluta sí pasa).
+  // Si el cliente bloquea imágenes, queda el círculo pálido y el texto completo.
+  var icoBase  = String(logoUrl).replace(/\/[^\/]*$/, '/');
+  var icoViaje = icoBase + 'ico-viaje.png';
+  var icoEst   = icoBase + 'ico-estudiantil.png';
 
   // Guía de emergencia personalizada: embebemos la ficha del agente actual
   // (nombre, contacto, licencia, web) como parámetros para que la app de
@@ -149,7 +162,8 @@ function buildPolizaActivaEmail(params) {
   var _assistUrl = polizaAsistenciaUrl;
 
   // Links saneados (solo http/https). Si un cross-sell viene vacío, cae al sitio
-  // del agente — PERO solo si el agente tiene web propia. Si no la tiene, queda ''// (el botón se oculta abajo) en lugar de arrastrar el sitio del owner.
+  // del agente — PERO solo si el agente tiene web propia. Si no la tiene, queda ''
+  // (el botón se oculta abajo) en lugar de arrastrar el sitio del owner.
   // Escapado UNA vez: entra crudo a tres href (assistUrl / viajeUrl / estUrl) y
   // el resto del archivo ya pasa todo por e() o _safe().
   var siteFallback = web ? e('https://' + web) : '';
@@ -159,17 +173,60 @@ function buildPolizaActivaEmail(params) {
   var viajeUrl  = _safe(CFG.XSELL_VIAJE_URL) || siteFallback;
   var estUrl    = _safe(CFG.XSELL_ESTUDIANTIL_URL) || siteFallback;
 
-  // Identificación del vehículo para el párrafo de confirmación.
-  var vehTxt = e(vehiculo || 'su vehículo');
-  var placaTxt = placa ? (' placa <b style="color:#0c2340;">' + e(placa) + '</b>') : '';
-  var polizaTxt = poliza ? ('No. <b style="color:#0c2340;">' + e(poliza) + '</b>') : '';
+  // ---- Piezas repetidas (línea clara: sin barras de color a la izquierda) ----
+  var rotulo = function (t) {
+    return '<p style="margin:0 0 4px;font-size:10px;font-weight:700;color:' + GRIS + ';letter-spacing:0.1em;text-transform:uppercase;">' + t + '</p>';
+  };
+  // Bloque con rótulo sobre una regla de 1 px (mismo criterio que _bloqueSobrio,
+  // pero el contenido es una tabla, no un párrafo).
+  var seccion = function (rot, inner, padTop) {
+    return '<tr><td style="padding:' + padTop + 'px 32px 0;">' +
+      '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid ' + LINEA + ';">' +
+      '<tr><td style="padding:14px 0 0;">' + rotulo(rot) + inner + '</td></tr></table></td></tr>';
+  };
+  var pildora = function (href, texto) {
+    return '<a href="' + href + '" style="display:inline-block;background:' + AZUL + ';color:#ffffff;text-decoration:none;border-radius:999px;padding:13px 26px;font-family:' + fontFam + ';font-weight:700;font-size:14px;">' + texto + '</a>';
+  };
+  var pildoraBorde = function (href, texto) {
+    return '<a href="' + href + '" style="display:inline-block;background:#ffffff;color:' + AZUL + ';text-decoration:none;border:1.5px solid ' + AZUL + ';border-radius:999px;padding:9px 18px;font-family:' + fontFam + ';font-weight:700;font-size:13px;">' + texto + '</a>';
+  };
+  var docu = function (t) {
+    return '<tr><td width="22" valign="top" style="color:' + VERDE + ';font-weight:700;padding:3px 0;font-size:13.5px;">&#10003;</td>' +
+      '<td style="padding:3px 0;font-size:13.5px;color:#334155;line-height:1.5;">' + t + '</td></tr>';
+  };
+  var telefono = function (rot, num, ultimo) {
+    var borde = ultimo ? '' : 'border-bottom:1px solid ' + LINEA + ';';
+    return '<tr><td style="padding:6px 0;' + borde + 'font-size:13px;color:#475569;">' + rot + '</td>' +
+      '<td align="right" style="padding:6px 0;' + borde + 'font-family:' + fontFam + ';font-size:16px;font-weight:700;color:' + NAVY + ';white-space:nowrap;">' + num + '</td></tr>';
+  };
+  // Tarjeta de cross-sell: icono en círculo pálido + título + texto + píldora.
+  var xsell = function (icono, alt, titulo, texto, href) {
+    return '<td width="50%" valign="top" style="background:#ffffff;border:1px solid ' + LINEA + ';border-radius:16px;padding:18px 16px 16px;">' +
+      '<table width="48" cellpadding="0" cellspacing="0" border="0" style="width:48px;"><tr>' +
+        '<td width="48" height="48" align="center" valign="middle" bgcolor="' + BANDA + '" style="background:' + BANDA + ';border-radius:24px;width:48px;height:48px;">' +
+          '<img src="' + e(icono) + '" alt="' + alt + '" width="24" height="24" style="display:block;border:0;width:24px;height:24px;"></td></tr></table>' +
+      '<p style="margin:12px 0 3px;font-family:' + fontFam + ';font-size:15px;font-weight:700;color:' + NAVY + ';">' + titulo + '</p>' +
+      '<p style="margin:0 0 14px;font-size:12.5px;color:#475569;line-height:1.5;">' + texto + '</p>' +
+      (href ? pildoraBorde(href, 'Comprar &rarr;') : '') +
+    '</td>';
+  };
+
+  // Tarjeta del vehículo asegurado (módulo compartido) con el N.º de póliza
+  // debajo del vehículo. La placa se dibuja como matrícula: roja si es CL.
+  var polizaLinea = poliza
+    ? '<p style="margin:6px 0 0;font-size:12.5px;color:' + GRIS + ';">P&oacute;liza N.&ordm; <b style="color:' + NAVY + ';letter-spacing:0.02em;">' + e(poliza) + '</b></p>'
+    : '';
+  var tarjetaHtml = _tarjetaVehiculo({
+    vehiculo: vehiculo || 'Su vehículo', plate: placa, plateClass: p.plateClass,
+    fontFam: fontFam, rotulo: 'Veh&iacute;culo asegurado', extra: polizaLinea
+  });
 
   var notaHtml = nota ? (
-    '<tr><td style="padding:6px 28px 0;">' +
-      '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fff7ed;border-left:4px solid #ea580c;border-radius:8px;">' +
+    '<tr><td style="padding:14px 32px 0;">' +
+      '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8fafc;border-radius:10px;">' +
         '<tr><td style="padding:12px 16px;">' +
-          '<p style="margin:0 0 3px;font-size:11px;font-weight:bold;color:#9a3412;letter-spacing:.06em;text-transform:uppercase;">Nota de tu agente</p>' +
-          '<p style="margin:0;font-size:13px;color:#7c2d12;line-height:1.55;">' + e(nota).replace(/\n/g, '<br>') + '</p>' +
+          rotulo('Nota de su agente') +
+          '<p style="margin:0;font-size:13px;color:#334155;line-height:1.55;">' + e(nota).replace(/\n/g, '<br>') + '</p>' +
         '</td></tr>' +
       '</table>' +
     '</td></tr>') : '';
@@ -179,7 +236,7 @@ function buildPolizaActivaEmail(params) {
 '<html lang="es"><head>' +
 '<meta charset="UTF-8">' +
 '<meta name="viewport" content="width=device-width, initial-scale=1.0">' +
-'<title>Tu póliza está activa &middot; Seguros del INS</title>' +
+'<title>Su póliza está activa &middot; Seguros del INS</title>' +
 '<!--[if !mso]><!-->' +
 '<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">' +
 '<!--<![endif]-->' +
@@ -188,106 +245,93 @@ function buildPolizaActivaEmail(params) {
 '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f5f5;padding:24px 0;"><tr><td align="center">' +
 '<table width="600" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;border-radius:12px;overflow:hidden;max-width:600px;box-shadow:0 4px 20px rgba(12,35,64,.08);">' +
 
-  // 1. HEADER
-  '<tr><td bgcolor="#0c2340" style="background:#0c2340;color:#ffffff;padding:26px 32px;text-align:center;">' +
-    '<img src="' + e(logoUrl) + '" alt="INS" height="44" style="display:block;margin:0 auto 10px;border:0;outline:none;text-decoration:none;height:44px;">' +
-    '<h1 style="margin:0;font-family:' + fontFam + ';font-size:21px;font-weight:700;letter-spacing:-.01em;">Póliza de Automóviles</h1>' +
-    '<p style="margin:6px 0 0;font-size:12px;opacity:.78;">Seguros del INS &middot; Tu protección al volante</p>' +
+  // 1. HEADER navy + filete de marca SDI (igual al correo de cotización)
+  '<tr><td bgcolor="' + NAVY + '" style="background:' + NAVY + ';color:#ffffff;padding:28px 32px;text-align:center;">' +
+    '<img src="' + e(logoUrl) + '" alt="INS" height="46" style="display:block;margin:0 auto 12px;border:0;outline:none;text-decoration:none;height:46px;">' +
+    '<h1 style="margin:0;font-family:' + fontFam + ';font-size:22px;font-weight:700;letter-spacing:-.01em;">Su p&oacute;liza est&aacute; activa</h1>' +
+    '<p style="margin:6px 0 0;font-size:12px;opacity:.75;">Seguros del INS &middot; P&oacute;liza de Autom&oacute;viles</p>' +
+  '</td></tr>' +
+  _fileteSDI() +
+
+  // 2. SALUDO
+  '<tr><td style="padding:28px 32px 12px;">' +
+    '<p style="margin:0;font-size:11px;color:' + GRIS + ';font-weight:600;text-transform:uppercase;letter-spacing:0.08em;">Hola</p>' +
+    '<p style="margin:4px 0 0;font-family:' + fontFam + ';font-size:24px;font-weight:700;color:' + NAVY + ';letter-spacing:-0.01em;">' + e(saludo) + ',</p>' +
   '</td></tr>' +
 
-  // 2. SALUDO + confirmación (verde)
-  '<tr><td style="padding:26px 32px 4px;">' +
-    '<p style="margin:0 0 14px;font-family:' + fontFam + ';font-size:18px;font-weight:700;color:#0c2340;">Hola ' + e(saludo) + ',</p>' +
-    '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ecfdf5;border:1px solid #a7f3d0;border-left:4px solid #10b981;border-radius:10px;">' +
-      '<tr><td style="padding:14px 18px;font-size:14px;line-height:1.6;color:#065f46;">' +
-        'Es un gusto saludarle. Le confirmo que su póliza ' + polizaTxt + ', que protege el vehículo <b style="color:#0c2340;">' + vehTxt + '</b>' + placaTxt + ', <b style="color:#047857;">ya se encuentra activa</b>. &#9989;' +
+  // 3. TARJETA DEL VEHÍCULO ASEGURADO (placa + N.º de póliza)
+  tarjetaHtml +
+
+  // 4. CONFIRMACIÓN (sello verde pálido + párrafo)
+  '<tr><td style="padding:22px 32px 0;">' +
+    '<p style="margin:0 0 10px;"><span style="display:inline-block;background:#ecfdf5;color:' + VERDE + ';font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:5px 12px;border-radius:999px;">&#9679;&nbsp; P&oacute;liza activa</span></p>' +
+    '<p style="margin:0;font-size:14px;line-height:1.65;color:#334155;">Es un gusto saludarle. Le confirmo que su p&oacute;liza <b style="color:' + NAVY + ';">ya se encuentra activa</b> y su veh&iacute;culo queda protegido desde este momento. Abajo le dejo lo que necesita tener a mano.</p>' +
+  '</td></tr>' +
+
+  // 5. DOCUMENTACIÓN ADJUNTA
+  seccion('Documentaci&oacute;n adjunta',
+    '<table cellpadding="0" cellspacing="0" border="0">' +
+      docu('Tarjeta del seguro') +
+      docu('Condiciones Particulares y Generales') +
+      docu('Comprobante de pago') +
+      docu('Gu&iacute;a de asistencia en carretera') +
+    '</table>', 24) +
+
+  // 6. CENTRO DE ASISTENCIA DIGITAL (debajo de los documentos, sobre banda pálida)
+  '<tr><td style="padding:24px 32px 0;">' +
+    '<table width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="' + BANDA + '" style="background:' + BANDA + ';border-radius:16px;">' +
+      '<tr><td style="padding:24px 22px;text-align:center;">' +
+        '<p style="margin:0 0 6px;font-family:' + fontFam + ';font-size:16px;font-weight:700;color:' + NAVY + ';">Centro de Asistencia Digital</p>' +
+        '<p style="margin:0 0 16px;font-size:13px;color:#475569;line-height:1.55;">Si tiene un accidente o una aver&iacute;a, no pierda tiempo buscando n&uacute;meros: esta gu&iacute;a le dice qu&eacute; hacer paso a paso y le conecta al instante con el contacto correcto.</p>' +
+        pildora(assistUrl, 'Abrir mi gu&iacute;a de emergencias &rarr;') +
+        '<p style="margin:14px 0 0;font-size:11.5px;color:' + GRIS + ';line-height:1.5;">&Aacute;brala en el celular y elija <b style="color:#334155;">&laquo;A&ntilde;adir a pantalla de inicio&raquo;</b> para tenerla siempre a mano, como una app. Sin descargas.</p>' +
       '</td></tr>' +
     '</table>' +
   '</td></tr>' +
 
-  // 3. CENTRO DE ASISTENCIA DIGITAL
-  '<tr><td style="padding:20px 32px 0;">' +
-    '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;">' +
-      '<tr><td style="padding:18px;text-align:center;">' +
-        '<p style="margin:0 0 4px;font-family:' + fontFam + ';font-size:14px;font-weight:700;color:#0c4a6e;">Centro de Asistencia Digital (Exclusivo)</p>' +
-        '<p style="margin:0 0 12px;font-size:12px;color:#475569;line-height:1.55;">Si tiene un accidente o avería, no pierda tiempo buscando números: esta guía le dice qué hacer paso a paso y le conecta al instante con el contacto correcto.</p>' +
-        '<a href="' + assistUrl + '" style="display:inline-block;background:#0369a1;color:#ffffff;text-decoration:none;border-radius:10px;padding:13px 26px;font-family:' + fontFam + ';font-weight:700;font-size:14px;"> Abrir mi guía de emergencias &rarr;</a>' +
-        '<p style="margin:10px 0 0;font-size:11px;color:#64748b;line-height:1.5;">Ábrala en el celular y elija <b>"Añadir a pantalla de inicio"</b> para tenerla siempre a mano, como una App. Sin descargas.</p>' +
-      '</td></tr>' +
+  // 7. CONTACTOS DE EMERGENCIA (teléfonos en tinta)
+  seccion('Contactos de emergencia &middot; gu&aacute;rdelos',
+    '<table width="100%" cellpadding="0" cellspacing="0" border="0">' +
+      telefono('Colisiones (Inspector)', '800-800-8000 &middot; 911', false) +
+      telefono('Asistencia en carretera (gr&uacute;a / aver&iacute;a)', '800-800-8001', true) +
+    '</table>', 24) +
+
+  // 8. IMPORTANTE (única advertencia: regla dorada ARRIBA, no barra a la izquierda)
+  '<tr><td style="padding:22px 32px 0;">' +
+    '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fffbeb;border-top:3px solid #C9A227;border-radius:0 0 10px 10px;">' +
+      '<tr><td style="padding:12px 16px 13px;font-size:12.5px;color:#713f12;line-height:1.55;"><b style="color:#422006;">Importante:</b> nunca realice acuerdos con terceros sin la autorizaci&oacute;n previa del INS, para no afectar la validez de su cobertura.</td></tr>' +
     '</table>' +
   '</td></tr>' +
 
-  // 4. DOCUMENTACIÓN ADJUNTA
-  '<tr><td style="padding:18px 32px 0;">' +
-    '<p style="margin:0 0 6px;font-family:' + fontFam + ';font-size:13px;font-weight:700;color:#0c2340;"> Documentación adjunta</p>' +
-    '<p style="margin:0;font-size:13px;color:#334155;line-height:1.95;">' +
-      '&#9989; Tarjeta del seguro<br>' +
-      '&#9989; Condiciones Particulares y Generales<br>' +
-      '&#9989; Comprobante de pago<br>' +
-      '&#9989; Guía de asistencia en carretera' +
-    '</p>' +
-  '</td></tr>' +
-
-  // 5. CONTACTOS DE EMERGENCIA
-  '<tr><td style="padding:16px 32px 0;">' +
-    '<p style="margin:0 0 6px;font-family:' + fontFam + ';font-size:13px;font-weight:700;color:#0c2340;"> Contactos de emergencia (guárdelos)</p>' +
-    '<p style="margin:0;font-size:13px;color:#334155;line-height:1.9;">' +
-      'Colisiones (Inspector): <b style="color:#0c2340;">800-800-8000</b> y <b style="color:#0c2340;">911</b><br>' +
-      'Asistencia en carretera (grúa / avería): <b style="color:#0c2340;">800-800-8001</b>' +
-    '</p>' +
-  '</td></tr>' +
-
-  // 6. NOTA IMPORTANTE (ámbar)
-  '<tr><td style="padding:16px 32px 0;">' +
-    '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fffbeb;border:1px solid #fcd34d;border-left:4px solid #f59e0b;border-radius:8px;">' +
-      '<tr>' +
-        '<td width="30" valign="top" style="padding:12px 0 12px 14px;color:#f59e0b;font-size:16px;line-height:1.2;">&#9888;</td>' +
-        '<td valign="top" style="padding:12px 14px 12px 4px;">' +
-          '<p style="margin:0;font-size:12px;color:#78350f;line-height:1.55;"><b style="color:#422006;">Importante:</b> nunca realice acuerdos con terceros sin la autorización previa del INS, para no afectar la validez de su cobertura.</p>' +
-        '</td>' +
-      '</tr>' +
-    '</table>' +
-  '</td></tr>' +
-
+  // 9. NOTA DEL AGENTE (solo si la escribe)
   notaHtml +
 
-  // 7. CROSS-SELL — Otros seguros que le pueden interesar (personalizable por agente)
-  '<tr><td style="padding:22px 32px 0;">' +
-    '<h2 style="margin:0 0 12px;font-family:' + fontFam + ';font-size:13px;font-weight:700;color:#0c2340;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #e0e7ef;padding-bottom:8px;">Otros seguros que le pueden interesar</h2>' +
+  // 10. CROSS-SELL con iconos (personalizable por agente)
+  '<tr><td style="padding:28px 32px 0;">' +
+    '<p style="margin:0 0 12px;font-family:' + fontFam + ';font-size:15px;font-weight:700;color:' + NAVY + ';">Otros seguros que le pueden interesar</p>' +
     '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:separate;border-spacing:6px 0;"><tr>' +
-      // Viaje
-      '<td width="50%" valign="top" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:16px;">' +
-        '<p style="margin:0 0 2px;font-size:22px;line-height:1;">&#9992;&#65039;</p>' +
-        '<p style="margin:6px 0 2px;font-family:' + fontFam + ';font-size:14px;font-weight:700;color:#0c2340;">Seguros de Viaje</p>' +
-        '<p style="margin:0 0 12px;font-size:12px;color:#475569;line-height:1.5;">Proteja su próxima aventura dentro y fuera del país.</p>' +
-        (viajeUrl ? '<a href="' + viajeUrl + '" style="display:inline-block;background:#0369a1;color:#ffffff;text-decoration:none;border-radius:8px;padding:9px 18px;font-family:' + fontFam + ';font-weight:700;font-size:13px;">Comprar &rarr;</a>' : '') +
-      '</td>' +
-      // Estudiantil
-      '<td width="50%" valign="top" style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:16px;">' +
-        '<p style="margin:0 0 2px;font-size:22px;line-height:1;"></p>' +
-        '<p style="margin:6px 0 2px;font-family:' + fontFam + ';font-size:14px;font-weight:700;color:#0c2340;">Seguro Estudiantil</p>' +
-        '<p style="margin:0 0 12px;font-size:12px;color:#475569;line-height:1.5;">Asegure el futuro de sus hijos durante todo el año lectivo.</p>' +
-        (estUrl ? '<a href="' + estUrl + '" style="display:inline-block;background:#16a34a;color:#ffffff;text-decoration:none;border-radius:8px;padding:9px 18px;font-family:' + fontFam + ';font-weight:700;font-size:13px;">Comprar &rarr;</a>' : '') +
-      '</td>' +
+      xsell(icoViaje, 'Avi&oacute;n', 'Seguros de Viaje', 'Proteja su pr&oacute;xima aventura fuera del pa&iacute;s.', viajeUrl) +
+      xsell(icoEst, 'Birrete', 'Seguro Estudiantil', 'Asegure el futuro de sus hijos durante todo el a&ntilde;o lectivo.', estUrl) +
     '</tr></table>' +
   '</td></tr>' +
 
-  // 8. FIRMA
-  '<tr><td style="padding:24px 32px 0;border-top:1px solid #e0e7ef;">' +
-    '<p style="margin:18px 0 0;font-size:13px;color:#475569;line-height:1.5;">Quedo a su entera disposición para cualquier consulta. Atentamente,</p>' +
-    '<p style="margin:10px 0 0;font-family:' + fontFam + ';font-weight:700;color:#0c2340;font-size:14px;">' + e(agente) + '</p>' +
-    '<p style="margin:2px 0 0;font-size:11px;color:#64748b;line-height:1.6;">Agente de Seguros Exclusivo &middot; Instituto Nacional de Seguros<br>' +
-      'Licencia SUGESE ' + e(lic) + ' &middot; Tel: ' + e(tel) + '<br>' +
-      '<a href="mailto:' + e(correoAg) + '" style="color:#0369a1;text-decoration:none;">' + e(correoAg) + '</a>' + (web ? (' &middot; ' + e(web)) : '') +
-    '</p>' +
+  // 11. FIRMA
+  '<tr><td style="padding:26px 32px 26px;">' +
+    '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid ' + LINEA + ';"><tr><td style="padding-top:18px;">' +
+      '<p style="margin:0;font-size:13px;color:#475569;line-height:1.5;">Quedo a su entera disposici&oacute;n para cualquier consulta. Atentamente,</p>' +
+      '<p style="margin:12px 0 0;font-family:' + fontFam + ';font-weight:700;color:' + NAVY + ';font-size:15px;">' + e(agente) + '</p>' +
+      '<p style="margin:3px 0 0;font-size:11.5px;color:' + GRIS + ';line-height:1.6;">Agente de Seguros Exclusivo &middot; Instituto Nacional de Seguros<br>' +
+        'Licencia SUGESE ' + e(lic) + ' &middot; Tel: ' + e(tel) + '<br>' +
+        '<a href="mailto:' + e(correoAg) + '" style="color:' + AZUL + ';text-decoration:none;">' + e(correoAg) + '</a>' + (web ? (' &middot; ' + e(web)) : '') +
+      '</p>' +
+    '</td></tr></table>' +
   '</td></tr>' +
 
-  // 9. PIE con la marca SDI (modulo compartido js/email-marca.js)
+  // 12. PIE con la marca SDI (modulo compartido js/email-marca.js)
   _pieSDI({
     logo: CFG.LOGO_SDI_URL, correo: correoAg, web: web,
     tel: tel, agente: agente, licencia: lic
   }) +
-
 
 '</table></td></tr></table></body></html>';
 }
