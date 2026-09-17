@@ -61,6 +61,7 @@ ok('p-rechaza-clave-ajena', !esNuestro('n=Agente&pv=1&evil=1', CLAVES_P));
 // Los precios/placa del explicador no van en /p, ni la prima en /g: listas distintas.
 ok('p-rechaza-claves-de-g', !esNuestro('n=Agente&va=10000000&p=BRK454', CLAVES_P));
 ok('g-rechaza-pv', !esNuestro('n=Agente&pv=487300', CLAVES));
+ok('g-acepta-asi-y-wa', esNuestro('n=Agente&c=Ana&pa=570891&cb=A.C&asi=1&wa=8888-0000', CLAVES));
 ok('p-rechaza-javascript', !esNuestro('n=javascript:alert(1)&pv=1', CLAVES_P));
 
 console.log('\nenlace-validacion: ' + pass + ' OK, ' + fail + ' FAIL');

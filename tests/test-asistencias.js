@@ -92,7 +92,7 @@ ok('sin url vacia el bloque no sale', M._bloqueAsistencias({ url: '' }) === '');
 
 console.log('=== El correo de cotizacion enchufa la tarjeta (segun la fecha) ===');
 var base = { nombre: 'Ana', vehiculo: 'Toyota Yaris', plate: 'BBB111',
-             prices: { anual: '570.891,00', semestral: '308.283,00', trimestral: '158.423,00' } };
+             prices: { anual: '570,891.00', semestral: '308,283.00', trimestral: '158,423.00' } };   // formato US, como lo trae el PDF
 var _origDisp = global.asiDisponible;
 global.asiDisponible = function () { return true; };
 var conAsi = buildEmail(Object.assign({}, base, { incluirAsistencias: true }));
@@ -110,6 +110,12 @@ ok('el enlace lleva la licencia', conAsi.indexOf('l=00-0000') !== -1);
 // En el HTML del correo el & va escapado como &amp;
 ok('el enlace lleva la prima anual cotizada (pa=570891)', /&amp;pa=570891/.test(conAsi));
 ok('el enlace NO lleva pv (eso es del cliente con poliza)', !/(&amp;|&)pv=/.test(conAsi));
+// La guia: el correo le dice con asi=1 que muestre la seccion de asistencias.
+var guiaCon = /explicacion\/\?[^"]*/.exec(conAsi)[0], guiaSin = /explicacion\/\?[^"]*/.exec(sinAsi)[0], guiaAntes = /explicacion\/\?[^"]*/.exec(antes)[0];
+ok('con la tarjeta, la guia recibe asi=1', /&(amp;)?asi=1/.test(guiaCon));
+ok('con la tarjeta, la guia recibe el WhatsApp del agente (wa)', /&(amp;)?wa=8888-0000/.test(guiaCon));
+ok('sin la casilla, la guia NO recibe asi', !/asi=1/.test(guiaSin));
+ok('antes del 28 set, la guia NO recibe asi', !/asi=1/.test(guiaAntes));
 A.PLANES_ASI.forEach(function (p) {
   ok('el correo trae ' + p.nom + ' con su prima del modulo', conAsi.indexOf(A.asiColones(p.prima)) !== -1 && conAsi.indexOf(p.nom) !== -1);
 });
@@ -185,6 +191,15 @@ ok('carga js/planes-asistencia.js', pagina.indexOf('src="../js/planes-asistencia
 ok('usa PLANES_ASI y no una copia', pagina.indexOf('var PLANES = PLANES_ASI') !== -1 && pagina.indexOf('var PLANES_ASI = [') === -1);
 ok('lee pv y pa', pagina.indexOf("Q.get('pv')") !== -1 && pagina.indexOf("Q.get('pa')") !== -1);
 ok('la pagina aplica el recargo por fraccionamiento (asiCosto + ASI_RECARGO)', pagina.indexOf('asiCosto(p.prima, fp)') !== -1 && pagina.indexOf('ASI_RECARGO[fp]') !== -1);
+var guia = fs.readFileSync(path.join(__dirname, '..', 'explicacion', 'index.html'), 'utf8');
+ok('la guia tiene la seccion #sasi oculta por defecto', /<section class="section" id="sasi" hidden>/.test(guia));
+ok('la guia carga el mismo modulo de datos', guia.indexOf('<script src="../js/planes-asistencia.js"></script>') !== -1);
+ok('la guia solo la muestra con asi=1', guia.indexOf("asi: _params.get('asi') === '1'") !== -1 && guia.indexOf('if (!sec || !data.asi || typeof PLANES_ASI') !== -1);
+ok('la guia re-encadena Pagos → asistencias → cita', guia.indexOf("s5next.dataset.target = 'sasi'") !== -1 && guia.indexOf("citaPrev.dataset.target = 'sasi'") !== -1);
+ok('el boton de la guia lleva pa, c, v, p y wa al configurador', guia.indexOf("add('c', data.c); add('v', data.v); add('p', data.p); add('pa', data.pa);") !== -1 && guia.indexOf("add('wa', data.wa)") !== -1);
+ok('la guia no tiene un punto nuevo en la barra (E1)', (guia.match(/class="sticky-dot/g) || []).length === 5);
+var appjs2 = fs.readFileSync(path.join(__dirname, '..', 'js', 'app.js'), 'utf8');
+ok('_guideExtras de app.js manda la misma bandera (historial y WhatsApp = correo)', /asistencias:\s+!!\(\(document\.getElementById\('m-asistencias'\)/.test(appjs2));
 ok('la pagina habla en la cuota de la forma de pago (UNIDAD por cuota)', pagina.indexOf("UNIDAD = fp === 'a' ? 'al año' : 'por ' + FP[fp][1]") !== -1 && pagina.indexOf('var tot = PRIMA + cuotaAsis') !== -1);
 ok('la cotizada (pa) siempre es anual', pagina.indexOf("MODO === 'vigente' && FP[param('fp', 'a')]") !== -1);
 ok('el WhatsApp al agente lleva la placa', pagina.indexOf("'placa ' + PLACA") !== -1);

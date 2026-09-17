@@ -629,7 +629,10 @@ function _guideExtras() {
     valor:         S.data.valor,
     sustReposCode: _sustReposToCode(S.data.sustRepos),
     dedDFH:        S.data.dedDFH,
-    prices:        S.data.prices
+    prices:        S.data.prices,
+    // La misma bandera que buildEmail: casilla del paso 3 + desde el 28 set 2026.
+    asistencias:   !!((document.getElementById('m-asistencias') || {}).checked &&
+                      typeof asiDisponible === 'function' && asiDisponible())
   };
 }
 

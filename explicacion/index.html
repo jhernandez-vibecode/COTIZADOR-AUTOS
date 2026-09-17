@@ -2183,6 +2183,25 @@ main{max-width:none;padding:44px 24px 56px;background:var(--lc-band)}
   .footer{padding:30px 18px 36px}
 }
 
+
+/* ---------- Sección de asistencias opcionales (cobertura ASI, 17 set 2026) ---------- */
+#sasi[hidden]{display:none!important}
+#sasi .section-num::before{background:var(--t-oro-tx)}
+.asi-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}
+.asi-row{display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:12px;align-items:center;border:1px solid var(--lc-line);border-radius:16px;padding:13px 14px;background:#fff}
+.asi-row .icon{width:38px;height:38px;border-radius:50%;display:grid;place-items:center}
+.asi-row .icon.t-oro{background:var(--t-oro-bg);color:var(--t-oro-tx)}.asi-row .icon.t-rosa{background:var(--t-rosa-bg);color:var(--t-rosa-tx)}.asi-row .icon.t-viol{background:var(--t-viol-bg);color:var(--t-viol-tx)}.asi-row .icon.t-cyan{background:var(--t-cyan-bg);color:var(--t-cyan-tx)}.asi-row .icon.t-azul{background:var(--t-azul-bg);color:var(--t-azul-tx)}.asi-row .icon.t-verde{background:var(--t-verde-bg);color:var(--t-verde-tx)}
+.asi-row .icon svg{width:18px;height:18px}
+.asi-row .name{font-weight:600;color:var(--lc-ink);font-size:14px;line-height:1.25}
+.asi-row .linea{font-size:12px;color:var(--lc-ink-2);margin-top:2px;line-height:1.35}
+.asi-row .qty{font-family:var(--font-mono);font-size:12.5px;color:var(--lc-ink);white-space:nowrap;text-align:right;font-variant-numeric:tabular-nums}
+.asi-row .qty small{display:block;font-size:10.5px;color:var(--lc-ink-3);font-family:var(--font-body)}
+.asi-cta{text-align:center;margin-top:22px}
+.asi-cta .step-btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+.asi-cta .fine{font-size:12.5px;color:var(--lc-ink-3);margin-top:10px;line-height:1.55}
+.asi-note{background:var(--lc-band);border-radius:16px;padding:14px 18px;font-size:13.5px;color:var(--lc-ink-2);line-height:1.6;margin-top:18px}
+.asi-note b{color:var(--lc-ink);font-weight:600}
+@media (max-width:720px){.asi-grid{grid-template-columns:1fr}.asi-cta .step-btn{white-space:normal;text-align:center;line-height:1.3;padding:10px 20px}}
 </style>
 </head>
 <body>
@@ -2787,6 +2806,33 @@ main{max-width:none;padding:44px 24px 56px;background:var(--lc-band)}
     </nav>
   </section>
 
+  <!-- ============ SECCIÓN — ASISTENCIAS OPCIONALES (cobertura ASI, SVA V32) ============
+       Solo con `asi=1` en el URL: el correo lo pone cuando la tarjeta de asistencias salió
+       en él (desde el 28 set 2026 y con la casilla prendida). Así el correo y la guía dicen
+       LO MISMO. Sin `asi`, la sección no existe y s5 sigue yendo a qtcita. Los seis planes
+       se leen de ../js/planes-asistencia.js (la misma fuente que el correo y /asistencias/). -->
+  <section class="section" id="sasi" hidden>
+    <div class="section-header">
+      <span class="section-num">Opcional · nuevo del INS</span>
+      <h2 class="section-title">Sumale asistencias a tu póliza</h2>
+      <p class="section-sub">Desde el 28 de setiembre podés agregar planes de asistencia para vos, tu casa, tu carro o tu mascota. <b>No cambian tus coberturas ni tu deducible</b>: se contratan aparte y se cobran junto con el seguro.</p>
+    </div>
+
+    <div class="asi-grid" id="asiGrid"></div>
+
+    <div class="asi-cta">
+      <a class="step-btn next" id="asiCta" href="../asistencias/" target="_blank" rel="noopener">Ver qué trae cada plan y en cuánto queda mi cotización →</a>
+      <p class="fine">Se abre con tu cotización cargada: prendés los que te sirvan y ves el total al año. No compromete a nada.</p>
+    </div>
+
+    <div class="asi-note"><b>Lo que conviene saber:</b> sin deducible · podés llevar más de uno · no llevan los descuentos ni los recargos de la póliza, solo el recargo por fraccionamiento si pagás en cuotas · los servicios se piden al 800-800-8001, las 24 horas.</div>
+
+    <nav class="step-nav-btns">
+      <button class="step-btn prev" data-target="s5">← Pagos</button>
+      <button class="step-btn next" data-target="qtcita">Avanzar →</button>
+    </nav>
+  </section>
+
   <!-- ============ SECCIÓN — QUÉ PASARÁ EL DÍA DE LA CITA ============ -->
   <section class="section" id="qtcita">
     <div class="section-header">
@@ -2961,6 +3007,7 @@ main{max-width:none;padding:44px 24px 56px;background:var(--lc-band)}
   </div>
 </div>
 
+<script src="../js/planes-asistencia.js"></script>
 <script>
 // ============ URL PARAMS ============
 const _params = new URLSearchParams(location.search);
@@ -2987,7 +3034,12 @@ const data = {
   pt: _params.get('pt') || null,
   // cb: las coberturas que trae ESTA cotización, para mostrar las mismas que
   // el correo. Formato "A-300000000.B-15000000.C.G.M".
-  cb: _params.get('cb') || null
+  cb: _params.get('cb') || null,
+  // asi=1: el correo trajo la tarjeta de planes de asistencia (desde el 28 set
+  // 2026, con la casilla prendida) → la guía muestra la misma sección. wa: el
+  // WhatsApp del agente, para el configurador.
+  asi: _params.get('asi') === '1',
+  wa: _params.get('wa') || ''
 };
 
 const fmt = (n) => '₡' + Number(n).toLocaleString('de-DE');
@@ -3419,8 +3471,51 @@ function applyPersonalization() {
   aplicarSecciones(_parseCbMapa(data.cb));
 }
 
+
+// ============ ASISTENCIAS OPCIONALES (cobertura ASI) ============
+// Solo con asi=1. Los planes salen de PLANES_ASI (../js/planes-asistencia.js);
+// si el módulo no cargó, la sección queda oculta: mejor no prometer nada.
+const ASI_ICONOS = {
+  mascota: '<path d="M8 6.5a1.6 2.2 0 1 0 0 .1M16 6.5a1.6 2.2 0 1 0 0 .1M4.5 11a1.6 2 0 1 0 0 .1M19.5 11a1.6 2 0 1 0 0 .1M12 11c-3 0-6 3.5-6 6a3 3 0 0 0 3 3c1.2 0 2-.5 3-.5s1.8.5 3 .5a3 3 0 0 0 3-3c0-2.5-3-6-6-6z"/>',
+  funerario: '<path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/>',
+  bienestar: '<path d="M3 12h4l2-5 4 10 2-5h6"/>',
+  premium: '<path d="M12 4v16M4 12h16"/>',
+  autos: '<path d="M5 13 6.8 8.5A2 2 0 0 1 8.7 7h6.6a2 2 0 0 1 1.9 1.5L19 13M4 13h16v5H4zM7 18v2M17 18v2"/>',
+  vip: '<path d="m3 8 4.5 4L12 5l4.5 7L21 8l-2 11H5z"/>'
+};
+const ASI_TONO = { verde: 't-verde', pizarra: 't-viol', cyan: 't-cyan', azul: 't-azul', naranja: 't-rosa', oro: 't-oro' };
+function urlPlanesDesdeGuia() {
+  const q = [];
+  const add = (k, v) => { if (v !== undefined && v !== null && String(v).trim() !== '') q.push(k + '=' + encodeURIComponent(String(v).trim())); };
+  add('n', data.n); add('l', data.l); add('w', data.w); add('a', data.a); add('wa', data.wa);
+  add('c', data.c); add('v', data.v); add('p', data.p); add('pa', data.pa);
+  return '../asistencias/' + (q.length ? '?' + q.join('&') : '');
+}
+function aplicarAsistencias() {
+  const sec = document.getElementById('sasi');
+  if (!sec || !data.asi || typeof PLANES_ASI === 'undefined' || !PLANES_ASI.length) return;
+  const grid = document.getElementById('asiGrid');
+  if (grid) {
+    grid.innerHTML = PLANES_ASI.map(p =>
+      '<div class="asi-row"><div class="icon svc-icon ' + (ASI_TONO[p.tono] || 't-azul') + '">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (ASI_ICONOS[p.id] || ASI_ICONOS.premium) + '</svg></div>' +
+        '<div><div class="name">' + esc(p.nom) + '</div><div class="linea">' + esc(p.linea) + '</div></div>' +
+        '<div class="qty">' + fmt(p.prima) + '<small>al año + IVA</small></div></div>'
+    ).join('');
+  }
+  const cta = document.getElementById('asiCta');
+  if (cta) cta.href = urlPlanesDesdeGuia();
+  sec.hidden = false;
+  // La sección entra al recorrido entre Pagos y la cita.
+  const s5next = document.querySelector('#s5 .step-btn.next[data-target="qtcita"]');
+  if (s5next) s5next.dataset.target = 'sasi';
+  const citaPrev = document.querySelector('#qtcita .step-btn.prev[data-target="s5"]');
+  if (citaPrev) { citaPrev.dataset.target = 'sasi'; citaPrev.textContent = '← Asistencias'; }
+}
+
 // Aplicar al cargar
 applyPersonalization();
+aplicarAsistencias();
 
 // ============ STICKY NAV + INTERSECTION OBSERVER ============
 const sections = document.querySelectorAll('.section');

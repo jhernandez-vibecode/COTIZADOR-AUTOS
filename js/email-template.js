@@ -107,6 +107,14 @@ function buildEmail(params) {
       })
     : '';
 
+  // ¿Este correo lleva la tarjeta de planes de asistencia? Solo con la casilla
+  // del paso 3 prendida Y desde el 28 set 2026 (asiDisponible). La misma
+  // bandera decide la tarjeta del correo y el `asi=1` de la guía: los dos
+  // tienen que decir LO MISMO.
+  const conAsistencias = !!(p.incluirAsistencias &&
+      typeof asiDisponible === 'function' && asiDisponible() &&
+      typeof _bloqueAsistencias === 'function');
+
   // URL del explicador con todos los datos personalizados
   const guideUrl = _buildGuideUrl({
     clientName:    nombre,
@@ -121,7 +129,9 @@ function buildEmail(params) {
     dedDFH:        p.dedDFH,
     prices:        prices,
     // Para que la guia muestre LAS MISMAS coberturas que este correo.
-    coberturas:    p.coberturas
+    coberturas:    p.coberturas,
+    // Para que la guia muestre la seccion de asistencias solo si este correo trajo la tarjeta.
+    asistencias:   conAsistencias
   });
 
   // Familia de fuentes con fallback (Outlook ignora Google Fonts → cae a Helvetica)
@@ -174,9 +184,7 @@ function buildEmail(params) {
   // existen en la solicitud de seguro y ofrecerlos seria prometer algo que
   // el cliente no puede contratar. El enlace lleva la prima anual cotizada
   // para que la pagina le muestre en cuanto quedaria el seguro.
-  const asistenciasHtml = (p.incluirAsistencias &&
-      typeof asiDisponible === 'function' && asiDisponible() &&
-      typeof _bloqueAsistencias === 'function')
+  const asistenciasHtml = conAsistencias
     ? _bloqueAsistencias({
         url: _buildPlanesUrl({ clientName: nombre, vehicle: vehiculo, plate: _placaEsRelleno(p.plate, p.plateClass) ? '' : plate, primaAnual: prices.anual }),
         fontFam: fontFam
@@ -578,6 +586,13 @@ function _buildGuideUrl(extras) {
   // Formato: "A-300000000.B-15000000.C.G.M" — codigo, y el monto detras de un
   // guion cuando el PDF lo trae. El punto y el guion no se escapan en un URL.
   add('cb', _codificarCoberturas(x.coberturas));
+  // asi=1: la guia muestra la seccion "Sumale asistencias" (17 set 2026). Solo
+  // cuando el correo llevo la tarjeta; sin esto los enlaces viejos no cambian.
+  // wa: el WhatsApp del agente, que la guia le pasa al configurador.
+  if (x.asistencias) {
+    params.push('asi=1');
+    if (CFG.WHATSAPP) params.push('wa=' + encodeURIComponent(CFG.WHATSAPP));
+  }
 
   if (params.length === 0) return base;
   const sep = base.indexOf('?') === -1 ? '?' : '&';

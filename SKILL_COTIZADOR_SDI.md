@@ -2777,9 +2777,33 @@ asistencias…").
 - **CSS del modal** al final de `css/linea-clara-consola.css` (bloque `.asi-*`), solo `index.html`.
 - **Aviso "Qué hay de nuevo"** `2026-09-17` + entrada en el pie.
 
+### La sección de asistencias en el explicador (17 sep 2026, tarde) — E1/E2/E3 aprobadas por JC
+
+JC: *"si debemos incluir esto aunque se haga más largo el explicador"*. Mockup sobre una copia de la guía (capturas
+375/900 px, artefacto https://claude.ai/artifact/9opS3MFZcN2sU1tDjbT9FE) → *"apruebo las tres, implementalo"*.
+
+- **`<section id="sasi" hidden>`** entre `s5` (Pagos) y `qtcita`: "Opcional · nuevo del INS" → **"Sumale asistencias a
+  tu póliza"**, seis filas `.asi-row` pintadas por `aplicarAsistencias()` desde **`PLANES_ASI`** (la guía carga
+  `../js/planes-asistencia.js` antes de su script; si el módulo no carga, la sección no sale), botón
+  `#asiCta` "Ver qué trae cada plan y en cuánto queda mi cotización" → `../asistencias/?n,l,w,a,wa,c,v,p,pa`
+  (`urlPlanesDesdeGuia()`), nota "lo que conviene saber".
+- **E1 · sin punto en la barra**: es un anexo como la cita; `_pasosGuia`/`sticky-dot` no cambian. `aplicarAsistencias`
+  re-encadena `#s5 .next → sasi` y `#qtcita .prev → sasi` ("← Asistencias"); sin `asi` quedan como antes.
+- **E2 · correo y guía dicen lo mismo**: `_buildGuideUrl` agrega **`asi=1`** y **`wa`** (WhatsApp del agente) solo con
+  la misma bandera `conAsistencias` que enchufa la tarjeta (casilla + `asiDisponible()`); `app.js` `_guideExtras()`
+  manda la misma bandera para el historial y el WhatsApp de la vista 4. `CLAVES` de `/g` acepta `cb`, `asi`, `wa`
+  (🔴 `cb` **faltaba** en la lista blanca desde el 25 ago: el acortador rechazaba el enlace de toda cotización con
+  coberturas y caía al largo en silencio; corregido de paso).
+- **E3 · precio anual sin IVA** ("₡7.200 al año + IVA"); la cuenta la hace el configurador.
+- CSS `.asi-*` al final del bloque LÍNEA CLARA del explicador. 🔴 **Al editar `explicacion/index.html` con Python,
+  abrir con `newline=''`**: en Windows la escritura normal convierte LF en CRLF y el diff entero cambia.
+- Tests en `test-asistencias.js` (**161 checks**): `asi=1`/`wa` solo con la tarjeta, sección oculta por defecto,
+  módulo cargado, re-encadenado, 5 dots. Smoke en localhost: con `asi=1` seis filas y navegación nueva; sin `asi` la
+  guía byte a byte como antes; 375 px sin desborde; consola 0.
+
 ### Verificación
 
-`tests/test-asistencias.js` (**150 checks**, con `asiCosto` en las cuatro formas de pago y la cuota en correo, WhatsApp y página): datos y conteos, portón por fecha, tarjeta del correo (sale/no sale según
+`tests/test-asistencias.js` (**161 checks**, con `asiCosto` en las cuatro formas de pago y la cuota en correo, WhatsApp y página): datos y conteos, portón por fecha, tarjeta del correo (sale/no sale según
 fecha y casilla, va después de los pagos, lleva `pa`), `_buildPlanesUrl` y `asiMonto` con los tres formatos, el correo
 nuevo (D1; el correo sin la cuenta; D3 sin "usted"; D5 `pv`+`fp`; ficha del agente del perfil y no
 la del dueño; XSS de la nota), el WhatsApp, la página (misma fuente, `pv`/`pa`, endpoint), la consola (orden de carga,
