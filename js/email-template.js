@@ -593,8 +593,9 @@ function _buildGuideUrl(extras) {
  * Los extras son del cliente y son opcionales:
  *   c  nombre de pila        v  vehiculo
  *   pa prima anual COTIZADA (desde el correo de cotizacion: "Tu cotizacion")
- *   pv prima anual VIGENTE  (desde el aviso a clientes con poliza: "Tu seguro hoy")
- *   fp forma de pago a|s|t|m (para decir cuanto seria por cuota)
+ *   pv lo que paga HOY por recibo (desde el aviso a clientes con poliza: "Tu seguro hoy"),
+ *      o sea la cuota de `fp`; con fp=a es el año
+ *   fp forma de pago a|s|t|m (la pagina habla en esa cuota)
  * La pagina lee una sola de pa/pv; si vienen las dos manda pv.
  *
  * @param {object} [extras]

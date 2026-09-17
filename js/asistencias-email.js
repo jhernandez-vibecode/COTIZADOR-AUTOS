@@ -11,8 +11,9 @@
  * Transcrito del mockup aprobado por JC el 17 set 2026
  * (docs/superpowers/specs/2026-09-17-asistencias-cliente-existente-mockup.html)
  * con sus cinco decisiones:
- *   D1 la prima que se escribe es la ANUAL CON IVA (la del recibo); a las
- *      asistencias se les suma el 13 % antes de sumarlas (asiConIva).
+ *   D1 (corregida por JC el 17 set, 2.ª vuelta): la prima que se escribe es LO
+ *      QUE PAGA EN CADA RECIBO, con IVA (la cuota de su forma de pago). Las
+ *      asistencias se le suman en esa misma cuota, con recargo e IVA.
  *   D2 (corregida por JC el mismo 17 set): la cuota SÍ lleva el recargo por
  *      fraccionamiento del INS (8/11/13 %) y después el IVA — asiCosto(). El
  *      correo ya NO hace la cuenta (JC: "ese texto es innecesario"): muestra
@@ -49,8 +50,8 @@ function asiParseMonto(v) {
  * HTML del correo.
  * @param {object} p
  * @param {string} p.nombrePila     - saludo ("Mariela")
- * @param {number} p.primaVigente   - prima anual CON IVA que paga hoy (D1)
- * @param {string} [p.formaPago]    - a|s|t|m (default 'a')
+ * @param {number} p.primaVigente   - lo que paga HOY en cada recibo, con IVA: la cuota de su forma de pago (D1, corregida)
+ * @param {string} [p.formaPago]    - a|s|t|m (default 'a': la prima es el año)
  * @param {string} [p.vehiculo]     - opcional, solo se nombra
  * @param {string} [p.notaAdicional]
  * @param {string} [p.urlPlanes]    - se calcula con _buildPlanesUrl si no viene
@@ -108,7 +109,7 @@ function buildAsistenciasEmail(p) {
       '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:' + BANDA + ';border-radius:16px;"><tr><td style="padding:18px 20px;">' +
         '<p style="margin:0;font-size:11px;letter-spacing:0.12em;color:' + GRIS + ';font-weight:bold;text-transform:uppercase;">Tu seguro hoy</p>' +
         '<p style="margin:4px 0 0;font-family:' + mono + ';font-size:28px;color:' + TINTA + ';font-weight:bold;">' + col(prima) + '</p>' +
-        '<p style="margin:2px 0 0;font-size:12.5px;color:' + GRIS + ';">al a&ntilde;o, con IVA &middot; pago ' + forma.nombre + '</p>' +
+        '<p style="margin:2px 0 0;font-size:12.5px;color:' + GRIS + ';">' + (forma.n > 1 ? 'por ' + forma.cuota + ', con IVA &middot; pago ' + forma.nombre : 'al a&ntilde;o, con IVA &middot; pago anual') + '</p>' +
       '</td></tr></table>' +
     '</td></tr>'
   ) : '';
@@ -204,7 +205,8 @@ function buildAsistenciasWaTexto(p) {
   t += (o.sinCorreo ? 'Te cuento una novedad: ' : 'Te acabo de enviar un correo con una novedad: ') +
        'desde el 28 de setiembre el INS permite sumarle planes de asistencia a tu póliza de autos (mascota, funeraria, salud, carro y VIP), desde ' +
        col(asiDesde()) + ' al año más IVA.\n\n';
-  if (prima > 0) t += 'Hoy pagás ' + col(prima) + ' al año. ';
+  var fpWa = ASI_FORMAS[o.formaPago] ? o.formaPago : 'a';
+  if (prima > 0) t += 'Hoy pagás ' + col(prima) + (fpWa === 'a' ? ' al año. ' : ' por ' + ASI_FORMAS[fpWa].cuota + '. ');
   t += 'En este enlace ves qué trae cada plan y en cuánto quedaría tu seguro:\n' + url + '\n\n';
   t += 'Si te interesa alguno, me decís y lo agrego a tu póliza.';
   return t;

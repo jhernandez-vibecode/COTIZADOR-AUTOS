@@ -187,9 +187,9 @@
                 <input class="form-control" id="as-mail" type="email" autocomplete="off" />
               </div>
               <div class="form-row">
-                <label class="form-label" for="as-prima">Prima anual vigente</label>
-                <div class="asi-inp"><span class="asi-pre">₡</span><input class="form-control asi-mono" id="as-prima" inputmode="numeric" placeholder="487.300" autocomplete="off" /></div>
-                <span class="asi-hint">Lo que paga hoy al año, con IVA, como sale en el recibo.</span>
+                <label class="form-label" for="as-prima">Prima vigente (lo que paga por recibo)</label>
+                <div class="asi-inp"><span class="asi-pre">₡</span><input class="form-control asi-mono" id="as-prima" inputmode="numeric" placeholder="215.108" autocomplete="off" /></div>
+                <span class="asi-hint">El monto del recibo, con IVA: si paga semestral, el semestre; si paga anual, el año.</span>
               </div>
               <div class="form-row">
                 <span class="form-label">Forma de pago</span>
@@ -199,7 +199,7 @@
                   <button type="button" data-fp="t" aria-pressed="false">Trimestral</button>
                   <button type="button" data-fp="m" aria-pressed="false">Mensual</button>
                 </div>
-                <span class="asi-hint">Para decirle cuánto sería por cuota.</span>
+                <span class="asi-hint">La del recibo. Las asistencias se le suman en esa misma cuota, con su recargo por fraccionamiento y el IVA.</span>
               </div>
               <div class="form-row">
                 <label class="form-label" for="as-veh">Vehículo <span class="asi-opt">(opcional)</span></label>
@@ -216,7 +216,7 @@
             </div>
             <div class="asi-resumen">
               <div class="r"><span>Su seguro hoy</span><b id="as-r-hoy">—</b></div>
-              <div class="r"><span>Con el plan más barato (Mascota, con IVA)</span><b id="as-r-min">—</b></div>
+              <div class="r"><span>Con el plan más barato (Mascota)</span><b id="as-r-min">—</b></div>
               <div class="r"><span>Con los seis planes</span><b id="as-r-max">—</b></div>
             </div>
           </div>

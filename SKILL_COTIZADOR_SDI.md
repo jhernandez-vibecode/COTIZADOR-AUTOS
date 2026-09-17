@@ -2711,11 +2711,13 @@ https://claude.ai/artifact/V5QVh1wXVCfpP4mDtvAcwW). Plan del 4 sep: `docs/superp
 
 | | Decisión | Consecuencia en el código |
 |---|---|---|
-| **D1** | La prima que el agente escribe es la **anual CON IVA** (la del recibo) | `asiConIva()` le suma el 13 % a cada plan antes de sumarlo: las dos cifras en la misma base |
+| **D1** | ~~La prima anual con IVA~~ **CORREGIDA por JC (2.ª vuelta, misma tarde)**: *"la plantilla debe reconocer desde la raíz la forma de pago… marqué que es semestral y el cálculo de arriba sigue saliendo anual"*. La prima que el agente escribe es **lo que el cliente paga en cada recibo, con IVA** (la cuota de su forma de pago; si paga anual, el año) | `pv` = la cuota, `fp` = la forma. **Todo habla en esa cuota**: el correo ("₡215.108 por semestre, con IVA · pago semestral"), el WhatsApp ("Hoy pagás ₡215.108 por semestre"), el resumen del modal y el configurador ("Tu seguro hoy ₡215.108 por semestre → quedaría en ₡219.501 por semestre", con "Al año: ₡439.002" debajo). Las asistencias se suman en la misma cuota con `asiCosto(prima, fp).cuota`. 🔴 **La cotizada (`pa`) sigue siendo anual**: llega del correo de cotización sin `fp` y la página fuerza `fp='a'` |
 | **D2** | ~~La cuota "antes del recargo por fraccionamiento"~~ **CORREGIDA por JC la misma tarde**: *"las primas de las asistencias son anuales, si una póliza es semestral se divide entre dos y se le aplica el recargo por fraccionamiento y se le suma el impuesto"*. Verificado en el dossier del INS (cada plan: "PRIMA ANUAL … No incluye recargo por fraccionamiento ni IVA de 13 %"; "no se le aplicará descuentos ni recargos… salvo el recargo por fraccionamiento") | `asiCosto(prima, fp)`: **cuota = prima ÷ cuotas × (1 + recargo) × 1,13**, con `ASI_RECARGO` = 8 % semestral · 11 % trimestral · 13 % mensual (verificados contra el PDF de cotización de muestra: sem×2, trim×4, men×12 sobre el anual). El configurador desglosa prima · recargo · IVA y dice la cuota "ya con el recargo y el IVA". 🔴 **El correo NO hace la cuenta** (JC: *"ese texto es innecesario"*): muestra la prima vigente y manda al configurador |
 | **D3** | **Trato de vos** | Como el correo de cotización y el configurador. Los de Póliza activa y Renovación siguen de usted |
 | **D4** | **NO entra al registro de Cotizaciones** | `asistencias-ui.js` no toca `history.js` (el test lo vigila) |
 | **D5** | **Un solo configurador** para los dos caminos | Con `pa` (prima cotizada) dice "Tu cotización"; con `pv` (prima vigente) "Tu seguro hoy"; sin ninguno, solo el total de las asistencias |
+
+🔴 **JC confirmó con la ficha del INS** ("PRIMA DEL PLAN: No aplica descuentos o recargos a la prima, a excepción del recargo por fraccionamiento"; la captura era la de Hogar Comprensivo, el dossier de Autos lo dice igual en su página 8) que **el único recargo es el de fraccionamiento**. No inventar otros.
 
 🔴 **Regla que dejó la corrección:** todo número que le prometa al cliente cuánto sube su seguro lleva el recargo por fraccionamiento de SU forma de pago y el IVA, en ese orden. `asiConIva()` (solo IVA) queda para el pago anual; para cualquier otra forma se usa `asiCosto(prima, fp)`. Los renglones del resumen suman exacto al total porque el IVA absorbe el redondeo.
 
@@ -2744,15 +2746,15 @@ asistencias…").
   planes con precio, botón al configurador, nota, firma, `_pieSDI`), `buildAsistenciasWaTexto`/`buildAsistenciasWaUrl`
   (`web.whatsapp.com/send/`, nunca `wa.me`; con `sinCorreo` no afirma que se mandó un correo), `asiParseMonto`.
 - **`js/asistencias-ui.js`** — el **modal `#asiModal`** (acceso `#btnAsistencias` en el rail, grupo Enviar, cuarto ítem).
-  Campos `as-nom`, `as-mail`, `as-prima`, `as-fp` (segmentos a/s/t/m), `as-veh`, `as-wa`, `as-nota`; resumen
+  Campos `as-nom`, `as-mail`, `as-prima` (**lo que paga por recibo**), `as-fp` (segmentos a/s/t/m), `as-veh`, `as-wa`, `as-nota`; resumen
   `as-r-hoy/min/max`; vista previa en iframe sandbox `#as-prev`; envío con `buildMIMESimple` + `enviarConReintento`;
   éxito `#asiDone` con **1 · WhatsApp** (`#btnAsiWa`, acorta con tipo `'p'` reservando la pestaña ANTES del await) y
   **2 · Otro cliente** (`#btnAsiOtro`). `initAsistenciasModal()` la llama `app.js` **con guard `typeof`** y cada id se
   busca con guard: un id inexistente no tumba el arranque. Orden de carga: `planes-asistencia` → `email-marca` →
   `email-template` → `asistencias-email` → … → `asistencias-ui` → `app`.
 - **`/asistencias/index.html`** — el configurador (cara del **cliente**: INS arriba en azul, SDI al pie, sin registro de
-  cambios). Lee `n,l,wa` (agente), `c,v`, `pv`/`pa`, `fp`; **pv manda sobre pa**; sin ninguno esconde la fila de tres
-  cifras. Tres cifras: "Tu seguro hoy" · "Asistencias elegidas" (con IVA) · "Tu seguro quedaría en" con el aumento en
+  cambios). Lee `n,l,wa` (agente), `c,v`, `pv`/`pa`, `fp`; **pv (la cuota del recibo) manda sobre pa (anual)**; sin ninguno esconde
+  la fila de tres cifras. Con `fp` distinto de `a` toda la página habla "por semestre/trimestre/mes". Tres cifras: "Tu seguro hoy" · "Asistencias elegidas" (con IVA) · "Tu seguro quedaría en" con el aumento en
   punto azul (nunca rojo). Interruptores, "Ver qué trae" con la tabla de servicios, resumen pegajoso con la cuota (D2) y
   botón de WhatsApp al agente con los planes escritos. Todo escapado con `textContent`/`esc()` (verificado con
   `<img onerror>` y `<svg onload>`).
@@ -2764,7 +2766,7 @@ asistencias…").
 
 ### Verificación
 
-`tests/test-asistencias.js` (**142 checks**, con `asiCosto` en las cuatro formas de pago): datos y conteos, portón por fecha, tarjeta del correo (sale/no sale según
+`tests/test-asistencias.js` (**145 checks**, con `asiCosto` en las cuatro formas de pago y la cuota en correo, WhatsApp y página): datos y conteos, portón por fecha, tarjeta del correo (sale/no sale según
 fecha y casilla, va después de los pagos, lleva `pa`), `_buildPlanesUrl` y `asiMonto` con los tres formatos, el correo
 nuevo (D1; el correo sin la cuenta; D3 sin "usted"; D5 `pv`+`fp`; ficha del agente del perfil y no
 la del dueño; XSS de la nota), el WhatsApp, la página (misma fuente, `pv`/`pa`, endpoint), la consola (orden de carga,

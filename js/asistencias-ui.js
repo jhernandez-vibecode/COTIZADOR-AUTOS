@@ -2,7 +2,7 @@
  * Cotizador SDI · Modal "Asistencias a cliente con póliza"
  *
  * Cuarto envío de la consola (17 set 2026). Sin PDF: el agente escribe nombre
- * de pila, correo, la prima anual vigente (con IVA, la del recibo) y la forma
+ * de pila, correo, la prima vigente (lo que paga en cada recibo, con IVA) y la forma
  * de pago; opcionalmente el vehículo, el WhatsApp y una nota. A la derecha ve
  * el correo armarse en vivo. Al enviar, el modal pasa a la pantalla de éxito
  * con 1 · Avisar por WhatsApp (enlace corto /p con la prima adentro) y
@@ -86,10 +86,13 @@ function _asiRepintar() {
   var col = function (n) { return '₡' + Math.round(n).toLocaleString('de-DE'); };
   var hoy = _asiEl('as-r-hoy'), min = _asiEl('as-r-min'), max = _asiEl('as-r-max');
   var todos = PLANES_ASI.reduce(function (a, pl) { return a + pl.prima; }, 0);
-  if (hoy) hoy.textContent = p.primaVigente > 0 ? col(p.primaVigente) : '—';
-  // Con el recargo por fraccionamiento de la forma de pago elegida y el IVA.
-  if (min) min.textContent = p.primaVigente > 0 ? col(p.primaVigente + asiCosto(asiDesde(), _asiFp).anual) : '—';
-  if (max) max.textContent = p.primaVigente > 0 ? col(p.primaVigente + asiCosto(todos, _asiFp).anual) : '—';
+  // La prima es lo que paga por CUOTA (el recibo); las asistencias se suman en
+  // esa misma cuota, con el recargo por fraccionamiento y el IVA (asiCosto).
+  var f = ASI_FORMAS[_asiFp] || ASI_FORMAS.a;
+  var unidad = f.n > 1 ? ' por ' + f.cuota : ' al a\u00f1o';
+  if (hoy) hoy.textContent = p.primaVigente > 0 ? col(p.primaVigente) + unidad : '—';
+  if (min) min.textContent = p.primaVigente > 0 ? col(p.primaVigente + asiCosto(asiDesde(), _asiFp).cuota) + unidad : '—';
+  if (max) max.textContent = p.primaVigente > 0 ? col(p.primaVigente + asiCosto(todos, _asiFp).cuota) + unidad : '—';
 
   clearTimeout(_asiPrevTimer);
   _asiPrevTimer = setTimeout(function () {
@@ -113,7 +116,7 @@ async function _asiEnviar() {
   var p = _asiParams();
   if (!p.nombrePila) { showToast('Escribí el nombre de pila del cliente.', 'error'); var n = _asiEl('as-nom'); if (n) n.focus(); return; }
   if (!esEmailValido(p.correo)) { showToast('El correo del cliente no parece válido.', 'error'); var m = _asiEl('as-mail'); if (m) m.focus(); return; }
-  if (!(p.primaVigente > 0)) { showToast('Escribí la prima anual vigente (la del recibo, con IVA).', 'error'); var pr = _asiEl('as-prima'); if (pr) pr.focus(); return; }
+  if (!(p.primaVigente > 0)) { showToast('Escribí la prima vigente: lo que paga en cada recibo, con IVA.', 'error'); var pr = _asiEl('as-prima'); if (pr) pr.focus(); return; }
 
   var btn = _asiEl('btnAsiSend');
   if (btn) { btn.disabled = true; btn.textContent = 'Enviando…'; }
