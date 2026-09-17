@@ -53,6 +53,7 @@ function asiParseMonto(v) {
  * @param {number} p.primaVigente   - lo que paga HOY en cada recibo, con IVA: la cuota de su forma de pago (D1, corregida)
  * @param {string} [p.formaPago]    - a|s|t|m (default 'a': la prima es el año)
  * @param {string} [p.vehiculo]     - opcional, solo se nombra
+ * @param {string} [p.placa]        - opcional; viaja al configurador para el WhatsApp al agente
  * @param {string} [p.notaAdicional]
  * @param {string} [p.urlPlanes]    - se calcula con _buildPlanesUrl si no viene
  * @returns {string}
@@ -69,10 +70,11 @@ function buildAsistenciasEmail(p) {
   var fp       = ASI_FORMAS[o.formaPago] ? o.formaPago : 'a';
   var forma    = ASI_FORMAS[fp];
   var vehiculo = String(o.vehiculo || '').trim();
+  var placa    = String(o.placa || '').trim();
   var nota     = String(o.notaAdicional || '').trim();
   var url      = String(o.urlPlanes || '').trim() ||
                  (typeof _buildPlanesUrl === 'function'
-                   ? _buildPlanesUrl({ clientName: saludo, vehicle: vehiculo, primaVigente: prima, formaPago: fp })
+                   ? _buildPlanesUrl({ clientName: saludo, vehicle: vehiculo, plate: placa, primaVigente: prima, formaPago: fp })
                    : '');
 
   var agente   = CFG.FROM_NAME  || 'Juan Carlos Hernandez Vargas';

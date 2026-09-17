@@ -28,7 +28,7 @@ export const CLAVES_A = new Set(["a", "n", "tel", "wa", "em", "lic", "web"]);
 // Parametros del configurador de asistencias /asistencias/ (ver
 // _buildPlanesUrl en js/email-template.js): la ficha del agente + el cliente,
 // su prima (cotizada `pa` o vigente `pv`) y la forma de pago. 17 set 2026.
-export const CLAVES_P = new Set(["n", "l", "w", "a", "wa", "c", "v", "pa", "pv", "fp"]);
+export const CLAVES_P = new Set(["n", "l", "w", "a", "wa", "c", "v", "p", "pa", "pv", "fp"]);
 
 // Hosts a los que /a tiene permitido redirigir. La app de asistencia vive
 // en su propio repo (APP-ASISTENCIA-SEGURO-AUTOS). Si algun dia estrena

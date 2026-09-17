@@ -55,7 +55,7 @@ ok('base-limpia-query',
    baseAsistencia('https://appasistenciaseguroautos.netlify.app/?a=jc#x') === 'https://appasistenciaseguroautos.netlify.app/');
 
 // ---------- Configurador de asistencias (/p, 17 set 2026) ----------
-ok('p-acepta', esNuestro('n=Agente%20Prueba&l=00-0000&wa=8888-0000&c=Mariela&v=Hyundai&pv=487300&fp=t', CLAVES_P));
+ok('p-acepta', esNuestro('n=Agente%20Prueba&l=00-0000&wa=8888-0000&c=Mariela&v=Hyundai&p=ABC123&pv=487300&fp=t', CLAVES_P));
 ok('p-acepta-cotizada', esNuestro('n=Agente&pa=570891&c=Ana', CLAVES_P));
 ok('p-rechaza-clave-ajena', !esNuestro('n=Agente&pv=1&evil=1', CLAVES_P));
 // Los precios/placa del explicador no van en /p, ni la prima en /g: listas distintas.

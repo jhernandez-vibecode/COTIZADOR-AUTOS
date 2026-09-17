@@ -1479,6 +1479,19 @@ https://claude.ai/artifact/V5QVh1wXVCfpP4mDtvAcwW). Plan del 4 sep: `docs/superp
 
 🔴 **Regla que dejó la corrección:** todo número que le prometa al cliente cuánto sube su seguro lleva el recargo por fraccionamiento de SU forma de pago y el IVA, en ese orden. `asiConIva()` (solo IVA) queda para el pago anual; para cualquier otra forma se usa `asiCosto(prima, fp)`. Los renglones del resumen suman exacto al total porque el IVA absorbe el redondeo.
 
+**Ajustes de JC tras probar el semestral en producción (17 sep, tarde):**
+- **El WhatsApp que el cliente le manda al agente** desde el configurador ya no dice "Hoy pago ₡X por semestre"
+  (*"puede confundir en el monto que va a pagar después"*) y **lleva la placa** para ubicar la póliza: *"Hola Juan,
+  revisé los planes de asistencia y me interesan: Salud Premium. Soy Alba, placa ABC123 (TOYOTA LAND CRUISER)."*.
+  La placa viaja por el param **`p`** (nuevo campo opcional `as-placa` en el modal; desde la cotización va la del PDF
+  salvo el relleno del 0 km; `CLAVES_P` la acepta) y se muestra bajo "Tu seguro hoy".
+- **Responsivo de verdad** (*"la mayoría lo va a ver en su celular"*): la tarjeta de cada plan tenía el precio en una
+  sola línea sin partir y empujaba el interruptor fuera del borde. Ahora el precio va en dos líneas ("₡7.200 al año, sin
+  IVA" / "₡4.393 por semestre, con IVA y recargo"), la columna del texto es `minmax(0,1fr)` y bajo 860 px el precio pasa
+  debajo del nombre. **Barra fija abajo en móvil** (`#barraMov`) con "Tu seguro quedaría en ₡X por semestre · + ₡Y" y
+  el botón "Ver resumen", que se pinta junto con el resumen. Verificado con captura headless por arnés de iframes a
+  375 y 760 px (arnés en `.netlify/smoke/`, ignorado y borrado).
+
 Ajuste de copy de JC: el botón del correo dice **"Ver qué trae cada plan y en cuánto queda mi seguro"** (no "Armar mis
 asistencias…").
 
@@ -1517,14 +1530,14 @@ asistencias…").
   botón de WhatsApp al agente con los planes escritos. Todo escapado con `textContent`/`esc()` (verificado con
   `<img onerror>` y `<svg onload>`).
 - **Enlace corto `/p/:id`** — `enlace.mjs` atiende `/p` (mismo sitio, destino `/asistencias/`, clave `p:` + huella `hp:`),
-  `validacion.mjs` → `CLAVES_P` (`n,l,w,a,wa,c,v,pa,pv,fp`), `shortlink.js` acepta `tipo 'p'`. 🔴 **Un alias recién
+  `validacion.mjs` → `CLAVES_P` (`n,l,w,a,wa,c,v,p,pa,pv,fp`), `shortlink.js` acepta `tipo 'p'`. 🔴 **Un alias recién
   desplegado necesita el redeploy para enganchar la Function** (ver "Enlaces cortos").
 - **CSS del modal** al final de `css/linea-clara-consola.css` (bloque `.asi-*`), solo `index.html`.
 - **Aviso "Qué hay de nuevo"** `2026-09-17` + entrada en el pie.
 
 ### Verificación
 
-`tests/test-asistencias.js` (**145 checks**, con `asiCosto` en las cuatro formas de pago y la cuota en correo, WhatsApp y página): datos y conteos, portón por fecha, tarjeta del correo (sale/no sale según
+`tests/test-asistencias.js` (**150 checks**, con `asiCosto` en las cuatro formas de pago y la cuota en correo, WhatsApp y página): datos y conteos, portón por fecha, tarjeta del correo (sale/no sale según
 fecha y casilla, va después de los pagos, lleva `pa`), `_buildPlanesUrl` y `asiMonto` con los tres formatos, el correo
 nuevo (D1; el correo sin la cuenta; D3 sin "usted"; D5 `pv`+`fp`; ficha del agente del perfil y no
 la del dueño; XSS de la nota), el WhatsApp, la página (misma fuente, `pv`/`pa`, endpoint), la consola (orden de carga,
@@ -1679,7 +1692,7 @@ repuestos y pasos, anual siempre resaltado) + **logo del INS en azul** → "dale
 8. **base64 en chunks** — `_uint8ToBase64` parte en chunks de 8192 bytes para evitar `Maximum call stack size exceeded` en PDFs grandes.
 9. **CFG.GUIDE_URL apunta al dominio Netlify** — el custom domain `cotizador.appsegurosdigitales.com` también está en los orígenes autorizados de OAuth, así que ambos funcionan; pero si aparece un dominio NUEVO hay que agregarlo primero en Google Cloud Console o el login se rechaza. (Fue el caso del sitio Netlify duplicado `cotizador-autos-sdi.netlify.app`, que rechaza login porque no está autorizado — ver Pendientes.)
 10. **Tests** — `tests/*` son Node sin runner, **22 archivos** (17 sep 2026). El más nuevo:
-    **`test-asistencias.js`** (145 — los planes ASI, el correo a clientes con póliza, la página y el enlace `/p`).
+    **`test-asistencias.js`** (150 — los planes ASI, el correo a clientes con póliza, la página y el enlace `/p`).
     Del 27 ago: **`test-explicador-secciones.js`** (32 — la lógica pura del explicador dinámico, incluida la regla de
     asistencia G/M, extraída de `explicacion/index.html` por los marcadores `[GUIA-CB-PURO]`, + el circuito
     correo → `cb` → guía). Del 25 ago:
@@ -1919,7 +1932,7 @@ enlaces que el cliente ve CRUDOS en WhatsApp son largos y WhatsApp los partía c
 |---|---|---|---|
 | `/g/:id` | Guía de la cotización (hasta 13 params, ~280 chars) | `/explicacion/` **del mismo sitio**, armado en el servidor | `CLAVES` (params del explicador) |
 | `/a/:id` | Guía de emergencias de la póliza (ficha del agente, ~183 chars) | **otro sitio** (app de asistencia) → `DESTINOS_A` | `CLAVES_A` (`a,n,tel,wa,em,lic,web`) |
-| `/p/:id` | Configurador de asistencias (ficha + cliente + prima, 17 sep 2026) | `/asistencias/` **del mismo sitio** | `CLAVES_P` (`n,l,w,a,wa,c,v,pa,pv,fp`) |
+| `/p/:id` | Configurador de asistencias (ficha + cliente + prima, 17 sep 2026) | `/asistencias/` **del mismo sitio** | `CLAVES_P` (`n,l,w,a,wa,c,v,p,pa,pv,fp`) |
 
 Se acorta **solo** donde el cliente ve la URL cruda: WhatsApp (vista 4 e historial
 💬 del cotizador, vista 4 de pólizas) y Copiar 📄. El correo y el historial guardan

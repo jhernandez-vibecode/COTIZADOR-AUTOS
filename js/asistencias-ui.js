@@ -37,9 +37,10 @@ function _asiParams() {
     primaVigente:  prima,
     formaPago:     _asiFp,
     vehiculo:      _asiVal('as-veh'),
+    placa:         _asiVal('as-placa'),
     telCliente:    _asiVal('as-wa'),
     notaAdicional: _asiVal('as-nota'),
-    urlPlanes:     _buildPlanesUrl({ clientName: _asiVal('as-nom'), vehicle: _asiVal('as-veh'), primaVigente: prima, formaPago: _asiFp })
+    urlPlanes:     _buildPlanesUrl({ clientName: _asiVal('as-nom'), vehicle: _asiVal('as-veh'), plate: _asiVal('as-placa'), primaVigente: prima, formaPago: _asiFp })
   };
 }
 
@@ -59,7 +60,7 @@ function closeAsistenciasModal() {
 
 /** Vuelve el modal al formulario vacío (también al elegir "Otro cliente"). */
 function _asiReset() {
-  ['as-nom', 'as-mail', 'as-prima', 'as-veh', 'as-wa', 'as-nota'].forEach(function (id) {
+  ['as-nom', 'as-mail', 'as-prima', 'as-veh', 'as-placa', 'as-wa', 'as-nota'].forEach(function (id) {
     var el = _asiEl(id); if (el) el.value = '';
   });
   _asiSetFp('a');
@@ -166,7 +167,7 @@ function initAsistenciasModal() {
   on('btnAsiWa',       'click', _asiWaClick);
   on('btnAsiOtro',     'click', _asiReset);
   on('btnAsiDoneClose','click', closeAsistenciasModal);
-  ['as-nom', 'as-mail', 'as-prima', 'as-veh', 'as-nota'].forEach(function (id) { on(id, 'input', _asiRepintar); });
+  ['as-nom', 'as-mail', 'as-prima', 'as-veh', 'as-placa', 'as-nota'].forEach(function (id) { on(id, 'input', _asiRepintar); });
   var fp = _asiEl('as-fp');
   if (fp) fp.addEventListener('click', function (e) {
     var b = e.target.closest && e.target.closest('[data-fp]');

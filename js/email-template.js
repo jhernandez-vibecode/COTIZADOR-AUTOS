@@ -178,7 +178,7 @@ function buildEmail(params) {
       typeof asiDisponible === 'function' && asiDisponible() &&
       typeof _bloqueAsistencias === 'function')
     ? _bloqueAsistencias({
-        url: _buildPlanesUrl({ clientName: nombre, vehicle: vehiculo, primaAnual: prices.anual }),
+        url: _buildPlanesUrl({ clientName: nombre, vehicle: vehiculo, plate: _placaEsRelleno(p.plate, p.plateClass) ? '' : plate, primaAnual: prices.anual }),
         fontFam: fontFam
       })
     : '';
@@ -591,7 +591,7 @@ function _buildGuideUrl(extras) {
  * aunque el correo lo mande otro agente.
  *
  * Los extras son del cliente y son opcionales:
- *   c  nombre de pila        v  vehiculo
+ *   c  nombre de pila        v  vehiculo        p  placa (identifica la poliza en el WhatsApp al agente)
  *   pa prima anual COTIZADA (desde el correo de cotizacion: "Tu cotizacion")
  *   pv lo que paga HOY por recibo (desde el aviso a clientes con poliza: "Tu seguro hoy"),
  *      o sea la cuota de `fp`; con fp=a es el año
@@ -624,6 +624,7 @@ function _buildPlanesUrl(extras) {
   };
   add('c',  x.clientName);
   add('v',  x.vehicle);
+  add('p',  x.plate);
   add('pa', num(x.primaAnual));
   add('pv', num(x.primaVigente));
   if (/^[astm]$/.test(String(x.formaPago || ''))) add('fp', x.formaPago);

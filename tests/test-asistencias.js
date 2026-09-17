@@ -119,6 +119,8 @@ var u = _buildPlanesUrl({ clientName: 'Mariela', vehicle: 'Hyundai Tucson', prim
 ok('pv normaliza "487.300" → 487300', /[?&]pv=487300/.test(u));
 ok('fp viaja', /[?&]fp=t/.test(u));
 ok('c viaja', /[?&]c=Mariela/.test(u));
+ok('p (placa) viaja', /[?&]p=ABC123/.test(_buildPlanesUrl({ plate: 'ABC123' })));
+ok('sin placa no viaja p', !/[?&]p=/.test(u));
 ok('wa del agente viaja', /[?&]wa=8888-0000/.test(u));
 ok('fp invalido no viaja', !/[?&]fp=/.test(_buildPlanesUrl({ formaPago: 'x' })));
 ok('prima en formato US "570,891.00" → 570891', /[?&]pa=570891/.test(_buildPlanesUrl({ primaAnual: '570,891.00' })));
@@ -146,6 +148,8 @@ ok('D5: el boton lleva pv=487300', /asistencias\/\?[^"]*pv=487300/.test(h));
 ok('D5: el boton lleva fp=t', /asistencias\/\?[^"]*fp=t/.test(h));
 ok('el boton dice "Ver que trae cada plan y en cuanto queda mi seguro"', /Ver qu&eacute; trae cada plan y en cu&aacute;nto queda mi seguro/.test(h));
 ok('nombra el vehiculo', h.indexOf('Hyundai Tucson 2021') !== -1);
+var hPlaca = E.buildAsistenciasEmail({ nombrePila: 'Ana', primaVigente: 1000, placa: 'ABC123' });
+ok('la placa viaja al configurador en el boton', /asistencias\/\?[^"]*p=ABC123/.test(hPlaca));
 ok('la nota va escapada (XSS)', h.indexOf('&lt;dos&gt;') !== -1 && h.indexOf('<dos>') === -1);
 ok('lleva el filete SDI', h.indexOf('#0D9488') !== -1 || h.indexOf('#0d9488') !== -1);
 ok('lleva el pie SDI con la licencia', h.indexOf('Licencia SUGESE 00-0000') !== -1);
@@ -183,6 +187,8 @@ ok('lee pv y pa', pagina.indexOf("Q.get('pv')") !== -1 && pagina.indexOf("Q.get(
 ok('la pagina aplica el recargo por fraccionamiento (asiCosto + ASI_RECARGO)', pagina.indexOf('asiCosto(p.prima, fp)') !== -1 && pagina.indexOf('ASI_RECARGO[fp]') !== -1);
 ok('la pagina habla en la cuota de la forma de pago (UNIDAD por cuota)', pagina.indexOf("UNIDAD = fp === 'a' ? 'al año' : 'por ' + FP[fp][1]") !== -1 && pagina.indexOf('var tot = PRIMA + cuotaAsis') !== -1);
 ok('la cotizada (pa) siempre es anual', pagina.indexOf("MODO === 'vigente' && FP[param('fp', 'a')]") !== -1);
+ok('el WhatsApp al agente lleva la placa', pagina.indexOf("'placa ' + PLACA") !== -1);
+ok('el WhatsApp al agente ya NO dice "Hoy pago" (JC: confunde)', pagina.indexOf('Hoy pago') === -1);
 ok('la pagina ya no dice "antes del recargo"', pagina.indexOf('antes del recargo') === -1);
 ok('WhatsApp por web.whatsapp.com/send/', pagina.indexOf('https://web.whatsapp.com/send/?phone=') !== -1 && pagina.indexOf('wa.me') === -1);
 ok('el INS arriba (cara del cliente)', pagina.indexOf('ins-logo-azul.png') !== -1);
@@ -200,7 +206,7 @@ ok('la casilla del paso 3 existe y arranca oculta', /id="asiRow" hidden/.test(in
 ok('app.js pasa incluirAsistencias en los DOS llamados a buildEmail', (appjs.match(/incluirAsistencias:/g) || []).length === 2);
 ok('app.js destapa la fila solo con asiDisponible()', /asiRow\.hidden = false/.test(appjs) && /asiDisponible\(\)/.test(appjs));
 ok('el acceso del rail existe', /id="btnAsistencias"/.test(index));
-ok('el modal existe con sus ids', ['asiModal', 'as-nom', 'as-mail', 'as-prima', 'as-fp', 'btnAsiSend', 'btnAsiWa', 'btnAsiOtro', 'asiDone'].every(function (id) { return index.indexOf('id="' + id + '"') !== -1; }));
+ok('el modal existe con sus ids', ['asiModal', 'as-nom', 'as-mail', 'as-prima', 'as-fp', 'as-placa', 'btnAsiSend', 'btnAsiWa', 'btnAsiOtro', 'asiDone'].every(function (id) { return index.indexOf('id="' + id + '"') !== -1; }));
 ok('app.js engancha el modal con guard typeof', /typeof initAsistenciasModal === 'function'/.test(appjs));
 var ui = fs.readFileSync(path.join(__dirname, '..', 'js', 'asistencias-ui.js'), 'utf8');
 ok('D4: el modal NO toca el historial', !/saveHistoryEntry|marcarPolizaEmitida|loadHistory/.test(ui));
