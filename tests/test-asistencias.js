@@ -9,8 +9,8 @@
  *      poliza no respalda).
  *   2. Que la tarjeta del correo de cotizacion NO salga antes del 28 de
  *      setiembre de 2026 y que, cuando sale, diga lo mismo que el modulo.
- *   3. El correo a clientes con poliza: la prima vigente CON IVA + las
- *      asistencias CON IVA (D1), la cuota "antes del recargo" (D2), trato
+ *   3. El correo a clientes con poliza: la prima vigente CON IVA (D1),
+ *      sin hacer la cuenta (JC), trato
  *      de vos (D3), y el enlace al configurador con `pv` y `fp` (D5).
  *   4. Que el configurador lea los MISMOS datos (misma fuente).
  *   5. El enlace corto /p: lista blanca y contrato con la Function.
@@ -138,9 +138,7 @@ var P = { nombrePila: 'Mariela', primaVigente: '487.300', formaPago: 't', vehicu
 var h = E.buildAsistenciasEmail(P);
 ok('saluda por el nombre', h.indexOf('>Mariela,<') !== -1);
 ok('D1: muestra la prima vigente', h.indexOf('₡487.300') !== -1);
-ok('D1: con el mas barato = prima + Mascota CON IVA (495.436)', h.indexOf('₡495.436') !== -1);
-ok('D2: la cuota dice "antes del recargo por fraccionamiento"', /antes del recargo por fraccionamiento/.test(h));
-ok('D2: cuota trimestral de Mascota con IVA = 8.136/4 = 2.034', h.indexOf('₡2.034') !== -1);
+ok('el correo NO hace la cuenta (JC: ese texto es innecesario)', h.indexOf('plan m&aacute;s econ&oacute;mico') === -1 && !/m&aacute;s por/.test(h));
 ok('D3: trato de vos ("pod&eacute;s")', /pod&eacute;s/.test(h));
 ok('D3: nada de usted', !/\busted\b/i.test(h));
 ok('dice "pago trimestral"', /pago trimestral/.test(h));
@@ -157,8 +155,6 @@ ok('sin emojis', !/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u.test(h));
 A.PLANES_ASI.forEach(function (p) {
   ok('nombra a ' + p.nom + ' con su prima', h.indexOf(p.nom) !== -1 && h.indexOf(A.asiColones(p.prima)) !== -1);
 });
-var hAnual = E.buildAsistenciasEmail({ nombrePila: 'Ana', primaVigente: 500000, formaPago: 'a' });
-ok('con pago anual no habla de cuota', !/m&aacute;s por/.test(hAnual));
 var hSinPrima = E.buildAsistenciasEmail({ nombrePila: 'Ana', primaVigente: '' });
 ok('sin prima no sale el bloque "Tu seguro hoy"', hSinPrima.indexOf('Tu seguro hoy') === -1);
 ok('sin nota no sale el bloque de la nota', hSinPrima.indexOf('Nota de tu agente') === -1);
@@ -182,6 +178,8 @@ var pagina = fs.readFileSync(path.join(__dirname, '..', 'asistencias', 'index.ht
 ok('carga js/planes-asistencia.js', pagina.indexOf('src="../js/planes-asistencia.js"') !== -1);
 ok('usa PLANES_ASI y no una copia', pagina.indexOf('var PLANES = PLANES_ASI') !== -1 && pagina.indexOf('var PLANES_ASI = [') === -1);
 ok('lee pv y pa', pagina.indexOf("Q.get('pv')") !== -1 && pagina.indexOf("Q.get('pa')") !== -1);
+ok('la pagina aplica el recargo por fraccionamiento (asiCosto + ASI_RECARGO)', pagina.indexOf('asiCosto(p.prima, fp)') !== -1 && pagina.indexOf('ASI_RECARGO[fp]') !== -1);
+ok('la pagina ya no dice "antes del recargo"', pagina.indexOf('antes del recargo') === -1);
 ok('WhatsApp por web.whatsapp.com/send/', pagina.indexOf('https://web.whatsapp.com/send/?phone=') !== -1 && pagina.indexOf('wa.me') === -1);
 ok('el INS arriba (cara del cliente)', pagina.indexOf('ins-logo-azul.png') !== -1);
 ok('SDI al pie', pagina.indexOf('sdi-logo-compacto.svg') !== -1);

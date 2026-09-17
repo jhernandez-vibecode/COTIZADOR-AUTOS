@@ -87,8 +87,9 @@ function _asiRepintar() {
   var hoy = _asiEl('as-r-hoy'), min = _asiEl('as-r-min'), max = _asiEl('as-r-max');
   var todos = PLANES_ASI.reduce(function (a, pl) { return a + pl.prima; }, 0);
   if (hoy) hoy.textContent = p.primaVigente > 0 ? col(p.primaVigente) : '—';
-  if (min) min.textContent = p.primaVigente > 0 ? col(p.primaVigente + asiConIva(asiDesde())) : '—';
-  if (max) max.textContent = p.primaVigente > 0 ? col(p.primaVigente + asiConIva(todos)) : '—';
+  // Con el recargo por fraccionamiento de la forma de pago elegida y el IVA.
+  if (min) min.textContent = p.primaVigente > 0 ? col(p.primaVigente + asiCosto(asiDesde(), _asiFp).anual) : '—';
+  if (max) max.textContent = p.primaVigente > 0 ? col(p.primaVigente + asiCosto(todos, _asiFp).anual) : '—';
 
   clearTimeout(_asiPrevTimer);
   _asiPrevTimer = setTimeout(function () {

@@ -186,7 +186,7 @@ button{font:inherit;color:inherit}
     <div class="saber" id="saber">
       <div class="c"><b>Cómo se activan</b>Le escribís al agente con los planes que querés y los agrega a tu póliza. El INS los cobra junto con el seguro, en la misma forma de pago que ya tenés.</div>
       <div class="c"><b>Cómo se usan</b>Llamás al 800-800-8001, las 24 horas, y el INS coordina el servicio con su red. Los eventos son por año de póliza y no se acumulan.</div>
-      <div class="c"><b>Lo que conviene saber</b>Sin deducible. No llevan los descuentos ni los recargos de la póliza, solo el recargo por fraccionamiento si pagás en cuotas. Aplican en Costa Rica. Los detalles están en las Condiciones Operativas de Multiasistencia del INS.</div>
+      <div class="c"><b>Lo que conviene saber</b>Sin deducible. No llevan los descuentos ni los recargos de la póliza; solo el recargo por fraccionamiento si pagás en cuotas, y el IVA del 13 %. Aplican en Costa Rica. Los detalles están en las Condiciones Operativas de Multiasistencia del INS.</div>
     </div>
   </div>
 </main>
@@ -223,6 +223,7 @@ button{font:inherit;color:inherit}
   var PRIMA = PV || PA, MODO = PV ? 'vigente' : PA ? 'cotizada' : 'sola';
   var FP = { a: [1, 'año'], s: [2, 'semestre'], t: [4, 'trimestre'], m: [12, 'mes'] };
   var fp = FP[param('fp', 'a')] ? param('fp', 'a') : 'a';
+  var RECARGO = ASI_RECARGO[fp];   // recargo por fraccionamiento del INS (8/11/13 %), el único que aplica
   var PLANES = PLANES_ASI;      // fuente única: js/planes-asistencia.js
   var IVA = ASI_IVA;
   var pila = AGENTE.nombre.split(' ')[0];
@@ -286,7 +287,7 @@ button{font:inherit;color:inherit}
         ico(p) +
         '<div><div class="nom">' + esc(p.nom) + '</div><div class="lin">' + esc(p.linea) + '</div>' +
           '<button class="ver" type="button" data-ver="' + esc(p.id) + '">' + (abierto[p.id] ? 'Ocultar' : 'Ver qué trae · ' + n + ' servicios') + '</button></div>' +
-        '<div class="pr">' + col(p.prima) + '<small>+ IVA · ' + col(asiConIva(p.prima)) + '</small></div>' +
+        '<div class="pr">' + col(p.prima) + '<small>al año, + IVA' + (RECARGO ? ' y recargo' : '') + ' · ' + col(asiCosto(p.prima, fp).anual) + '</small></div>' +
         '<input class="sw" type="checkbox" role="switch" data-sw="' + esc(p.id) + '"' + (sel[p.id] ? ' checked' : '') + ' aria-label="Agregar ' + esc(p.nom) + '">' +
         (abierto[p.id] ? detalle(p) : '') +
       '</div>';
@@ -304,12 +305,17 @@ button{font:inherit;color:inherit}
 
   function pintaRes() {
     var ids = PLANES.filter(function (p) { return sel[p.id]; });
+    // cuota = prima anual / cuotas × (1 + recargo por fraccionamiento) × (1 + IVA)
     var neto = ids.reduce(function (a, p) { return a + p.prima; }, 0);
-    var iva = Math.round(neto * IVA), conIva = neto + iva, tot = PRIMA + conIva;
+    var conIva = ids.reduce(function (a, p) { return a + asiCosto(p.prima, fp).anual; }, 0);   // con recargo e IVA
+    var cuota = ids.reduce(function (a, p) { return a + asiCosto(p.prima, fp).cuota; }, 0);
+    var recargo = Math.round(neto * RECARGO);
+    var iva = conIva - neto - recargo;   // el IVA absorbe el redondeo: los renglones suman exacto al total
+    var tot = PRIMA + conIva;
 
     if (MODO !== 'sola') {
       $('#k-asis').textContent = col(conIva);
-      $('#k-asis-s').textContent = ids.length ? ids.length + (ids.length === 1 ? ' plan' : ' planes') + ' · con IVA del 13 %' : 'con IVA del 13 %';
+      $('#k-asis-s').textContent = (ids.length ? ids.length + (ids.length === 1 ? ' plan' : ' planes') + ' · ' : '') + 'con IVA' + (RECARGO ? ' y recargo por fraccionamiento' : '');
       $('#k-tot').textContent = col(tot);
       var d = $('#k-delta'); d.hidden = !ids.length;
       if (ids.length) d.querySelector('span').textContent = '+ ' + col(conIva) + ' al año';
@@ -320,6 +326,7 @@ button{font:inherit;color:inherit}
       h += '<p class="vacio">Todavía no prendiste ninguno. Acá se va sumando' + (MODO !== 'sola' ? ' y te digo en cuánto queda tu ' + (MODO === 'vigente' ? 'seguro' : 'cotización') : '') + '.</p>';
     } else {
       ids.forEach(function (p) { h += '<div class="fila"><span>' + esc(p.nom) + '</span><b>' + col(p.prima) + '</b></div>'; });
+      if (RECARGO) h += '<div class="fila suma"><span>Recargo por fraccionamiento ' + Math.round(RECARGO * 100) + ' %</span><b>' + col(recargo) + '</b></div>';
       h += '<div class="fila suma"><span>IVA 13 %</span><b>' + col(iva) + '</b></div>';
       if (MODO !== 'sola') {
         h += '<div class="fila suma"><span>' + (MODO === 'vigente' ? 'Tu seguro hoy' : 'Tu cotización') + '</span><b>' + col(PRIMA) + '</b></div>';
@@ -327,8 +334,8 @@ button{font:inherit;color:inherit}
       } else {
         h += '<div class="total"><div class="l">Total al año</div><div class="v">' + col(conIva) + '</div></div>';
       }
-      if (FP[fp][0] > 1) h += '<p class="cuota">≈ <b class="mono">' + col(conIva / FP[fp][0]) + '</b> más por ' + FP[fp][1] + ', antes del recargo por fraccionamiento.</p>';
-      else h += '<p class="cuota">Si pagás el seguro en cuotas, a estos planes también se les aplica el recargo por fraccionamiento.</p>';
+      if (FP[fp][0] > 1) h += '<p class="cuota"><b class="mono">' + col(cuota) + '</b> más por ' + FP[fp][1] + ', ya con el recargo por fraccionamiento y el IVA.</p>';
+      else h += '<p class="cuota">Si pagás el seguro en cuotas, a estos planes también se les aplica el recargo por fraccionamiento (8 % semestral, 11 % trimestral, 13 % mensual).</p>';
       h += '<a class="btn btn-p" href="' + esc(urlWa(ids, neto)) + '" target="_blank" rel="noopener">Pedirle estos planes a ' + esc(pila) + '</a>';
       h += '<p class="nota">Te abre WhatsApp con los planes ya escritos. El agente los agrega a tu póliza y el INS los cobra con el seguro.</p>';
     }

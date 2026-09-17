@@ -34,6 +34,16 @@ var ASI_DESDE = new Date('2026-09-28T00:00:00-06:00');
 /* IVA que el INS NO incluye en las primas publicadas (Ley 9635). */
 var ASI_IVA = 0.13;
 
+/* Recargo por fraccionamiento, el UNICO recargo que el INS le aplica a estos
+   planes ("PRIMA ANUAL ... No incluye recargo por fraccionamiento ni IVA de
+   13%", dossier de Planes de Asistencia, una vez por plan). Porcentajes sobre
+   la prima anual, verificados contra el PDF de cotizacion de muestra
+   (semestral x2 = +8 %, trimestral x4 = +11 %, mensual x12 = +13 %).
+   Correccion de JC del 17 set 2026: la cuota se calcula dividiendo la prima
+   anual entre las cuotas, aplicando el recargo y DESPUES el IVA. */
+var ASI_RECARGO = { a: 0, s: 0.08, t: 0.11, m: 0.13 };
+var ASI_CUOTAS  = { a: 1, s: 2,    t: 4,    m: 12 };
+
 var PLANES_ASI = [
   {
     id: 'mascota', nom: 'Mascota', prima: 7200, tono: 'verde', icono: 'pata',
@@ -205,12 +215,24 @@ function asiDesde() {
 }
 
 /**
- * Prima con el IVA sumado, redondeada al colon. Es lo que se le SUMA a la
- * prima vigente del cliente (que ya trae IVA) para que las dos cifras
- * esten en la misma base — decision D1 de JC, 17 set 2026.
+ * Lo que de verdad paga el cliente por una prima anual publicada, segun su
+ * forma de pago:  cuota = prima / cuotas x (1 + recargo) x (1 + IVA).
+ * `anual` es la suma de las cuotas del ano (con recargo e IVA): es lo que se
+ * le SUMA a la prima vigente del cliente, que ya trae las dos cosas (D1).
+ * @param {number} prima - prima anual sin IVA ni recargo
+ * @param {string} [fp]  - a|s|t|m (default 'a': sin recargo)
+ * @returns {{anual:number, cuota:number, n:number, recargo:number, iva:number}}
  */
+function asiCosto(prima, fp) {
+  var f = ASI_RECARGO.hasOwnProperty(fp) ? fp : 'a';
+  var p = Number(prima || 0), r = ASI_RECARGO[f], n = ASI_CUOTAS[f];
+  var cuota = Math.round(p / n * (1 + r) * (1 + ASI_IVA));
+  return { anual: cuota * n, cuota: cuota, n: n, recargo: r, iva: ASI_IVA };
+}
+
+/** Prima anual con el IVA y sin recargo (pago anual). Atajo de asiCosto(prima,'a').anual. */
 function asiConIva(prima) {
-  return Math.round(Number(prima || 0) * (1 + ASI_IVA));
+  return asiCosto(prima, 'a').anual;
 }
 
 /**
@@ -240,8 +262,8 @@ function asiColones(n) {
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    PLANES_ASI: PLANES_ASI, ASI_DESDE: ASI_DESDE, ASI_IVA: ASI_IVA,
+    PLANES_ASI: PLANES_ASI, ASI_DESDE: ASI_DESDE, ASI_IVA: ASI_IVA, ASI_RECARGO: ASI_RECARGO, ASI_CUOTAS: ASI_CUOTAS,
     asiDisponible: asiDisponible, planAsi: planAsi,
-    asiDesde: asiDesde, asiConIva: asiConIva, asiColones: asiColones, asiMonto: asiMonto
+    asiDesde: asiDesde, asiConIva: asiConIva, asiCosto: asiCosto, asiColones: asiColones, asiMonto: asiMonto
   };
 }

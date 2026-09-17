@@ -13,9 +13,10 @@
  * con sus cinco decisiones:
  *   D1 la prima que se escribe es la ANUAL CON IVA (la del recibo); a las
  *      asistencias se les suma el 13 % antes de sumarlas (asiConIva).
- *   D2 la cuota se dice "antes del recargo por fraccionamiento": no se
- *      calcula el recargo porque no está confirmada la base sobre la que
- *      el INS lo aplica a esta cobertura.
+ *   D2 (corregida por JC el mismo 17 set): la cuota SÍ lleva el recargo por
+ *      fraccionamiento del INS (8/11/13 %) y después el IVA — asiCosto(). El
+ *      correo ya NO hace la cuenta (JC: "ese texto es innecesario"): muestra
+ *      la prima vigente y manda al configurador, que sí la hace.
  *   D3 trato de vos, como el correo de cotización y el configurador.
  *   D4 NO entra al registro de Cotizaciones.
  *   D5 el configurador es el mismo de la cotización nueva; llega con `pv`.
@@ -88,10 +89,9 @@ function buildAsistenciasEmail(p) {
   var LINEA = '#DADCE0', BANDA = '#EEF4F9';
 
   var col = function (n) { return '₡' + Math.round(n).toLocaleString('de-DE'); };
-  var masBarato = asiDesde();
-  var conBarato = prima + asiConIva(masBarato);
 
-  // Los seis planes, uno por fila, con su precio al año.
+  // Los seis planes, uno por fila, con su precio al año (sin IVA ni recargo,
+  // como los publica el INS). La cuenta la hace el configurador, no el correo.
   var filas = '';
   for (var i = 0; i < PLANES_ASI.length; i++) {
     var pl = PLANES_ASI[i];
@@ -103,18 +103,12 @@ function buildAsistenciasEmail(p) {
     '</tr>';
   }
 
-  // D2: la cuota, sin el recargo por fraccionamiento.
-  var cuota = forma.n > 1
-    ? ' o unos <b style="font-family:' + mono + ';">' + col(asiConIva(masBarato) / forma.n) + '</b> m&aacute;s por ' + forma.cuota + ', antes del recargo por fraccionamiento'
-    : '';
-
   var primaHtml = prima > 0 ? (
     '<tr><td style="padding:0 32px 22px;">' +
       '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:' + BANDA + ';border-radius:16px;"><tr><td style="padding:18px 20px;">' +
         '<p style="margin:0;font-size:11px;letter-spacing:0.12em;color:' + GRIS + ';font-weight:bold;text-transform:uppercase;">Tu seguro hoy</p>' +
         '<p style="margin:4px 0 0;font-family:' + mono + ';font-size:28px;color:' + TINTA + ';font-weight:bold;">' + col(prima) + '</p>' +
         '<p style="margin:2px 0 0;font-size:12.5px;color:' + GRIS + ';">al a&ntilde;o, con IVA &middot; pago ' + forma.nombre + '</p>' +
-        '<p style="margin:12px 0 0;font-size:13.5px;line-height:1.55;color:#334155;">Con el plan m&aacute;s econ&oacute;mico, tu seguro pasar&iacute;a a <b style="font-family:' + mono + ';">' + col(conBarato) + '</b> al a&ntilde;o' + cuota + '. En el configurador pod&eacute;s armar tu combinaci&oacute;n y ver el n&uacute;mero exacto.</p>' +
       '</td></tr></table>' +
     '</td></tr>'
   ) : '';

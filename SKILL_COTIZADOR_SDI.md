@@ -2712,10 +2712,12 @@ https://claude.ai/artifact/V5QVh1wXVCfpP4mDtvAcwW). Plan del 4 sep: `docs/superp
 | | Decisión | Consecuencia en el código |
 |---|---|---|
 | **D1** | La prima que el agente escribe es la **anual CON IVA** (la del recibo) | `asiConIva()` le suma el 13 % a cada plan antes de sumarlo: las dos cifras en la misma base |
-| **D2** | La cuota se muestra **"antes del recargo por fraccionamiento"** | No se calcula el recargo (8/11/13 %): no está confirmada la base sobre la que el INS lo aplica a esta cobertura |
+| **D2** | ~~La cuota "antes del recargo por fraccionamiento"~~ **CORREGIDA por JC la misma tarde**: *"las primas de las asistencias son anuales, si una póliza es semestral se divide entre dos y se le aplica el recargo por fraccionamiento y se le suma el impuesto"*. Verificado en el dossier del INS (cada plan: "PRIMA ANUAL … No incluye recargo por fraccionamiento ni IVA de 13 %"; "no se le aplicará descuentos ni recargos… salvo el recargo por fraccionamiento") | `asiCosto(prima, fp)`: **cuota = prima ÷ cuotas × (1 + recargo) × 1,13**, con `ASI_RECARGO` = 8 % semestral · 11 % trimestral · 13 % mensual (verificados contra el PDF de cotización de muestra: sem×2, trim×4, men×12 sobre el anual). El configurador desglosa prima · recargo · IVA y dice la cuota "ya con el recargo y el IVA". 🔴 **El correo NO hace la cuenta** (JC: *"ese texto es innecesario"*): muestra la prima vigente y manda al configurador |
 | **D3** | **Trato de vos** | Como el correo de cotización y el configurador. Los de Póliza activa y Renovación siguen de usted |
 | **D4** | **NO entra al registro de Cotizaciones** | `asistencias-ui.js` no toca `history.js` (el test lo vigila) |
 | **D5** | **Un solo configurador** para los dos caminos | Con `pa` (prima cotizada) dice "Tu cotización"; con `pv` (prima vigente) "Tu seguro hoy"; sin ninguno, solo el total de las asistencias |
+
+🔴 **Regla que dejó la corrección:** todo número que le prometa al cliente cuánto sube su seguro lleva el recargo por fraccionamiento de SU forma de pago y el IVA, en ese orden. `asiConIva()` (solo IVA) queda para el pago anual; para cualquier otra forma se usa `asiCosto(prima, fp)`. Los renglones del resumen suman exacto al total porque el IVA absorbe el redondeo.
 
 Ajuste de copy de JC: el botón del correo dice **"Ver qué trae cada plan y en cuánto queda mi seguro"** (no "Armar mis
 asistencias…").
@@ -2724,7 +2726,7 @@ asistencias…").
 
 - **`js/planes-asistencia.js`** — 🔴 **la ÚNICA fuente** de los seis planes (`PLANES_ASI`, transcritos del mockup del 3 sep
   que se verificó contra el dossier del INS **leyendo cada página como imagen**; conteos 11 · 8 · 16 · 30 · 7 · 21),
-  `ASI_DESDE` (28 sep 2026), `ASI_IVA` (0,13), `asiDisponible(fecha)`, `planAsi`, `asiDesde` (7.200), `asiConIva`,
+  `ASI_DESDE` (28 sep 2026), `ASI_IVA` (0,13), `ASI_RECARGO`/`ASI_CUOTAS`, `asiDisponible(fecha)`, `planAsi`, `asiDesde` (7.200), `asiConIva`, `asiCosto(prima, fp)`,
   `asiMonto` (lee "570.891,00" del PDF, "487.300" tecleado, "487,300.00" US y 487300) y `asiColones` ('de-DE').
   Sin DOM ni CFG. Lo cargan el correo de cotización, el correo nuevo y la página: **si se duplican los datos, correo y
   página empiezan a decir cosas distintas** (gotcha 27).
@@ -2762,9 +2764,9 @@ asistencias…").
 
 ### Verificación
 
-`tests/test-asistencias.js` (**143 checks**): datos y conteos, portón por fecha, tarjeta del correo (sale/no sale según
+`tests/test-asistencias.js` (**142 checks**, con `asiCosto` en las cuatro formas de pago): datos y conteos, portón por fecha, tarjeta del correo (sale/no sale según
 fecha y casilla, va después de los pagos, lleva `pa`), `_buildPlanesUrl` y `asiMonto` con los tres formatos, el correo
-nuevo (D1 495.436 = 487.300 + 8.136; D2 cuota 2.034; D3 sin "usted"; D5 `pv`+`fp`; ficha del agente del perfil y no
+nuevo (D1; el correo sin la cuenta; D3 sin "usted"; D5 `pv`+`fp`; ficha del agente del perfil y no
 la del dueño; XSS de la nota), el WhatsApp, la página (misma fuente, `pv`/`pa`, endpoint), la consola (orden de carga,
 dos llamados, guard) y el enlace `/p`. Más `test-enlace-validacion.mjs` (+6) y `test-shortlink.js` (+6).
 **Suite: 22 archivos en verde.** Smoke en localhost (`http-server -c-1`, perfil inventado): configurador con
