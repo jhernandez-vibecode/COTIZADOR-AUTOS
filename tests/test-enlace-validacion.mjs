@@ -6,7 +6,7 @@
  *
  * Correr: node tests/test-enlace-validacion.mjs
  */
-import { esNuestro, baseAsistencia, CLAVES, CLAVES_A } from '../netlify/functions/lib/validacion.mjs';
+import { esNuestro, baseAsistencia, CLAVES, CLAVES_A, CLAVES_P } from '../netlify/functions/lib/validacion.mjs';
 
 let pass = 0, fail = 0;
 function ok(name, cond) { if (cond) { pass++; } else { fail++; console.error('FAIL ' + name); } }
@@ -53,6 +53,15 @@ ok('base-rechaza-basura',      baseAsistencia('no-es-una-url') === '');
 // El query y el hash viajan aparte en `q`: la base guardada no los arrastra.
 ok('base-limpia-query',
    baseAsistencia('https://appasistenciaseguroautos.netlify.app/?a=jc#x') === 'https://appasistenciaseguroautos.netlify.app/');
+
+// ---------- Configurador de asistencias (/p, 17 set 2026) ----------
+ok('p-acepta', esNuestro('n=Agente%20Prueba&l=00-0000&wa=8888-0000&c=Mariela&v=Hyundai&pv=487300&fp=t', CLAVES_P));
+ok('p-acepta-cotizada', esNuestro('n=Agente&pa=570891&c=Ana', CLAVES_P));
+ok('p-rechaza-clave-ajena', !esNuestro('n=Agente&pv=1&evil=1', CLAVES_P));
+// Los precios/placa del explicador no van en /p, ni la prima en /g: listas distintas.
+ok('p-rechaza-claves-de-g', !esNuestro('n=Agente&va=10000000&p=BRK454', CLAVES_P));
+ok('g-rechaza-pv', !esNuestro('n=Agente&pv=487300', CLAVES));
+ok('p-rechaza-javascript', !esNuestro('n=javascript:alert(1)&pv=1', CLAVES_P));
 
 console.log('\nenlace-validacion: ' + pass + ' OK, ' + fail + ' FAIL');
 process.exit(fail ? 1 : 0);

@@ -159,6 +159,97 @@
     </div>
   </div>
 
+
+  <!-- ===== MODAL · ASISTENCIAS A CLIENTE CON PÓLIZA (17 set 2026) =====
+       Cuarto envío de la consola. Sin PDF. Lo maneja js/asistencias-ui.js;
+       NO entra al registro de Cotizaciones (decisión D4 de JC). ===== -->
+  <div class="modal-backdrop" id="asiModal">
+    <div class="modal-card asi-card">
+      <div class="modal-header">
+        <div>
+          <h2 class="modal-title">Asistencias a cliente con póliza</h2>
+          <p class="asi-sub">Le mandás los seis planes del INS y un configurador que le muestra cuánto subiría su seguro.</p>
+        </div>
+        <button class="modal-close" id="btnAsiClose" aria-label="Cerrar">×</button>
+      </div>
+
+      <div id="asiForm">
+        <div class="asi-body">
+          <div class="asi-form">
+            <div class="asi-grid">
+              <div class="form-row">
+                <label class="form-label" for="as-nom">Nombre de pila</label>
+                <input class="form-control" id="as-nom" autocomplete="off" />
+                <span class="asi-hint">Así lo saluda el correo y el WhatsApp.</span>
+              </div>
+              <div class="form-row">
+                <label class="form-label" for="as-mail">Correo del cliente</label>
+                <input class="form-control" id="as-mail" type="email" autocomplete="off" />
+              </div>
+              <div class="form-row">
+                <label class="form-label" for="as-prima">Prima anual vigente</label>
+                <div class="asi-inp"><span class="asi-pre">₡</span><input class="form-control asi-mono" id="as-prima" inputmode="numeric" placeholder="487.300" autocomplete="off" /></div>
+                <span class="asi-hint">Lo que paga hoy al año, con IVA, como sale en el recibo.</span>
+              </div>
+              <div class="form-row">
+                <span class="form-label">Forma de pago</span>
+                <div class="asi-seg" id="as-fp" role="group" aria-label="Forma de pago">
+                  <button type="button" data-fp="a" aria-pressed="true">Anual</button>
+                  <button type="button" data-fp="s" aria-pressed="false">Semestral</button>
+                  <button type="button" data-fp="t" aria-pressed="false">Trimestral</button>
+                  <button type="button" data-fp="m" aria-pressed="false">Mensual</button>
+                </div>
+                <span class="asi-hint">Para decirle cuánto sería por cuota.</span>
+              </div>
+              <div class="form-row">
+                <label class="form-label" for="as-veh">Vehículo <span class="asi-opt">(opcional)</span></label>
+                <input class="form-control" id="as-veh" autocomplete="off" />
+              </div>
+              <div class="form-row">
+                <label class="form-label" for="as-wa">WhatsApp del cliente <span class="asi-opt">(opcional)</span></label>
+                <input class="form-control asi-mono" id="as-wa" type="tel" inputmode="numeric" placeholder="8888-8888" autocomplete="off" />
+              </div>
+              <div class="form-row asi-full">
+                <label class="form-label" for="as-nota">Nota personal <span class="asi-opt">(opcional)</span></label>
+                <textarea class="form-control" id="as-nota" rows="2"></textarea>
+              </div>
+            </div>
+            <div class="asi-resumen">
+              <div class="r"><span>Su seguro hoy</span><b id="as-r-hoy">—</b></div>
+              <div class="r"><span>Con el plan más barato (Mascota, con IVA)</span><b id="as-r-min">—</b></div>
+              <div class="r"><span>Con los seis planes</span><b id="as-r-max">—</b></div>
+            </div>
+          </div>
+          <div class="asi-prev">
+            <div class="asi-rot">Vista previa del correo</div>
+            <div class="preview-box asi-prev-box" id="as-prev"></div>
+          </div>
+        </div>
+        <div class="modal-footer asi-foot">
+          <span class="asi-quien">Sale desde tu Gmail con tu ficha de agente. No se guarda en Cotizaciones.</span>
+          <div class="asi-btns">
+            <button class="btn btn-secondary" id="btnAsiCancel">Cancelar</button>
+            <button class="btn btn-primary" id="btnAsiSend">Enviar correo</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="asiDone" hidden>
+        <div class="modal-body success-box">
+          <div class="success-icon">✓</div>
+          <div class="success-title">¡Correo enviado!</div>
+          <div class="success-msg" id="asiDoneMsg"></div>
+          <div class="success-actions">
+            <a class="btn btn-send btn-step" id="btnAsiWa" href="#" target="_blank" rel="noopener" style="text-decoration:none;"><span class="btn-step-num">1</span> Avisar al cliente por WhatsApp</a>
+            <button class="btn btn-primary btn-step" id="btnAsiOtro"><span class="btn-step-num">2</span> Otro cliente</button>
+          </div>
+          <p class="asi-hint" style="margin-top:14px;">El WhatsApp lleva el enlace corto al configurador, ya con su prima adentro. Si no pusiste su número, elegís el contacto dentro de WhatsApp.</p>
+          <button class="btn btn-secondary" id="btnAsiDoneClose" style="margin-top:10px;">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-backdrop" id="statsModal">
     <div class="modal-card stats-card">
       <div class="modal-header">
@@ -224,6 +315,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16l-3-2-2 2-2-2-2 2-2-2Z"/><path d="M9 8h6"/><path d="M9 12h6"/></svg>
         Renovación confirmada
       </a>
+      <button type="button" class="rail-item" id="btnAsistencias" style="animation-delay:.12s">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 7v5c0 5 3.5 8 8 9 4.5-1 8-4 8-9V7z"/><path d="M12 9v6M9 12h6"/></svg>
+        Asistencias a cliente
+      </button>
 
       <div class="rail-sec">Mi control</div>
       <button type="button" class="rail-item" id="btnStats" style="animation-delay:.14s">
@@ -551,6 +646,19 @@
             <textarea class="form-control" id="m-note" rows="3" placeholder="Mensaje adicional para el cliente..."></textarea>
           </div>
 
+          <!-- Planes de asistencia (cobertura ASI). La fila la muestra app.js SOLO
+               desde el 28 set 2026 (asiDisponible): antes no hay nada que ofrecer. -->
+          <div class="toggle-row" id="asiRow" hidden>
+            <label class="toggle-label" for="m-asistencias">
+              <span>Incluir los planes de asistencia del INS</span>
+              <span class="toggle-hint">Agrega una tarjeta después de las formas de pago con los seis planes y su precio, más el enlace a la página donde el cliente los arma y ve en cuánto queda su seguro. Apagalo si en esta cotización no querés ofrecerlos.</span>
+            </label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="m-asistencias" checked />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
           <div class="form-row">
             <span class="pill"><span id="m-pdfname">COTIZACION.pdf</span></span>
           </div>
@@ -605,8 +713,18 @@
        toca la app se agrega una linea aca. -->
   <footer class="app-foot">
     <details>
-      <summary>Última actualización: 13 set 2026 — Los correos de Póliza activa y Renovación confirmada estrenan la imagen SDI</summary>
+      <summary>Última actualización: 17 set 2026 — Planes de asistencia del INS: aviso a clientes con póliza y tarjeta en la cotización</summary>
       <ul>
+        <li><b>17 set 2026</b> — <b>Nuevo acceso "Asistencias a cliente" en el menú, bajo Enviar.</b> Es para los
+        clientes que YA tienen póliza: escribís su nombre, su correo, la prima anual que paga hoy (la del recibo, con
+        IVA) y su forma de pago, y le sale un correo con los seis planes de asistencia que el INS estrena el 28 de
+        setiembre (Mascota, Funeraria, Salud Bienestar, Salud Premium, Autos Plus y VIP) y un botón que lo lleva a una
+        página donde prende los que quiera y ve en cuánto quedaría su seguro al año. Después podés avisarle por
+        WhatsApp con el enlace corto. No hay PDF y <b>no se guarda en Cotizaciones</b>.</li>
+        <li><b>17 set 2026</b> — <b>Desde el 28 de setiembre, el correo de cotización lleva una tarjeta con los seis
+        planes de asistencia</b> después de las formas de pago, con el mismo botón a la página. En el paso 3 aparece
+        una casilla para apagarla en una cotización concreta. Antes del 28 la casilla no se muestra y el correo sale
+        igual que hoy: el INS todavía no los emite.</li>
         <li><b>13 set 2026</b> — <b>El correo de "Renovación confirmada" (el del comprobante de pago) cambió de imagen,
         igual que el de Póliza activa:</b> después del saludo va la tarjeta del vehículo con su placa dibujada (roja si es
         carga liviana) y el número de póliza; luego el sello "Pago aplicado", el detalle del pago con el monto grande,
@@ -773,8 +891,10 @@
   <script src="js/router.js"></script>
   <script src="js/pdf-extract.js"></script>
   <script src="js/pdf-modify.js"></script>
+  <script src="js/planes-asistencia.js"></script>
   <script src="js/email-marca.js"></script>
   <script src="js/email-template.js"></script>
+  <script src="js/asistencias-email.js"></script>
   <script src="js/gmail-auth.js"></script>
   <script src="js/wizard.js"></script>
   <script src="js/mime-builder.js"></script>
@@ -782,6 +902,7 @@
   <script src="js/drive-sync.js"></script>
   <script src="js/datos-ui.js"></script>
   <script src="js/novedades.js"></script>
+  <script src="js/asistencias-ui.js"></script>
   <script src="js/app.js"></script>
 
   <script>

@@ -8,7 +8,7 @@
 
 **Tech Stack:** HTML + JS vanilla, sin build, sin npm en el front. Tests Node sin runner (`node tests/test-asistencias.js`). Deploy: push a `main` → Netlify.
 
-**Estado:** APROBADO EL DISEÑO (opción 2 de los mockups del 3 set 2026), **NO IMPLEMENTAR TODAVÍA**. JC sigue dándole forma hasta el 28 de setiembre.
+**Estado:** ✅ **IMPLEMENTADO el 17 set 2026** (JC aprobó las cinco decisiones del mockup nuevo y dijo "arrancá"). Además del plan: el modal "Asistencias a cliente" para clientes con póliza vigente (`js/asistencias-ui.js` + `js/asistencias-email.js`), el configurador suma la prima (`pa`/`pv`), y el enlace corto `/p`. La página se hizo en línea clara v1.3 (mockup `2026-09-17-asistencias-cliente-existente-mockup.html`), no con la letra del mockup del 3 set. Detalle en el SKILL, sección "Planes de asistencia del INS".
 
 ---
 

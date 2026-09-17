@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Planes de asistencia · Seguros del INS</title>
+<meta name="description" content="Armá tus planes de asistencia del INS y mirá en cuánto queda tu seguro de automóviles.">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/svg+xml" href="../img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&family=Google+Sans+Code:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   /asistencias/ · configurador de los planes de asistencia (ASI)
+   Cara del CLIENTE: el INS arriba, SDI al pie. Línea clara SDI v1.3,
+   transcrita del mockup aprobado por JC el 17 set 2026
+   (docs/superpowers/specs/2026-09-17-asistencias-cliente-existente-mockup.html).
+   Inter va en la pila SOLO para prestar el ₡ (Google Sans Flex no lo trae).
+   ============================================================ */
+:root{
+  --lc-blue:#0369A1; --lc-blue-ink:#02557F; --lc-blue-soft:#E8F1F8;
+  --lc-band:#EEF4F9; --lc-line:#DADCE0; --lc-line-btn:#8A939C; --lc-line-soft:#EDEFF2;
+  --lc-ink:#1B1F23; --lc-ink-2:#5A6570; --lc-ink-3:#6B7681;
+  --lc-ok-bg:#E9F5F0; --lc-ok-tx:#037D61;
+  --lc-prod:#0C2340;
+  --t-verde-bg:#E9F5F0; --t-verde-tx:#037D61;
+  --t-azul-bg:#E8F1F8; --t-azul-tx:#02557F;
+  --t-rosa-bg:#FCE8EC; --t-rosa-tx:#9F1239;
+  --t-viol-bg:#EFEAFB; --t-viol-tx:#5B21B6;
+  --t-oro-bg:#FBF3DC; --t-oro-tx:#7C5A00;
+  --t-cyan-bg:#E3F5F7; --t-cyan-tx:#0E6371;
+  --font-body:'Google Sans Flex','Inter',system-ui,sans-serif;
+  --font-mono:'Google Sans Code','Inter',ui-monospace,monospace;
+}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth}
+body{margin:0;background:#fff;color:var(--lc-ink);font-family:var(--font-body);font-size:14.5px;line-height:1.55;font-optical-sizing:auto;-webkit-font-smoothing:antialiased}
+h1,h2,h3,p{margin:0}
+h1,h2,h3{font-weight:500;letter-spacing:-.02em;text-wrap:balance;line-height:1.15}
+a{color:var(--lc-blue)}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid rgba(3,105,161,.35);outline-offset:2px;border-radius:8px}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+
+/* barra en dos niveles: INS arriba (cara del cliente) */
+.pg-top{background:#F8F9FA;height:52px;border-bottom:1px solid var(--lc-line-soft)}
+.pg-top .wrap{display:flex;align-items:center;justify-content:space-between;height:100%;gap:16px}
+.pg-top img.ins{height:22px;width:auto;display:block}
+.agente{font-size:12.5px;color:var(--lc-ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.agente b{color:var(--lc-ink);font-weight:600}
+.agente .lic{font-family:var(--font-mono);font-size:11.5px;color:var(--lc-ink-3);margin-left:8px}
+.pg-nav{border-bottom:1px solid var(--lc-line-soft);background:#fff}
+.pg-nav .wrap{display:flex;align-items:center;justify-content:space-between;padding-top:12px;padding-bottom:12px;gap:16px}
+.pg-nav .prod{font-weight:600;font-size:16px;letter-spacing:-.02em}
+.pg-nav .prod small{display:block;font-weight:400;font-size:12.5px;color:var(--lc-ink-3)}
+.pill{border:1px solid var(--lc-blue);color:var(--lc-blue);border-radius:999px;min-height:38px;padding:0 16px;display:inline-flex;align-items:center;font-weight:600;font-size:13px;background:#fff;text-decoration:none;white-space:nowrap}
+.pill:hover{background:var(--lc-blue-soft)}
+.filete{height:4px;background:linear-gradient(90deg,#0369A1 0 60%,#0D9488 60% 85%,#EA580C 85% 95%,#C9A227 95% 100%)}
+
+/* hero */
+.hero{text-align:center;padding:48px 24px 28px;max-width:760px;margin:0 auto}
+.chip{display:inline-flex;align-items:center;gap:8px;background:var(--t-azul-bg);color:var(--t-azul-tx);border-radius:999px;padding:6px 14px;font-size:12.5px;font-weight:600}
+.chip i{width:8px;height:8px;border-radius:50%;background:var(--lc-blue)}
+.hero h1{font-size:clamp(30px,4.4vw,44px);margin:16px 0 12px}
+.hero p{color:var(--lc-ink-2);font-size:16px;max-width:56ch;margin:0 auto}
+.ctas{display:flex;gap:10px;justify-content:center;margin-top:22px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;min-height:44px;padding:0 22px;font-size:14.5px;font-weight:600;border:1px solid var(--lc-blue);cursor:pointer;text-decoration:none;transition:background .15s}
+.btn-p{background:var(--lc-blue);color:#fff}
+.btn-p:hover{background:var(--lc-blue-ink)}
+.btn-s{background:#fff;color:var(--lc-blue)}
+.btn-s:hover{background:var(--lc-blue-soft)}
+
+/* banda + panel */
+.band{background:var(--lc-band);padding:32px 24px 56px}
+.panel{background:#fff;border-radius:32px;max-width:1040px;margin:0 auto;padding:34px 36px;border:1px solid var(--lc-line)}
+.hoy{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:28px}
+.hoy .k{border:1px solid var(--lc-line);border-radius:20px;padding:18px 20px}
+.hoy .k .l{font-size:12px;font-weight:600;color:var(--lc-ink-3);letter-spacing:.02em}
+.hoy .k .v{font-size:30px;font-weight:500;letter-spacing:-.025em;margin-top:4px;font-variant-numeric:tabular-nums}
+.hoy .k .s{font-size:12.5px;color:var(--lc-ink-3);margin-top:2px}
+.hoy .k.dest{background:var(--t-verde-bg);border-color:transparent}
+.hoy .k.dest .l,.hoy .k.dest .s{color:var(--t-verde-tx)}
+.delta{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:13px;color:var(--lc-ink-2);margin-top:6px}
+.delta i{width:8px;height:8px;border-radius:50%;background:var(--lc-blue);flex:none}
+.grid2{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:24px;align-items:start}
+.h3{font-size:20px;font-weight:500;letter-spacing:-.02em;margin-bottom:4px}
+.h3::before{content:"";display:block;width:28px;height:3px;border-radius:2px;background:var(--lc-prod);margin-bottom:12px}
+.sub{color:var(--lc-ink-3);font-size:13.5px;margin-bottom:16px}
+
+/* planes */
+.plan{border:1px solid var(--lc-line);border-radius:20px;padding:16px 18px;display:grid;grid-template-columns:44px 1fr auto 52px;gap:14px;align-items:center;margin-bottom:10px;transition:background .15s,border-color .15s}
+.plan[data-on="1"]{background:color-mix(in srgb,var(--lc-blue) 6%,#fff);border-color:var(--lc-blue)}
+.plan .ico{width:44px;height:44px;border-radius:50%;display:grid;place-items:center}
+.plan .ico svg{width:20px;height:20px}
+.plan .nom{font-weight:600;font-size:15px}
+.plan .lin{font-size:13px;color:var(--lc-ink-2)}
+.plan .ver{background:none;border:0;padding:0;color:var(--lc-blue);font-size:12.5px;font-weight:600;cursor:pointer;margin-top:4px}
+.plan .pr{font-family:var(--font-mono);font-size:14px;font-weight:600;text-align:right;white-space:nowrap}
+.plan .pr small{display:block;font-weight:400;font-size:11px;color:var(--lc-ink-3)}
+.sw{appearance:none;width:44px;height:26px;border-radius:999px;background:#fff;border:1px solid var(--lc-line-btn);position:relative;cursor:pointer;margin:0}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--lc-line-btn);transition:transform .15s,background .15s}
+.sw:checked{background:var(--lc-blue);border-color:var(--lc-blue)}
+.sw:checked::after{background:#fff;transform:translateX(18px)}
+.detalle{grid-column:1/-1;border-top:1px solid var(--lc-line-soft);padding-top:12px;font-size:13px}
+.detalle p{color:var(--lc-ink-2);margin-bottom:10px}
+.detalle table{width:100%;border-collapse:collapse}
+.detalle td{padding:5px 0;border-bottom:1px solid var(--lc-line-soft);vertical-align:top}
+.detalle td:nth-child(2),.detalle td:nth-child(3){font-family:var(--font-mono);font-size:12px;text-align:right;white-space:nowrap;color:var(--lc-ink-2)}
+.detalle .cab td{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--lc-ink-3);border-bottom:1px solid var(--lc-line)}
+.detalle ul{margin:0;padding-left:18px;color:var(--lc-ink-2)}
+.detalle .nota{font-size:12px;color:var(--lc-ink-3);margin-top:8px}
+
+/* resumen */
+.res{border:1px solid var(--lc-line);border-radius:24px;padding:22px 24px;position:sticky;top:16px}
+.res .rt{font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--lc-ink-3)}
+.res .fila{display:flex;justify-content:space-between;gap:12px;font-size:13.5px;padding:8px 0;border-bottom:1px solid var(--lc-line-soft)}
+.res .fila b{font-family:var(--font-mono);font-weight:500}
+.res .fila.suma span{color:var(--lc-ink-2)}
+.res .total{margin-top:14px;background:var(--t-verde-bg);border-radius:16px;padding:16px 18px}
+.res .total .l{font-size:12.5px;font-weight:600;color:var(--t-verde-tx)}
+.res .total .v{font-size:34px;font-weight:500;letter-spacing:-.025em;font-variant-numeric:tabular-nums;color:var(--lc-ink);margin-top:2px}
+.res .cuota{font-size:12.5px;color:var(--lc-ink-3);margin-top:10px}
+.res .vacio{color:var(--lc-ink-3);font-size:13.5px;padding:14px 0}
+.res .btn{width:100%;margin-top:14px}
+.res .nota{font-size:12px;color:var(--lc-ink-3);margin-top:12px;line-height:1.5}
+
+/* saber + pie */
+.saber{max-width:1040px;margin:28px auto 0;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.saber .c{background:#fff;border:1px solid var(--lc-line);border-radius:20px;padding:18px 20px;font-size:13.5px;color:var(--lc-ink-2)}
+.saber .c b{display:block;color:var(--lc-ink);font-weight:600;margin-bottom:4px}
+.pie{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:22px 24px;border-top:1px solid var(--lc-line-soft);font-size:12px;color:var(--lc-ink-3);flex-wrap:wrap}
+.pie img{height:22px;width:auto}
+.pie .plat{display:flex;align-items:center;gap:10px}
+
+@media (max-width:860px){
+  .hoy{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.res{position:static}.saber{grid-template-columns:1fr}
+  .plan{grid-template-columns:44px 1fr 52px}.plan .pr{grid-column:2;text-align:left}
+  .panel{padding:24px 18px;border-radius:24px}.agente{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="pg-top"><div class="wrap">
+    <img class="ins" src="../img/ins-logo-azul.png" alt="INS">
+    <div class="agente"><b id="agNombre"></b> · Agente autorizado<span class="lic" id="agLic"></span></div>
+  </div></div>
+  <div class="pg-nav"><div class="wrap">
+    <div class="prod">Planes de asistencia<small>Seguro Voluntario de Automóviles · Cobertura ASI</small></div>
+    <a class="pill" id="pillWa" href="#" target="_blank" rel="noopener">Escribirle al agente</a>
+  </div></div>
+  <div class="filete"></div>
+</header>
+
+<main>
+  <section class="hero">
+    <span class="chip"><i></i>Nuevo del INS desde el 28 de setiembre de 2026</span>
+    <h1 id="titulo">Armá tus asistencias y mirá en cuánto queda tu seguro</h1>
+    <p>Prendé los planes que te sirvan. Nada de esto cambia las coberturas de tu póliza: se suman aparte y se cobran junto con el seguro.</p>
+    <div class="ctas"><a class="btn btn-p" href="#planes">Ver los seis planes</a><a class="btn btn-s" href="#saber">Cómo se activan</a></div>
+  </section>
+
+  <div class="band">
+    <div class="panel">
+      <div class="hoy" id="hoy" hidden>
+        <div class="k"><div class="l" id="k-hoy-l">Tu seguro hoy</div><div class="v" id="k-hoy">—</div><div class="s" id="k-hoy-s">al año</div></div>
+        <div class="k"><div class="l">Asistencias elegidas</div><div class="v" id="k-asis">₡0</div><div class="s" id="k-asis-s">con IVA del 13 %</div></div>
+        <div class="k dest"><div class="l" id="k-tot-l">Tu seguro quedaría en</div><div class="v" id="k-tot">—</div><div class="s">al año</div><div class="delta" id="k-delta" hidden><i></i><span></span></div></div>
+      </div>
+
+      <div class="grid2">
+        <div id="planes">
+          <div class="h3">Los seis planes</div>
+          <p class="sub">Precio anual de cada uno, sin IVA, tal como lo publica el INS. Podés llevar más de uno.</p>
+          <div id="lista"></div>
+        </div>
+        <aside class="res" id="res"></aside>
+      </div>
+    </div>
+
+    <div class="saber" id="saber">
+      <div class="c"><b>Cómo se activan</b>Le escribís al agente con los planes que querés y los agrega a tu póliza. El INS los cobra junto con el seguro, en la misma forma de pago que ya tenés.</div>
+      <div class="c"><b>Cómo se usan</b>Llamás al 800-800-8001, las 24 horas, y el INS coordina el servicio con su red. Los eventos son por año de póliza y no se acumulan.</div>
+      <div class="c"><b>Lo que conviene saber</b>Sin deducible. No llevan los descuentos ni los recargos de la póliza, solo el recargo por fraccionamiento si pagás en cuotas. Aplican en Costa Rica. Los detalles están en las Condiciones Operativas de Multiasistencia del INS.</div>
+    </div>
+  </div>
+</main>
+
+<footer class="pie">
+  <div id="pieAgente">Seguros del INS</div>
+  <div class="plat"><span>Plataforma</span><img src="../img/sdi-logo-compacto.svg" alt="Seguros Digitales SDI"></div>
+</footer>
+
+<script src="../js/planes-asistencia.js"></script>
+<script>
+(function () {
+  'use strict';
+  /* ---------- ficha del agente y del cliente: llegan por el URL que arma
+     _buildPlanesUrl() en el correo. Todo se escapa antes de tocar el DOM. ---------- */
+  var Q = new URLSearchParams(location.search);
+  function param(k, def) { var v = (Q.get(k) || '').trim(); return v || (def || ''); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function $(s, r) { return (r || document).querySelector(s); }
+  function col(n) { return '₡' + Math.round(n).toLocaleString('de-DE'); }
+  function soloDigitos(v) { var d = String(v || '').replace(/\D/g, ''); return /^\d+$/.test(d) && Number(d) > 0 ? Number(d) : 0; }
+
+  var AGENTE = {
+    nombre: param('n', 'Juan Carlos Hernández Vargas'),
+    licencia: param('l', '08-1318'),
+    wa: param('wa', '8822 1348').replace(/\D/g, '')
+  };
+  var WA_AGENTE = AGENTE.wa.length === 8 ? '506' + AGENTE.wa : AGENTE.wa;
+  var CLIENTE = param('c', '');
+  var VEH = param('v', '');
+  // pv (prima vigente) manda sobre pa (prima cotizada). Sin ninguna, la página
+  // muestra solo lo que suman las asistencias.
+  var PV = soloDigitos(Q.get('pv')), PA = soloDigitos(Q.get('pa'));
+  var PRIMA = PV || PA, MODO = PV ? 'vigente' : PA ? 'cotizada' : 'sola';
+  var FP = { a: [1, 'año'], s: [2, 'semestre'], t: [4, 'trimestre'], m: [12, 'mes'] };
+  var fp = FP[param('fp', 'a')] ? param('fp', 'a') : 'a';
+  var PLANES = PLANES_ASI;      // fuente única: js/planes-asistencia.js
+  var IVA = ASI_IVA;
+  var pila = AGENTE.nombre.split(' ')[0];
+
+  var ICO = {
+    mascota: '<path d="M8 6.5a1.6 2.2 0 1 0 0 .1M16 6.5a1.6 2.2 0 1 0 0 .1M4.5 11a1.6 2 0 1 0 0 .1M19.5 11a1.6 2 0 1 0 0 .1M12 11c-3 0-6 3.5-6 6a3 3 0 0 0 3 3c1.2 0 2-.5 3-.5s1.8.5 3 .5a3 3 0 0 0 3-3c0-2.5-3-6-6-6z"/>',
+    funerario: '<path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/>',
+    bienestar: '<path d="M3 12h4l2-5 4 10 2-5h6"/>',
+    premium: '<path d="M12 4v16M4 12h16"/>',
+    autos: '<path d="M5 13 6.8 8.5A2 2 0 0 1 8.7 7h6.6a2 2 0 0 1 1.9 1.5L19 13M4 13h16v5H4zM7 18v2M17 18v2"/>',
+    vip: '<path d="m3 8 4.5 4L12 5l4.5 7L21 8l-2 11H5z"/>'
+  };
+  var TONO = { verde: ['#E9F5F0', '#037D61'], pizarra: ['#EFEAFB', '#5B21B6'], cyan: ['#E3F5F7', '#0E6371'], azul: ['#E8F1F8', '#02557F'], naranja: ['#FCE8EC', '#9F1239'], oro: ['#FBF3DC', '#7C5A00'] };
+  function ico(p) {
+    var t = TONO[p.tono] || TONO.azul;
+    return '<span class="ico" style="background:' + t[0] + ';color:' + t[1] + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (ICO[p.id] || ICO.premium) + '</svg></span>';
+  }
+
+  /* ---------- cabecera y titular ---------- */
+  var el;
+  if ((el = $('#agNombre'))) el.textContent = AGENTE.nombre;
+  if ((el = $('#agLic'))) el.textContent = 'SUGESE ' + AGENTE.licencia;
+  if ((el = $('#pieAgente'))) el.textContent = 'Seguros del INS · ' + AGENTE.nombre + ', agente autorizado · Licencia SUGESE ' + AGENTE.licencia;
+  if ((el = $('#pillWa'))) el.textContent = 'Escribirle a ' + pila;
+  if ((el = $('#titulo'))) {
+    el.textContent = (CLIENTE ? CLIENTE + ', armá' : 'Armá') + ' tus asistencias y mirá en cuánto queda tu ' + (MODO === 'cotizada' ? 'cotización' : 'seguro');
+  }
+  if (MODO !== 'sola') {
+    $('#hoy').hidden = false;
+    $('#k-hoy-l').textContent = MODO === 'vigente' ? 'Tu seguro hoy' : 'Tu cotización';
+    $('#k-hoy').textContent = col(PRIMA);
+    $('#k-hoy-s').textContent = 'al año' + (VEH ? ' · ' + VEH : '');
+    $('#k-tot-l').textContent = MODO === 'vigente' ? 'Tu seguro quedaría en' : 'Tu cotización quedaría en';
+    $('#k-tot').textContent = col(PRIMA);
+  }
+
+  /* ---------- detalle de un plan ---------- */
+  function detalle(p) {
+    var h = '<div class="detalle">';
+    if (p.desc) h += '<p>' + esc(p.desc) + '</p>';
+    if (p.serv && p.serv.length) {
+      h += '<table><tr class="cab"><td>Servicio</td><td>Eventos / año</td><td>Tope por evento</td></tr>' +
+        p.serv.map(function (s) { return '<tr><td>' + esc(s[0]) + '</td><td>' + esc(s[1] || '—') + '</td><td>' + esc(s[2]) + '</td></tr>'; }).join('') + '</table>';
+    } else if (p.incluye) {
+      h += '<p><b>' + esc(p.monto || '') + '</b>' + (p.montoAlt ? ' ' + esc(p.montoAlt) : '') + (p.eventos ? ' · ' + esc(p.eventos) : '') + '</p><ul>' +
+        p.incluye.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ul>';
+    }
+    if (p.nota) h += '<p class="nota">' + esc(p.nota) + '</p>';
+    return h + '</div>';
+  }
+
+  /* ---------- configurador ---------- */
+  var sel = {}, abierto = {};
+  var lista = $('#lista'), res = $('#res');
+
+  function pintaLista() {
+    var h = '';
+    PLANES.forEach(function (p) {
+      var n = p.serv ? p.serv.length : (p.incluye ? p.incluye.length : 0);
+      h += '<div class="plan" data-plan="' + esc(p.id) + '" data-on="' + (sel[p.id] ? 1 : 0) + '">' +
+        ico(p) +
+        '<div><div class="nom">' + esc(p.nom) + '</div><div class="lin">' + esc(p.linea) + '</div>' +
+          '<button class="ver" type="button" data-ver="' + esc(p.id) + '">' + (abierto[p.id] ? 'Ocultar' : 'Ver qué trae · ' + n + ' servicios') + '</button></div>' +
+        '<div class="pr">' + col(p.prima) + '<small>+ IVA · ' + col(asiConIva(p.prima)) + '</small></div>' +
+        '<input class="sw" type="checkbox" role="switch" data-sw="' + esc(p.id) + '"' + (sel[p.id] ? ' checked' : '') + ' aria-label="Agregar ' + esc(p.nom) + '">' +
+        (abierto[p.id] ? detalle(p) : '') +
+      '</div>';
+    });
+    lista.innerHTML = h;
+  }
+
+  function urlWa(ids, neto) {
+    var nombres = ids.map(function (p) { return p.nom; });
+    var t = 'Hola ' + pila + ', revisé los planes de asistencia y me interesan: ' + nombres.join(', ') + '.';
+    if (PRIMA && MODO === 'vigente') t += ' Hoy pago ' + col(PRIMA) + ' al año.';
+    if (CLIENTE) t += ' Soy ' + CLIENTE + (VEH ? ' (' + VEH + ')' : '') + '.';
+    return 'https://web.whatsapp.com/send/?phone=' + WA_AGENTE + '&text=' + encodeURIComponent(t);
+  }
+
+  function pintaRes() {
+    var ids = PLANES.filter(function (p) { return sel[p.id]; });
+    var neto = ids.reduce(function (a, p) { return a + p.prima; }, 0);
+    var iva = Math.round(neto * IVA), conIva = neto + iva, tot = PRIMA + conIva;
+
+    if (MODO !== 'sola') {
+      $('#k-asis').textContent = col(conIva);
+      $('#k-asis-s').textContent = ids.length ? ids.length + (ids.length === 1 ? ' plan' : ' planes') + ' · con IVA del 13 %' : 'con IVA del 13 %';
+      $('#k-tot').textContent = col(tot);
+      var d = $('#k-delta'); d.hidden = !ids.length;
+      if (ids.length) d.querySelector('span').textContent = '+ ' + col(conIva) + ' al año';
+    }
+
+    var h = '<div class="rt">Tu selección</div>';
+    if (!ids.length) {
+      h += '<p class="vacio">Todavía no prendiste ninguno. Acá se va sumando' + (MODO !== 'sola' ? ' y te digo en cuánto queda tu ' + (MODO === 'vigente' ? 'seguro' : 'cotización') : '') + '.</p>';
+    } else {
+      ids.forEach(function (p) { h += '<div class="fila"><span>' + esc(p.nom) + '</span><b>' + col(p.prima) + '</b></div>'; });
+      h += '<div class="fila suma"><span>IVA 13 %</span><b>' + col(iva) + '</b></div>';
+      if (MODO !== 'sola') {
+        h += '<div class="fila suma"><span>' + (MODO === 'vigente' ? 'Tu seguro hoy' : 'Tu cotización') + '</span><b>' + col(PRIMA) + '</b></div>';
+        h += '<div class="total"><div class="l">' + (MODO === 'vigente' ? 'Tu seguro quedaría en' : 'Tu cotización quedaría en') + '</div><div class="v">' + col(tot) + '</div><div class="delta"><i></i>+ ' + col(conIva) + ' al año</div></div>';
+      } else {
+        h += '<div class="total"><div class="l">Total al año</div><div class="v">' + col(conIva) + '</div></div>';
+      }
+      if (FP[fp][0] > 1) h += '<p class="cuota">≈ <b class="mono">' + col(conIva / FP[fp][0]) + '</b> más por ' + FP[fp][1] + ', antes del recargo por fraccionamiento.</p>';
+      else h += '<p class="cuota">Si pagás el seguro en cuotas, a estos planes también se les aplica el recargo por fraccionamiento.</p>';
+      h += '<a class="btn btn-p" href="' + esc(urlWa(ids, neto)) + '" target="_blank" rel="noopener">Pedirle estos planes a ' + esc(pila) + '</a>';
+      h += '<p class="nota">Te abre WhatsApp con los planes ya escritos. El agente los agrega a tu póliza y el INS los cobra con el seguro.</p>';
+    }
+    res.innerHTML = h;
+  }
+
+  /* El enganche va ANTES de pintar: si algo de arriba faltara, los
+     interruptores igual responden (regla que dejaron dos incidentes). */
+  lista.addEventListener('change', function (e) {
+    var id = e.target.getAttribute && e.target.getAttribute('data-sw'); if (!id) return;
+    sel[id] = e.target.checked;
+    e.target.closest('.plan').setAttribute('data-on', e.target.checked ? '1' : '0');
+    pintaRes();
+  });
+  lista.addEventListener('click', function (e) {
+    var id = e.target.getAttribute && e.target.getAttribute('data-ver'); if (!id) return;
+    abierto[id] = !abierto[id]; pintaLista();
+  });
+  if ((el = $('#pillWa'))) el.href = 'https://web.whatsapp.com/send/?phone=' + WA_AGENTE + '&text=' + encodeURIComponent('Hola ' + pila + ', tengo una consulta sobre los planes de asistencia.');
+
+  pintaLista(); pintaRes();
+})();
+</script>
+</body>
+</html>

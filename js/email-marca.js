@@ -245,6 +245,54 @@ function _bloquePagos(o) {
     '        </td></tr>';
 }
 
+/* ----------------------------------------------------------------------
+   TARJETA DE LOS PLANES DE ASISTENCIA (cobertura ASI del INS, SVA V32).
+
+   Discreta a proposito: fondo gris plano, sin boton de color, sin foto y
+   sin barra lateral. Va DESPUES de las formas de pago — el cliente ya vio
+   lo que le importa. Los seis nombres con su precio para que se entienda
+   de un vistazo de que se trata; el detalle esta en la pagina.
+
+   Los datos salen de PLANES_ASI (js/planes-asistencia.js), la misma fuente
+   que lee la pagina: el correo y la pagina no pueden contradecirse.
+
+   Devuelve '' si no hay a donde mandar al cliente: una tarjeta que nombra
+   planes y no dice donde verlos es peor que no ponerla.
+   ---------------------------------------------------------------------- */
+function _bloqueAsistencias(o) {
+  var op = o || {};
+  var url = String(op.url || '').trim();
+  if (!url) return '';
+  if (typeof PLANES_ASI === 'undefined' || !PLANES_ASI.length) return '';
+  var fontFam = op.fontFam || "'Space Grotesk',Arial,sans-serif";
+
+  // Dos por fila, en el orden del modulo (de la prima mas baja a la mas alta).
+  var filas = '';
+  for (var i = 0; i < PLANES_ASI.length; i += 2) {
+    filas += '<tr>';
+    for (var k = 0; k < 2; k++) {
+      var p = PLANES_ASI[i + k];
+      filas += '<td width="50%" style="padding:5px 10px 5px 0;vertical-align:top;font-size:13px;">' +
+        (p ? '<span style="color:' + SDI_NAVY + ';font-weight:bold;">' + _escMarca(p.nom) + '</span>' +
+             '<span style="color:' + SDI_GRIS + ';"> &middot; ' + asiColones(p.prima) + '</span>' : '') +
+        '</td>';
+    }
+    filas += '</tr>';
+  }
+
+  return '\n        <tr><td style="padding:26px 32px 0;">\n' +
+    '          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f8fafc;border:1px solid ' + SDI_LINEA + ';border-radius:10px;">\n' +
+    '            <tr><td style="padding:18px 20px;">\n' +
+    '              <p style="margin:0 0 3px;font-size:10px;font-weight:bold;letter-spacing:0.1em;text-transform:uppercase;color:#8a6d1f;">Opcional &middot; nuevo del INS</p>\n' +
+    '              <p style="margin:0 0 4px;font-family:' + fontFam + ';font-size:16px;font-weight:bold;color:' + SDI_NAVY + ';">Asistencias que le pod&eacute;s sumar a la p&oacute;liza</p>\n' +
+    '              <p style="margin:0 0 14px;font-size:13px;color:' + SDI_GRIS + ';line-height:1.5;">Se contratan aparte de la cotizaci&oacute;n y se cobran junto con el seguro. Precios al a&ntilde;o, sin IVA.</p>\n' +
+    '              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">' + filas + '</table>\n' +
+    '              <p style="margin:16px 0 0;"><a href="' + _escMarca(url) + '" style="display:inline-block;border:1px solid #cbd5e1;border-radius:8px;padding:9px 16px;color:#0c4a6e;font-weight:bold;font-size:13px;text-decoration:none;">Ver qu&eacute; trae cada plan y en cu&aacute;nto queda mi seguro &rarr;</a></p>\n' +
+    '            </td></tr>\n' +
+    '          </table>\n' +
+    '        </td></tr>\n';
+}
+
 /**
  * Pie con el logotipo OFICIAL de SDI y la nota legal completa.
  * El logotipo va como imagen y no recreado con tablas: su tipografia esta
@@ -666,7 +714,7 @@ if (typeof module !== 'undefined' && module.exports) {
     _fileteSDI: _fileteSDI, _analizarPlaca: _analizarPlaca, _placaEsRelleno: _placaEsRelleno,
     _claseEsCL: _claseEsCL, _claseEsTemporal: _claseEsTemporal,
     _tarjetaVehiculo: _tarjetaVehiculo, _bloqueSobrio: _bloqueSobrio, _pieSDI: _pieSDI,
-    _ahorroAnual: _ahorroAnual, _bloquePagos: _bloquePagos,
+    _ahorroAnual: _ahorroAnual, _bloquePagos: _bloquePagos, _bloqueAsistencias: _bloqueAsistencias,
     _bloqueCoberturas: _bloqueCoberturas, _filasCoberturas: _filasCoberturas, _notaDeducibles: _notaDeducibles, _cuadrosDeducibles: _cuadrosDeducibles,
     _deduciblePorCobertura: _deduciblePorCobertura, _montoCR: _montoCR, _enPalabras: _enPalabras,
     SDI_TONOS: SDI_TONOS, SDI_COBERTURAS: SDI_COBERTURAS,

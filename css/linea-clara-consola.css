@@ -334,3 +334,41 @@ body.page-marcas{background:#fff}
 .form-row span[style*="--gray-500"]{color:var(--lc-ink-3)!important}   /* ayudas bajo los campos, con color en línea */
 .form-label span[style*="--gray-500"]{color:var(--lc-ink-3)!important}
 .card[style*="margin-top"]{margin-top:24px!important}
+
+
+/* ---------- modal "Asistencias a cliente con póliza" (17 set 2026) ---------- */
+.asi-card{max-width:980px}
+.asi-sub{margin:2px 0 0;font-size:13px;color:var(--lc-ink-3);font-weight:400}
+.asi-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr)}
+.asi-form{padding:22px 26px;border-right:1px solid var(--lc-line-soft)}
+.asi-prev{padding:22px 26px;background:var(--lc-band)}
+.asi-rot{font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--lc-ink-3);margin-bottom:10px}
+.asi-prev-box{height:520px;background:#fff;border:1px solid var(--lc-line);border-radius:16px;overflow:hidden}
+.asi-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.asi-grid .form-row{margin-bottom:14px}
+.asi-grid .asi-full{grid-column:1/-1}
+.asi-hint{display:block;font-size:12px;color:var(--lc-ink-3);margin-top:5px;line-height:1.4}
+.asi-opt{font-weight:400}
+.asi-inp{position:relative}
+.asi-inp .asi-pre{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-family:'Inter',sans-serif;color:var(--lc-ink-3);font-size:13.5px;pointer-events:none}
+.asi-inp .form-control{padding-left:28px}
+.asi-mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.asi-seg{display:flex;gap:6px;flex-wrap:wrap}
+.asi-seg button{border:1px solid var(--lc-line-btn);background:#fff;border-radius:999px;min-height:36px;padding:0 14px;font:inherit;font-size:13px;font-weight:500;color:var(--lc-ink-2);cursor:pointer}
+.asi-seg button[aria-pressed="true"]{background:var(--lc-blue);border-color:var(--lc-blue);color:#fff;font-weight:600}
+.asi-resumen{background:#fff;border:1px solid var(--lc-line);border-radius:20px;padding:12px 18px;margin-top:4px}
+.asi-resumen .r{display:flex;justify-content:space-between;gap:12px;font-size:13.5px;padding:7px 0;border-bottom:1px solid var(--lc-line-soft)}
+.asi-resumen .r:last-child{border-bottom:0}
+.asi-resumen .r span{color:var(--lc-ink-2)}
+.asi-resumen .r b{font-family:var(--font-mono);font-weight:600;font-variant-numeric:tabular-nums}
+.asi-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.asi-quien{font-size:12.5px;color:var(--lc-ink-3)}
+.asi-btns{display:flex;gap:10px;flex-wrap:wrap}
+#asiDone .success-box{padding:40px 24px 28px}
+#asiDone[hidden],#asiForm[hidden]{display:none!important}
+@media (max-width:860px){
+  .asi-body{grid-template-columns:1fr}
+  .asi-form{border-right:0;border-bottom:1px solid var(--lc-line-soft)}
+  .asi-grid{grid-template-columns:1fr}
+  .asi-prev-box{height:420px}
+}

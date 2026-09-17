@@ -69,6 +69,18 @@ var ASIST = 'https://appasistenciaseguroautos.netlify.app/?n=Juan%20Carlos&tel=8
   ok('a-sin-cotizador', SHORTLINK_HOST.indexOf('cotizador') === -1);
   ok('a-mas-corto',  r2.length < ASIST.length);
 
+  // ---- Configurador de asistencias (17 set 2026): mismo sitio, ruta /p ----
+  var PLANES = 'https://cotizador.appsegurosdigitales.com/asistencias/?n=Juan%20Carlos&l=08-1318&c=Mariela&pv=487300&fp=t';
+  mockFetch(() => respuesta(200, { id: 'PLANES2345' }));
+  var r3 = await acortarEnlace(PLANES, 'p');
+  ok('p-ruta',      llamadas[0].ruta === '/p');
+  ok('p-query',     llamadas[0].body.q === 'n=Juan%20Carlos&l=08-1318&c=Mariela&pv=487300&fp=t');
+  ok('p-sin-base',  llamadas[0].body.b === undefined);   // como /g: el destino lo arma la Function
+  ok('p-devuelve',  r3 === 'https://guia.appsegurosdigitales.com/p/PLANES2345');
+  ok('p-mas-corto', r3.length < PLANES.length);
+  mockFetch(() => respuesta(503, {}));
+  ok('p-falla-largo', (await acortarEnlace(PLANES, 'p')) === PLANES);
+
   // ---- Fallback: pase lo que pase, sale el enlace largo ----
   mockFetch(() => respuesta(503, { error: 'No se pudo acortar el enlace.' }));
   ok('falla-503',   (await acortarEnlace(ASIST, 'a')) === ASIST);

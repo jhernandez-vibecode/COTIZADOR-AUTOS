@@ -13,6 +13,11 @@ const CFG = {
   // URLs usadas en el correo al cliente (custom domain via Portal SDI)
   GUIDE_URL:   'https://cotizador.appsegurosdigitales.com/explicacion/',
   AGENDA_URL:  'https://forms.gle/tqSaZBDcZfNgNktC7',
+  // Pagina de los planes de asistencia (cobertura ASI del INS, SVA V32).
+  // OJO: NO es ASSIST_URL — ese es el Centro de Asistencia Digital de la
+  // poliza activa, que es otra app y otro repo. Confundirlas manda al cliente
+  // a la app equivocada.
+  PLANES_URL:  'https://cotizador.appsegurosdigitales.com/asistencias/',
   LOGO_URL:    'https://cotizador.appsegurosdigitales.com/img/ins-logo.png',
   // Logotipo SDI del pie del correo. Va como imagen y no recreado con tablas
   // porque su tipografia esta vectorizada en el kit de marca, y en correo las
@@ -60,9 +65,11 @@ const CFG = {
   // y anotar lo mismo en el registro de cambios del pie de index.html.
   // Solo la consola (index.html) la muestra; las sub-páginas no.
   NOVEDADES: {
-    version: '2026-09-13b',
-    fecha: '13 sep 2026',
+    version: '2026-09-17',
+    fecha: '17 sep 2026',
     items: [
+      '<b>Nuevo acceso "Asistencias a cliente" en el menú, bajo Enviar.</b> Para los clientes que ya tienen póliza: escribís su nombre, correo, la prima anual que paga hoy y su forma de pago, y le sale un correo con los seis planes de asistencia que el INS estrena el 28 de setiembre, más un botón a una página donde prende los que quiera y ve en cuánto quedaría su seguro. Después podés avisarle por WhatsApp. No se guarda en Cotizaciones.',
+      '<b>Desde el 28 de setiembre, el correo de cotización lleva una tarjeta con los seis planes</b> después de las formas de pago, con el mismo botón. En el paso 3 aparece una casilla para apagarla en una cotización concreta. Antes del 28 el correo sale igual que hoy.',
       '<b>El correo de Renovación confirmada también cambió de imagen</b>: tarjeta del vehículo con la placa dibujada y el número de póliza, sello "Pago aplicado", el monto grande con el período y el comprobante, los pasos ante un evento con los teléfonos a la derecha, y las mismas tarjetas de Viaje y Estudiantil con icono. Con varios recibos, la tabla y el total van en blanco y negro.',
       '<b>El correo de Póliza activa cambió de imagen</b>: después del saludo va la tarjeta del vehículo con la placa dibujada (roja si es carga liviana) y el número de póliza; luego el sello "Póliza activa", los documentos adjuntos y debajo el Centro de Asistencia Digital.',
       '<b>Botones redondos azules, sin cajas con barra de color</b>, teléfonos de emergencia grandes y un icono sencillo en Seguro de Viaje y Seguro Estudiantil.',

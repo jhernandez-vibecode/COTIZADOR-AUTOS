@@ -5,7 +5,7 @@ description: ESPECIALISTA COTIZADOR AUTOS SDI — App web vanilla JS que extrae 
 
 # Especialista Cotizador SDI — Seguros Autos INS
 
-Leer COMPLETO antes de tocar código. Estado a **13 septiembre 2026**: **los correos de Póliza activa y de Renovación confirmada estrenan la línea clara** (orden nuevo, tarjeta del vehículo compartida, iconos PNG en el cross-sell; ver "El correo de Póliza activa en línea clara" y "El correo de Renovación confirmada en línea clara"; con este segundo, los TRES correos de la consola van en línea clara). Previo (**10 septiembre 2026**): **TODA la app está en la línea clara SDI** —
+Leer COMPLETO antes de tocar código. Estado a **17 septiembre 2026**: **los planes de asistencia del INS (cobertura ASI, SVA V32) ya están en producción** — módulo de datos único, tarjeta en el correo de cotización (apagada hasta el 28 sep por `asiDisponible()`), página `/asistencias/` con el configurador que suma la prima y **el cuarto envío de la consola: modal "Asistencias a cliente"** para clientes con póliza vigente (ver "Planes de asistencia del INS"). Previo (**13 septiembre 2026**): **los correos de Póliza activa y de Renovación confirmada estrenan la línea clara** (orden nuevo, tarjeta del vehículo compartida, iconos PNG en el cross-sell; ver "El correo de Póliza activa en línea clara" y "El correo de Renovación confirmada en línea clara"; con este segundo, los TRES correos de la consola van en línea clara). Previo (**10 septiembre 2026**): **TODA la app está en la línea clara SDI** —
 consola, explicador y las cuatro sub-páginas (`/polizas-activas/`, `/renovaciones/`, `/cancelacion/`, `/marcas-recargo/`,
 commit `5f3719c`, tag `pre-subpaginas-linea-clara-10sep`; ver "Las sub-páginas en línea clara"). Solo los correos siguen
 aparte (Arial en el cliente). La consola (`index.html`) y el explicador (`/explicacion/`) fueron los primeros. La consola va por `css/linea-clara-consola.css` (commit `c5cc457`, tag
@@ -160,6 +160,9 @@ js/renovacion-extract.js RenovacionParse: lee el Comprobante de Pago del INS (IN
 js/renovacion-email.js  buildRenovacionEmail() + buildRenovacionWaUrl() — correo "Renovación confirmada" (NO de cobro) + aviso WA. Reusa polizaAsistenciaUrl/polizaWaIntl
 js/renovacion-app.js    Orquestación de /renovaciones/ (cargar → revisar → redactar → enviar → WhatsApp) + triple barrera del guard D7
 js/stats-ui.js          Pestaña 📊 (render + handlers). Extraído de app.js el 9 set 2026; solo depende de history.js
+js/planes-asistencia.js 🔴 ÚNICA fuente de los 6 planes ASI + asiDisponible (28 sep 2026) + asiMonto/asiConIva/asiColones
+js/asistencias-email.js buildAsistenciasEmail() + buildAsistenciasWaTexto/Url — correo a clientes con póliza (17 sep 2026)
+js/asistencias-ui.js    Modal #asiModal "Asistencias a cliente" (cuarto envío). NO toca history.js (D4)
 js/app.js               Orquestación + historial + estadísticas (📊) + sugerencia alta gama + sync vista 2
 ```
 
@@ -170,6 +173,7 @@ polizas-activas/index.html  Envío de pólizas activas (wizard 4 pasos, look "Na
 renovaciones/index.html  Renovación confirmada: envío del comprobante de pago ya pagado (wizard 4 pasos)
 explicacion/index.html   Guía visual 5 secciones (13 URL params, incl. dd)
 marcas-recargo/index.html  Tabla 58 marcas INS con deducibles diferenciados
+asistencias/index.html   Configurador de los planes de asistencia ASI (cara del cliente; pv/pa suma la prima)
 documentos-ins/          PDFs estándar INS auto-adjuntos (Deber/Perfeccionamiento, Multiasistencia, Pacto Amistoso, DAM, Cond. Generales SVA)
 ```
 
@@ -1130,9 +1134,9 @@ la dependencia de orden.
 
 ```
 toast → config → state → agent-profile → shortlink → history →
-stats-ui → history-ui → router → pdf-extract → pdf-modify → email-marca →
-email-template → gmail-auth → wizard → mime-builder → standard-docs →
-drive-sync → datos-ui → novedades → app
+stats-ui → history-ui → router → pdf-extract → pdf-modify → **planes-asistencia** → email-marca →
+email-template → **asistencias-email** → gmail-auth → wizard → mime-builder → standard-docs →
+drive-sync → datos-ui → novedades → **asistencias-ui** → app
 ```
 
 Regla: **cada UI va después del módulo de datos del que depende, y todas antes de `app.js`**, que engancha los
@@ -1452,6 +1456,90 @@ rollback **`pre-renovacion-linea-clara-13sep`**. Solo `buildRenovacionEmail` cam
   el correo con la ficha del agente del perfil, sin la licencia del dueño, 0 errores de consola.
 - Mockup: https://claude.ai/code/artifact/a4b511d4-907c-42b3-8f90-8a615ae69eb6 (artefacto privado de JC).
 
+## Planes de asistencia del INS (cobertura ASI, SVA V32) — 17 sep 2026, EN PROD
+
+JC retomó el tema el 17 sep: *"Me gusta tarjeta y configurador… por otra parte necesito también un modal aparte en el
+cotizador para enviar la información a clientes existentes… en función de su prima vigente vea cuánto le aumentaría el
+seguro"*. Mockup nuevo en línea clara v1.3 (tres pestañas: modal, correo, configurador con la prima) → **aprobó las
+cinco decisiones y dijo "arrancá"**. Se implementó el plan del 4 sep (opción 2) **más** el cuarto envío de la consola.
+Mockup: `docs/superpowers/specs/2026-09-17-asistencias-cliente-existente-mockup.html` (artefacto privado
+https://claude.ai/artifact/V5QVh1wXVCfpP4mDtvAcwW). Plan del 4 sep: `docs/superpowers/plans/2026-09-04-cobertura-asi-asistencias.md`.
+
+### Las cinco decisiones de JC (17 sep 2026) — no cambiar sin consultarlo
+
+| | Decisión | Consecuencia en el código |
+|---|---|---|
+| **D1** | La prima que el agente escribe es la **anual CON IVA** (la del recibo) | `asiConIva()` le suma el 13 % a cada plan antes de sumarlo: las dos cifras en la misma base |
+| **D2** | La cuota se muestra **"antes del recargo por fraccionamiento"** | No se calcula el recargo (8/11/13 %): no está confirmada la base sobre la que el INS lo aplica a esta cobertura |
+| **D3** | **Trato de vos** | Como el correo de cotización y el configurador. Los de Póliza activa y Renovación siguen de usted |
+| **D4** | **NO entra al registro de Cotizaciones** | `asistencias-ui.js` no toca `history.js` (el test lo vigila) |
+| **D5** | **Un solo configurador** para los dos caminos | Con `pa` (prima cotizada) dice "Tu cotización"; con `pv` (prima vigente) "Tu seguro hoy"; sin ninguno, solo el total de las asistencias |
+
+Ajuste de copy de JC: el botón del correo dice **"Ver qué trae cada plan y en cuánto queda mi seguro"** (no "Armar mis
+asistencias…").
+
+### Qué hay
+
+- **`js/planes-asistencia.js`** — 🔴 **la ÚNICA fuente** de los seis planes (`PLANES_ASI`, transcritos del mockup del 3 sep
+  que se verificó contra el dossier del INS **leyendo cada página como imagen**; conteos 11 · 8 · 16 · 30 · 7 · 21),
+  `ASI_DESDE` (28 sep 2026), `ASI_IVA` (0,13), `asiDisponible(fecha)`, `planAsi`, `asiDesde` (7.200), `asiConIva`,
+  `asiMonto` (lee "570.891,00" del PDF, "487.300" tecleado, "487,300.00" US y 487300) y `asiColones` ('de-DE').
+  Sin DOM ni CFG. Lo cargan el correo de cotización, el correo nuevo y la página: **si se duplican los datos, correo y
+  página empiezan a decir cosas distintas** (gotcha 27).
+- **`email-marca.js` → `_bloqueAsistencias({url, fontFam})`** — la tarjeta gris discreta del correo de **cotización**,
+  después de las formas de pago. Devuelve `''` sin URL.
+- **`email-template.js` → `_buildPlanesUrl(extras)`** — URL de `/asistencias/` con la ficha del agente
+  (`n,l,w,a,wa`) + `c,v,pa|pv,fp`. `buildEmail` la enchufa **solo si `p.incluirAsistencias` Y `asiDisponible()`**:
+  🔴 **antes del 28 sep 2026 la tarjeta no sale aunque la casilla esté prendida** (el INS no emite todavía con la V32).
+- **`config.js` → `CFG.PLANES_URL`**. 🔴 **NO es `CFG.ASSIST_URL`** (ese es el Centro de Asistencia Digital de la póliza
+  activa, otra app y otro repo).
+- **`index.html` vista 3 → casilla `#m-asistencias` en `#asiRow`** (arranca `hidden`; `app.js` la destapa solo con
+  `asiDisponible()`). `app.js` pasa `incluirAsistencias` a `buildEmail` en los **dos** llamados (vista previa y envío).
+- **`js/asistencias-email.js`** — `buildAsistenciasEmail(p)` (el correo a clientes con póliza: header navy + filete,
+  HOLA + nombre, "Tu seguro hoy" con la prima grande en Courier, "con el plan más económico pasaría a ₡X", los seis
+  planes con precio, botón al configurador, nota, firma, `_pieSDI`), `buildAsistenciasWaTexto`/`buildAsistenciasWaUrl`
+  (`web.whatsapp.com/send/`, nunca `wa.me`; con `sinCorreo` no afirma que se mandó un correo), `asiParseMonto`.
+- **`js/asistencias-ui.js`** — el **modal `#asiModal`** (acceso `#btnAsistencias` en el rail, grupo Enviar, cuarto ítem).
+  Campos `as-nom`, `as-mail`, `as-prima`, `as-fp` (segmentos a/s/t/m), `as-veh`, `as-wa`, `as-nota`; resumen
+  `as-r-hoy/min/max`; vista previa en iframe sandbox `#as-prev`; envío con `buildMIMESimple` + `enviarConReintento`;
+  éxito `#asiDone` con **1 · WhatsApp** (`#btnAsiWa`, acorta con tipo `'p'` reservando la pestaña ANTES del await) y
+  **2 · Otro cliente** (`#btnAsiOtro`). `initAsistenciasModal()` la llama `app.js` **con guard `typeof`** y cada id se
+  busca con guard: un id inexistente no tumba el arranque. Orden de carga: `planes-asistencia` → `email-marca` →
+  `email-template` → `asistencias-email` → … → `asistencias-ui` → `app`.
+- **`/asistencias/index.html`** — el configurador (cara del **cliente**: INS arriba en azul, SDI al pie, sin registro de
+  cambios). Lee `n,l,wa` (agente), `c,v`, `pv`/`pa`, `fp`; **pv manda sobre pa**; sin ninguno esconde la fila de tres
+  cifras. Tres cifras: "Tu seguro hoy" · "Asistencias elegidas" (con IVA) · "Tu seguro quedaría en" con el aumento en
+  punto azul (nunca rojo). Interruptores, "Ver qué trae" con la tabla de servicios, resumen pegajoso con la cuota (D2) y
+  botón de WhatsApp al agente con los planes escritos. Todo escapado con `textContent`/`esc()` (verificado con
+  `<img onerror>` y `<svg onload>`).
+- **Enlace corto `/p/:id`** — `enlace.mjs` atiende `/p` (mismo sitio, destino `/asistencias/`, clave `p:` + huella `hp:`),
+  `validacion.mjs` → `CLAVES_P` (`n,l,w,a,wa,c,v,pa,pv,fp`), `shortlink.js` acepta `tipo 'p'`. 🔴 **Un alias recién
+  desplegado necesita el redeploy para enganchar la Function** (ver "Enlaces cortos").
+- **CSS del modal** al final de `css/linea-clara-consola.css` (bloque `.asi-*`), solo `index.html`.
+- **Aviso "Qué hay de nuevo"** `2026-09-17` + entrada en el pie.
+
+### Verificación
+
+`tests/test-asistencias.js` (**143 checks**): datos y conteos, portón por fecha, tarjeta del correo (sale/no sale según
+fecha y casilla, va después de los pagos, lleva `pa`), `_buildPlanesUrl` y `asiMonto` con los tres formatos, el correo
+nuevo (D1 495.436 = 487.300 + 8.136; D2 cuota 2.034; D3 sin "usted"; D5 `pv`+`fp`; ficha del agente del perfil y no
+la del dueño; XSS de la nota), el WhatsApp, la página (misma fuente, `pv`/`pa`, endpoint), la consola (orden de carga,
+dos llamados, guard) y el enlace `/p`. Más `test-enlace-validacion.mjs` (+6) y `test-shortlink.js` (+6).
+**Suite: 22 archivos en verde.** Smoke en localhost (`http-server -c-1`, perfil inventado): configurador con
+`pv=487300&fp=t` → Mascota + Salud Premium = ₡542.896 (+₡55.596), fuentes v1.3 cargadas, 375 px sin desborde, XSS
+inerte; el modal abre por clic real, la vista previa trae `pv=487300`, `fp=t` y la licencia del perfil, "Otro cliente"
+limpia; Cotizaciones y Configuración siguen abriendo. Cero errores de consola.
+
+🔴 **Al reescribir con Python un fuente que trae `\u20A1` o tildes**: el tool de escritura convirtió `\uXXXX` en el
+carácter real. Es válido (los correos ya llevan tildes literales), pero el `old` de un reemplazo posterior tiene que
+usar el carácter, no la secuencia.
+
+### Lo que NO hace (igual que el plan del 4 sep)
+
+No toca el esquema de repuestos de la V32 (plan aparte, misma fecha límite). No registra qué planes marcó el cliente.
+No agrega los planes al PDF ni a los documentos estándar. No replica la tarjeta en Póliza activa ni Renovación
+(`_bloqueAsistencias` queda en `email-marca.js` por si se pide).
+
 ## Las sub-páginas en línea clara (10 sep 2026, `5f3719c`) — EN PROD
 
 JC: *"Dale con las sub-páginas también, con mockups"* → 12 capturas → *"Dale, implementalo igual que las otras"*.
@@ -1586,8 +1674,9 @@ repuestos y pasos, anual siempre resaltado) + **logo del INS en azul** → "dale
 7. **Params de URL del explicador** — `num()` normaliza montos del PDF ("10,000,000.00" → "10000000") antes de encodear. Sin eso `parseInt` da 10, Number da NaN.
 8. **base64 en chunks** — `_uint8ToBase64` parte en chunks de 8192 bytes para evitar `Maximum call stack size exceeded` en PDFs grandes.
 9. **CFG.GUIDE_URL apunta al dominio Netlify** — el custom domain `cotizador.appsegurosdigitales.com` también está en los orígenes autorizados de OAuth, así que ambos funcionan; pero si aparece un dominio NUEVO hay que agregarlo primero en Google Cloud Console o el login se rechaza. (Fue el caso del sitio Netlify duplicado `cotizador-autos-sdi.netlify.app`, que rechaza login porque no está autorizado — ver Pendientes.)
-10. **Tests** — `tests/*` son Node sin runner, **17 archivos / 612 checks** (contados el 27 ago 2026). El más
-    nuevo: **`test-explicador-secciones.js`** (32 — la lógica pura del explicador dinámico, incluida la regla de
+10. **Tests** — `tests/*` son Node sin runner, **22 archivos** (17 sep 2026). El más nuevo:
+    **`test-asistencias.js`** (143 — los planes ASI, el correo a clientes con póliza, la página y el enlace `/p`).
+    Del 27 ago: **`test-explicador-secciones.js`** (32 — la lógica pura del explicador dinámico, incluida la regla de
     asistencia G/M, extraída de `explicacion/index.html` por los marcadores `[GUIA-CB-PURO]`, + el circuito
     correo → `cb` → guía). Del 25 ago:
     **`test-email-marca.js`** (45 — la placa, el relleno del cero km, el pie, los pagos) y
@@ -1677,9 +1766,9 @@ Contrastadas con 5 PDF oficiales que entregó JC (viven en `OneDrive\ARCHIVO DIG
      Salud Premium ₡42.000 · Autos Plus ₡42.000 · VIP ₡42.000 (anuales, **sin IVA 13% ni fraccionamiento**).
      Sin deducible; no reciben NINGÚN descuento (ni plan familiar, ni 0 km, ni buena experiencia); mínimo cobertura
      A; se puede llevar más de uno pero no repetido; territorio nacional; se piden al 800-800-8001.
-     **JC escogió el diseño el 4 set 2026** (opción 2: tarjeta discreta en el correo después de las formas de pago
-     + página `/asistencias/` con configurador y total en vivo) y pidió **NO implementar todavía** — sigue
-     dándole forma hasta el 28. Plan por tareas con el código real:
+     ✅ **IMPLEMENTADO el 17 sep 2026** (ver "Planes de asistencia del INS"): tarjeta en el correo apagada hasta el
+     28 por `asiDisponible()`, página `/asistencias/`, modal para clientes con póliza y enlace corto `/p`. Queda
+     **el esquema de repuestos (punto 2)**. Plan original por tareas:
      `docs/superpowers/plans/2026-09-04-cobertura-asi-asistencias.md`; mockups aprobados:
      `docs/superpowers/specs/2026-09-03-cobertura-asi-mockups.html` (commit `e01bc41`).
      🔴 **Trampa de nombres: la constante nueva es `CFG.PLANES_URL`, NO `CFG.ASSIST_URL`** — esa última es el
@@ -1826,6 +1915,7 @@ enlaces que el cliente ve CRUDOS en WhatsApp son largos y WhatsApp los partía c
 |---|---|---|---|
 | `/g/:id` | Guía de la cotización (hasta 13 params, ~280 chars) | `/explicacion/` **del mismo sitio**, armado en el servidor | `CLAVES` (params del explicador) |
 | `/a/:id` | Guía de emergencias de la póliza (ficha del agente, ~183 chars) | **otro sitio** (app de asistencia) → `DESTINOS_A` | `CLAVES_A` (`a,n,tel,wa,em,lic,web`) |
+| `/p/:id` | Configurador de asistencias (ficha + cliente + prima, 17 sep 2026) | `/asistencias/` **del mismo sitio** | `CLAVES_P` (`n,l,w,a,wa,c,v,pa,pv,fp`) |
 
 Se acorta **solo** donde el cliente ve la URL cruda: WhatsApp (vista 4 e historial
 💬 del cotizador, vista 4 de pólizas) y Copiar 📄. El correo y el historial guardan

@@ -8,6 +8,7 @@
  *
  *   'g' → guia de la cotizacion   /explicacion/?n=…&c=…&va=…  (hasta 13 params)
  *   'a' → guia de emergencias     app de asistencia + ficha del agente (~180)
+ *   'p' → planes de asistencia    /asistencias/?n=…&pv=…  (17 set 2026)
  *
  * Se usa SOLO donde el cliente ve la URL cruda (WhatsApp y Copiar). El correo
  * y el historial guardan el link LARGO a proposito: el boton del correo lo
@@ -50,7 +51,7 @@ var SHORTLINK_RE_ID = /^[A-Z2-9]{10}$/;
  * Cambia un link largo por su alias corto.
  *
  * @param {string} urlLarga - URL completa, con sus parametros
- * @param {string} [tipo]   - 'g' guia de la cotizacion (default) · 'a' asistencia
+ * @param {string} [tipo]   - 'g' guia de la cotizacion (default) · 'a' asistencia · 'p' planes
  * @returns {Promise<string>} el alias corto, o la URL larga si no se pudo
  */
 async function acortarEnlace(urlLarga, tipo) {
@@ -58,7 +59,7 @@ async function acortarEnlace(urlLarga, tipo) {
   var i = larga.indexOf('?');
   if (i === -1) return larga;                       // sin parametros no hay nada que acortar
 
-  var ruta = tipo === 'a' ? '/a' : '/g';
+  var ruta = tipo === 'a' ? '/a' : tipo === 'p' ? '/p' : '/g';
   var cuerpo = { q: larga.slice(i + 1) };
   // La guia de emergencias vive en OTRO sitio (la app de asistencia), asi que
   // hay que decirle a la Function a donde apunta. Ella lo valida contra su

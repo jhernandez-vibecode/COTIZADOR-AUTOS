@@ -169,6 +169,20 @@ function buildEmail(params) {
         fontFam: fontFam
       })
     : '';
+  // Planes de asistencia (cobertura ASI). Solo si el agente dejo la casilla
+  // prendida Y el INS ya los emite: antes del 28 de setiembre de 2026 no
+  // existen en la solicitud de seguro y ofrecerlos seria prometer algo que
+  // el cliente no puede contratar. El enlace lleva la prima anual cotizada
+  // para que la pagina le muestre en cuanto quedaria el seguro.
+  const asistenciasHtml = (p.incluirAsistencias &&
+      typeof asiDisponible === 'function' && asiDisponible() &&
+      typeof _bloqueAsistencias === 'function')
+    ? _bloqueAsistencias({
+        url: _buildPlanesUrl({ clientName: nombre, vehicle: vehiculo, primaAnual: prices.anual }),
+        fontFam: fontFam
+      })
+    : '';
+
   const beneficiosHtml = `        <!-- 5. BENEFICIOS OUTCOME (Full → Cero deducible → Asistencia) -->
         <tr><td style="padding:26px 32px 0;">
           <h2 style="margin:0 0 14px;font-family:${fontFam};font-size:14px;font-weight:700;color:#0c4a6e;text-transform:uppercase;letter-spacing:0.05em;border-bottom:2px solid #0369a1;padding-bottom:8px;">3 beneficios clave de tu cobertura</h2>
@@ -269,6 +283,9 @@ function buildEmail(params) {
 
         <!-- 6. FORMAS DE PAGO (trimestral, semestral, anual; el anual en verde) -->
         ${_bloquePagos({ prices: prices, fontFam: fontFam })}
+
+        <!-- 6b. PLANES DE ASISTENCIA (opcional, cobertura ASI; desde el 28 set 2026) -->
+        ${asistenciasHtml}
 
         ${interesHtml}
 
@@ -565,6 +582,51 @@ function _buildGuideUrl(extras) {
   if (params.length === 0) return base;
   const sep = base.indexOf('?') === -1 ? '?' : '&';
   return base + sep + params.join('&');
+}
+
+/**
+ * URL de /asistencias/ con la ficha del agente, para que la pagina muestre
+ * al agente correcto y su WhatsApp — igual que hace _buildGuideUrl con la
+ * guia. Sin esto la pagina caeria a los defaults de config.js, o sea a JC,
+ * aunque el correo lo mande otro agente.
+ *
+ * Los extras son del cliente y son opcionales:
+ *   c  nombre de pila        v  vehiculo
+ *   pa prima anual COTIZADA (desde el correo de cotizacion: "Tu cotizacion")
+ *   pv prima anual VIGENTE  (desde el aviso a clientes con poliza: "Tu seguro hoy")
+ *   fp forma de pago a|s|t|m (para decir cuanto seria por cuota)
+ * La pagina lee una sola de pa/pv; si vienen las dos manda pv.
+ *
+ * @param {object} [extras]
+ * @returns {string} '' si CFG.PLANES_URL no esta
+ */
+function _buildPlanesUrl(extras) {
+  const base = (typeof CFG !== 'undefined' && CFG.PLANES_URL) || '';
+  if (!base) return '';
+  const params = [];
+  if (CFG.FROM_NAME)  params.push('n='  + encodeURIComponent(CFG.FROM_NAME));
+  if (CFG.LICENSE)    params.push('l='  + encodeURIComponent(CFG.LICENSE));
+  if (CFG.WEBSITE)    params.push('w='  + encodeURIComponent(CFG.WEBSITE));
+  if (CFG.AGENDA_URL) params.push('a='  + encodeURIComponent(CFG.AGENDA_URL));
+  if (CFG.WHATSAPP)   params.push('wa=' + encodeURIComponent(CFG.WHATSAPP));
+  const x = extras || {};
+  const add = function (key, val) {
+    if (val !== undefined && val !== null && String(val).trim() !== '') {
+      params.push(key + '=' + encodeURIComponent(String(val).trim()));
+    }
+  };
+  // "570.891,00" (PDF del INS) / "487.300" / "570,891.00" / 570891 → "570891".
+  // Sin numero no viaja. asiMonto vive en js/planes-asistencia.js.
+  const num = function (val) {
+    const n = (typeof asiMonto === 'function') ? asiMonto(val) : 0;
+    return n > 0 ? String(n) : '';
+  };
+  add('c',  x.clientName);
+  add('v',  x.vehicle);
+  add('pa', num(x.primaAnual));
+  add('pv', num(x.primaVigente));
+  if (/^[astm]$/.test(String(x.formaPago || ''))) add('fp', x.formaPago);
+  return params.length ? base + (base.indexOf('?') === -1 ? '?' : '&') + params.join('&') : base;
 }
 
 /**

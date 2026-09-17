@@ -148,6 +148,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // ============ PESTAÑA DE ESTADÍSTICAS (📊) ============
   document.getElementById('btnStats').addEventListener('click', openStatsModal);
+
+  // ============ MODAL DE ASISTENCIAS A CLIENTE CON PÓLIZA (17 set 2026) ============
+  // Con guard typeof: si el módulo no cargó, el resto del arranque sigue.
+  if (typeof initAsistenciasModal === 'function') initAsistenciasModal();
+
+  // La casilla de asistencias del paso 3 solo aparece cuando el INS ya emite
+  // con la V32 (28 set 2026). Antes no hay nada que ofrecer, y una casilla
+  // prendida que no hace nada confunde.
+  var asiRow = document.getElementById('asiRow');
+  if (asiRow && typeof asiDisponible === 'function' && asiDisponible()) asiRow.hidden = false;
   document.getElementById('btnStatsClose').addEventListener('click', closeStatsModal);
   document.getElementById('btnStatsExit').addEventListener('click', closeStatsModal);
   // Delegacion: los contenedores siempre existen, los hijos se repintan.
@@ -650,7 +660,9 @@ function updatePreview() {
     // coberturas cambia en cada una: una lista fija le prometeria al
     // cliente algo que no contrato.
     coberturas:    S.data.coberturas,
-    deducibles:    S.data.deductibles
+    deducibles:    S.data.deductibles,
+    // Planes de asistencia (desde el 28 set 2026): la casilla del paso 3.
+    incluirAsistencias: !!(document.getElementById('m-asistencias') || {}).checked
   });
 
   const preview = document.getElementById('preview');
@@ -706,7 +718,8 @@ async function handleSend() {
       // coberturas cambia en cada una: una lista fija le prometeria al
       // cliente algo que no contrato.
       coberturas:    S.data.coberturas,
-      deducibles:    S.data.deductibles
+      deducibles:    S.data.deductibles,
+      incluirAsistencias: !!(document.getElementById('m-asistencias') || {}).checked
     });
 
     const toAddr  = document.getElementById('m-to').value.trim();
