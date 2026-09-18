@@ -324,7 +324,7 @@ Sexta sección, **entre `s5` (Pagos) y el cierre**. La pidió JC para bajar la f
 
 Si `sr` no viene en el URL (correos viejos), se muestran las 4 filas con Plus resaltado por defecto.
 
-**Momento celebración**: al hacer clic en "Agendar mi cita" → overlay verde + confetti + mensaje personalizado → abre Google Form del agente (param `a`). Fallback: link hardcoded de JC para URLs sin `a`.
+**Pantalla de "Agendar" (18 sep 2026, reemplaza al "momento celebración")**: al hacer clic en "Agendar mi cita de aseguramiento" (`.cta-rect` → `openCelebration()`; los otros tres botones "Agendar mi cita" solo bajan hasta ahí) se abre el overlay `#celebBackdrop`. JC, 18 sep: *"ese muy bien puede hacer pensar al asegurado que ya agendó"*. Ahora dice **"Falta un paso, {nombre}"** · "Ya revisaste tu cotización. **Tu cita todavía no está agendada**: se agenda en el formulario que abre el botón de abajo." · paso pendiente "Agendá tu cita · Llená el formulario de {pila del agente}" con insignia **"Falta"** · botón **"Abrir el formulario y agendar →"** · pie "Toma 1 minuto. Tu cita queda agendada cuando enviás el formulario." 🔴 **Sin confeti** (`.celeb-modal .confetti{display:none!important}`; los nodos siguen) **y sin "Recibirás confirmación por correo"**: prometía algo que depende del agente. Todo en vos. El anillo "1/2 pasos" se queda. Tag `pre-pantalla-agendar-18sep`; el script del cambio está en `docs/superpowers/specs/2026-09-18-pantalla-agendar-mock-celeb.py`. El enlace sigue siendo el del agente (param `a`); fallback: el formulario de JC para URLs sin `a`.
 
 ## Sustitución de repuestos — email
 

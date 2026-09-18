@@ -65,9 +65,10 @@ const CFG = {
   // y anotar lo mismo en el registro de cambios del pie de index.html.
   // Solo la consola (index.html) la muestra; las sub-páginas no.
   NOVEDADES: {
-    version: '2026-09-17',
-    fecha: '17 sep 2026',
+    version: '2026-09-18',
+    fecha: '18 sep 2026',
     items: [
+      '<b>La pantalla de "Agendar mi cita" de la guía ya no parece una cita confirmada.</b> Decía "¡Muy bien!" con confeti; ahora dice "Falta un paso", aclara que la cita todavía no está agendada y el botón se llama "Abrir el formulario y agendar". El enlace a tu formulario es el mismo.',
       '<b>Nuevo acceso "Asistencias a cliente" en el menú, bajo Enviar.</b> Para los clientes que ya tienen póliza: escribís su nombre, correo, la prima anual que paga hoy y su forma de pago, y le sale un correo con los seis planes de asistencia que el INS estrena el 28 de setiembre, más un botón a una página donde prende los que quiera y ve en cuánto quedaría su seguro. Después podés avisarle por WhatsApp. No se guarda en Cotizaciones.',
       '<b>Desde el 28 de setiembre, el correo de cotización lleva una tarjeta con los seis planes</b> después de las formas de pago, con el mismo botón, <b>y la guía del cliente suma una sección "Sumale asistencias a tu póliza"</b> entre las formas de pago y el día de la cita. En el paso 3 aparece una casilla para apagarlos en una cotización concreta. Antes del 28 el correo y la guía salen igual que hoy.',
       '<b>El correo de Renovación confirmada también cambió de imagen</b>: tarjeta del vehículo con la placa dibujada y el número de póliza, sello "Pago aplicado", el monto grande con el período y el comprobante, los pasos ante un evento con los teléfonos a la derecha, y las mismas tarjetas de Viaje y Estudiantil con icono. Con varios recibos, la tabla y el total van en blanco y negro.',

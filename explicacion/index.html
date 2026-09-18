@@ -2186,6 +2186,9 @@ main{max-width:none;padding:44px 24px 56px;background:var(--lc-band)}
 
 /* ---------- Sección de asistencias opcionales (cobertura ASI, 17 set 2026) ---------- */
 #sasi[hidden]{display:none!important}
+/* La pantalla de "Agendar" ya no celebra: la cita todavía no está hecha (18 set 2026). */
+.celeb-modal .confetti{display:none!important}
+.celeb-sub b{color:var(--lc-ink);font-weight:600}
 #sasi .section-num::before{background:var(--t-oro-tx)}
 .asi-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}
 .asi-row{display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:12px;align-items:center;border:1px solid var(--lc-line);border-radius:16px;padding:13px 14px;background:#fff}
@@ -2969,8 +2972,8 @@ main{max-width:none;padding:44px 24px 56px;background:var(--lc-band)}
       </div>
     </div>
 
-    <h2 class="celeb-title">¡Muy bien,<br/><span class="name">Jonathan</span>! 🎉</h2>
-    <p class="celeb-sub">Completaste el paso 1 de 2. Tu cita aún está pendiente.</p>
+    <h2 class="celeb-title">Falta un paso,<br/><span class="name">Jonathan</span></h2>
+    <p class="celeb-sub">Ya revisaste tu cotización. <b>Tu cita todavía no está agendada</b>: se agenda en el formulario que abre el botón de abajo.</p>
 
     <div class="celeb-steps">
       <div class="celeb-step done-step">
@@ -2984,18 +2987,18 @@ main{max-width:none;padding:44px 24px 56px;background:var(--lc-band)}
       <div class="celeb-step pending-step">
         <div class="celeb-step-icon pend">📅</div>
         <div class="celeb-step-text">
-          <b>Agenda tu cita</b>
-          <span id="celebStepConfirm">Confirma con Juan Carlos</span>
+          <b>Agendá tu cita</b>
+          <span id="celebStepConfirm">Llená el formulario de Juan Carlos</span>
         </div>
-        <div class="celeb-step-badge pend">Pendiente</div>
+        <div class="celeb-step-badge pend">Falta</div>
       </div>
     </div>
 
     <a class="celeb-cta-link" id="celebGoForm" href="https://forms.gle/tqSaZBDcZfNgNktC7" target="_blank" rel="noopener">
-      <span>Completar — Agendar mi cita</span>
+      <span>Abrir el formulario y agendar</span>
       <span class="arrow">→</span>
     </a>
-    <p class="celeb-cta-hint">Solo toma 1 minuto · Recibirás confirmación por correo</p>
+    <p class="celeb-cta-hint">Toma 1 minuto. Tu cita queda agendada cuando enviás el formulario.</p>
 
     <div class="celeb-signature">
       <div class="celeb-avatar">JC</div>
@@ -3341,7 +3344,8 @@ function applyPersonalization() {
   // Celebración — título y pasos
   const celebTitle = document.querySelector('.celeb-title');
   if (celebTitle) {
-    celebTitle.innerHTML = `¡Muy bien,<br/><span class="name">${esc(data.c || 'Cliente')}</span>! 🎉`;
+    // Sin "¡Muy bien!" ni confeti: se leía como cita ya agendada (JC, 18 set 2026).
+    celebTitle.innerHTML = `Falta un paso,<br/><span class="name">${esc(data.c || 'Cliente')}</span>`;
   }
   const celebVehicle = document.getElementById('celebVehicle');
   if (celebVehicle && data.v) {
@@ -3355,7 +3359,7 @@ function applyPersonalization() {
   }
   // Celebración — paso "Confirma con X" y firma "Tu agente X te acompaña"
   const celebStepConfirm = document.getElementById('celebStepConfirm');
-  if (celebStepConfirm) celebStepConfirm.textContent = `Confirma con ${data.n}`;
+  if (celebStepConfirm) celebStepConfirm.textContent = `Llená el formulario de ${String(data.n).split(' ')[0]}`;
   const celebSigName = document.getElementById('celebSigName');
   if (celebSigName) celebSigName.textContent = `Tu agente ${data.n} te acompaña`;
 
