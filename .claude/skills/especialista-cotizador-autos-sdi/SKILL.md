@@ -1800,6 +1800,37 @@ Contrastadas con 5 PDF oficiales que entregó JC (viven en `OneDrive\ARCHIVO DIG
 
 ## Pendientes
 
+- 🔴 **Flujo "Quiero estas asistencias" → volver a la guía → formulario prellenado — DISEÑADO, SIN IMPLEMENTAR (18 sep 2026).**
+  Idea de JC: que el cliente que sale de la guía al configurador no termine en WhatsApp, sino que vuelva a su guía con lo
+  elegido y el total, y que la elección le llegue al agente en el formulario de la cita. Mockup con capturas 780/375 px:
+  https://claude.ai/artifact/FsYC1oWpvAwgvDVJZmaVYY · **esperando sus decisiones G1-G5**.
+  - **El código ya está escrito y probado en mockup**: `docs/superpowers/specs/2026-09-18-flujo-asistencias-mock-flujo.py`.
+    `python …mock-flujo.py mock` genera `explicacion/_mockup.html` + `asistencias/_mockup.html` (NO commitearlos);
+    `python …mock-flujo.py real` aplica lo mismo a los tres archivos reales. Tras el OK falta la fontanería: perfil ⚙
+    (campo "enlace de relleno previo"), `_buildGuideUrl` (`a` = enlace LARGO + `fe` + `fpl`), `CLAVES` de `/g`
+    (`fe`, `fpl`, `as`) y `CLAVES_P` (`r`, `as`), tests y el título/aclaración de la tarjeta del correo.
+  - **Guía**: param `as=mascota.premium` → la rejilla de seis desaparece y queda "Tu selección" + "Tu cotización anual
+    quedaría en ₡X" + "Cambiar mi selección"; `#celebGoForm` recibe el formulario con `entry.<fe>` repetido por plan (el
+    NOMBRE exacto) y `entry.<fpl>` = placa. 🔴 Al volver hay que saltar a `#sasi` con `behavior:'instant'` y ponerle
+    `in-view` a mano: la guía tiene scroll suave y un observador que deja la sección en `opacity:0` tras un salto.
+  - **Configurador**: param `r` = ruta de la guía; 🔴 **solo acepta rutas `/explicacion/` del mismo origen** (no es un
+    redirector abierto). Con `r` y modo cotizada el botón es "Quiero estas asistencias"; sin `r` sigue el WhatsApp.
+  - **Multi-agente (G1)**: el regreso existe SOLO si el agente configuró su formulario (`fe` numérico). Sin eso, WhatsApp
+    como hoy. 🔴 El relleno previo de JC jamás se le aplica a un agente con otro `AGENDA_URL`.
+  - 🔴 **`forms.gle` DESCARTA los parámetros** (redirige a `viewform?usp=send_form`): el relleno previo exige el enlace
+    largo `docs.google.com/forms/d/e/…/viewform`. Verificado el 17 sep con el formulario real de JC, sin enviar nada.
+  - 🔴 **El formulario de JC NO se toca antes del 28 de setiembre** (orden suya del 18 sep). El 17 se le agregó una
+    pregunta de prueba de respuesta corta y él la borra; su `entry` muere con ella. El 28: pregunta **"Asistencias
+    opcionales que desea agregar"**, tipo **Casillas de verificación** (NO "Opción múltiple", que deja marcar una sola),
+    no obligatoria, con seis opciones de nombre EXACTO — Mascota · Asistencia Funeraria · Salud Bienestar · Salud
+    Premium · Autos Plus · VIP — y los precios en la descripción, nunca en la opción (Google solo marca si el texto
+    coincide). El formulario es "Solicitud Cita- Seguro Automóviles en Línea" (Drive `1B3z8rEk3ywa17G4iJyRLpblc1aBSGs2Ma0KBo-8Wzrg`);
+    la placa ya tiene pregunta propia y también se prellena.
+  - **Que no se confunda con la asistencia en carretera** (alerta de JC, 18 sep): de cara al cliente se llaman
+    **"Asistencias opcionales: mascota, salud, hogar y más"**; aclaración fija según `cb` (con G/M: "Tu asistencia en
+    carretera ya viene incluida…"; sin ellas: "no son la asistencia en carretera ni la reemplazan"); Autos Plus pasa a
+    "Lavado, pulido y cambio de aceite del carro. No es la asistencia en carretera." Textos pendientes de su OK (G4).
+
 - 🔴 **SVA V32 del INS — dos frentes con fecha límite: 28 de setiembre de 2026.** La circular 0395-2026
   (registro SUGESE G01-01-A01-012 V32, aprobada 26/08/2026) cambia dos cosas que tocan esta app:
   1. **Cobertura ASI — Servicios de Multiasistencia (NUEVA).** Seis planes opcionales con prima adicional que el
