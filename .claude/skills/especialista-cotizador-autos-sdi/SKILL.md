@@ -5,7 +5,7 @@ description: ESPECIALISTA COTIZADOR AUTOS SDI — App web vanilla JS que extrae 
 
 # Especialista Cotizador SDI — Seguros Autos INS
 
-Leer COMPLETO antes de tocar código. Estado a **17 septiembre 2026**: **los planes de asistencia del INS (cobertura ASI, SVA V32) ya están en producción** — módulo de datos único, tarjeta en el correo de cotización (apagada hasta el 28 sep por `asiDisponible()`), página `/asistencias/` con el configurador que suma la prima y **el cuarto envío de la consola: modal "Asistencias a cliente"** para clientes con póliza vigente (ver "Planes de asistencia del INS"). Previo (**13 septiembre 2026**): **los correos de Póliza activa y de Renovación confirmada estrenan la línea clara** (orden nuevo, tarjeta del vehículo compartida, iconos PNG en el cross-sell; ver "El correo de Póliza activa en línea clara" y "El correo de Renovación confirmada en línea clara"; con este segundo, los TRES correos de la consola van en línea clara). Previo (**10 septiembre 2026**): **TODA la app está en la línea clara SDI** —
+Leer COMPLETO antes de tocar código. **🔖 Hay un CHECKPOINT del 18 sep 2026 al inicio de "Pendientes": leerlo primero (decisiones G1-G5 que JC tiene sin responder, y lo que le toca el 28).** Estado a **18 septiembre 2026**: la pantalla de "Agendar mi cita" de la guía ya no parece una cita confirmada (`67f1f22`), y el flujo "Quiero estas asistencias" → guía → formulario prellenado está DISEÑADO y sin implementar. Previo (**17 septiembre 2026**): **los planes de asistencia del INS (cobertura ASI, SVA V32) ya están en producción** — módulo de datos único, tarjeta en el correo de cotización (apagada hasta el 28 sep por `asiDisponible()`), página `/asistencias/` con el configurador que suma la prima y **el cuarto envío de la consola: modal "Asistencias a cliente"** para clientes con póliza vigente (ver "Planes de asistencia del INS"). Previo (**13 septiembre 2026**): **los correos de Póliza activa y de Renovación confirmada estrenan la línea clara** (orden nuevo, tarjeta del vehículo compartida, iconos PNG en el cross-sell; ver "El correo de Póliza activa en línea clara" y "El correo de Renovación confirmada en línea clara"; con este segundo, los TRES correos de la consola van en línea clara). Previo (**10 septiembre 2026**): **TODA la app está en la línea clara SDI** —
 consola, explicador y las cuatro sub-páginas (`/polizas-activas/`, `/renovaciones/`, `/cancelacion/`, `/marcas-recargo/`,
 commit `5f3719c`, tag `pre-subpaginas-linea-clara-10sep`; ver "Las sub-páginas en línea clara"). Solo los correos siguen
 aparte (Arial en el cliente). La consola (`index.html`) y el explicador (`/explicacion/`) fueron los primeros. La consola va por `css/linea-clara-consola.css` (commit `c5cc457`, tag
@@ -1799,6 +1799,56 @@ Contrastadas con 5 PDF oficiales que entregó JC (viven en `OneDrive\ARCHIVO DIG
 - **Cláusula 33:** ver la sección de la calculadora — el factor va **sobre prima anual**.
 
 ## Pendientes
+
+### 🔖 CHECKPOINT 18 sep 2026 — dónde quedamos (JC: *"hagamos un checkpoint con las decisiones pendientes… revisamos más tarde"*)
+
+**Árbol limpio, todo pusheado, `main` = `67f1f22`.** Tags de rollback en origin: `pre-asistencias-asi-17sep` y
+`pre-pantalla-agendar-18sep`. Suite: 22 archivos en verde (`test-asistencias.js` 161 checks).
+
+**EN PRODUCCIÓN (17-18 sep), en orden:**
+
+| Commit | Qué |
+|---|---|
+| `0bc395b` | Planes de asistencia ASI: módulo único, tarjeta en el correo de cotización (apagada hasta el 28), `/asistencias/`, modal "Asistencias a cliente", enlace corto `/p` |
+| `0ccbda2` | Corrección de JC: la cuota lleva recargo por fraccionamiento (8/11/13 %) y después IVA; el correo ya no hace la cuenta |
+| `f538ddd` | Corrección de JC: la prima vigente es **lo que paga por recibo** y todo habla en esa cuota |
+| `4879f42` | Placa en el WhatsApp al agente (sin "Hoy pago…"), configurador responsivo con barra fija en móvil |
+| `8ce78ac` | Sección de asistencias en la guía (solo con `asi=1`); `CLAVES` de `/g` acepta `cb`, `asi`, `wa` |
+| `67f1f22` | La pantalla de "Agendar mi cita" ya no parece una cita confirmada ("Falta un paso, …", sin confeti) |
+| `e55d608` | Solo docs: el flujo de regreso a la guía, diseñado y sin implementar |
+
+**⏳ DECISIONES QUE JC TIENE PENDIENTES (mockup https://claude.ai/artifact/FsYC1oWpvAwgvDVJZmaVYY):**
+
+| | Decisión | Si dice que sí |
+|---|---|---|
+| **G1** | El regreso a la guía solo para agentes con su formulario configurado; el resto sigue con WhatsApp | campo "enlace de relleno previo" en ⚙; sin él, nada cambia |
+| **G2** | La pregunta del formulario: **Casillas de verificación** con los seis nombres EXACTOS | Mascota · Asistencia Funeraria · Salud Bienestar · Salud Premium · Autos Plus · VIP; precios en la descripción |
+| **G3** | La placa llega prellenada al formulario (su pregunta ya existe) | `entry.<fpl>`; con 0 km llega vacía |
+| **G4** | Los textos que separan esto de la asistencia en carretera | nombre "Asistencias opcionales: mascota, salud, hogar y más"; aclaración según `cb`; Autos Plus "Lavado, pulido y cambio de aceite del carro. No es la asistencia en carretera." — van en correo, guía, configurador y formulario |
+| **G5** | En la guía el total es ANUAL ("Tu cotización anual quedaría en ₡X") con la nota del recargo | el cliente todavía no eligió forma de pago |
+
+**Con su OK, lo que sigue (no empezar sin él — "un dale no salta el mockup" ya se cumplió, falta la aprobación):**
+1. `python docs/superpowers/specs/2026-09-18-flujo-asistencias-mock-flujo.py real` (guía + configurador + línea de Autos Plus).
+2. Fontanería que el script NO hace: perfil ⚙ (campo del enlace de relleno previo → se le extrae la base larga y los `entry`
+   de asistencias y placa), `_buildGuideUrl` (`a` = enlace largo + `fe` + `fpl`), `CLAVES` de `/g` (`fe`, `fpl`, `as`),
+   `CLAVES_P` (`r`, `as`), título y aclaración de `_bloqueAsistencias`, tests, pie y novedades.
+3. Smoke en localhost (ida y vuelta, 375 px, agente SIN formulario configurado → sigue WhatsApp) → prod, apagado hasta el 28.
+
+**📌 LO QUE LE TOCA A JC:**
+- **Borrar la pregunta de prueba** que se le agregó a su formulario el 17 sep ("Planes de asistencia que desea agregar
+  (opcional)", respuesta corta, debajo de "Forma de pago"). Él dijo que la borra; hasta entonces los clientes la ven.
+- **Probar en producción** el modal "Asistencias a cliente" con un envío real (a `segurosjhernandez@outlook.com`, nunca al
+  corporativo). El semestral ya lo probó y funciona (18 sep).
+- **El 28 de setiembre**: crear la pregunta de casillas (G2) en su formulario y pegar el enlace de relleno previo en ⚙.
+  🔴 El formulario NO se toca antes del 28 (orden suya).
+- Decidir dónde archivar los tres mockups (hoy viven en `docs/superpowers/specs/` y como artefactos privados).
+
+**🗓 EL 28 DE SETIEMBRE, REVISAR:** que la tarjeta del correo, la casilla del paso 3 y la sección de la guía aparezcan
+solas (`asiDisponible()`); y el **esquema de repuestos de la V32**, que sigue SIN PLAN (texto fijo de la sección 4 del
+explicador: "hasta 5 años o 60.000 km").
+
+**Artefactos de la jornada (privados de JC):** modal/correo/configurador `V5QVh1wXVCfpP4mDtvAcwW` · sección de la guía
+`9opS3MFZcN2sU1tDjbT9FE` · flujo de regreso `FsYC1oWpvAwgvDVJZmaVYY` (todos bajo `https://claude.ai/artifact/`).
 
 - 🔴 **Flujo "Quiero estas asistencias" → volver a la guía → formulario prellenado — DISEÑADO, SIN IMPLEMENTAR (18 sep 2026).**
   Idea de JC: que el cliente que sale de la guía al configurador no termine en WhatsApp, sino que vuelva a su guía con lo

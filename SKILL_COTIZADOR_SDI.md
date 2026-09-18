@@ -2859,3 +2859,54 @@ No agrega los planes al PDF ni a los documentos estándar. No replica la tarjeta
 ## Checkpoint 18 sep 2026 — la pantalla de "Agendar" ya no celebra
 
 **Pantalla de "Agendar" (18 sep 2026, reemplaza al "momento celebración")**: al hacer clic en "Agendar mi cita de aseguramiento" (`.cta-rect` → `openCelebration()`; los otros tres botones "Agendar mi cita" solo bajan hasta ahí) se abre el overlay `#celebBackdrop`. JC, 18 sep: *"ese muy bien puede hacer pensar al asegurado que ya agendó"*. Ahora dice **"Falta un paso, {nombre}"** · "Ya revisaste tu cotización. **Tu cita todavía no está agendada**: se agenda en el formulario que abre el botón de abajo." · paso pendiente "Agendá tu cita · Llená el formulario de {pila del agente}" con insignia **"Falta"** · botón **"Abrir el formulario y agendar →"** · pie "Toma 1 minuto. Tu cita queda agendada cuando enviás el formulario." 🔴 **Sin confeti** (`.celeb-modal .confetti{display:none!important}`; los nodos siguen) **y sin "Recibirás confirmación por correo"**: prometía algo que depende del agente. Todo en vos. El anillo "1/2 pasos" se queda. Tag `pre-pantalla-agendar-18sep`; el script del cambio está en `docs/superpowers/specs/2026-09-18-pantalla-agendar-mock-celeb.py`. El enlace sigue siendo el del agente (param `a`); fallback: el formulario de JC para URLs sin `a`.
+
+## 🔖 CHECKPOINT 18 sep 2026 — dónde quedamos (JC: *"hagamos un checkpoint con las decisiones pendientes… revisamos más tarde"*)
+
+**Árbol limpio, todo pusheado, `main` = `67f1f22`.** Tags de rollback en origin: `pre-asistencias-asi-17sep` y
+`pre-pantalla-agendar-18sep`. Suite: 22 archivos en verde (`test-asistencias.js` 161 checks).
+
+**EN PRODUCCIÓN (17-18 sep), en orden:**
+
+| Commit | Qué |
+|---|---|
+| `0bc395b` | Planes de asistencia ASI: módulo único, tarjeta en el correo de cotización (apagada hasta el 28), `/asistencias/`, modal "Asistencias a cliente", enlace corto `/p` |
+| `0ccbda2` | Corrección de JC: la cuota lleva recargo por fraccionamiento (8/11/13 %) y después IVA; el correo ya no hace la cuenta |
+| `f538ddd` | Corrección de JC: la prima vigente es **lo que paga por recibo** y todo habla en esa cuota |
+| `4879f42` | Placa en el WhatsApp al agente (sin "Hoy pago…"), configurador responsivo con barra fija en móvil |
+| `8ce78ac` | Sección de asistencias en la guía (solo con `asi=1`); `CLAVES` de `/g` acepta `cb`, `asi`, `wa` |
+| `67f1f22` | La pantalla de "Agendar mi cita" ya no parece una cita confirmada ("Falta un paso, …", sin confeti) |
+| `e55d608` | Solo docs: el flujo de regreso a la guía, diseñado y sin implementar |
+
+**⏳ DECISIONES QUE JC TIENE PENDIENTES (mockup https://claude.ai/artifact/FsYC1oWpvAwgvDVJZmaVYY):**
+
+| | Decisión | Si dice que sí |
+|---|---|---|
+| **G1** | El regreso a la guía solo para agentes con su formulario configurado; el resto sigue con WhatsApp | campo "enlace de relleno previo" en ⚙; sin él, nada cambia |
+| **G2** | La pregunta del formulario: **Casillas de verificación** con los seis nombres EXACTOS | Mascota · Asistencia Funeraria · Salud Bienestar · Salud Premium · Autos Plus · VIP; precios en la descripción |
+| **G3** | La placa llega prellenada al formulario (su pregunta ya existe) | `entry.<fpl>`; con 0 km llega vacía |
+| **G4** | Los textos que separan esto de la asistencia en carretera | nombre "Asistencias opcionales: mascota, salud, hogar y más"; aclaración según `cb`; Autos Plus "Lavado, pulido y cambio de aceite del carro. No es la asistencia en carretera." — van en correo, guía, configurador y formulario |
+| **G5** | En la guía el total es ANUAL ("Tu cotización anual quedaría en ₡X") con la nota del recargo | el cliente todavía no eligió forma de pago |
+
+**Con su OK, lo que sigue (no empezar sin él — "un dale no salta el mockup" ya se cumplió, falta la aprobación):**
+1. `python docs/superpowers/specs/2026-09-18-flujo-asistencias-mock-flujo.py real` (guía + configurador + línea de Autos Plus).
+2. Fontanería que el script NO hace: perfil ⚙ (campo del enlace de relleno previo → se le extrae la base larga y los `entry`
+   de asistencias y placa), `_buildGuideUrl` (`a` = enlace largo + `fe` + `fpl`), `CLAVES` de `/g` (`fe`, `fpl`, `as`),
+   `CLAVES_P` (`r`, `as`), título y aclaración de `_bloqueAsistencias`, tests, pie y novedades.
+3. Smoke en localhost (ida y vuelta, 375 px, agente SIN formulario configurado → sigue WhatsApp) → prod, apagado hasta el 28.
+
+**📌 LO QUE LE TOCA A JC:**
+- **Borrar la pregunta de prueba** que se le agregó a su formulario el 17 sep ("Planes de asistencia que desea agregar
+  (opcional)", respuesta corta, debajo de "Forma de pago"). Él dijo que la borra; hasta entonces los clientes la ven.
+- **Probar en producción** el modal "Asistencias a cliente" con un envío real (a `segurosjhernandez@outlook.com`, nunca al
+  corporativo). El semestral ya lo probó y funciona (18 sep).
+- **El 28 de setiembre**: crear la pregunta de casillas (G2) en su formulario y pegar el enlace de relleno previo en ⚙.
+  🔴 El formulario NO se toca antes del 28 (orden suya).
+- Decidir dónde archivar los tres mockups (hoy viven en `docs/superpowers/specs/` y como artefactos privados).
+
+**🗓 EL 28 DE SETIEMBRE, REVISAR:** que la tarjeta del correo, la casilla del paso 3 y la sección de la guía aparezcan
+solas (`asiDisponible()`); y el **esquema de repuestos de la V32**, que sigue SIN PLAN (texto fijo de la sección 4 del
+explicador: "hasta 5 años o 60.000 km").
+
+**Artefactos de la jornada (privados de JC):** modal/correo/configurador `V5QVh1wXVCfpP4mDtvAcwW` · sección de la guía
+`9opS3MFZcN2sU1tDjbT9FE` · flujo de regreso `FsYC1oWpvAwgvDVJZmaVYY` (todos bajo `https://claude.ai/artifact/`).
+
