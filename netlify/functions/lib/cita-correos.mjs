@@ -88,7 +88,14 @@ export function correoAgente(d, opc) {
   const veh = [d.v, d.y].filter(Boolean).join(" ");
   const placaAsunto = esCeroKm(d.placa) ? "0 KM" : d.placa;
   const wa = waIntl(d.telefono);
-  const textoWa = "Hola " + nombrePila(d) + ", soy " + String(d.n).split(/\s+/)[0] + ". Recibí tu solicitud de cita para el " + fechaLarga(d.fecha) + ", " + d.franja + ".";
+  // El mensaje que el agente le manda al cliente desde el botón (JC, 19 set 2026). WhatsApp lo abre
+  // EDITABLE: si el espacio no se puede, el agente lo corrige antes de enviar. Dos palabras del nombre
+  // del agente y no una: "Juan Carlos", no "Juan".
+  const agenteCorto = String(d.n).trim().split(/\s+/).slice(0, 2).join(" ");
+  const textoWa = "Hola " + nombrePila(d) + ", soy " + agenteCorto + ", tu agente del INS. Recibí tu solicitud de aseguramiento para el " +
+    fechaLarga(d.fecha) + ", de " + d.franja + ", y te confirmo el espacio.\n\n" +
+    "Ese día, a primera hora, te enviamos a tu correo un código QR para iniciar el aseguramiento: lo escaneás con el celular y subís las fotos del vehículo ahí mismo.\n\n" +
+    "Cualquier duda, escribime por aquí.";
   const copiar = [
     [d.nombre, d.telefono, d.correo].join(" | "), d.direccion.replace(/\s*\n\s*/g, " "),
     [d.ocupacion || "—", d.ingreso || "—", d.placa, d.formaPago].join(" | "),
