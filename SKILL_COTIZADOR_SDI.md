@@ -2910,3 +2910,10 @@ explicador: "hasta 5 años o 60.000 km").
 **Artefactos de la jornada (privados de JC):** modal/correo/configurador `V5QVh1wXVCfpP4mDtvAcwW` · sección de la guía
 `9opS3MFZcN2sU1tDjbT9FE` · flujo de regreso `FsYC1oWpvAwgvDVJZmaVYY` (todos bajo `https://claude.ai/artifact/`).
 
+---
+
+## CHECKPOINT 19 sep 2026 — formulario propio de cita (`/cita/`)
+
+Publicado y APAGADO por defecto (merge `6c35767`, tag `pre-cita-formulario-propio`). El detalle vigente (decisiones, piezas, infraestructura de Resend y DNS, trampas y verificación) vive en la SKILL router, sección "Formulario propio de cita". Spec: `docs/superpowers/specs/2026-09-18-cita-formulario-propio-design.md`. Plan: `docs/superpowers/plans/2026-09-19-cita-formulario-propio.md`.
+
+Historia corta: nació de explorar cómo prellenar asistencias en el Google Form (G1-G5); JC propuso traer las preguntas a una página propia "como en Viajero". Se descartó guardar respuestas en servidor (datos sensibles de clientes de otros agentes) y el WhatsApp solo; quedó correo al agente + confirmación al cliente. Para el envío se evaluó usar `send.segurosdelins.com`, pero su DNS está en el panel de Enom donde vive el sitio comercial de JC y él pidió no arriesgarlo; se usó `appsegurosdigitales.com` (DNS en Netlify), que cabe en el plan gratuito de Resend (3 dominios). Ejecutado con subagentes (tareas 1-5 y 8) y a mano las delicadas (6, 7, 9-11). Commits: `10b13e0`, `92bebe6`, `1bc79fc`, `1b07663`, `8943c23`, `f67518c`, merge `6c35767`.

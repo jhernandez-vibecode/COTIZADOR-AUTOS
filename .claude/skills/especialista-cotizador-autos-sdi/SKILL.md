@@ -5,7 +5,7 @@ description: ESPECIALISTA COTIZADOR AUTOS SDI — App web vanilla JS que extrae 
 
 # Especialista Cotizador SDI — Seguros Autos INS
 
-Leer COMPLETO antes de tocar código. **🔖 Hay un CHECKPOINT del 18 sep 2026 al inicio de "Pendientes": leerlo primero (decisiones G1-G5 que JC tiene sin responder, y lo que le toca el 28).** Estado a **18 septiembre 2026**: la pantalla de "Agendar mi cita" de la guía ya no parece una cita confirmada (`67f1f22`), y el flujo "Quiero estas asistencias" → guía → formulario prellenado está DISEÑADO y sin implementar. Previo (**17 septiembre 2026**): **los planes de asistencia del INS (cobertura ASI, SVA V32) ya están en producción** — módulo de datos único, tarjeta en el correo de cotización (apagada hasta el 28 sep por `asiDisponible()`), página `/asistencias/` con el configurador que suma la prima y **el cuarto envío de la consola: modal "Asistencias a cliente"** para clientes con póliza vigente (ver "Planes de asistencia del INS"). Previo (**13 septiembre 2026**): **los correos de Póliza activa y de Renovación confirmada estrenan la línea clara** (orden nuevo, tarjeta del vehículo compartida, iconos PNG en el cross-sell; ver "El correo de Póliza activa en línea clara" y "El correo de Renovación confirmada en línea clara"; con este segundo, los TRES correos de la consola van en línea clara). Previo (**10 septiembre 2026**): **TODA la app está en la línea clara SDI** —
+Leer COMPLETO antes de tocar código. **🔖 Hay un CHECKPOINT del 19 sep 2026 al inicio de "Pendientes": leerlo primero (piloto del formulario de cita, y G1/G4/G5 que JC tiene sin responder).** Estado a **19 septiembre 2026**: **formulario propio de cita `/cita/` EN PRODUCCIÓN, apagado por defecto** (interruptor "Formulario de cita" en ⚙; página con las 9 preguntas del Google Form + correo; Function `POST /cita/enviar` que confirma al cliente y avisa al agente por Resend; merge `6c35767`, tag `pre-cita-formulario-propio`; ver "Formulario propio de cita"). Previo (**18 septiembre 2026**): la pantalla de "Agendar mi cita" de la guía ya no parece una cita confirmada (`67f1f22`), y el flujo "Quiero estas asistencias" → guía → formulario prellenado está DISEÑADO y sin implementar. Previo (**17 septiembre 2026**): **los planes de asistencia del INS (cobertura ASI, SVA V32) ya están en producción** — módulo de datos único, tarjeta en el correo de cotización (apagada hasta el 28 sep por `asiDisponible()`), página `/asistencias/` con el configurador que suma la prima y **el cuarto envío de la consola: modal "Asistencias a cliente"** para clientes con póliza vigente (ver "Planes de asistencia del INS"). Previo (**13 septiembre 2026**): **los correos de Póliza activa y de Renovación confirmada estrenan la línea clara** (orden nuevo, tarjeta del vehículo compartida, iconos PNG en el cross-sell; ver "El correo de Póliza activa en línea clara" y "El correo de Renovación confirmada en línea clara"; con este segundo, los TRES correos de la consola van en línea clara). Previo (**10 septiembre 2026**): **TODA la app está en la línea clara SDI** —
 consola, explicador y las cuatro sub-páginas (`/polizas-activas/`, `/renovaciones/`, `/cancelacion/`, `/marcas-recargo/`,
 commit `5f3719c`, tag `pre-subpaginas-linea-clara-10sep`; ver "Las sub-páginas en línea clara"). Solo los correos siguen
 aparte (Arial en el cliente). La consola (`index.html`) y el explicador (`/explicacion/`) fueron los primeros. La consola va por `css/linea-clara-consola.css` (commit `c5cc457`, tag
@@ -174,6 +174,7 @@ renovaciones/index.html  Renovación confirmada: envío del comprobante de pago 
 explicacion/index.html   Guía visual 5 secciones (13 URL params, incl. dd)
 marcas-recargo/index.html  Tabla 58 marcas INS con deducibles diferenciados
 asistencias/index.html   Configurador de los planes de asistencia ASI (cara del cliente; pv/pa suma la prima)
+cita/index.html          Solicitud de cita de aseguramiento (cara del cliente; postea a /cita/enviar). Solo con citaModo sdi
 documentos-ins/          PDFs estándar INS auto-adjuntos (Deber/Perfeccionamiento, Multiasistencia, Pacto Amistoso, DAM, Cond. Generales SVA)
 ```
 
@@ -259,7 +260,7 @@ Los flags `og` y `ag` **sustituyen** la sección 3 (deducible estándar) del exp
 
 ## Explicador (/explicacion/)
 
-URL params: `n` (agente), `l` (licencia), `w` (website), `a` (agendaUrl), `c` (cliente), `v` (vehículo), `p` (placa), `y` (año), `vt` (tipo: `g`/`e`), `va` (valor asegurado), `sr` (repuesto), `dd` (deducible D,F,H real del PDF), `pa`/`ps`/`pt` (precios), `og` (asiático), `ag` (alta gama), **`cb` (las coberturas de la cotización — 25 ago 2026)**, **`asi=1` + `wa` (la sección de asistencias — 17 sep 2026)**.
+URL params: `n` (agente), `l` (licencia), `w` (website), `a` (agendaUrl), `c` (cliente), `v` (vehículo), `p` (placa), `y` (año), `vt` (tipo: `g`/`e`), `va` (valor asegurado), `sr` (repuesto), `dd` (deducible D,F,H real del PDF), `pa`/`ps`/`pt` (precios), `og` (asiático), `ag` (alta gama), **`cb` (las coberturas de la cotización — 25 ago 2026)**, **`asi=1` + `wa` (la sección de asistencias — 17 sep 2026)**, **`fc=1` + `ae` + `tel` (formulario propio de cita — 19 sep 2026)**.
 
 🔴 **`cb` es el que evita que la guía y el correo se contradigan.** Formato `A-300000000.B-15000000.C.G.M`.
 Sin él, la guía muestra sus seis tarjetas fijas y sus 5 pasos — que es lo correcto para los enlaces enviados
@@ -1456,6 +1457,103 @@ rollback **`pre-renovacion-linea-clara-13sep`**. Solo `buildRenovacionEmail` cam
   el correo con la ficha del agente del perfil, sin la licencia del dueño, 0 errores de consola.
 - Mockup: https://claude.ai/code/artifact/a4b511d4-907c-42b3-8f90-8a615ae69eb6 (artefacto privado de JC).
 
+## Formulario propio de cita (`/cita/`) — 19 sep 2026, EN PROD y APAGADO por defecto
+
+JC, 18 sep: *"quiero explorar la posibilidad de que las preguntas que tenemos hoy en el form las podamos pasar a algo
+similar a lo que tenemos en viajero… se deben copiar exactamente las mismas preguntas"*. Brainstorming → mockup aprobado
+(artefacto privado https://claude.ai/artifact/EP4TxcngHFCgRm6Ug8AA3f) → spec
+`docs/superpowers/specs/2026-09-18-cita-formulario-propio-design.md` → plan
+`docs/superpowers/plans/2026-09-19-cita-formulario-propio.md` → rama `feat/cita-formulario-propio` → merge `6c35767`.
+Tag de rollback **`pre-cita-formulario-propio`**.
+
+**Por qué:** el Google Form de la cita, su script de confirmación y su hoja son de la cuenta de JC: otro agente tendría
+que armar los tres. Y el cliente salía a otra cara y volvía a escribir la placa.
+
+### Decisiones de JC — no cambiar sin consultarlo
+
+| | Decisión |
+|---|---|
+| Canal | Correo al agente + confirmación al cliente. **El correo ES el registro** (etiqueta "Citas de aseguramiento" en Gmail). La plataforma **no almacena respuestas** |
+| Dónde | Página propia `/cita/`, hermana de `/asistencias/` |
+| C1 | Trato de **vos**; las **preguntas van palabra por palabra** como en el Google Form (aunque estén de usted) |
+| C2 | Se dice **"Solicitud recibida"**, nunca "cita agendada": el espacio lo confirma el agente |
+| C3 | Fecha solo **lunes a viernes**, desde hoy (zona Costa Rica). Feriados no se bloquean: los cubre el aviso de reprogramación |
+| C4 | Consentimiento obligatorio: "únicamente para tramitar mi seguro… **No se usan para publicidad**" |
+| C5 | Remitente `citas@appsegurosdigitales.com` con el nombre del agente delante; "Responder" va al agente |
+| Ingreso | Selector por **rangos** (pedido de JC), opcional: <₡500k · 500k-1M · 1M-2M · 2M-4M · >4M |
+| Aviso | La pantalla de recibido destaca que si el espacio no se puede, **nos ponemos en contacto para reprogramar** |
+| Piloto | Solo JC lo prende. `tramites@segurosdelins.com` (su hermano) entra cuando JC lo dé por bueno |
+| G2/G3 | **Sin efecto**: las asistencias viajan por `as=`, ya no hace falta pregunta de casillas ni relleno previo en Google |
+
+🔴 **El formulario de cita NO tiene pregunta condicional de cero kilómetros.** Esa vive en el formulario de
+*cotización* de JC (otro). Verificado leyendo `forms.gle/tqSaZBDcZfNgNktC7` dos veces: 9 preguntas, sin secciones.
+
+### Piezas
+
+- **`cita/index.html`** — cara del cliente (INS arriba, SDI al pie, línea clara transcrita del mockup). Lee
+  `n,l,wa,tel,ae` (agente) · `c,v,p,y` · `pa,ps,pt` · `as`. Todo por `textContent`. Sin `n` o sin `ae` válido muestra
+  "Este enlace está incompleto". Tres estados con `[hidden]`: `#citaForm` ↔ `#citaOk` ↔ `#citaFallo`. Campo trampa
+  `#f-sitio` (oculto por CSS, **no** `type=hidden`). Si el POST falla → botón de WhatsApp al agente con las respuestas
+  escritas (`web.whatsapp.com/send/`). Fechas con tablas propias: **"setiembre"**, no el "septiembre" del navegador.
+- **`netlify/functions/cita.mjs`** — `POST /cita/enviar`. Solo orquesta. **Fail-closed**: sin `CITA_API_KEY`,
+  `CITA_FROM` o `CITA_AGENTES` responde 503. Lista de orígenes permitidos. Modo `{verificar:true, ae}` → `{autorizado}`
+  (lo usa el ⚙; no envía nada). Envío por la API REST de Resend con `fetch` (campo de responder-a: **`reply_to`**,
+  confirmado en su doc el 19 sep). No persiste ni loguea respuestas.
+- **`netlify/functions/lib/cita-validacion.mjs`** (pura) — opciones cerradas del formulario, L-V en zona CR, lista de
+  agentes, largos, campo trampa, `as` contra los ids de `PLANES_ASI`. Importa `js/planes-asistencia.js` (CommonJS)
+  desde ESM: única fuente de los planes también en el servidor.
+- **`netlify/functions/lib/cita-correos.mjs`** (pura) — `correoCliente(d)` y `correoAgente(d,{clienteAvisado})` →
+  `{asunto, html, texto}`. Asunto del agente ordenable: `Cita solicitada · BDF482 · mar 22 sep · 3-5 pm · Nombre`.
+  El del cliente **nunca repite domicilio ni ingreso**. Con 0 km el asunto dice "0 KM".
+- **`netlify/functions/lib/cita-limite.mjs`** — tope por hora (IP 6, destino 3) y anti-duplicado 60 s sobre un store
+  inyectado (Blobs `cita-limite`). Guarda **solo huellas sha256 y contadores**.
+- **Consola:** perfil `citaModo: 'propio'|'sdi'` (default `'propio'`, guard `!== undefined`) → `CFG.CITA_MODO`;
+  `CFG.CITA_URL`. Radios `#p-cita-propio` / `#p-cita-sdi` en el ⚙. `_citaSdi()`, `_buildCitaUrl(extras)` y el CTA
+  "Agendar mi cita ahora" del correo (`agendaHref`) en `email-template.js`. `_verificarCitaAutorizada(email)` en
+  `app.js`: avisa (no bloquea) si el correo no está en la lista.
+- **Enlace de la guía:** en modo sdi gana `fc=1`, `ae`, `tel` y `wa`. **En modo propio queda byte a byte como antes.**
+  `CLAVES` de `/g` los acepta (si no, el acortador cae al largo en silencio).
+- **Guía:** bloque **`[GUIA-CITA-PURO]`** (`_modoCitaSdi`, `_urlCita`) tras `[/GUIA-CB-PURO]`. `openCelebration()`
+  navega a `../cita/?…` solo con `fc=1` **y** `ae` válido; si no, abre "Falta un paso" como siempre.
+  🔴 El sitio web (`w`) **no viaja** a `/cita/`: la guía lo rellena con el de JC cuando falta.
+
+### Infraestructura (19 sep 2026)
+
+- **Resend**, cuenta `segurosdelins`, **plan gratuito = 3 dominios, 3.000 correos/mes, 100/día** (leído en su página
+  de precios; NO es "un solo dominio"). Dominio **`appsegurosdigitales.com` → Verified**. El otro dominio de la cuenta,
+  `send.segurosdelins.com` (Not Started), es de otro proyecto de JC: **no tocarlo**.
+- **DNS en Netlify** (`appsegurosdigitales.com`, team `jhernandez-gp6pk9a`): TXT `resend._domainkey` (DKIM), CNAME
+  `rsend` → `rsend.forge.rmta.net`, CNAME `send` → `send.forge.rmta.net`, TXT `_dmarc` → `v=DMARC1; p=none;`.
+  🔴 El diálogo de Netlify trae una **`@` precargada en Nombre**: borrar el campo antes de escribir.
+- 🔴 **El DNS de `segurosdelins.com` (panel de Enom, `name-services.com`) NO se toca para esto.** Orden de JC: es su
+  sitio comercial y su correo. Ese panel guarda todas las filas juntas.
+- **Variables del sitio en Netlify:** `CITA_FROM` = `citas@appsegurosdigitales.com` · `CITA_AGENTES` =
+  `jhernandez@segurosdelins.com` (coma para agregar más) · `CITA_API_KEY` (secreta; la creó y pegó JC, permiso
+  "Sending access"). Alta de un agente = agregar su correo a `CITA_AGENTES` + redeploy.
+- No hace falta casilla real en `appsegurosdigitales.com`: los correos llevan "Responder a".
+
+### Trampas que dejó
+
+- 🔴 **La herramienta Write convierte la secuencia de escape del NUL y las \uXXXX en el carácter REAL.** Pasó en el
+  plan (5 NUL) y en 4 archivos de subagentes. Tras escribir un fuente que las lleve: contar bytes de control con Python
+  y reponer la secuencia visible con `chr(92)+'u0000'`. `git diff --stat` con `Bin` en un texto = lo mismo.
+- Chrome headless **no baja de ~500 px de ancho**: una captura a 375 sale recortada y parece desborde. Medir
+  `scrollWidth === clientWidth` en el navegador real.
+- El preview local sirve sin `Cache-Control`: las funciones nuevas salían viejas. `String(fn).includes(...)` antes de
+  diagnosticar; `fetch(url,{cache:'reload'})` sobre cada `<script src>` y recargar.
+- Verificación en prod de una Function nueva: probar la **ruta de la Function** (`POST /cita/enviar` con
+  `{"verificar":true,…}`) en los tres hosts, no la página.
+
+### Verificación
+
+Tests: `test-cita-validacion.mjs` (38) · `test-cita-correos.mjs` (29) · `test-cita-limite.mjs` (10) ·
+`test-cita-url.js` (62: enlaces en los dos modos, perfil, bloque puro de la guía, textos literales de la página) ·
+`test-enlace-validacion.mjs` (+1). **Suite: 26 archivos en verde.** Smoke en localhost: 375 px sin desborde, 8 errores
+de validación, sábado rechazado, fallo → WhatsApp, éxito simulado, XSS inerte, enlace incompleto, ⚙ guarda y recuerda,
+guía en los dos sentidos. Producción (19 sep): `/cita/` 200; la Function responde en los 3 hosts (`autorizado:true`
+para JC, 405 a GET, 403 a origen ajeno, 400 a solicitud inválida); `/g` acepta `fc/ae/tel`; resto del sitio 200.
+⏳ **Falta el primer envío REAL** (piloto de JC).
+
 ## Planes de asistencia del INS (cobertura ASI, SVA V32) — 17 sep 2026, EN PROD
 
 JC retomó el tema el 17 sep: *"Me gusta tarjeta y configurador… por otra parte necesito también un modal aparte en el
@@ -1715,7 +1813,7 @@ repuestos y pasos, anual siempre resaltado) + **logo del INS en azul** → "dale
 7. **Params de URL del explicador** — `num()` normaliza montos del PDF ("10,000,000.00" → "10000000") antes de encodear. Sin eso `parseInt` da 10, Number da NaN.
 8. **base64 en chunks** — `_uint8ToBase64` parte en chunks de 8192 bytes para evitar `Maximum call stack size exceeded` en PDFs grandes.
 9. **CFG.GUIDE_URL apunta al dominio Netlify** — el custom domain `cotizador.appsegurosdigitales.com` también está en los orígenes autorizados de OAuth, así que ambos funcionan; pero si aparece un dominio NUEVO hay que agregarlo primero en Google Cloud Console o el login se rechaza. (Fue el caso del sitio Netlify duplicado `cotizador-autos-sdi.netlify.app`, que rechaza login porque no está autorizado — ver Pendientes.)
-10. **Tests** — `tests/*` son Node sin runner, **22 archivos** (17 sep 2026). El más nuevo:
+10. **Tests** — `tests/*` son Node sin runner, **26 archivos** (19 sep 2026; los 4 nuevos son `test-cita-*`, ver "Formulario propio de cita"). Antes:
     **`test-asistencias.js`** (161 — los planes ASI, el correo a clientes con póliza, la página y el enlace `/p`).
     Del 27 ago: **`test-explicador-secciones.js`** (32 — la lógica pura del explicador dinámico, incluida la regla de
     asistencia G/M, extraída de `explicacion/index.html` por los marcadores `[GUIA-CB-PURO]`, + el circuito
@@ -1799,6 +1897,28 @@ Contrastadas con 5 PDF oficiales que entregó JC (viven en `OneDrive\ARCHIVO DIG
 - **Cláusula 33:** ver la sección de la calculadora — el factor va **sobre prima anual**.
 
 ## Pendientes
+
+### 🔖 CHECKPOINT 19 sep 2026 — formulario de cita publicado, falta el piloto
+
+**`main` = merge `6c35767` + docs.** Tags en origin: `pre-cita-formulario-propio`. Suite: 26 archivos en verde.
+
+**📌 LO QUE LE TOCA A JC (piloto):**
+1. ⚙ → "Formulario de cita" → **Formulario SDI** → Guardar (no debe salir el aviso de lista).
+2. Enviar una cotización de prueba a `segurosjhernandez@outlook.com` (**nunca al corporativo**), abrir la guía, tocar
+   "Agendar mi cita" y llenar la solicitud — ideal desde un **iPhone real** (el campo de fecha).
+3. Comprobar: "Solicitud recibida" en Principal (no Spam); "Cita solicitada" en su bandeja; "Responder" va a quien
+   corresponde.
+4. Filtro de Gmail: `subject:"Cita solicitada" from:citas@appsegurosdigitales.com` → etiqueta "Citas de aseguramiento"
+   + "No enviar nunca a spam".
+5. Una semana de piloto sin tocar lógica. Después: agregar `tramites@segurosdelins.com` a `CITA_AGENTES`.
+
+**Segunda etapa conversada (NO empezar sin pedido):** marca automática "Cita solicitada · fecha · franja" en
+Cotizaciones, cruzada por placa con dato mínimo sin información personal (embudo Cotizadas → Con cita → Con póliza).
+
+**Asistencias — siguen abiertas G1, G4 y G5** (G2 y G3 quedaron sin efecto). G1 replanteada: el regreso del
+configurador a la guía existe cuando el agente está en modo `'sdi'`; en `'propio'` sigue el WhatsApp. Del script
+`2026-09-18-flujo-asistencias-mock-flujo.py` se descarta la parte de `entry.<fe>`/`entry.<fpl>` y se conserva `as` y `r`.
+El Google Form de JC **no se borra**: atiende los enlaces ya enviados y el modo propio.
 
 ### 🔖 CHECKPOINT 18 sep 2026 — dónde quedamos (JC: *"hagamos un checkpoint con las decisiones pendientes… revisamos más tarde"*)
 
