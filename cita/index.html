@@ -247,7 +247,11 @@ a{color:var(--blue)}
 
   function waIntl(v) { var n = String(v || '').replace(/\D/g, ''); return n.length === 8 ? '506' + n : n; }
   function urlWa(texto) { var n = waIntl(ag.wa); return n ? 'https://web.whatsapp.com/send/?phone=' + n + '&text=' + encodeURIComponent(texto) : ''; }
-  function fechaLinda(f) { var m = f.split('-'); var d = new Date(Date.UTC(+m[0], +m[1] - 1, +m[2])); return d.toLocaleDateString('es-CR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }); }
+  // Con tablas propias y no con el formato de fecha del navegador: este escribe "septiembre"
+  // y los correos (lib/cita-correos.mjs) dicen "setiembre". El cliente ve las dos.
+  var DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+  var MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'setiembre', 'octubre', 'noviembre', 'diciembre'];
+  function fechaLinda(f) { var m = f.split('-'); var d = new Date(Date.UTC(+m[0], +m[1] - 1, +m[2])); return DIAS[d.getUTCDay()] + ' ' + d.getUTCDate() + ' de ' + MESES[d.getUTCMonth()]; }
 
   function mostrar(id) { ['citaForm', 'citaOk', 'citaFallo'].forEach(function (x) { $(x).hidden = x !== id; }); window.scrollTo(0, 0); }
 

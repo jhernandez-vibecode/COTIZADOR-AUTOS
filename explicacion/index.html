@@ -3115,7 +3115,7 @@ function _modoCitaSdi(d) {
 function _urlCita(d, as) {
   const q = [];
   const add = (k, v) => { if (v !== undefined && v !== null && String(v).trim() !== '') q.push(k + '=' + encodeURIComponent(String(v).trim())); };
-  add('n', d.n); add('l', d.l); add('w', d.w); add('wa', d.wa); add('tel', d.tel); add('ae', d.ae);
+  add('n', d.n); add('l', d.l); add('wa', d.wa); add('tel', d.tel); add('ae', d.ae);
   add('c', d.c); add('v', d.v); add('p', d.p); add('y', d.y);
   add('pa', d.pa); add('ps', d.ps); add('pt', d.pt);
   if (/^[a-z]+(\.[a-z]+)*$/.test(String(as || ''))) add('as', as);

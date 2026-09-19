@@ -71,6 +71,7 @@ ok('con ae invalido NO', _modoCitaSdi(Object.assign({}, dg, { ae: 'javascript:al
 var ug = _urlCita(dg, 'mascota.premium');
 ok('arma la ruta relativa a /cita/', ug.indexOf('../cita/?') === 0);
 ok('pasa agente, cliente, primas y asistencias', ['ae=agente%40ejemplo.test', 'c=Mariela', 'p=BDF482', 'y=2021', 'ps=308283', 'as=mascota.premium'].every(function (t) { return ug.indexOf(t) !== -1; }));
+ok('el sitio web NO viaja a /cita/ (la guia lo rellena con un valor por defecto)', ug.indexOf('w=') === -1 && !/[?&]w=/.test(cu));
 ok('as con basura no viaja', _urlCita(dg, '<script>').indexOf('as=') === -1);
 ok('la guia lee fc, ae y tel', guia.indexOf("fc: _params.get('fc') === '1'") !== -1 && guia.indexOf("ae: _params.get('ae') || ''") !== -1 && guia.indexOf("tel: _params.get('tel') || ''") !== -1);
 ok('el boton navega a /cita/ solo en modo sdi', guia.indexOf('if (_modoCitaSdi(data))') !== -1);
@@ -96,6 +97,7 @@ ok('campo trampa presente y sin type=hidden', /id="f-sitio"/.test(pg) && !/id="f
 ok('envia a /cita/enviar', pg.indexOf("fetch('/cita/enviar'") !== -1);
 ok('nada del agente escrito a mano', pg.indexOf('08-1318') === -1 && !/Juan Carlos/.test(pg) && pg.indexOf('8822') === -1);
 ok('sin genero', !/protegid[ao]\b|asegurad[ao] al instante/.test(pg.replace(/queda asegurado/g, '')));
+ok('la fecha dice setiembre como los correos, no el septiembre del navegador', pg.indexOf("'setiembre'") !== -1 && pg.indexOf('toLocaleDateString') === -1);
 ok('noindex', pg.indexOf('name="robots" content="noindex"') !== -1);
 
 console.log('\n' + pass + ' ok, ' + fail + ' fallas');

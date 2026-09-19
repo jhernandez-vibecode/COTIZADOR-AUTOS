@@ -630,7 +630,7 @@ function _buildCitaUrl(extras) {
   };
   const num = function (val) { const n = (typeof asiMonto === 'function') ? asiMonto(val) : 0; return n > 0 ? String(n) : ''; };
   const x = extras || {};
-  add('n', CFG.FROM_NAME); add('l', CFG.LICENSE); add('w', CFG.WEBSITE);
+  add('n', CFG.FROM_NAME); add('l', CFG.LICENSE);
   add('wa', CFG.WHATSAPP); add('tel', CFG.PHONE); add('ae', CFG.FROM_EMAIL);
   add('c', x.clientName); add('v', x.vehicle); add('p', x.plate); add('y', x.year);
   if (x.prices) { add('pa', num(x.prices.anual)); add('ps', num(x.prices.semestral)); add('pt', num(x.prices.trimestral)); }
