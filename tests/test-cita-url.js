@@ -116,7 +116,7 @@ ok('nota de la Ley 8204 bajo el ingreso', /Ley 8204 y la pol[ií]tica «Conozca 
 ok('precios dentro de las formas de pago', ['id="pr-a"', 'id="pr-s"', 'id="pr-t"'].every(function (t) { return pg.indexOf(t) !== -1; }));
 ok('el anual va resaltado con estrella', /class="op rec"[^>]*>\s*<input[^>]*value="Anual"/.test(pg) && pg.indexOf('&#9733; Anual') !== -1);
 ok('los valores que se envían siguen siendo los del formulario', ['value="Anual"', 'value="Semestral"', 'value="Trimestral"'].every(function (t) { return pg.indexOf(t) !== -1; }));
-ok('guía: "Tu plan" ya no va fijo en la pestaña Básico', guia.indexOf('Plan Básico (7-15 años) · Tu plan') === -1 && guia.indexOf("tabs[isPlus ? 0 : 1].textContent += ' · Tu plan'") !== -1);
+ok('guía: "Tu plan" ya no va fijo en la pestaña Básico', guia.indexOf('Plan Básico (7-15 años) · Tu plan') === -1 && guia.indexOf("if (t.getAttribute('data-plan') === miPlan) t.textContent += ' · Tu plan'") !== -1);
 ok('guía: repuestos ya no repite "Tuyo"', guia.indexOf('match-tag">Tuyo<') === -1 && guia.indexOf('you-tag">Tu plan<') !== -1);
 ok('no promete videollamada: la inspeccion es con fotos (JC, 19 set 2026)', !/video\s?llamada/i.test(pg));
 ok('noindex', pg.indexOf('name="robots" content="noindex"') !== -1);
