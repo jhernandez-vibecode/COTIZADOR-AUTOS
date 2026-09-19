@@ -1533,7 +1533,10 @@ JC probó en producción: **llegaron los dos correos** ("ESTÁ PRECIOSO"). Pidi�
 - **Ingreso:** nota "Se solicita para cumplir con la Ley 8204 y la política «Conozca a su cliente»".
 - **Formas de pago:** cada caja muestra su precio (`#pr-a/#pr-s/#pr-t`, de `pa/ps/pt`, formato 'de-DE'); la anual va
   `.op.rec` con estrella y "Mejor precio". Los `value` que se envían siguen siendo Anual/Semestral/Trimestral.
-- `test-cita-url.js` sube a **77 checks**.
+- 🔴 **La nota del rango de horas NO dice "mediante una videollamada"** (JC, 19 sep): no se hace videollamada; la inspección es con
+  fotos, que llevan geolocalización en tiempo real. Es la ÚNICA diferencia de texto contra el Google Form, que todavía lo dice. No
+  volver a "copiarlo literal" del formulario viejo. Un test lo vigila.
+- `test-cita-url.js` sube a **78 checks**.
 - **WhatsApp del correo al agente (segunda prueba de JC, misma tarde):** el botón "Escribirle por WhatsApp" abre un mensaje que ahora
   se presenta ("soy Juan Carlos, tu agente del INS": DOS palabras del nombre, no una), **confirma el espacio** y avisa que **el día
   agendado, a primera hora, se le envía al correo un código QR para iniciar el aseguramiento**. WhatsApp lo abre editable: si el
