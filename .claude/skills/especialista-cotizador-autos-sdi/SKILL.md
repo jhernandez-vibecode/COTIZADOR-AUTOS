@@ -5,7 +5,7 @@ description: ESPECIALISTA COTIZADOR AUTOS SDI — App web vanilla JS que extrae 
 
 # Especialista Cotizador SDI — Seguros Autos INS
 
-Leer COMPLETO antes de tocar código. **🔖 Hay un CHECKPOINT del 19 sep 2026 al inicio de "Pendientes": leerlo primero (piloto del formulario de cita, y G1/G4/G5 que JC tiene sin responder).** Estado a **19 septiembre 2026**: **formulario propio de cita `/cita/` EN PRODUCCIÓN, apagado por defecto** (interruptor "Formulario de cita" en ⚙; página con las 9 preguntas del Google Form + correo; Function `POST /cita/enviar` que confirma al cliente y avisa al agente por Resend; merge `6c35767`, tag `pre-cita-formulario-propio`; ver "Formulario propio de cita"). Previo (**18 septiembre 2026**): la pantalla de "Agendar mi cita" de la guía ya no parece una cita confirmada (`67f1f22`), y el flujo "Quiero estas asistencias" → guía → formulario prellenado está DISEÑADO y sin implementar. Previo (**17 septiembre 2026**): **los planes de asistencia del INS (cobertura ASI, SVA V32) ya están en producción** — módulo de datos único, tarjeta en el correo de cotización (apagada hasta el 28 sep por `asiDisponible()`), página `/asistencias/` con el configurador que suma la prima y **el cuarto envío de la consola: modal "Asistencias a cliente"** para clientes con póliza vigente (ver "Planes de asistencia del INS"). Previo (**13 septiembre 2026**): **los correos de Póliza activa y de Renovación confirmada estrenan la línea clara** (orden nuevo, tarjeta del vehículo compartida, iconos PNG en el cross-sell; ver "El correo de Póliza activa en línea clara" y "El correo de Renovación confirmada en línea clara"; con este segundo, los TRES correos de la consola van en línea clara). Previo (**10 septiembre 2026**): **TODA la app está en la línea clara SDI** —
+Leer COMPLETO antes de tocar código. **🔖 Hay un CHECKPOINT del 19 sep 2026 al inicio de "Pendientes": leerlo primero (lo que queda del formulario de cita — prueba del segundo agente y límites de Multiasistencia —, y G1/G4/G5 que JC tiene sin responder).** Estado a **19 septiembre 2026**: **formulario propio de cita `/cita/` EN PRODUCCIÓN, apagado por defecto** (interruptor "Formulario de cita" en ⚙; página con las 9 preguntas del Google Form + correo; Function `POST /cita/enviar` que confirma al cliente y avisa al agente por Resend; merge `6c35767`, tag `pre-cita-formulario-propio`; ver "Formulario propio de cita"). Previo (**18 septiembre 2026**): la pantalla de "Agendar mi cita" de la guía ya no parece una cita confirmada (`67f1f22`), y el flujo "Quiero estas asistencias" → guía → formulario prellenado está DISEÑADO y sin implementar. Previo (**17 septiembre 2026**): **los planes de asistencia del INS (cobertura ASI, SVA V32) ya están en producción** — módulo de datos único, tarjeta en el correo de cotización (apagada hasta el 28 sep por `asiDisponible()`), página `/asistencias/` con el configurador que suma la prima y **el cuarto envío de la consola: modal "Asistencias a cliente"** para clientes con póliza vigente (ver "Planes de asistencia del INS"). Previo (**13 septiembre 2026**): **los correos de Póliza activa y de Renovación confirmada estrenan la línea clara** (orden nuevo, tarjeta del vehículo compartida, iconos PNG en el cross-sell; ver "El correo de Póliza activa en línea clara" y "El correo de Renovación confirmada en línea clara"; con este segundo, los TRES correos de la consola van en línea clara). Previo (**10 septiembre 2026**): **TODA la app está en la línea clara SDI** —
 consola, explicador y las cuatro sub-páginas (`/polizas-activas/`, `/renovaciones/`, `/cancelacion/`, `/marcas-recargo/`,
 commit `5f3719c`, tag `pre-subpaginas-linea-clara-10sep`; ver "Las sub-páginas en línea clara"). Solo los correos siguen
 aparte (Arial en el cliente). La consola (`index.html`) y el explicador (`/explicacion/`) fueron los primeros. La consola va por `css/linea-clara-consola.css` (commit `c5cc457`, tag
@@ -1926,19 +1926,32 @@ Contrastadas con 5 PDF oficiales que entregó JC (viven en `OneDrive\ARCHIVO DIG
 
 ## Pendientes
 
-### 🔖 CHECKPOINT 19 sep 2026 — formulario de cita publicado, falta el piloto
+### 🔖 CHECKPOINT 19 sep 2026 (cierre del día) — formulario de cita en producción, probado por JC con envíos reales
 
-**`main` = merge `6c35767` + docs.** Tags en origin: `pre-cita-formulario-propio`. Suite: 26 archivos en verde.
+**Árbol limpio, todo pusheado.** Tag de rollback `pre-cita-formulario-propio`. Suite: 26 archivos en verde
+(`test-cita-url.js` 78 · `test-cita-correos.mjs` 33 · `test-cita-validacion.mjs` 38 · `test-cita-limite.mjs` 10).
 
-**📌 LO QUE LE TOCA A JC (piloto):**
-1. ⚙ → "Formulario de cita" → **Formulario SDI** → Guardar (no debe salir el aviso de lista).
-2. Enviar una cotización de prueba a `segurosjhernandez@outlook.com` (**nunca al corporativo**), abrir la guía, tocar
-   "Agendar mi cita" y llenar la solicitud — ideal desde un **iPhone real** (el campo de fecha).
-3. Comprobar: "Solicitud recibida" en Principal (no Spam); "Cita solicitada" en su bandeja; "Responder" va a quien
-   corresponde.
-4. Filtro de Gmail: `subject:"Cita solicitada" from:citas@appsegurosdigitales.com` → etiqueta "Citas de aseguramiento"
-   + "No enviar nunca a spam".
-5. Una semana de piloto sin tocar lógica. Después: agregar `tramites@segurosdelins.com` a `CITA_AGENTES`.
+**Hecho hoy, en orden:** diseño y mockup → spec → plan → tareas 0-9 en rama (subagentes + a mano) → Resend
+(`appsegurosdigitales.com` Verified, 4 registros DNS en Netlify, 3 variables) → publicado apagado → **JC lo prendió y
+probó: llegaron los dos correos** → 5 ajustes suyos (guía "Tu plan"/"Tuyo"; dirección por provincia-cantón-distrito;
+nota Ley 8204; precios en formas de pago) → WhatsApp del agente con el aviso del código QR → fuera "videollamada" →
+`tramites@segurosdelins.com` autorizado (verificado en prod: `autorizado:true`).
+
+**Volumen:** JC, 19 sep: entre los dos agentes **no superan 30 citas al mes** (~60 correos). El plan gratuito de Resend
+(3.000/mes, 100/día) sobra: no proponer el plan pago por esto.
+
+**📌 LO QUE QUEDA:**
+1. **Prueba de Fernando/`tramites@`** (segundo agente REAL, nunca probado): en SU navegador, ⚙ con correo exacto
+   `tramites@segurosdelins.com` → "Formulario SDI" → cotización de prueba a un correo personal → agendar. Revisar que la
+   página, la firma del correo, el "Responder" y el WhatsApp salgan con SUS datos y que "Cita solicitada" le llegue a él.
+2. Filtro de Gmail en las dos cuentas: `subject:"Cita solicitada" from:citas@appsegurosdigitales.com` → etiqueta
+   "Citas de aseguramiento" + "No enviar nunca a spam".
+3. 🔴 **Límites de Multiasistencia de la guía** (`#s2 .svc-grid`): fijos e iguales para todo vehículo, no coinciden con
+   `documentos-ins/co-multiasistencia-170.pdf`. JC arrancó la verificación en una sesión aparte el 19 sep; **mirar su
+   resultado antes de tocar esa sección**. Va firmada con la licencia del agente.
+4. El Google Form de JC todavía dice "mediante una videollamada" (lo ven los enlaces viejos y el modo propio): lo edita él.
+5. Lista oficial de distritos (INS/INEC) si aparece → regenerar `js/cr-territorio.js`.
+6. Una semana sin tocar lógica del formulario (cooldown), salvo bugs.
 
 **Segunda etapa conversada (NO empezar sin pedido):** marca automática "Cita solicitada · fecha · franja" en
 Cotizaciones, cruzada por placa con dato mínimo sin información personal (embudo Cotizadas → Con cita → Con póliza).
@@ -1947,6 +1960,9 @@ Cotizaciones, cruzada por placa con dato mínimo sin información personal (embu
 configurador a la guía existe cuando el agente está en modo `'sdi'`; en `'propio'` sigue el WhatsApp. Del script
 `2026-09-18-flujo-asistencias-mock-flujo.py` se descarta la parte de `entry.<fe>`/`entry.<fpl>` y se conserva `as` y `r`.
 El Google Form de JC **no se borra**: atiende los enlaces ya enviados y el modo propio.
+
+**🗓 28 de setiembre:** que la tarjeta del correo, la casilla del paso 3 y la sección de la guía de asistencias aparezcan
+solas (`asiDisponible()`); y el esquema de repuestos de la V32, que sigue SIN PLAN.
 
 ### 🔖 CHECKPOINT 18 sep 2026 — dónde quedamos (JC: *"hagamos un checkpoint con las decisiones pendientes… revisamos más tarde"*)
 
