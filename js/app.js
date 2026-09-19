@@ -271,6 +271,9 @@ function openProfileModal(firstTime) {
   document.getElementById('p-license').value  = CFG.LICENSE    || '';
   document.getElementById('p-website').value  = CFG.WEBSITE    || '';
   document.getElementById('p-agenda').value   = CFG.AGENDA_URL || '';
+  var pCitaSdi = document.getElementById('p-cita-sdi'), pCitaPropio = document.getElementById('p-cita-propio');
+  if (pCitaSdi && pCitaPropio) { pCitaSdi.checked = CFG.CITA_MODO === 'sdi'; pCitaPropio.checked = !pCitaSdi.checked; }
+  var pCitaAviso = document.getElementById('p-cita-aviso'); if (pCitaAviso) pCitaAviso.hidden = true;
   // Envío de pólizas activas (links del correo "Póliza Activa")
   var pAssist = document.getElementById('p-assist');
   var pXViaje = document.getElementById('p-xsell-viaje');
@@ -320,6 +323,21 @@ function closeProfileModal() {
 // Se extrajo el 9 set 2026: app.js pasaba de 1400 líneas con seis
 // responsabilidades sin relación. El 📊 solo necesita history.js, así que
 // salió entero. app.js conserva únicamente el enganche de sus botones.
+
+/**
+ * Modo "Formulario SDI": pregunta al servidor si el correo del agente esta en la
+ * lista autorizada. Solo avisa — no bloquea el guardado: si no esta, a sus
+ * clientes les sale el respaldo por WhatsApp hasta que lo agreguen.
+ */
+function _verificarCitaAutorizada(email) {
+  fetch('/cita/enviar', { method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ verificar: true, ae: email }) })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (j) {
+      if (j && j.autorizado === false) showToast('Tu correo todavía no está en la lista de agentes autorizados del Formulario SDI. Pedí que lo agreguen; mientras tanto tus clientes verán el respaldo por WhatsApp.', 'error');
+    })
+    .catch(function () { /* sin red o en localhost sin functions: no molestar */ });
+}
 
 /**
  * Valida y guarda el perfil del agente desde el modal.
@@ -396,6 +414,7 @@ function handleProfileSave() {
     license:   license,
     website:   cleanWebsite,
     agendaUrl: cleanAgenda,
+    citaModo:  (document.getElementById('p-cita-sdi') || {}).checked ? 'sdi' : 'propio',
     assistUrl:           assistUrl,
     xsellViajeUrl:       xsellViajeUrl,
     xsellEstudiantilUrl: xsellEstudiantilUrl
@@ -413,6 +432,7 @@ function handleProfileSave() {
   if (typeof scheduleDriveBackup === 'function') scheduleDriveBackup();
 
   showToast('Perfil guardado.', 'success');
+  if (profile.citaModo === 'sdi') _verificarCitaAutorizada(profile.email);
   closeProfileModal();
   // Si estamos en la vista 3 (redactar), regenerar la previa con los nuevos datos
   if (S.step === 3) updatePreview();

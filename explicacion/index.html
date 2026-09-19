@@ -3042,7 +3042,12 @@ const data = {
   // 2026, con la casilla prendida) → la guía muestra la misma sección. wa: el
   // WhatsApp del agente, para el configurador.
   asi: _params.get('asi') === '1',
-  wa: _params.get('wa') || ''
+  wa: _params.get('wa') || '',
+  // fc=1 + ae: el agente usa el formulario propio de cita (19 set 2026). El botón
+  // de agendar abre /cita/ en vez de la pantalla "Falta un paso". tel: su teléfono.
+  fc: _params.get('fc') === '1',
+  ae: _params.get('ae') || '',
+  tel: _params.get('tel') || ''
 };
 
 const fmt = (n) => '₡' + Number(n).toLocaleString('de-DE');
@@ -3101,6 +3106,22 @@ function _seccionesQueAplican(mapa) {
   };
 }
 // ===== [/GUIA-CB-PURO] =====
+
+// ===== [GUIA-CITA-PURO] — lógica pura, sin DOM. tests/test-cita-url.js la extrae
+// por estos marcadores y la evalúa en Node. Si movés el bloque, mové los marcadores.
+function _modoCitaSdi(d) {
+  return !!(d && d.fc && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(d.ae || '')));
+}
+function _urlCita(d, as) {
+  const q = [];
+  const add = (k, v) => { if (v !== undefined && v !== null && String(v).trim() !== '') q.push(k + '=' + encodeURIComponent(String(v).trim())); };
+  add('n', d.n); add('l', d.l); add('wa', d.wa); add('tel', d.tel); add('ae', d.ae);
+  add('c', d.c); add('v', d.v); add('p', d.p); add('y', d.y);
+  add('pa', d.pa); add('ps', d.ps); add('pt', d.pt);
+  if (/^[a-z]+(\.[a-z]+)*$/.test(String(as || ''))) add('as', as);
+  return '../cita/?' + q.join('&');
+}
+// ===== [/GUIA-CITA-PURO] =====
 
 /**
  * Deja en la sección 1 SOLO las coberturas que trae la cotización, con el
@@ -3621,6 +3642,9 @@ floatNext.addEventListener('click', () => {
 // "user gesture" en mobile — no hay popup blocker (a diferencia de un
 // window.open desde setTimeout, que iOS/Android bloquean por seguridad).
 function openCelebration() {
+  // Agente con formulario propio: se agenda en /cita/, en esta misma pestaña.
+  // Sin fc (modo propio y enlaces ya enviados) sigue la pantalla "Falta un paso".
+  if (_modoCitaSdi(data)) { location.href = _urlCita(data, _params.get('as') || ''); return; }
   document.getElementById('celebBackdrop').classList.add('active');
 }
 function closeCelebration() {
