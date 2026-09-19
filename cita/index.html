@@ -193,6 +193,7 @@ a{color:var(--blue)}
     <a class="btn" id="falloWa" target="_blank" rel="noopener" hidden>Enviar mis respuestas por WhatsApp</a>
     <button class="btn s" type="button" id="falloReintentar">Intentar de nuevo</button>
     <p class="pie-f" id="falloTel" hidden></p>
+    <p class="pie-f" id="falloDet" hidden style="font-size:11px;opacity:.8"></p>
   </div></div>
 </main>
 
@@ -316,7 +317,11 @@ a{color:var(--blue)}
 
   function mostrar(id) { ['citaForm', 'citaOk', 'citaFallo'].forEach(function (x) { $(x).hidden = x !== id; }); window.scrollTo(0, 0); }
 
-  function fallo(r) {
+  function fallo(r, st, det) {
+    // Motivo en letra chica (19 set 2026): con una foto de esta pantalla el agente sabe qué pasó.
+    // Solo el código, el texto del servidor y el correo del AGENTE al que iba la solicitud.
+    $('falloDet').textContent = 'Detalle para tu agente: ' + (st ? 'código ' + st : 'sin conexión') + (det ? ' · ' + det : '') + ' · agente: ' + ag.ae;
+    $('falloDet').hidden = false;
     var texto = 'Hola ' + pilaAg + ', quiero agendar mi aseguramiento.\n' + 'Nombre: ' + r.nombre + '\nTeléfono: ' + r.telefono + '\nCorreo: ' + r.correo +
       '\nDirección: ' + r.direccion + (r.ocupacion ? '\nOcupación: ' + r.ocupacion : '') + (r.ingreso ? '\nIngreso: ' + r.ingreso : '') +
       '\nPlaca: ' + r.placa + '\nForma de pago: ' + r.formaPago + '\nFecha: ' + fechaLinda(r.fecha) + '\nHorario: ' + r.franja +
@@ -352,7 +357,7 @@ a{color:var(--blue)}
           if (u) { $('okWa').href = u; $('okWa').textContent = 'Escribirle a ' + pilaAg + ' por WhatsApp'; $('okWa').hidden = false; }
           mostrar('citaOk');
         } else if (x.st === 400 && x.j && x.j.campo) { marcar(x.j.campo, x.j.error || 'Revisá este campo.'); }
-        else { fallo(r); }
+        else { fallo(r, x.st, x.j && x.j.error); }
       })
       .catch(function () { fallo(r); })
       .then(function () { enviando = false; b.disabled = false; b.textContent = 'Enviar mi solicitud'; });
