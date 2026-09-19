@@ -107,6 +107,11 @@ function buildEmail(params) {
       })
     : '';
 
+  // A donde va el boton "Agendar mi cita ahora": /cita/ si el agente usa el
+  // formulario propio; si no, su enlace de siempre.
+  const agendaHref = _buildCitaUrl({ clientName: nombre, vehicle: vehiculo, year: p.year,
+    plate: _placaEsRelleno(p.plate, p.plateClass) ? '' : p.plate, prices: prices }) || CFG.AGENDA_URL;
+
   // ¿Este correo lleva la tarjeta de planes de asistencia? Solo con la casilla
   // del paso 3 prendida Y desde el 28 set 2026 (asiDisponible). La misma
   // bandera decide la tarjeta del correo y el `asi=1` de la guía: los dos
@@ -302,7 +307,7 @@ function buildEmail(params) {
 
         <!-- 8. CTA AGENDAR (camino limpio sin barreras) -->
         <tr><td style="padding:30px 32px 0;text-align:center;">
-          <a href="${CFG.AGENDA_URL}" style="display:inline-block;background:#047857;color:#ffffff;text-decoration:none;border-radius:10px;padding:16px 32px;font-family:${fontFam};font-weight:700;font-size:16px;">Agendar mi cita ahora &rarr;</a>
+          <a href="${_escHtml(agendaHref)}" style="display:inline-block;background:#047857;color:#ffffff;text-decoration:none;border-radius:10px;padding:16px 32px;font-family:${fontFam};font-weight:700;font-size:16px;">Agendar mi cita ahora &rarr;</a>
           <p style="margin:14px 0 0;font-size:12px;color:#475569;font-weight:500;"><b style="color:#0c4a6e;">Cotizaci&oacute;n v&aacute;lida 15 d&iacute;as</b> &middot; Es f&aacute;cil, es r&aacute;pido, es seguro</p>
         </td></tr>
 
@@ -589,14 +594,47 @@ function _buildGuideUrl(extras) {
   // asi=1: la guia muestra la seccion "Sumale asistencias" (17 set 2026). Solo
   // cuando el correo llevo la tarjeta; sin esto los enlaces viejos no cambian.
   // wa: el WhatsApp del agente, que la guia le pasa al configurador.
-  if (x.asistencias) {
-    params.push('asi=1');
-    if (CFG.WHATSAPP) params.push('wa=' + encodeURIComponent(CFG.WHATSAPP));
+  const citaSdi = _citaSdi();
+  if (x.asistencias) params.push('asi=1');
+  // wa: lo usan el configurador de asistencias y el respaldo por WhatsApp de /cita/.
+  if ((x.asistencias || citaSdi) && CFG.WHATSAPP) params.push('wa=' + encodeURIComponent(CFG.WHATSAPP));
+  // fc=1: el boton "Agendar mi cita" de la guia abre /cita/ en vez del enlace
+  // propio del agente. ae: a donde llega la solicitud. Sin esto el enlace queda
+  // byte a byte como antes (modo 'propio' y enlaces ya enviados).
+  if (citaSdi) {
+    params.push('fc=1');
+    params.push('ae=' + encodeURIComponent(CFG.FROM_EMAIL));
+    if (CFG.PHONE) params.push('tel=' + encodeURIComponent(CFG.PHONE));
   }
 
   if (params.length === 0) return base;
   const sep = base.indexOf('?') === -1 ? '?' : '&';
   return base + sep + params.join('&');
+}
+
+/** true si este agente usa el formulario propio Y tiene correo a donde avisarle. */
+function _citaSdi() {
+  return typeof CFG !== 'undefined' && CFG.CITA_MODO === 'sdi' && !!CFG.CITA_URL && !!CFG.FROM_EMAIL;
+}
+
+/**
+ * URL de /cita/ con la ficha del agente y lo que ya se sabe de la cotizacion.
+ * '' en modo 'propio' (el llamador cae a CFG.AGENDA_URL).
+ * @param {object} [extras] clientName, vehicle, plate, year, prices{anual,semestral,trimestral}
+ */
+function _buildCitaUrl(extras) {
+  if (!_citaSdi()) return '';
+  const params = [];
+  const add = function (key, val) {
+    if (val !== undefined && val !== null && String(val).trim() !== '') params.push(key + '=' + encodeURIComponent(String(val).trim()));
+  };
+  const num = function (val) { const n = (typeof asiMonto === 'function') ? asiMonto(val) : 0; return n > 0 ? String(n) : ''; };
+  const x = extras || {};
+  add('n', CFG.FROM_NAME); add('l', CFG.LICENSE); add('w', CFG.WEBSITE);
+  add('wa', CFG.WHATSAPP); add('tel', CFG.PHONE); add('ae', CFG.FROM_EMAIL);
+  add('c', x.clientName); add('v', x.vehicle); add('p', x.plate); add('y', x.year);
+  if (x.prices) { add('pa', num(x.prices.anual)); add('ps', num(x.prices.semestral)); add('pt', num(x.prices.trimestral)); }
+  return CFG.CITA_URL + '?' + params.join('&');
 }
 
 /**

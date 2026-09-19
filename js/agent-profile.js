@@ -62,6 +62,8 @@ function saveProfile(p) {
       license:   (p.license   || '').trim(),
       website:   (p.website   || '').trim(),
       agendaUrl: (p.agendaUrl || '').trim(),
+      // Formulario de cita: 'propio' (su enlace) | 'sdi' (pagina /cita/)
+      citaModo:  (p.citaModo === 'sdi') ? 'sdi' : 'propio',
       // Envío de pólizas activas (personalizables por agente)
       assistUrl:        (p.assistUrl        || '').trim(),
       xsellViajeUrl:    (p.xsellViajeUrl    || '').trim(),
@@ -93,6 +95,8 @@ function applyProfile(p) {
   // agendaUrl: solo sobrescribir si el agente puso uno propio
   // (si lo deja vacio se mantiene el default del config.js)
   if (p.agendaUrl) CFG.AGENDA_URL = p.agendaUrl;
+  // Perfiles viejos no traen el campo → se quedan en el default 'propio'.
+  if (p.citaModo !== undefined) CFG.CITA_MODO = (p.citaModo === 'sdi') ? 'sdi' : 'propio';
   // Envío de pólizas activas: asignar siempre que el campo exista en el perfil
   // (incl. ''), para que el agente pueda dejar un link en blanco a propósito.
   // Perfiles viejos (sin estos campos) caen al default del config.js (undefined => no se toca).

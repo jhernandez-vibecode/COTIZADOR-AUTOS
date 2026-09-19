@@ -97,6 +97,19 @@
           <input class="form-control" id="p-agenda" placeholder="https://forms.gle/..." />
         </div>
 
+        <div class="form-row">
+          <label class="form-label">Formulario de cita</label>
+          <label style="display:flex;gap:10px;align-items:flex-start;margin:6px 0;font-size:13px;">
+            <input type="radio" name="p-cita" id="p-cita-propio" value="propio" style="margin-top:3px;">
+            <span><b>Mi enlace propio</b> — el botón “Agendar mi cita” abre el link de arriba. Es lo de siempre.</span>
+          </label>
+          <label style="display:flex;gap:10px;align-items:flex-start;margin:6px 0;font-size:13px;">
+            <input type="radio" name="p-cita" id="p-cita-sdi" value="sdi" style="margin-top:3px;">
+            <span><b>Formulario SDI</b> — el cliente agenda en una página con tu nombre y tu licencia, con su placa ya puesta. Las solicitudes llegan a <b>tu correo de este perfil</b>.</span>
+          </label>
+          <p id="p-cita-aviso" hidden style="margin:6px 0 0;font-size:12px;color:#7C5A00;background:#FBF3DC;border-radius:8px;padding:8px 10px;"></p>
+        </div>
+
         <div style="margin:18px 0 6px;padding-top:14px;border-top:1px solid var(--gray-200,#e5e7eb);">
           <p style="margin:0;font-size:13px;font-weight:700;color:var(--navy,#0c2340);">Envío de pólizas activas</p>
           <p style="margin:2px 0 0;font-size:11px;color:var(--gray-500,#64748b);">Links que aparecen en el correo de “Póliza Activa”. Si dejás un cross-sell vacío, el botón lleva a tu sitio web.</p>

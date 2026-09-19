@@ -31,6 +31,11 @@ ok('g-rechaza-gigante', !esNuestro('n=' + 'x'.repeat(2100), CLAVES));
 // palabra) y cae al link largo en silencio — que es justo lo que veniamos a
 // arreglar. El nombre del agente va SIEMPRE en el query.
 ok('g-acepta-espacios', esNuestro('n=Juan%20Carlos%20Hernandez%20Vargas&c=DELGADO%20ARGUELLO%20SILVIA%20MARIEL', CLAVES));
+
+// 19 set 2026 — modo "Formulario SDI": la guia recibe fc, ae y tel. Si faltan en
+// la lista blanca, el acortador rechaza el enlace y cae al largo EN SILENCIO
+// (paso con `cb` del 25 ago al 17 set).
+ok('g-acepta-cita', esNuestro('n=Agente%20Prueba&fc=1&ae=agente%40ejemplo.test&tel=8888-1111&wa=8888-1111', CLAVES));
 ok('a-acepta-espacios', esNuestro('n=Juan%20Carlos%20Hernandez%20Vargas&lic=08-1318', CLAVES_A));
 
 // ---------- Guia de emergencias (/a) ----------
