@@ -75,7 +75,14 @@ export default async function handler(req, context) {
 
   const v = validarCita(body, { agentes, now: ahora });
   if (v.trampa) return json(200, { ok: true, clienteAvisado: true });   // robot: se finge exito
-  if (!v.ok) return json(v.estado || 400, { error: v.error, campo: v.campo });
+  if (!v.ok) {
+    // Rastro MINIMO del rechazo (19 set 2026: a un agente le fallaba y no habia como saber por que).
+    // Solo el campo y el estado. Del cuerpo se anota UNICAMENTE el correo del AGENTE cuando ese es el
+    // motivo (no esta en CITA_AGENTES): es dato del agente, no del cliente. Nada mas del cuerpo se loguea.
+    const agenteRechazado = v.campo === "ae" ? String((body && body.ae) || "").slice(0, 80).replace(/[\r\n]/g, "") : "";
+    console.warn("[cita] rechazada", v.estado || 400, v.campo, agenteRechazado);
+    return json(v.estado || 400, { error: v.error, campo: v.campo });
+  }
   const d = v.datos;
 
   if (store) {
