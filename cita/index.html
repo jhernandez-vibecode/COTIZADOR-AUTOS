@@ -96,6 +96,19 @@ a{color:var(--blue)}
 .pasos4 b{color:var(--ink);font-weight:600}
 .aviso{background:var(--oro-bg);color:var(--oro-tx);border-top:3px solid #C9A227;border-radius:0 0 14px 14px;padding:16px 18px;font-size:14.5px}.aviso b{display:block;font-size:15.5px;margin-bottom:2px}
 
+/* ajustes de JC, 19 set 2026: selectores de dirección y precios en las formas de pago */
+.fila3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.fila3 select:disabled{background:#F8F9FA;color:var(--ink3)}
+.sub-lb{font-size:12px;font-weight:600;color:var(--ink3);display:block;margin-bottom:3px}
+.op span.op-col{flex-direction:column;gap:1px;min-height:62px;height:100%;padding:8px 10px}
+.op .op-pr{font:500 12.5px var(--mono);font-variant-numeric:tabular-nums;opacity:.85}
+.op .op-tag{font-size:10.5px;font-weight:600;letter-spacing:.02em}
+.op.rec span{border-color:var(--ok-tx);background:var(--ok-bg)}
+.op.rec .op-tag{color:var(--ok-tx)}
+.op.rec input:checked+span{background:var(--blue);border-color:var(--blue)}
+.op.rec input:checked+span .op-tag{color:#fff}
+@media (max-width:600px){.fila3{grid-template-columns:1fr}}
+
 /* validación y trampa anti-robot (propias de /cita/, no del mockup) */
 .campo input,.campo textarea,.campo select{min-width:0;max-width:100%}
 .campo input[type=date]{-webkit-appearance:none;appearance:none;min-height:46px}   /* iOS no encoge el campo de fecha */
@@ -126,17 +139,24 @@ a{color:var(--blue)}
         <div class="campo" data-c="telefono"><label for="f-telefono">Número de Teléfono <span class="req">*</span></label><input id="f-telefono" type="tel" inputmode="tel" autocomplete="tel" maxlength="80"><span class="err" hidden></span></div>
         <div class="campo" data-c="correo"><label for="f-correo">Correo electrónico <span class="req">*</span></label><input id="f-correo" type="email" autocomplete="email" maxlength="80"><span class="ay">Aquí te llega la confirmación y el código QR de las fotos.</span><span class="err" hidden></span></div>
       </div>
-      <div class="campo" data-c="direccion"><label for="f-direccion">Dirección Domicilio (Provincia- canton- distrito y señas) <span class="req">*</span></label><textarea id="f-direccion" maxlength="400" autocomplete="street-address"></textarea><span class="err" hidden></span></div>
+      <div class="campo" data-c="direccion"><span class="lb">Dirección Domicilio (Provincia- canton- distrito y señas) <span class="req">*</span></span>
+        <div class="fila3">
+          <div><label class="sub-lb" for="f-provincia">Provincia</label><select id="f-provincia" autocomplete="address-level1"><option value="">Elegí la provincia</option></select></div>
+          <div><label class="sub-lb" for="f-canton">Cantón</label><select id="f-canton" autocomplete="address-level2" disabled><option value="">Primero la provincia</option></select></div>
+          <div><label class="sub-lb" for="f-distrito">Distrito</label><select id="f-distrito" autocomplete="address-level3" disabled><option value="">Primero el cantón</option></select></div>
+        </div>
+        <label class="sub-lb" for="f-direccion" style="margin-top:6px">Dirección por señas</label>
+        <textarea id="f-direccion" maxlength="300" autocomplete="street-address" placeholder="Ej.: 200 m norte de la escuela, casa portón gris"></textarea><span class="err" hidden></span></div>
       <div class="fila2">
         <div class="campo" data-c="ocupacion"><label for="f-ocupacion">Ocupación u Oficio</label><input id="f-ocupacion" type="text" maxlength="80"></div>
-        <div class="campo" data-c="ingreso"><label for="f-ingreso">Ingreso Mensual Promedio</label><select id="f-ingreso"><option value="">Seleccioná un rango</option><option value="Menos de ₡500.000">Menos de ₡500.000</option><option value="De ₡500.000 a ₡1.000.000">De ₡500.000 a ₡1.000.000</option><option value="De ₡1.000.000 a ₡2.000.000">De ₡1.000.000 a ₡2.000.000</option><option value="De ₡2.000.000 a ₡4.000.000">De ₡2.000.000 a ₡4.000.000</option><option value="Más de ₡4.000.000">Más de ₡4.000.000</option></select><span class="ay">Opcional. Un rango aproximado es suficiente.</span></div>
+        <div class="campo" data-c="ingreso"><label for="f-ingreso">Ingreso Mensual Promedio</label><select id="f-ingreso"><option value="">Seleccioná un rango</option><option value="Menos de ₡500.000">Menos de ₡500.000</option><option value="De ₡500.000 a ₡1.000.000">De ₡500.000 a ₡1.000.000</option><option value="De ₡1.000.000 a ₡2.000.000">De ₡1.000.000 a ₡2.000.000</option><option value="De ₡2.000.000 a ₡4.000.000">De ₡2.000.000 a ₡4.000.000</option><option value="Más de ₡4.000.000">Más de ₡4.000.000</option></select><span class="ay">Opcional. Un rango aproximado es suficiente. Se solicita para cumplir con la Ley 8204 y la política «Conozca a su cliente».</span></div>
       </div>
     </div>
 
     <div class="grupo"><h3>Tu vehículo y tu pago</h3>
       <div class="campo" data-c="placa"><label for="f-placa">Número de Placa o Indique si es Cero Kilómetros <span class="req">*</span></label><input id="f-placa" type="text" maxlength="80"><span class="pre-n" id="placaNota" hidden>Viene de tu cotización. Corregila si hace falta.</span><span class="err" hidden></span></div>
       <div class="campo" data-c="formaPago"><span class="lb">Forma de pago que desea contratar <span class="req">*</span></span>
-        <div class="ops c3"><label class="op"><input type="radio" name="formaPago" id="f-fp-a" value="Anual"><span>Anual</span></label><label class="op"><input type="radio" name="formaPago" id="f-fp-s" value="Semestral"><span>Semestral</span></label><label class="op"><input type="radio" name="formaPago" id="f-fp-t" value="Trimestral"><span>Trimestral</span></label></div><span class="err" hidden></span></div>
+        <div class="ops c3"><label class="op rec"><input type="radio" name="formaPago" id="f-fp-a" value="Anual"><span class="op-col"><b>&#9733; Anual</b><i class="op-pr" id="pr-a" hidden></i><em class="op-tag" style="font-style:normal">Mejor precio</em></span></label><label class="op"><input type="radio" name="formaPago" id="f-fp-s" value="Semestral"><span class="op-col"><b>Semestral</b><i class="op-pr" id="pr-s" hidden></i></span></label><label class="op"><input type="radio" name="formaPago" id="f-fp-t" value="Trimestral"><span class="op-col"><b>Trimestral</b><i class="op-pr" id="pr-t" hidden></i></span></label></div><span class="err" hidden></span></div>
     </div>
 
     <div class="grupo"><h3>Tu cita</h3>
@@ -179,6 +199,7 @@ a{color:var(--blue)}
 <div class="pie"><span id="pieAg"></span><img src="../img/sdi-logo-compacto.svg" alt="Seguros Digitales SDI"></div>
 
 <script src="../js/planes-asistencia.js"></script>
+<script src="../js/cr-territorio.js"></script>
 <script>
 (function () {
   'use strict';
@@ -209,6 +230,39 @@ a{color:var(--blue)}
       planes.forEach(function (nm) { var t = document.createElement('span'); t.className = 'tag'; t.textContent = nm; box.appendChild(t); });
     }
   }
+  // ---- precios de la cotización dentro de cada forma de pago (pa/ps/pt del enlace) ----
+  function colones(v) { var n = Number(String(v || '').replace(/\D/g, '')); return n > 0 ? '\u20a1' + n.toLocaleString('de-DE') : ''; }
+  [['pr-a', cot.pa, ' al año'], ['pr-s', cot.ps, ' por semestre'], ['pr-t', cot.pt, ' por trimestre']].forEach(function (x) {
+    var t = colones(x[1]); if (t) { $(x[0]).textContent = t + x[2]; $(x[0]).hidden = false; }
+  });
+
+  // ---- dirección: provincia > cantón > distrito (js/cr-territorio.js) ----
+  var OTRO = 'No aparece en la lista';
+  var T = (typeof CR_TERRITORIO !== 'undefined' && CR_TERRITORIO.length) ? CR_TERRITORIO : [];
+  function llenar(sel, lista, primero) {
+    sel.innerHTML = '';
+    var o = document.createElement('option'); o.value = ''; o.textContent = primero; sel.appendChild(o);
+    lista.forEach(function (nm) { var x = document.createElement('option'); x.value = nm; x.textContent = nm; sel.appendChild(x); });
+    sel.disabled = !lista.length;
+  }
+  var selP = $('f-provincia'), selC = $('f-canton'), selD = $('f-distrito');
+  if (T.length) {
+    llenar(selP, T.map(function (x) { return x.n; }), 'Elegí la provincia');
+    selP.addEventListener('change', function () {
+      var pr = T.filter(function (x) { return x.n === selP.value; })[0];
+      llenar(selC, pr ? pr.c.map(function (x) { return x.n; }) : [], pr ? 'Elegí el cantón' : 'Primero la provincia');
+      llenar(selD, [], 'Primero el cantón');
+    });
+    selC.addEventListener('change', function () {
+      var pr = T.filter(function (x) { return x.n === selP.value; })[0];
+      var ca = pr && pr.c.filter(function (x) { return x.n === selC.value; })[0];
+      llenar(selD, ca ? ca.d.concat([OTRO]) : [], ca ? 'Elegí el distrito' : 'Primero el cantón');
+    });
+  } else {
+    // Sin la lista (el archivo no cargó) los selectores se esconden y queda el párrafo de siempre.
+    document.querySelector('.fila3').hidden = true;
+  }
+
   if (cot.p) { $('f-placa').value = cot.p; $('f-placa').classList.add('pre'); $('placaNota').hidden = false; }
 
   // ---- fecha: desde hoy (Costa Rica), de lunes a viernes ----
@@ -222,9 +276,15 @@ a{color:var(--blue)}
     if (e) { e.textContent = msg || ''; e.hidden = !msg; }
   }
   function radio(nombre) { var r = document.querySelector('input[name="' + nombre + '"]:checked'); return r ? r.value : ''; }
+  function armarDireccion() {
+    var senas = $('f-direccion').value.trim();
+    if (!T.length) return senas;
+    var partes = [selP.value, selC.value, selD.value === OTRO ? '' : selD.value].filter(Boolean);
+    return partes.join(', ') + (partes.length && senas ? '. ' : '') + senas;
+  }
   function leer() {
     return { nombre: $('f-nombre').value.trim(), telefono: $('f-telefono').value.trim(), correo: $('f-correo').value.trim(),
-      direccion: $('f-direccion').value.trim(), ocupacion: $('f-ocupacion').value.trim(), ingreso: $('f-ingreso').value,
+      direccion: armarDireccion(), senas: $('f-direccion').value.trim(), ocupacion: $('f-ocupacion').value.trim(), ingreso: $('f-ingreso').value,
       placa: $('f-placa').value.trim(), formaPago: radio('formaPago'), fecha: $('f-fecha').value, franja: radio('franja'),
       consent: $('f-consent').checked, sitio: $('f-sitio').value };
   }
@@ -233,7 +293,8 @@ a{color:var(--blue)}
     if (!r.nombre) e.nombre = 'Escribí tu nombre completo.';
     if (r.telefono.replace(/\D/g, '').length < 8) e.telefono = 'Escribí un teléfono de al menos 8 dígitos.';
     if (!RE_MAIL.test(r.correo)) e.correo = 'Revisá el correo: ahí te llega la confirmación.';
-    if (!r.direccion) e.direccion = 'Escribí tu dirección.';
+    if (T.length && (!selP.value || !selC.value || !selD.value)) e.direccion = 'Elegí provincia, cantón y distrito.';
+    else if (!r.senas) e.direccion = 'Escribí la dirección por señas.';
     if (!r.placa) e.placa = 'Escribí la placa, o “Cero kilómetros”.';
     if (!r.formaPago) e.formaPago = 'Elegí una forma de pago.';
     if (!r.fecha) e.fecha = 'Elegí una fecha.';
@@ -278,7 +339,7 @@ a{color:var(--blue)}
     if (primero) { var c = document.querySelector('[data-c="' + primero + '"]'); if (c) c.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
 
     enviando = true; var b = $('btnEnviar'); b.disabled = true; b.textContent = 'Enviando…';
-    var cuerpo = Object.assign({}, r, ag, cot);
+    var cuerpo = Object.assign({}, r, ag, cot); delete cuerpo.senas;
     fetch('/cita/enviar', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(cuerpo) })
       .then(function (resp) { return resp.json().catch(function () { return {}; }).then(function (j) { return { st: resp.status, j: j }; }); })
       .then(function (x) {

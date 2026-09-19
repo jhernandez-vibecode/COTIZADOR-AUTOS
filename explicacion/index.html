@@ -2435,7 +2435,7 @@ main{max-width:none;padding:44px 24px 56px;background:var(--lc-band)}
 
     <div class="plan-toggle">
       <button class="tab">Plan Plus (0-6 años)</button>
-      <button class="tab active">Plan Básico (7-15 años) · Tu plan</button>
+      <button class="tab active">Plan Básico (7-15 años)</button>
     </div>
 
     <div class="svc-grid">
@@ -2712,7 +2712,6 @@ main{max-width:none;padding:44px 24px 56px;background:var(--lc-band)}
               <div class="place">Agencia oficial o taller autorizado</div>
             </div>
             <div>
-              <span class="badge-q match-tag">Tuyo</span>
               <span class="badge-q">Repuesto Original</span>
             </div>
           </div>
@@ -3412,6 +3411,8 @@ function applyPersonalization() {
     if (tabs.length === 2) {
       tabs[0].classList.toggle('active', isPlus);
       tabs[1].classList.toggle('active', !isPlus);
+      // "· Tu plan" va en la pestaña que le toca a ESTE vehículo (antes estaba fija en Básico).
+      tabs[isPlus ? 0 : 1].textContent += ' · Tu plan';
     }
     // Personalizar el copy del banner
     const bannerSmall = document.querySelector('.tip-banner .small');
