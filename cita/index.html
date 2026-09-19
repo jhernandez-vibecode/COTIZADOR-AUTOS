@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cita de aseguramiento · Seguros del INS</title>
+<meta name="description" content="Agendá la inspección virtual de tu seguro de automóviles del INS.">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/svg+xml" href="../img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&family=Google+Sans+Code:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   /cita/ · formulario propio de solicitud de cita · línea clara SDI v1.3
+   Transcrito del mockup aprobado docs/superpowers/specs/2026-09-18-cita-formulario-propio-mockup.html
+   (18 set 2026). Un solo tema claro a propósito: es la marca (fondo blanco).
+   ============================================================ */
+:root{
+  --blue:#0369A1;--blue-ink:#02557F;--blue-soft:#E8F1F8;--band:#EEF4F9;
+  --line:#DADCE0;--line-btn:#8A939C;--line-soft:#EDEFF2;
+  --ink:#1B1F23;--ink2:#5A6570;--ink3:#6B7681;--navy:#0C2340;
+  --ok-bg:#E9F5F0;--ok-tx:#037D61;--oro-bg:#FBF3DC;--oro-tx:#7C5A00;--rosa-bg:#FCE8EC;--rosa-tx:#9F1239;
+  --body:'Google Sans Flex','Inter',system-ui,sans-serif;--mono:'Google Sans Code','Inter',ui-monospace,monospace;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:#fff;color:var(--ink);font-family:var(--body);font-size:14.5px;line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3,p{margin:0}h1,h2,h3{font-weight:500;letter-spacing:-.02em;line-height:1.15;text-wrap:balance}
+a{color:var(--blue)}
+[hidden]{display:none!important}
+.filete{height:4px;background:linear-gradient(90deg,#0369A1 0 60%,#0D9488 60% 85%,#EA580C 85% 95%,#C9A227 95% 100%)}
+
+/* ===== la página /cita/ ===== */
+.pg-top{background:#F8F9FA;border-bottom:1px solid var(--line-soft);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 20px;height:50px}
+.pg-top img{height:21px;width:auto;display:block}
+.agente{font-size:12px;color:var(--ink2);text-align:right;line-height:1.3}
+.agente b{color:var(--ink);font-weight:600;display:block}
+.agente .lic{font-family:var(--mono);font-size:11px;color:var(--ink3)}
+.pg-nav{padding:12px 20px;border-bottom:1px solid var(--line-soft)}
+.pg-nav .prod{font-weight:600;font-size:15.5px;letter-spacing:-.02em}
+.pg-nav small{display:block;font-weight:400;font-size:12.5px;color:var(--ink3)}
+.hero{padding:30px 20px 22px;text-align:center}
+.hero .c2{display:inline-flex;align-items:center;gap:8px;background:var(--blue-soft);color:var(--blue-ink);border-radius:999px;padding:5px 13px;font-size:12.5px;font-weight:600}
+.hero .c2 i{width:8px;height:8px;border-radius:50%;background:var(--blue)}
+.hero h1{font-size:clamp(26px,5vw,38px);margin:14px 0 10px}
+.hero p{color:var(--ink2);max-width:52ch;margin:0 auto;font-size:15px}
+.band{background:var(--band);padding:22px 16px 34px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:28px;padding:26px 28px;max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+.resumen{display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px 16px;align-items:center;border:1px solid var(--line);border-radius:18px;padding:14px 16px}
+.chapa{border:2px solid var(--navy);border-radius:8px;text-align:center;overflow:hidden;min-width:104px}
+.chapa small{display:block;background:var(--navy);color:#fff;font:600 8px var(--body);letter-spacing:.14em;padding:2px 0}
+.chapa b{display:block;font:600 19px var(--mono);letter-spacing:.06em;color:var(--navy);padding:3px 8px}
+.resumen .veh{font-weight:600}.resumen .det{font-size:12.5px;color:var(--ink3)}
+.resumen .asi{grid-column:1/-1;border-top:1px solid var(--line-soft);padding-top:10px;font-size:13px;color:var(--ink2);display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tag{background:var(--ok-bg);color:var(--ok-tx);border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600}
+.grupo{display:flex;flex-direction:column;gap:14px}
+.grupo>h3{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);border-bottom:1px solid var(--line);padding-bottom:7px}
+.fila2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.campo{display:flex;flex-direction:column;gap:5px;min-width:0}
+.campo label,.campo .lb{font-weight:600;font-size:13.5px}
+.campo .req{color:var(--rosa-tx)}
+.campo .ay{font-size:12.5px;color:var(--ink3);line-height:1.45}
+.campo input,.campo textarea,.campo select{font:400 15px var(--body);color:var(--ink);border:1px solid var(--line-btn);border-radius:12px;padding:11px 13px;background:#fff;width:100%;min-width:0}
+.campo textarea{min-height:74px;resize:vertical}
+.campo input.pre{background:color-mix(in srgb,var(--blue) 5%,#fff);border-color:var(--blue)}
+.pre-n{font-size:11.5px;color:var(--blue-ink);font-weight:600}
+.ops{display:grid;gap:8px}
+.ops.c3{grid-template-columns:repeat(3,1fr)}.ops.c2{grid-template-columns:1fr 1fr}
+.op{position:relative}
+.op input{position:absolute;opacity:0;inset:0;cursor:pointer}
+.op span{display:flex;align-items:center;justify-content:center;text-align:center;min-height:46px;border:1px solid var(--line-btn);border-radius:14px;padding:6px 10px;font-weight:600;font-size:13.5px;background:#fff}
+.op input:checked+span{background:var(--blue);border-color:var(--blue);color:#fff}
+.op input:focus-visible+span{outline:3px solid rgba(3,105,161,.35);outline-offset:2px}
+.consent{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;font-size:13px;color:var(--ink2);background:#F8F9FA;border-radius:14px;padding:14px}
+.consent input{width:20px;height:20px;margin:1px 0 0;accent-color:var(--blue)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;min-height:48px;padding:0 24px;font:600 15px var(--body);border:1px solid var(--blue);cursor:pointer;text-decoration:none;background:var(--blue);color:#fff}
+.btn.s{background:#fff;color:var(--blue)}
+.pie-f{font-size:12.5px;color:var(--ink3);text-align:center}
+.pie{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:16px 20px;border-top:1px solid var(--line-soft);font-size:11.5px;color:var(--ink3)}
+.pie img{height:20px;width:auto}
+@media (max-width:600px){
+  .panel{padding:20px 16px;border-radius:22px}.fila2,.ops.c3{grid-template-columns:1fr}
+  .band{padding-inline:10px}.agente .lic{display:none}
+}
+
+/* recibido */
+.sello{display:inline-flex;align-items:center;gap:8px;background:var(--ok-bg);color:var(--ok-tx);border-radius:999px;padding:6px 14px;font-weight:600;font-size:13px}
+.sello i{width:8px;height:8px;border-radius:50%;background:var(--ok-tx)}
+.cita-k{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.cita-k div{border:1px solid var(--line);border-radius:16px;padding:12px 14px}
+.cita-k small{display:block;font-size:11.5px;font-weight:600;color:var(--ink3)}
+.cita-k b{font-size:18px;font-weight:500;letter-spacing:-.02em}
+.pasos4{display:grid;gap:10px}
+.pasos4 div{display:grid;grid-template-columns:28px minmax(0,1fr);gap:12px;font-size:13.5px;color:var(--ink2)}
+.pasos4 i{font:600 12px var(--mono);font-style:normal;width:26px;height:26px;border-radius:50%;background:var(--blue-soft);color:var(--blue-ink);display:grid;place-items:center}
+.pasos4 b{color:var(--ink);font-weight:600}
+.aviso{background:var(--oro-bg);color:var(--oro-tx);border-top:3px solid #C9A227;border-radius:0 0 14px 14px;padding:16px 18px;font-size:14.5px}.aviso b{display:block;font-size:15.5px;margin-bottom:2px}
+
+/* validación y trampa anti-robot (propias de /cita/, no del mockup) */
+.campo input,.campo textarea,.campo select{min-width:0;max-width:100%}
+.campo input[type=date]{-webkit-appearance:none;appearance:none;min-height:46px}   /* iOS no encoge el campo de fecha */
+.campo .err{font-size:12.5px;color:#9F1239;font-weight:600}
+.campo.mal input,.campo.mal textarea,.campo.mal select{border-color:#9F1239}
+.trampa{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.btn[disabled]{opacity:.6;cursor:default}
+</style>
+</head>
+<body>
+<div class="pg-top"><img src="../img/ins-logo-azul.png" alt="INS"><div class="agente"><b id="agNom"></b><span class="lic" id="agLic"></span></div></div>
+<div class="pg-nav"><div class="prod">Cita de aseguramiento<small>Seguro de Automóviles · inspección virtual</small></div></div>
+<div class="filete"></div>
+
+<main id="citaSinDatos" hidden>
+  <div class="hero"><h1>Este enlace está incompleto</h1><p>Abrí la cita desde el botón “Agendar mi cita” de tu cotización, o escribile a tu agente.</p></div>
+</main>
+
+<main id="citaForm" hidden>
+  <div class="hero"><span class="c2"><i></i>100 % digital · sin papeles</span><h1 id="heroT">Agendá tu aseguramiento</h1><p>Estás a un paso de proteger tu vehículo. Llená la solicitud y te confirmo el espacio. Toma 2 minutos.</p></div>
+  <div class="band"><form class="panel" id="frm" novalidate>
+    <div class="resumen" id="resumen" hidden><div class="chapa" id="chapa" hidden><small>COSTA RICA</small><b id="chapaN"></b></div><div><div class="veh" id="resVeh"></div><div class="det">Datos de tu cotización</div></div>
+      <div class="asi" id="resAsi" hidden></div></div>
+
+    <div class="grupo"><h3>Tus datos</h3>
+      <div class="campo" data-c="nombre"><label for="f-nombre">Nombre Completo <span class="req">*</span></label><input id="f-nombre" type="text" autocomplete="name" maxlength="120"><span class="err" hidden></span></div>
+      <div class="fila2">
+        <div class="campo" data-c="telefono"><label for="f-telefono">Número de Teléfono <span class="req">*</span></label><input id="f-telefono" type="tel" inputmode="tel" autocomplete="tel" maxlength="80"><span class="err" hidden></span></div>
+        <div class="campo" data-c="correo"><label for="f-correo">Correo electrónico <span class="req">*</span></label><input id="f-correo" type="email" autocomplete="email" maxlength="80"><span class="ay">Aquí te llega la confirmación y el código QR de las fotos.</span><span class="err" hidden></span></div>
+      </div>
+      <div class="campo" data-c="direccion"><label for="f-direccion">Dirección Domicilio (Provincia- canton- distrito y señas) <span class="req">*</span></label><textarea id="f-direccion" maxlength="400" autocomplete="street-address"></textarea><span class="err" hidden></span></div>
+      <div class="fila2">
+        <div class="campo" data-c="ocupacion"><label for="f-ocupacion">Ocupación u Oficio</label><input id="f-ocupacion" type="text" maxlength="80"></div>
+        <div class="campo" data-c="ingreso"><label for="f-ingreso">Ingreso Mensual Promedio</label><select id="f-ingreso"><option value="">Seleccioná un rango</option><option value="Menos de ₡500.000">Menos de ₡500.000</option><option value="De ₡500.000 a ₡1.000.000">De ₡500.000 a ₡1.000.000</option><option value="De ₡1.000.000 a ₡2.000.000">De ₡1.000.000 a ₡2.000.000</option><option value="De ₡2.000.000 a ₡4.000.000">De ₡2.000.000 a ₡4.000.000</option><option value="Más de ₡4.000.000">Más de ₡4.000.000</option></select><span class="ay">Opcional. Un rango aproximado es suficiente.</span></div>
+      </div>
+    </div>
+
+    <div class="grupo"><h3>Tu vehículo y tu pago</h3>
+      <div class="campo" data-c="placa"><label for="f-placa">Número de Placa o Indique si es Cero Kilómetros <span class="req">*</span></label><input id="f-placa" type="text" maxlength="80"><span class="pre-n" id="placaNota" hidden>Viene de tu cotización. Corregila si hace falta.</span><span class="err" hidden></span></div>
+      <div class="campo" data-c="formaPago"><span class="lb">Forma de pago que desea contratar <span class="req">*</span></span>
+        <div class="ops c3"><label class="op"><input type="radio" name="formaPago" id="f-fp-a" value="Anual"><span>Anual</span></label><label class="op"><input type="radio" name="formaPago" id="f-fp-s" value="Semestral"><span>Semestral</span></label><label class="op"><input type="radio" name="formaPago" id="f-fp-t" value="Trimestral"><span>Trimestral</span></label></div><span class="err" hidden></span></div>
+    </div>
+
+    <div class="grupo"><h3>Tu cita</h3>
+      <div class="campo" data-c="fecha"><label for="f-fecha">Por favor, indique la fecha en la que desea programar el aseguramiento de su vehículo <span class="req">*</span></label><span class="ay">Tome en cuenta que nuestro horario comercial es de lunes a viernes de 8:00 am a 5:00 pm</span><input id="f-fecha" type="date"><span class="err" hidden></span></div>
+      <div class="campo" data-c="franja"><span class="lb">Por favor, seleccione el rango de horas que prefiere para coordinar el aseguramiento. <span class="req">*</span></span><span class="ay">Es necesario que a esa hora tenga disponible su vehículo para las fotografías que vamos a necesitar y verificar el estado de conservación mediante una videollamada.</span>
+        <div class="ops c2"><label class="op"><input type="radio" name="franja" id="f-h1" value="8:00 am a 10:00 am"><span>8:00 am a 10:00 am</span></label><label class="op"><input type="radio" name="franja" id="f-h2" value="10:00 am a 12:00 md"><span>10:00 am a 12:00 md</span></label><label class="op"><input type="radio" name="franja" id="f-h3" value="01:00 pm a 03:00 pm"><span>01:00 pm a 03:00 pm</span></label><label class="op"><input type="radio" name="franja" id="f-h4" value="03:00 pm a 05:00 pm"><span>03:00 pm a 05:00 pm</span></label></div><span class="err" hidden></span></div>
+    </div>
+
+    <div class="trampa" aria-hidden="true"><label for="f-sitio">Sitio web</label><input id="f-sitio" type="text" tabindex="-1" autocomplete="off"></div>
+    <div class="campo" data-c="consent"><label class="consent"><input type="checkbox" id="f-consent"><span>Autorizo el uso de estos datos únicamente para tramitar mi seguro de automóviles con el INS. <b>No se usan para publicidad</b> ni se comparten con terceros.</span></label><span class="err" hidden></span></div>
+    <button class="btn" type="submit" id="btnEnviar">Enviar mi solicitud</button>
+    <p class="pie-f">Si el horario solicitado no está disponible, te contacto de inmediato para reprogramar al espacio más cercano.</p>
+  </form></div>
+</main>
+
+<main id="citaOk" hidden>
+  <div class="hero"><span class="sello"><i></i>Solicitud recibida</span><h1 id="okT">Listo. Ya tengo tu solicitud</h1><p id="okP"></p></div>
+  <div class="band"><div class="panel">
+    <div class="cita-k"><div><small>Fecha solicitada</small><b id="okFecha"></b></div><div><small>Horario</small><b id="okFranja"></b></div></div>
+    <div class="aviso"><b>¿Y si ese horario no se puede?</b> Tu cita queda en firme cuando te la confirmo. Si el espacio que pediste no está disponible, nos ponemos en contacto con vos para reprogramarla al espacio más cercano.</div>
+    <div class="grupo"><h3>¿Qué pasará el día de tu cita?</h3><div class="pasos4">
+      <div><i>1</i><span><b>Preparate.</b> Tené tu vehículo a mano, limpio y en un lugar iluminado.</span></div>
+      <div><i>2</i><span><b>Subí tus fotos.</b> Te llega un código QR al correo; lo escaneás y cargás las fotos ahí mismo.</span></div>
+      <div><i>3</i><span><b>Aceptación digital.</b> Aceptás la póliza desde el celular con un token de seguridad.</span></div>
+      <div><i>4</i><span><b>Pago y listo.</b> Tarjeta, transferencia, SINPE Móvil o INS en línea. Tu vehículo queda asegurado al instante.</span></div>
+    </div></div>
+    <a class="btn s" id="okWa" target="_blank" rel="noopener" hidden>Escribirle por WhatsApp</a>
+  </div></div>
+</main>
+
+<main id="citaFallo" hidden>
+  <div class="hero"><h1>No pudimos enviar tu solicitud</h1><p id="falloP">Tus respuestas no se perdieron. Podés mandárselas a tu agente por WhatsApp, ya escritas, o intentar de nuevo.</p></div>
+  <div class="band"><div class="panel">
+    <a class="btn" id="falloWa" target="_blank" rel="noopener" hidden>Enviar mis respuestas por WhatsApp</a>
+    <button class="btn s" type="button" id="falloReintentar">Intentar de nuevo</button>
+    <p class="pie-f" id="falloTel" hidden></p>
+  </div></div>
+</main>
+
+<div class="pie"><span id="pieAg"></span><img src="../img/sdi-logo-compacto.svg" alt="Seguros Digitales SDI"></div>
+
+<script src="../js/planes-asistencia.js"></script>
+<script>
+(function () {
+  'use strict';
+  var P = new URLSearchParams(location.search);
+  var g = function (k) { return (P.get(k) || '').trim(); };
+  var ag = { n: g('n'), l: g('l'), wa: g('wa'), tel: g('tel'), ae: g('ae') };
+  var cot = { c: g('c'), v: g('v'), p: g('p'), y: g('y'), pa: g('pa'), ps: g('ps'), pt: g('pt'), as: g('as') };
+  var $ = function (id) { return document.getElementById(id); };
+  var RE_MAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;   // el mismo regex laxo de js/wizard.js
+  var pilaAg = ag.n.split(/\s+/)[0] || 'tu agente';
+
+  if (!ag.n || !RE_MAIL.test(ag.ae)) { $('citaSinDatos').hidden = false; return; }
+
+  // ---- pintar (todo por textContent: nada del URL entra como HTML) ----
+  $('agNom').textContent = ag.n;
+  if (ag.l) $('agLic').textContent = 'Lic. SUGESE ' + ag.l;
+  $('pieAg').textContent = 'Gestionado por ' + ag.n + ', agente exclusivo del INS' + (ag.l ? ' · Licencia SUGESE ' + ag.l : '');
+  if (cot.c) $('heroT').textContent = cot.c.split(/\s+/)[0] + ', agendá tu aseguramiento';
+  var veh = [cot.v, cot.y].filter(Boolean).join(' ');
+  var planes = (typeof PLANES_ASI !== 'undefined' ? cot.as.split('.') : []).map(function (id) {
+    var pl = (typeof PLANES_ASI !== 'undefined' ? PLANES_ASI : []).filter(function (x) { return x.id === id; })[0]; return pl ? pl.nom : '';
+  }).filter(Boolean);
+  if (veh || cot.p || planes.length) {
+    $('resumen').hidden = false; $('resVeh').textContent = veh || 'Tu vehículo';
+    if (/^[A-Za-z]{3}\d{3}$/.test(cot.p)) { $('chapa').hidden = false; $('chapaN').textContent = cot.p.slice(0, 3).toUpperCase() + ' ' + cot.p.slice(3); }
+    if (planes.length) {
+      var box = $('resAsi'); box.hidden = false; box.appendChild(document.createTextNode('Asistencias opcionales que elegiste: '));
+      planes.forEach(function (nm) { var t = document.createElement('span'); t.className = 'tag'; t.textContent = nm; box.appendChild(t); });
+    }
+  }
+  if (cot.p) { $('f-placa').value = cot.p; $('f-placa').classList.add('pre'); $('placaNota').hidden = false; }
+
+  // ---- fecha: desde hoy (Costa Rica), de lunes a viernes ----
+  var hoy = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Costa_Rica' }).format(new Date());
+  $('f-fecha').min = hoy;
+  function habil(f) { var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(f); if (!m) return false; var d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])).getUTCDay(); return d >= 1 && d <= 5; }
+
+  function marcar(campo, msg) {
+    var c = document.querySelector('[data-c="' + campo + '"]'); if (!c) return;
+    var e = c.querySelector('.err'); c.classList.toggle('mal', !!msg);
+    if (e) { e.textContent = msg || ''; e.hidden = !msg; }
+  }
+  function radio(nombre) { var r = document.querySelector('input[name="' + nombre + '"]:checked'); return r ? r.value : ''; }
+  function leer() {
+    return { nombre: $('f-nombre').value.trim(), telefono: $('f-telefono').value.trim(), correo: $('f-correo').value.trim(),
+      direccion: $('f-direccion').value.trim(), ocupacion: $('f-ocupacion').value.trim(), ingreso: $('f-ingreso').value,
+      placa: $('f-placa').value.trim(), formaPago: radio('formaPago'), fecha: $('f-fecha').value, franja: radio('franja'),
+      consent: $('f-consent').checked, sitio: $('f-sitio').value };
+  }
+  function validar(r) {
+    var e = {};
+    if (!r.nombre) e.nombre = 'Escribí tu nombre completo.';
+    if (r.telefono.replace(/\D/g, '').length < 8) e.telefono = 'Escribí un teléfono de al menos 8 dígitos.';
+    if (!RE_MAIL.test(r.correo)) e.correo = 'Revisá el correo: ahí te llega la confirmación.';
+    if (!r.direccion) e.direccion = 'Escribí tu dirección.';
+    if (!r.placa) e.placa = 'Escribí la placa, o “Cero kilómetros”.';
+    if (!r.formaPago) e.formaPago = 'Elegí una forma de pago.';
+    if (!r.fecha) e.fecha = 'Elegí una fecha.';
+    else if (r.fecha < hoy) e.fecha = 'Esa fecha ya pasó.';
+    else if (!habil(r.fecha)) e.fecha = 'Atendemos de lunes a viernes. Elegí otro día.';
+    if (!r.franja) e.franja = 'Elegí un rango de horas.';
+    if (!r.consent) e.consent = 'Necesitamos tu autorización para tramitar el seguro.';
+    return e;
+  }
+  $('f-fecha').addEventListener('change', function () { var f = this.value; marcar('fecha', f && f >= hoy && !habil(f) ? 'Atendemos de lunes a viernes. Elegí otro día.' : ''); });
+
+  function waIntl(v) { var n = String(v || '').replace(/\D/g, ''); return n.length === 8 ? '506' + n : n; }
+  function urlWa(texto) { var n = waIntl(ag.wa); return n ? 'https://web.whatsapp.com/send/?phone=' + n + '&text=' + encodeURIComponent(texto) : ''; }
+  function fechaLinda(f) { var m = f.split('-'); var d = new Date(Date.UTC(+m[0], +m[1] - 1, +m[2])); return d.toLocaleDateString('es-CR', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }); }
+
+  function mostrar(id) { ['citaForm', 'citaOk', 'citaFallo'].forEach(function (x) { $(x).hidden = x !== id; }); window.scrollTo(0, 0); }
+
+  function fallo(r) {
+    var texto = 'Hola ' + pilaAg + ', quiero agendar mi aseguramiento.\n' + 'Nombre: ' + r.nombre + '\nTeléfono: ' + r.telefono + '\nCorreo: ' + r.correo +
+      '\nDirección: ' + r.direccion + (r.ocupacion ? '\nOcupación: ' + r.ocupacion : '') + (r.ingreso ? '\nIngreso: ' + r.ingreso : '') +
+      '\nPlaca: ' + r.placa + '\nForma de pago: ' + r.formaPago + '\nFecha: ' + fechaLinda(r.fecha) + '\nHorario: ' + r.franja +
+      (planes.length ? '\nAsistencias: ' + planes.join(', ') : '');
+    var u = urlWa(texto);
+    if (u) { $('falloWa').href = u; $('falloWa').hidden = false; }
+    else { $('falloP').textContent = 'Tus respuestas siguen en el formulario. Intentá de nuevo en un momento.'; }
+    if (ag.tel) { $('falloTel').textContent = 'También podés llamar a ' + pilaAg + ' al ' + ag.tel + '.'; $('falloTel').hidden = false; }
+    mostrar('citaFallo');
+  }
+  $('falloReintentar').addEventListener('click', function () { mostrar('citaForm'); });
+
+  var enviando = false;
+  $('frm').addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    if (enviando) return;
+    var r = leer(), e = validar(r);
+    ['nombre', 'telefono', 'correo', 'direccion', 'placa', 'formaPago', 'fecha', 'franja', 'consent'].forEach(function (k) { marcar(k, e[k]); });
+    var primero = Object.keys(e)[0];
+    if (primero) { var c = document.querySelector('[data-c="' + primero + '"]'); if (c) c.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+
+    enviando = true; var b = $('btnEnviar'); b.disabled = true; b.textContent = 'Enviando…';
+    var cuerpo = Object.assign({}, r, ag, cot);
+    fetch('/cita/enviar', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(cuerpo) })
+      .then(function (resp) { return resp.json().catch(function () { return {}; }).then(function (j) { return { st: resp.status, j: j }; }); })
+      .then(function (x) {
+        if (x.st === 200 && x.j && x.j.ok) {
+          var pila = (cot.c || r.nombre).split(/\s+/)[0];
+          $('okT').textContent = 'Listo, ' + pila + '. Ya tengo tu solicitud';
+          $('okP').textContent = x.j.clienteAvisado === false ? 'En breve te confirmo el espacio.' : 'Te envié la confirmación a ' + r.correo + '. En breve te confirmo el espacio.';
+          $('okFecha').textContent = fechaLinda(r.fecha); $('okFranja').textContent = r.franja;
+          var u = urlWa('Hola ' + pilaAg + ', acabo de enviar mi solicitud de cita para el ' + fechaLinda(r.fecha) + ', ' + r.franja + '.');
+          if (u) { $('okWa').href = u; $('okWa').textContent = 'Escribirle a ' + pilaAg + ' por WhatsApp'; $('okWa').hidden = false; }
+          mostrar('citaOk');
+        } else if (x.st === 400 && x.j && x.j.campo) { marcar(x.j.campo, x.j.error || 'Revisá este campo.'); }
+        else { fallo(r); }
+      })
+      .catch(function () { fallo(r); })
+      .then(function () { enviando = false; b.disabled = false; b.textContent = 'Enviar mi solicitud'; });
+  });
+
+  $('citaForm').hidden = false;
+})();
+</script>
+</body>
+</html>
