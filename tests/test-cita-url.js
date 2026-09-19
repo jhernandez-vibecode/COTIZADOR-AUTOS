@@ -98,6 +98,26 @@ ok('envia a /cita/enviar', pg.indexOf("fetch('/cita/enviar'") !== -1);
 ok('nada del agente escrito a mano', pg.indexOf('08-1318') === -1 && !/Juan Carlos/.test(pg) && pg.indexOf('8822') === -1);
 ok('sin genero', !/protegid[ao]\b|asegurad[ao] al instante/.test(pg.replace(/queda asegurado/g, '')));
 ok('la fecha dice setiembre como los correos, no el septiembre del navegador', pg.indexOf("'setiembre'") !== -1 && pg.indexOf('toLocaleDateString') === -1);
+
+console.log('-- ajustes de JC del 19 set 2026 --');
+var TERR = require('../js/cr-territorio.js').CR_TERRITORIO;
+var nCant = TERR.reduce(function (t, x) { return t + x.c.length; }, 0);
+var punt = TERR.filter(function (x) { return x.n === 'Puntarenas'; })[0];
+ok('territorio: 7 provincias y 84 cantones', TERR.length === 7 && nCant === 84);
+ok('territorio: Monteverde y Puerto Jiménez son CANTONES de Puntarenas', punt.c.some(function (c) { return c.n === 'Monteverde'; }) && punt.c.some(function (c) { return c.n === 'Puerto Jiménez'; }));
+ok('territorio: ya no figuran como distritos de otro cantón', punt.c.filter(function (c) { return c.n === 'Central' || c.n === 'Golfito'; }).every(function (c) { return c.d.indexOf('Monte Verde') === -1 && c.d.indexOf('Puerto Jiménez') === -1; }));
+ok('territorio: ningún cantón sin distritos ni nombres repetidos dentro de un cantón', TERR.every(function (x) { return x.c.every(function (c) { return c.d.length > 0 && new Set(c.d).size === c.d.length; }); }));
+ok('la página carga la lista de territorio', pg.indexOf('src="../js/cr-territorio.js"') !== -1);
+ok('tres selectores + señas', ['id="f-provincia"', 'id="f-canton"', 'id="f-distrito"', 'id="f-direccion"', 'Dirección por señas'].every(function (t) { return pg.indexOf(t) !== -1; }));
+ok('el distrito ofrece "No aparece en la lista"', pg.indexOf("'No aparece en la lista'") !== -1);
+ok('la dirección sigue viajando como un solo campo (la Function no cambió)', pg.indexOf('direccion: armarDireccion()') !== -1 && pg.indexOf('delete cuerpo.senas') !== -1);
+ok('si la lista no carga, queda el párrafo de siempre', pg.indexOf("document.querySelector('.fila3').hidden = true") !== -1);
+ok('nota de la Ley 8204 bajo el ingreso', /Ley 8204 y la pol[ií]tica «Conozca a su cliente»/.test(pg));
+ok('precios dentro de las formas de pago', ['id="pr-a"', 'id="pr-s"', 'id="pr-t"'].every(function (t) { return pg.indexOf(t) !== -1; }));
+ok('el anual va resaltado con estrella', /class="op rec"[^>]*>\s*<input[^>]*value="Anual"/.test(pg) && pg.indexOf('&#9733; Anual') !== -1);
+ok('los valores que se envían siguen siendo los del formulario', ['value="Anual"', 'value="Semestral"', 'value="Trimestral"'].every(function (t) { return pg.indexOf(t) !== -1; }));
+ok('guía: "Tu plan" ya no va fijo en la pestaña Básico', guia.indexOf('Plan Básico (7-15 años) · Tu plan') === -1 && guia.indexOf("tabs[isPlus ? 0 : 1].textContent += ' · Tu plan'") !== -1);
+ok('guía: repuestos ya no repite "Tuyo"', guia.indexOf('match-tag">Tuyo<') === -1 && guia.indexOf('you-tag">Tu plan<') !== -1);
 ok('noindex', pg.indexOf('name="robots" content="noindex"') !== -1);
 
 console.log('\n' + pass + ' ok, ' + fail + ' fallas');
