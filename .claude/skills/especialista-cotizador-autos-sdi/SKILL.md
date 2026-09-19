@@ -5,7 +5,7 @@ description: ESPECIALISTA COTIZADOR AUTOS SDI — App web vanilla JS que extrae 
 
 # Especialista Cotizador SDI — Seguros Autos INS
 
-Leer COMPLETO antes de tocar código. **🔖 Hay un CHECKPOINT del 19 sep 2026 al inicio de "Pendientes": leerlo primero (lo que queda del formulario de cita — prueba del segundo agente y límites de Multiasistencia —, y G1/G4/G5 que JC tiene sin responder).** Estado a **19 septiembre 2026**: **formulario propio de cita `/cita/` EN PRODUCCIÓN, apagado por defecto** (interruptor "Formulario de cita" en ⚙; página con las 9 preguntas del Google Form + correo; Function `POST /cita/enviar` que confirma al cliente y avisa al agente por Resend; merge `6c35767`, tag `pre-cita-formulario-propio`; ver "Formulario propio de cita"). Previo (**18 septiembre 2026**): la pantalla de "Agendar mi cita" de la guía ya no parece una cita confirmada (`67f1f22`), y el flujo "Quiero estas asistencias" → guía → formulario prellenado está DISEÑADO y sin implementar. Previo (**17 septiembre 2026**): **los planes de asistencia del INS (cobertura ASI, SVA V32) ya están en producción** — módulo de datos único, tarjeta en el correo de cotización (apagada hasta el 28 sep por `asiDisponible()`), página `/asistencias/` con el configurador que suma la prima y **el cuarto envío de la consola: modal "Asistencias a cliente"** para clientes con póliza vigente (ver "Planes de asistencia del INS"). Previo (**13 septiembre 2026**): **los correos de Póliza activa y de Renovación confirmada estrenan la línea clara** (orden nuevo, tarjeta del vehículo compartida, iconos PNG en el cross-sell; ver "El correo de Póliza activa en línea clara" y "El correo de Renovación confirmada en línea clara"; con este segundo, los TRES correos de la consola van en línea clara). Previo (**10 septiembre 2026**): **TODA la app está en la línea clara SDI** —
+Leer COMPLETO antes de tocar código. **🔖 Hay un CHECKPOINT del 19 sep 2026 al inicio de "Pendientes": leerlo primero (lo que queda del formulario de cita — prueba del segundo agente —, y G1/G4/G5 que JC tiene sin responder).** Estado a **19 septiembre 2026**: **formulario propio de cita `/cita/` EN PRODUCCIÓN, apagado por defecto** (interruptor "Formulario de cita" en ⚙; página con las 9 preguntas del Google Form + correo; Function `POST /cita/enviar` que confirma al cliente y avisa al agente por Resend; merge `6c35767`, tag `pre-cita-formulario-propio`; ver "Formulario propio de cita"). Previo (**18 septiembre 2026**): la pantalla de "Agendar mi cita" de la guía ya no parece una cita confirmada (`67f1f22`), y el flujo "Quiero estas asistencias" → guía → formulario prellenado está DISEÑADO y sin implementar. Previo (**17 septiembre 2026**): **los planes de asistencia del INS (cobertura ASI, SVA V32) ya están en producción** — módulo de datos único, tarjeta en el correo de cotización (apagada hasta el 28 sep por `asiDisponible()`), página `/asistencias/` con el configurador que suma la prima y **el cuarto envío de la consola: modal "Asistencias a cliente"** para clientes con póliza vigente (ver "Planes de asistencia del INS"). Previo (**13 septiembre 2026**): **los correos de Póliza activa y de Renovación confirmada estrenan la línea clara** (orden nuevo, tarjeta del vehículo compartida, iconos PNG en el cross-sell; ver "El correo de Póliza activa en línea clara" y "El correo de Renovación confirmada en línea clara"; con este segundo, los TRES correos de la consola van en línea clara). Previo (**10 septiembre 2026**): **TODA la app está en la línea clara SDI** —
 consola, explicador y las cuatro sub-páginas (`/polizas-activas/`, `/renovaciones/`, `/cancelacion/`, `/marcas-recargo/`,
 commit `5f3719c`, tag `pre-subpaginas-linea-clara-10sep`; ver "Las sub-páginas en línea clara"). Solo los correos siguen
 aparte (Arial en el cliente). La consola (`index.html`) y el explicador (`/explicacion/`) fueron los primeros. La consola va por `css/linea-clara-consola.css` (commit `c5cc457`, tag
@@ -301,7 +301,39 @@ asistencia). La regla, en `_seccionesQueAplican(mapa)`:
 
 **Param `dd`**: la sección 3 estándar (deducible) muestra el monto real extraído del PDF (`.dd-amt` spans). Si `dd` no viene (correos viejos), queda el ₡400.000 histórico. Se formatea con `fmt()` (es-CR), mismo estilo que los precios.
 
-5 secciones numeradas (base; con `cb` pueden quedar de 2 a 4 — ver "Pasos 2, 3 y 4 dinámicos"): Coberturas (`s1`, título "¿Qué incluye tu cobertura?") → Asistencia (`s2`, Plan Plus 0-6 años / Plan Básico 7-15, solo con G o M) → Deducible (`s3`, o `s3a`/`s3b` con los flags og/ag) → Repuestos (`s4`) → 3 opciones de pago (`s5`).
+5 secciones numeradas (base; con `cb` pueden quedar de 2 a 4 — ver "Pasos 2, 3 y 4 dinámicos"): Coberturas (`s1`, título "¿Qué incluye tu cobertura?") → Asistencia (`s2`, tres planes Plus 0-6 / Básico 7-15 / Limitado 16-20 con tabla según G o G+M — ver "Asistencia en carretera por plan"; solo con G o M) → Deducible (`s3`, o `s3a`/`s3b` con los flags og/ag) → Repuestos (`s4`) → 3 opciones de pago (`s5`).
+
+### Asistencia en carretera por plan (19 sep 2026, merge `6b40576`) — EN PROD
+
+La sección 2 (`#s2`) mostraba **una sola tabla fija** (6×$175 · 7×$175 · 4×$125 · 4×costo · 4×$100 · 3×$100 · 3×$100) a todo
+vehículo, con dos pestañas decorativas. Esa tabla era el **"Plan Básico Extendido 7-15 años" de la versión 2025 del INS**: solo
+era correcta para un carro de 7-15 años con G+M; a un 7-15 con solo G le prometía de más en las 7 filas. Tag de rollback
+**`pre-asistencia-por-plan-19sep`**. Mockup (8 casos): `docs/superpowers/specs/2026-09-19-asistencia-por-plan-mockup.png`;
+script que lo generó y aplicó: `…/2026-09-19-asistencia-por-plan-mock.py`.
+
+- **Fuente:** `documentos-ins/co-multiasistencia-170.pdf` (INS, 3 feb 2026), leído **como imagen**. Tablas de *Particulares y
+  carga liviana · Uso personal*: G Limitado y Básico **p.12**, G Plus **p.13**, M Limitado Extendido y Plus Extendido **p.21**.
+  La tabla completa con página por cifra vive en `docs/fuentes-ins/REGLAS-INS-VERIFICADAS.md`.
+- 🔴 **G y M NO se suman (p.10):** con M rigen SOLO los límites del Plan Extendido. La guía decide por `cb`: trae `M` → tabla
+  Extendida y subtítulo "Coberturas G y M"; solo `G` → tabla de G y subtítulo "Cobertura G" (**la M no se menciona si la
+  cotización no la trae** — JC casi siempre vende las dos, pero a veces le piden cotizar sin M); sin `cb` (enlaces viejos) →
+  tabla de G como **piso** + nota "si tu póliza incluye la M, la cantidad es mayor". Nunca promete de más.
+- 🔴 **El PDF vigente NO trae el "Básico Extendido 7-15" de particulares/uso personal** (la p.21 salta de Limitado a Plus; el
+  de la p.24 es de USO COMERCIAL y no aplica). **Decisión de JC (opción B): no se publica esa cifra**; un 7-15 con M ve la
+  tabla de G + "tu cotización incluye además la M, que amplía la cantidad de servicios; tu agente te confirma el detalle"
+  (`extendidoSinTabla`). Las cifras de la versión 2025 (V30, p.20: 6/7/4/4/4/3/3) quedan anotadas en REGLAS por si el INS
+  confirma que fue un error de compaginación — **pendiente de JC: consultarlo al INS**. Si lo confirma, basta poner el arreglo
+  en `ASIST_LIMITES.basico.M` (o `python …mock.py real a`) y ajustar el test.
+- **Tres pestañas clicables** (`#planTabs [data-plan]`: plus · basico · limitado) que repintan `#svcGrid [data-svc]` y la nota
+  `#svcNota` ("por año calendario (1 de enero al 31 de diciembre)… Fuente: Condiciones Operativas…"). "· Tu plan" va en la del
+  vehículo. **Más de 20 años** (el INS no suscribe G ni M, p.7): se esconden pestañas, tabla y nota; queda un texto sin cifras.
+- Lógica pura entre los marcadores **`[GUIA-ASIST-PURO]`** (`ASIST_ORDEN`, `ASIST_LIMITES`, `_planAsistencia`,
+  `_limitesAsistencia`), justo después de `[/GUIA-CB-PURO]`. `tests/test-asistencia-por-plan.js` (30 checks) la extrae por los
+  marcadores. **Si el INS publica otra versión del PDF: releer las páginas como imagen, actualizar `ASIST_LIMITES`, el test y REGLAS.**
+- La edad sigue siendo `año actual − y`, como antes. El HTML estático (sin `y`) arranca en Básico G.
+- Smoke en localhost (`http-server -c-1`): 2015 con G+M, 2024 solo G, enlace sin `cb`, 2003; clic real en las pestañas; 375 px
+  sin desborde; consola 0; `_urlCita` y los 5 dots intactos. De paso: un check de `test-cita-url.js` buscaba la línea literal
+  vieja de "Tu plan" y se le apuntó a la nueva.
 
 ### Sección "📅 ¿Qué pasará el día de tu cita?" (`<section id="qtcita">`) — EN PROD desde 27 may 2026, commit `31ec130`
 
@@ -1541,9 +1573,7 @@ JC probó en producción: **llegaron los dos correos** ("ESTÁ PRECIOSO"). Pidi�
   se presenta ("soy Juan Carlos, tu agente del INS": DOS palabras del nombre, no una), **confirma el espacio** y avisa que **el día
   agendado, a primera hora, se le envía al correo un código QR para iniciar el aseguramiento**. WhatsApp lo abre editable: si el
   espacio no se puede, el agente lo corrige antes de enviar. `textoWa` en `cita-correos.mjs`; `test-cita-correos.mjs` sube a 33.
-- 🔴 **Hallazgo abierto (tarea aparte, en curso):** la tabla de límites de Multiasistencia de la guía (`#s2 .svc-grid`) es
-  FIJA desde el commit inicial e igual para todo vehículo, y no coincide limpio con `documentos-ins/co-multiasistencia-170.pdf`
-  (Plan Plus 0-6 años: remolque $200, no $175). No se tocó: hay que leer las tablas del PDF como imagen.
+- ✅ **Hallazgo cerrado el 19 sep 2026:** la tabla de límites de Multiasistencia de la guía era fija; ahora cambia según el plan y G / G+M. Ver "Asistencia en carretera por plan".
 
 ### Infraestructura (19 sep 2026)
 
@@ -1841,7 +1871,7 @@ repuestos y pasos, anual siempre resaltado) + **logo del INS en azul** → "dale
 7. **Params de URL del explicador** — `num()` normaliza montos del PDF ("10,000,000.00" → "10000000") antes de encodear. Sin eso `parseInt` da 10, Number da NaN.
 8. **base64 en chunks** — `_uint8ToBase64` parte en chunks de 8192 bytes para evitar `Maximum call stack size exceeded` en PDFs grandes.
 9. **CFG.GUIDE_URL apunta al dominio Netlify** — el custom domain `cotizador.appsegurosdigitales.com` también está en los orígenes autorizados de OAuth, así que ambos funcionan; pero si aparece un dominio NUEVO hay que agregarlo primero en Google Cloud Console o el login se rechaza. (Fue el caso del sitio Netlify duplicado `cotizador-autos-sdi.netlify.app`, que rechaza login porque no está autorizado — ver Pendientes.)
-10. **Tests** — `tests/*` son Node sin runner, **26 archivos** (19 sep 2026; los 4 nuevos son `test-cita-*`, ver "Formulario propio de cita"). Antes:
+10. **Tests** — `tests/*` son Node sin runner, **27 archivos** (19 sep 2026; los 4 `test-cita-*`, ver "Formulario propio de cita", y **`test-asistencia-por-plan.js`** (30 — cada cifra de la tabla de asistencia con su página del PDF)). Antes:
     **`test-asistencias.js`** (161 — los planes ASI, el correo a clientes con póliza, la página y el enlace `/p`).
     Del 27 ago: **`test-explicador-secciones.js`** (32 — la lógica pura del explicador dinámico, incluida la regla de
     asistencia G/M, extraída de `explicacion/index.html` por los marcadores `[GUIA-CB-PURO]`, + el circuito
@@ -1946,12 +1976,9 @@ nota Ley 8204; precios en formas de pago) → WhatsApp del agente con el aviso d
    página, la firma del correo, el "Responder" y el WhatsApp salgan con SUS datos y que "Cita solicitada" le llegue a él.
 2. Filtro de Gmail en las dos cuentas: `subject:"Cita solicitada" from:citas@appsegurosdigitales.com` → etiqueta
    "Citas de aseguramiento" + "No enviar nunca a spam".
-3. 🔴 **Límites de Multiasistencia de la guía** (`#s2 .svc-grid`): fijos e iguales para todo vehículo, no coinciden con
-   `documentos-ins/co-multiasistencia-170.pdf`. JC arrancó la verificación en una sesión aparte el 19 sep; **mirar su
-   resultado antes de tocar esa sección**. Va firmada con la licencia del agente.
-4. El Google Form de JC todavía dice "mediante una videollamada" (lo ven los enlaces viejos y el modo propio): lo edita él.
-5. Lista oficial de distritos (INS/INEC) si aparece → regenerar `js/cr-territorio.js`.
-6. Una semana sin tocar lógica del formulario (cooldown), salvo bugs.
+3. El Google Form de JC todavía dice "mediante una videollamada" (lo ven los enlaces viejos y el modo propio): lo edita él.
+4. Lista oficial de distritos (INS/INEC) si aparece → regenerar `js/cr-territorio.js`.
+5. Una semana sin tocar lógica del formulario (cooldown), salvo bugs.
 
 **Segunda etapa conversada (NO empezar sin pedido):** marca automática "Cita solicitada · fecha · franja" en
 Cotizaciones, cruzada por placa con dato mínimo sin información personal (embudo Cotizadas → Con cita → Con póliza).
