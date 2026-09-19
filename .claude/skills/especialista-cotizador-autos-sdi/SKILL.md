@@ -1517,6 +1517,27 @@ que armar los tres. Y el cliente salía a otra cara y volvía a escribir la plac
   navega a `../cita/?…` solo con `fc=1` **y** `ae` válido; si no, abre "Falta un paso" como siempre.
   🔴 El sitio web (`w`) **no viaja** a `/cita/`: la guía lo rellena con el de JC cuando falta.
 
+### Ajustes de JC tras su primera prueba real (19 sep 2026, misma tarde)
+
+JC probó en producción: **llegaron los dos correos** ("ESTÁ PRECIOSO"). Pidió cinco ajustes, publicados ese día:
+- **Guía · asistencia:** "· Tu plan" estaba escrito FIJO en la pestaña Básico; el JS solo movía la clase `active`. Ahora
+  lo pone el JS en `tabs[isPlus ? 0 : 1]`. **Guía · repuestos:** se quitó el "Tuyo" (`match-tag`); queda solo "Tu plan".
+- **`/cita/` · dirección:** tres selectores en cascada (`#f-provincia`, `#f-canton`, `#f-distrito`) + "Dirección por
+  señas" (`#f-direccion`). 🔴 **La dirección sigue viajando como UN solo campo** (`armarDireccion()` → "Heredia, Belén,
+  La Ribera. señas"): la Function y los correos NO cambiaron. `senas` solo valida en el navegador y se borra del cuerpo.
+  Si `js/cr-territorio.js` no carga, los selectores se esconden y queda el párrafo de siempre.
+- **`js/cr-territorio.js`** — `CR_TERRITORIO` `[{n, c:[{n, d:[]}]}]`. Fuente `ubicaciones.paginasweb.cr` (82 cantones,
+  desactualizada) **corregida a 84**: Monteverde y Puerto Jiménez pasan de distritos a cantones de Puntarenas. Pueden
+  faltar distritos nuevos y tildes ("La Asuncion"): por eso el distrito ofrece **"No aparece en la lista"**. No editar
+  nombres a mano sin fuente; si JC trae lista oficial (INS/INEC), regenerar.
+- **Ingreso:** nota "Se solicita para cumplir con la Ley 8204 y la política «Conozca a su cliente»".
+- **Formas de pago:** cada caja muestra su precio (`#pr-a/#pr-s/#pr-t`, de `pa/ps/pt`, formato 'de-DE'); la anual va
+  `.op.rec` con estrella y "Mejor precio". Los `value` que se envían siguen siendo Anual/Semestral/Trimestral.
+- `test-cita-url.js` sube a **77 checks**.
+- 🔴 **Hallazgo abierto (tarea aparte, en curso):** la tabla de límites de Multiasistencia de la guía (`#s2 .svc-grid`) es
+  FIJA desde el commit inicial e igual para todo vehículo, y no coincide limpio con `documentos-ins/co-multiasistencia-170.pdf`
+  (Plan Plus 0-6 años: remolque $200, no $175). No se tocó: hay que leer las tablas del PDF como imagen.
+
 ### Infraestructura (19 sep 2026)
 
 - **Resend**, cuenta `segurosdelins`, **plan gratuito = 3 dominios, 3.000 correos/mes, 100/día** (leído en su página
