@@ -84,7 +84,7 @@ ok('existe', pg.length > 0);
  'Por favor, indique la fecha en la que desea programar el aseguramiento de su vehículo',
  'Tome en cuenta que nuestro horario comercial es de lunes a viernes de 8:00 am a 5:00 pm',
  'Por favor, seleccione el rango de horas que prefiere para coordinar el aseguramiento.',
- 'Es necesario que a esa hora tenga disponible su vehículo para las fotografías que vamos a necesitar y verificar el estado de conservación mediante una videollamada.'
+ 'Es necesario que a esa hora tenga disponible su vehículo para las fotografías que vamos a necesitar y verificar el estado de conservación.'
 ].forEach(function (t) { ok('pregunta literal: ' + t.slice(0, 38), pg.indexOf(t) !== -1); });
 ['Anual', 'Semestral', 'Trimestral', '8:00 am a 10:00 am', '10:00 am a 12:00 md', '01:00 pm a 03:00 pm', '03:00 pm a 05:00 pm',
  'Menos de ₡500.000', 'De ₡500.000 a ₡1.000.000', 'De ₡1.000.000 a ₡2.000.000', 'De ₡2.000.000 a ₡4.000.000', 'Más de ₡4.000.000'
@@ -118,6 +118,7 @@ ok('el anual va resaltado con estrella', /class="op rec"[^>]*>\s*<input[^>]*valu
 ok('los valores que se envían siguen siendo los del formulario', ['value="Anual"', 'value="Semestral"', 'value="Trimestral"'].every(function (t) { return pg.indexOf(t) !== -1; }));
 ok('guía: "Tu plan" ya no va fijo en la pestaña Básico', guia.indexOf('Plan Básico (7-15 años) · Tu plan') === -1 && guia.indexOf("tabs[isPlus ? 0 : 1].textContent += ' · Tu plan'") !== -1);
 ok('guía: repuestos ya no repite "Tuyo"', guia.indexOf('match-tag">Tuyo<') === -1 && guia.indexOf('you-tag">Tu plan<') !== -1);
+ok('no promete videollamada: la inspeccion es con fotos (JC, 19 set 2026)', !/video\s?llamada/i.test(pg));
 ok('noindex', pg.indexOf('name="robots" content="noindex"') !== -1);
 
 console.log('\n' + pass + ' ok, ' + fail + ' fallas');
