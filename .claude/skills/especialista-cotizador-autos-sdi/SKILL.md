@@ -1534,6 +1534,10 @@ JC probó en producción: **llegaron los dos correos** ("ESTÁ PRECIOSO"). Pidi�
 - **Formas de pago:** cada caja muestra su precio (`#pr-a/#pr-s/#pr-t`, de `pa/ps/pt`, formato 'de-DE'); la anual va
   `.op.rec` con estrella y "Mejor precio". Los `value` que se envían siguen siendo Anual/Semestral/Trimestral.
 - `test-cita-url.js` sube a **77 checks**.
+- **WhatsApp del correo al agente (segunda prueba de JC, misma tarde):** el botón "Escribirle por WhatsApp" abre un mensaje que ahora
+  se presenta ("soy Juan Carlos, tu agente del INS": DOS palabras del nombre, no una), **confirma el espacio** y avisa que **el día
+  agendado, a primera hora, se le envía al correo un código QR para iniciar el aseguramiento**. WhatsApp lo abre editable: si el
+  espacio no se puede, el agente lo corrige antes de enviar. `textoWa` en `cita-correos.mjs`; `test-cita-correos.mjs` sube a 33.
 - 🔴 **Hallazgo abierto (tarea aparte, en curso):** la tabla de límites de Multiasistencia de la guía (`#s2 .svc-grid`) es
   FIJA desde el commit inicial e igual para todo vehículo, y no coincide limpio con `documentos-ins/co-multiasistencia-170.pdf`
   (Plan Plus 0-6 años: remolque $200, no $175). No se tocó: hay que leer las tablas del PDF como imagen.
