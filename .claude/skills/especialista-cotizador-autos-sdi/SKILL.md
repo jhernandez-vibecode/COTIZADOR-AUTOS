@@ -1482,7 +1482,7 @@ que armar los tres. Y el cliente salía a otra cara y volvía a escribir la plac
 | C5 | Remitente `citas@appsegurosdigitales.com` con el nombre del agente delante; "Responder" va al agente |
 | Ingreso | Selector por **rangos** (pedido de JC), opcional: <₡500k · 500k-1M · 1M-2M · 2M-4M · >4M |
 | Aviso | La pantalla de recibido destaca que si el espacio no se puede, **nos ponemos en contacto para reprogramar** |
-| Piloto | Solo JC lo prende. `tramites@segurosdelins.com` (su hermano) entra cuando JC lo dé por bueno |
+| Piloto | JC y, desde el 19 sep, `tramites@segurosdelins.com` (su hermano). Cada uno lo prende en SU ⚙ |
 | G2/G3 | **Sin efecto**: las asistencias viajan por `as=`, ya no hace falta pregunta de casillas ni relleno previo en Google |
 
 🔴 **El formulario de cita NO tiene pregunta condicional de cero kilómetros.** Esa vive en el formulario de
@@ -1556,7 +1556,7 @@ JC probó en producción: **llegaron los dos correos** ("ESTÁ PRECIOSO"). Pidi�
 - 🔴 **El DNS de `segurosdelins.com` (panel de Enom, `name-services.com`) NO se toca para esto.** Orden de JC: es su
   sitio comercial y su correo. Ese panel guarda todas las filas juntas.
 - **Variables del sitio en Netlify:** `CITA_FROM` = `citas@appsegurosdigitales.com` · `CITA_AGENTES` =
-  `jhernandez@segurosdelins.com` (coma para agregar más) · `CITA_API_KEY` (secreta; la creó y pegó JC, permiso
+  `jhernandez@segurosdelins.com,tramites@segurosdelins.com` (19 sep: JC pidió darle acceso a su hermano ese mismo día para que pruebe; coma para agregar más; **todo cambio pide un deploy nuevo** para que la Function lo tome) · `CITA_API_KEY` (secreta; la creó y pegó JC, permiso
   "Sending access"). Alta de un agente = agregar su correo a `CITA_AGENTES` + redeploy.
 - No hace falta casilla real en `appsegurosdigitales.com`: los correos llevan "Responder a".
 
