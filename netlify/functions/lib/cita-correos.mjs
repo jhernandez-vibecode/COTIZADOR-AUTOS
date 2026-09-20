@@ -85,7 +85,8 @@ export function correoAgente(d, opc) {
   const avisado = !opc || opc.clienteAvisado !== false;
   const asi = nombresAsi(d.as);
   const primas = [["Anual", d.pa], ["Semestral", d.ps], ["Trimestral", d.pt]].map(([k, v]) => colones(v) ? k + " " + colones(v) : "").filter(Boolean).join(" · ");
-  const veh = [d.v, d.y].filter(Boolean).join(" ");
+  // El vehículo suele traer ya el año ("Rural 2024"): no repetirlo.
+  const veh = [d.v, d.y && String(d.v || "").indexOf(d.y) === -1 ? d.y : ""].filter(Boolean).join(" ");
   const placaAsunto = esCeroKm(d.placa) ? "0 KM" : d.placa;
   const wa = waIntl(d.telefono);
   // El mensaje que el agente le manda al cliente desde el botón (JC, 19 set 2026). WhatsApp lo abre

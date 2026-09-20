@@ -45,6 +45,10 @@ ok('WhatsApp al cliente: saluda por el nombre de pila y se presenta el agente', 
 ok('WhatsApp al cliente: trae la fecha y la franja', waTxt.indexOf('martes 22 de setiembre de 2026') !== -1 && waTxt.indexOf('03:00 pm a 05:00 pm') !== -1);
 ok('WhatsApp al cliente: avisa del codigo QR a primera hora del dia agendado', /a primera hora/.test(waTxt) && /código QR/.test(waTxt) && /iniciar el aseguramiento/.test(waTxt));
 ok('WhatsApp al cliente: trato de vos, sin usted', !/\busted\b/i.test(waTxt) && /escaneás/.test(waTxt));
+// 19 set 2026 (JC): el vehiculo ya trae el ano ("Rural 2024") y salia "Rural 2024 2024".
+const conAno = correoAgente(Object.assign({}, d, { v: 'Rural 2024', y: '2024' }), { clienteAvisado: true });
+ok('agente: no repite el ano si el vehiculo ya lo trae', conAno.html.indexOf('Rural 2024 2024') === -1 && conAno.html.indexOf('Rural 2024') !== -1 && conAno.texto.indexOf('2024 2024') === -1);
+ok('agente: si el vehiculo NO trae el ano, se agrega', ag.html.indexOf('TOYOTA RAV4 2021') !== -1);
 ok('agente: bloque para copiar', ag.html.indexOf('Para copiar y pegar') !== -1);
 ok('agente: sin nota de fallo cuando el cliente fue avisado', ag.html.indexOf('No se pudo enviar la confirmaci') === -1);
 ok('agente: con nota cuando NO fue avisado', correoAgente(d, { clienteAvisado: false }).html.indexOf('No se pudo enviar la confirmaci') !== -1);

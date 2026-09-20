@@ -219,7 +219,8 @@ a{color:var(--blue)}
   if (ag.l) $('agLic').textContent = 'Lic. SUGESE ' + ag.l;
   $('pieAg').textContent = 'Gestionado por ' + ag.n + ', agente exclusivo del INS' + (ag.l ? ' · Licencia SUGESE ' + ag.l : '');
   if (cot.c) $('heroT').textContent = cot.c.split(/\s+/)[0] + ', agendá tu aseguramiento';
-  var veh = [cot.v, cot.y].filter(Boolean).join(' ');
+  // El vehículo de la cotización suele traer ya el año ("Rural 2024"): no repetirlo.
+  var veh = cot.v + (cot.y && cot.v.indexOf(cot.y) === -1 ? (cot.v ? ' ' : '') + cot.y : '');
   var planes = (typeof PLANES_ASI !== 'undefined' ? cot.as.split('.') : []).map(function (id) {
     var pl = (typeof PLANES_ASI !== 'undefined' ? PLANES_ASI : []).filter(function (x) { return x.id === id; })[0]; return pl ? pl.nom : '';
   }).filter(Boolean);

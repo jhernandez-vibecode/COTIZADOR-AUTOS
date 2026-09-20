@@ -120,6 +120,7 @@ ok('guía: "Tu plan" ya no va fijo en la pestaña Básico', guia.indexOf('Plan B
 ok('guía: repuestos ya no repite "Tuyo"', guia.indexOf('match-tag">Tuyo<') === -1 && guia.indexOf('you-tag">Tu plan<') !== -1);
 ok('no promete videollamada: la inspeccion es con fotos (JC, 19 set 2026)', !/video\s?llamada/i.test(pg));
 ok('la pantalla de fallo muestra el motivo y el correo del agente (diagnostico por foto)', pg.indexOf('id="falloDet"') !== -1 && pg.indexOf("fallo(r, x.st, x.j && x.j.error)") !== -1);
+ok('la pagina no repite el ano del vehiculo', pg.indexOf("[cot.v, cot.y].filter(Boolean).join(' ')") === -1 && pg.indexOf('cot.v.indexOf(cot.y) === -1') !== -1);
 ok('noindex', pg.indexOf('name="robots" content="noindex"') !== -1);
 
 console.log('\n' + pass + ' ok, ' + fail + ' fallas');
