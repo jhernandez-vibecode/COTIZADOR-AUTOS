@@ -1575,6 +1575,35 @@ JC probó en producción: **llegaron los dos correos** ("ESTÁ PRECIOSO"). Pidi�
   espacio no se puede, el agente lo corrige antes de enviar. `textoWa` en `cita-correos.mjs`; `test-cita-correos.mjs` sube a 33.
 - ✅ **Hallazgo cerrado el 19 sep 2026:** la tabla de límites de Multiasistencia de la guía era fija; ahora cambia según el plan y G / G+M. Ver "Asistencia en carretera por plan".
 
+### 🔴 "No pudimos enviar tu solicitud" con un agente recién dado de alta (19 sep 2026, noche) — RESUELTO
+
+Al segundo agente (`tramites@`) le falló tres veces seguidas aunque ya estaba en `CITA_AGENTES`. **Causa: el correo del
+agente (`ae`) queda PEGADO en el enlace de la guía cuando se envía la cotización.** Corrigió su ⚙ y siguió probando sobre la
+MISMA cotización, que llevaba el correo anterior → 403 cada vez. Se arregló con: ⚙ → Correo exacto → Guardar → **cotización
+NUEVA** → agendar desde ese correo.
+
+Cómo se diagnosticó, en el orden que sirve (y sin adivinar):
+1. **Resend → Emails y Logs:** cero intentos del agente = la Function lo rechazó ANTES de enviar (403/429/5xx), no es
+   entrega ni Spam. (Un 400 con campo conocido no da esa pantalla: marca el campo y se queda en el formulario.)
+2. **Consulta que no envía nada:** `POST /cita/enviar` con `{"verificar":true,"ae":"correo"}` → `{autorizado}`. Tolera
+   mayúsculas y espacios. Sirve para probar si un correo está en la lista tras un deploy.
+3. **Prueba real controlada** (con permiso de JC): POST completo con `correo: delivered@resend.dev` (dirección de prueba de
+   Resend: simula la entrega, no le llega a nadie) y `ae` = el agente. Primero con JC (¿se rompió algo con los últimos
+   deploys?), después con el agente afectado. Si llega, el servicio está sano y el problema es el enlace.
+4. Desde ese día la **pantalla de fallo muestra en letra chica** `Detalle para tu agente: código N · motivo · agente: ae`
+   (`#falloDet`): una foto alcanza. Y la Function deja `console.warn("[cita] rechazada", estado, campo, ae-si-es-el-motivo)`
+   — nada del cliente.
+
+Reglas que deja:
+- **Alta de un agente = 4 pasos:** agregar su correo a `CITA_AGENTES` → deploy → él pone ese MISMO correo en su ⚙ y marca
+  "Formulario SDI" (sin aviso rojo al guardar) → **cotización nueva**. Decirle el cuarto paso ANTES de que pruebe.
+- El nombre del perfil es el que ve el cliente: la página usa la PRIMERA palabra ("llamar a Luis"), el WhatsApp las dos
+  primeras. Si el agente se presenta con su segundo nombre, que lo escriba así en ⚙.
+- 🔴 **Corrección de un dato que di mal:** SASINS **sí** envía por esta cuenta de Resend (respaldos y hallazgos a JC, ~10
+  al mes); lo que nunca se verificó es el dominio `send.segurosdelins.com`. El cupo es compartido, y sobra.
+- La sesión de Netlify en el Chrome de Claude caduca: para leer los registros de la Function JC tiene que volver a iniciar
+  sesión (Claude no ingresa credenciales). Por eso existe `#falloDet`.
+
 ### Infraestructura (19 sep 2026)
 
 - **Resend**, cuenta `segurosdelins`, **plan gratuito = 3 dominios, 3.000 correos/mes, 100/día** (leído en su página
@@ -1971,9 +2000,7 @@ nota Ley 8204; precios en formas de pago) → WhatsApp del agente con el aviso d
 (3.000/mes, 100/día) sobra: no proponer el plan pago por esto.
 
 **📌 LO QUE QUEDA:**
-1. **Prueba de Fernando/`tramites@`** (segundo agente REAL, nunca probado): en SU navegador, ⚙ con correo exacto
-   `tramites@segurosdelins.com` → "Formulario SDI" → cotización de prueba a un correo personal → agendar. Revisar que la
-   página, la firma del correo, el "Responder" y el WhatsApp salgan con SUS datos y que "Cita solicitada" le llegue a él.
+1. ~~Prueba del segundo agente (`tramites@`)~~ — **HECHA el 19 sep (noche): le funcionó** tras enviar una cotización nueva (ver "No pudimos enviar tu solicitud con un agente recién dado de alta").
 2. Filtro de Gmail en las dos cuentas: `subject:"Cita solicitada" from:citas@appsegurosdigitales.com` → etiqueta
    "Citas de aseguramiento" + "No enviar nunca a spam".
 3. El Google Form de JC todavía dice "mediante una videollamada" (lo ven los enlaces viejos y el modo propio): lo edita él.
