@@ -258,7 +258,7 @@
           <div class="success-title">¡Correo enviado!</div>
           <div class="success-msg" id="asiDoneMsg"></div>
           <div class="success-actions">
-            <a class="btn btn-send btn-step" id="btnAsiWa" href="#" target="_blank" rel="noopener" style="text-decoration:none;"><span class="btn-step-num">1</span> Avisar al cliente por WhatsApp</a>
+            <a class="btn btn-send btn-wa btn-step" id="btnAsiWa" href="#" target="_blank" rel="noopener" style="text-decoration:none;"><span class="btn-step-num">1</span> Avisar al cliente por WhatsApp</a>
             <button class="btn btn-primary btn-step" id="btnAsiOtro"><span class="btn-step-num">2</span> Otro cliente</button>
           </div>
           <p class="asi-hint" style="margin-top:14px;">El WhatsApp lleva el enlace corto al configurador, ya con su prima adentro. Si no pusiste su número, elegís el contacto dentro de WhatsApp.</p>
@@ -715,7 +715,7 @@
             <label class="form-label" for="m-wa-cliente" style="margin-bottom:0;">WhatsApp del cliente <span style="font-weight:400;color:var(--gray-500);">(opcional)</span></label>
             <input class="form-control" id="m-wa-cliente" type="tel" inputmode="numeric" placeholder="8888-8888" autocomplete="off" />
             <span style="font-size:11px;color:var(--gray-500);line-height:1.4;">Si lo ponés, el botón abre el chat directo del cliente con la guía. Si lo dejás vacío, elegís el contacto dentro de WhatsApp.</span>
-            <a class="btn btn-send btn-step" id="btnWhatsApp" href="#" target="_blank" rel="noopener"
+            <a class="btn btn-send btn-wa btn-step" id="btnWhatsApp" href="#" target="_blank" rel="noopener"
                style="text-decoration:none;"><span class="btn-step-num">1</span> Compartir guía por WhatsApp</a>
           </div>
           <button class="btn btn-primary btn-step" id="btnReset"><span class="btn-step-num">2</span> Enviar otra cotización</button>
@@ -731,8 +731,9 @@
        toca la app se agrega una linea aca. -->
   <footer class="app-foot">
     <details>
-      <summary>Última actualización: 19 set 2026 — La guía del cliente muestra los límites de asistencia según el plan del vehículo</summary>
+      <summary>Última actualización: 21 set 2026 — El botón de WhatsApp ahora es verde</summary>
       <ul>
+        <li><b>21 set 2026</b> — <b>El botón de WhatsApp ahora es verde</b> en las cuatro pantallas de envío (cotización, póliza activa, renovación y asistencias), para distinguirlo de un vistazo de los botones azules. Todo lo demás funciona igual.</li>
         <li><b>19 set 2026</b> — <b>En la guía del cliente, la tabla de la asistencia en carretera ahora cambia según el vehículo.</b> Antes mostraba los mismos límites a todos. Ahora muestra los del plan que le toca por antigüedad (Plus 0-6 años, Básico 7-15, Limitado 16-20) y distingue si la cotización trae la Multiasistencia Extendida (M) o solo la G: con M salen los límites del Plan Extendido, y sin M ya no se menciona la M. El cliente puede tocar las tres pestañas para comparar. Cada cifra se verificó contra las Condiciones Operativas de Multiasistencia del INS (febrero 2026). Para carros de 7 a 15 años con M, ese documento no trae la tabla: la guía muestra los límites de la G y avisa que la M los amplía.</li>
         <li><b>19 set 2026</b> — <b>Ajustes tras la primera prueba real del formulario de cita.</b> En la guía del cliente, la etiqueta "Tu plan" de la asistencia en carretera ahora va en el plan que le corresponde al año del vehículo (antes salía siempre en el de 7 a 15 años), y en repuestos ya no se repite "Tu plan" y "Tuyo". En el formulario de cita, la dirección se elige por provincia, cantón y distrito y debajo se escriben las señas; bajo el ingreso se aclara que se pide por la Ley 8204 (Conozca a su cliente); y cada forma de pago muestra su precio, con la anual resaltada.</li>
         <li><b>19 set 2026</b> — <b>Nuevo: formulario de cita propio, opcional.</b> En Configuración hay un apartado "Formulario de cita" con dos opciones. "Mi enlace propio" es lo de siempre. Con "Formulario SDI", cuando el cliente toca "Agendar mi cita" (en la guía o en el correo) se abre una página con su nombre y licencia de agente, la placa ya puesta y las mismas preguntas del formulario de Google; al enviarla, el cliente recibe de inmediato un correo de "Solicitud recibida" y a usted le llega otro, "Cita solicitada", con todas las respuestas y los datos de la cotización. Si el envío fallara, el cliente puede mandarle sus respuestas por WhatsApp, ya escritas. Viene apagado: quien no lo active sigue exactamente como hasta hoy, y los enlaces ya enviados no cambian.</li>

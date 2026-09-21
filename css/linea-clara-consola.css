@@ -173,6 +173,10 @@ b,strong{font-weight:600}
 .btn-secondary:hover:not(:disabled){background:var(--lc-blue-soft)}
 .btn-send{background:var(--lc-blue);border:1px solid var(--lc-blue);min-height:48px;font-size:15px;padding:0 22px}
 .btn-send:hover:not(:disabled){background:var(--lc-blue-ink);transform:none;box-shadow:none}
+/* El envío por WhatsApp es el único botón verde (pedido de JC, 21 sep 2026):
+   se distingue de un vistazo del azul de "enviar otra". #047857 + blanco = 5,48:1. */
+.btn-wa,.btn-send.btn-wa{background:#047857;border:1px solid #047857;color:#fff}
+.btn-wa:hover:not(:disabled),.btn-send.btn-wa:hover:not(:disabled){background:#065f46;border-color:#065f46}
 .btn-step{min-height:48px;padding:0 18px}
 .btn-step-num{background:rgba(255,255,255,.22)}
 .btn:focus-visible{outline:3px solid rgba(3,105,161,.35);outline-offset:2px}
