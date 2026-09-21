@@ -2319,6 +2319,10 @@ cosa que se haga en este repo:
 - Hay tablas del INS **incrustadas como imagen**: el texto no las trae y el dato
   desaparece en silencio. Si un PDF del INS "no tiene" un dato que debería tener,
   rasterizar la página y leerla como imagen antes de concluir nada.
+
+## El botón de WhatsApp es verde (21 sep 2026, `75e19fc`) — EN PROD
+
+Pedido de JC (mismo día en Vital 360 y la consola de Asistencia Viajero; Hogar NO, por decisión suya). Clase **`.btn-wa`** en `css/linea-clara-consola.css` (`#047857` + blanco = 5,48:1; hover `#065f46`), puesta en los 4 botones de aviso: `#btnWhatsApp` de `index.html`, `/polizas-activas/` y `/renovaciones/`, y `#btnAsiWa` del modal de asistencias. Es la ÚNICA excepción al "un solo azul" de la línea clara: `.btn-send` sin `.btn-wa` sigue azul. No se tocó "Preparar aviso por WhatsApp" de renovaciones (no abre WhatsApp, avanza de paso). Verificado con `getComputedStyle` en localhost y en producción.
 
 ---
 
