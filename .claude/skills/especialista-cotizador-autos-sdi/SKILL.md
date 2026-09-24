@@ -2003,8 +2003,8 @@ nota Ley 8204; precios en formas de pago) → WhatsApp del agente con el aviso d
 1. ~~Prueba del segundo agente (`tramites@`)~~ — **HECHA el 19 sep (noche): le funcionó** tras enviar una cotización nueva (ver "No pudimos enviar tu solicitud con un agente recién dado de alta").
 2. Filtro de Gmail en las dos cuentas: `subject:"Cita solicitada" from:citas@appsegurosdigitales.com` → etiqueta
    "Citas de aseguramiento" + "No enviar nunca a spam".
-3. El Google Form de JC todavía dice "mediante una videollamada" (lo ven los enlaces viejos y el modo propio): lo edita él.
-4. Lista oficial de distritos (INS/INEC) si aparece → regenerar `js/cr-territorio.js`.
+3. El Google Form de JC todavía dice "mediante una videollamada" (lo ven los enlaces viejos y el modo propio): lo edita él.
+4. Lista oficial de distritos (INS/INEC) si aparece → regenerar `js/cr-territorio.js`.
 5. Una semana sin tocar lógica del formulario (cooldown), salvo bugs.
 
 **Segunda etapa conversada (NO empezar sin pedido):** marca automática "Cita solicitada · fecha · franja" en
@@ -2128,6 +2128,19 @@ explicador: "hasta 5 años o 60.000 km").
 
      Queda por revisar el texto fijo de la sección 4 del explicador ("hasta 5 años o 60.000 km"), que es literal
      y no depende del parser. `_reposFixedIndex` se apaga solo con 4 columnas, así que manda `_labelMatch`.
+
+     🔖 **23 sep 2026 — arrancado y EN PAUSA, esperando la fuente de JC.** JC: *"ya no se usa el kilometraje,
+     solamente los años"*. Confirmado en `Downloads/Matriz de Cambios SVA V32 (2).pdf` (Cláusula 26, p.8-9): la V32
+     quita el km y dice solo "período de uso establecido en la Solicitud de Seguro, contado a partir de su año de
+     fabricación" (Plus: "según el rango seleccionado"). 🔴 **Ningún documento que tenemos trae los AÑOS**: la
+     circular promete un HTML adjunto con el esquema, pero el correo de la circular en Gmail (hilo
+     `1a069c14ed7029bd`) solo trae matriz, `Dossier Autos.pdf` (asistencias, sin repuestos) y circular. JC dijo
+     *"voy a conseguir la circular"*. **No poner años sin esa fuente** (licencia SUGESE).
+     Lo que hay que cambiar cuando llegue (texto con km hoy): `js/email-template.js` `_sustitucionText` (casos
+     `plus` 8 años/80.000 km y `garantia` 5 años/60.000 km — esta opción ya no existe en V32) y
+     `explicacion/index.html` sección 4 (4 filas `.qrow` con "≤36,000 km", "≤60,000 km", "≤80,000 km", "más de
+     36,000 km"; falta fila para **Original Multimarca**, que hoy comparte el código `sr=0`). Enlaces V31 ya
+     enviados deben conservar su texto. Mockup primero, como siempre.
   🔴 **Los datos del dossier se verifican leyendo cada página COMO IMAGEN.** El emparejamiento
   servicio↔límite por coordenadas se equivoca en las filas apretadas (Salud Premium). Conteos correctos:
   11 · 8 · 16 · 30 · 7 · 21.
@@ -2319,7 +2332,7 @@ cosa que se haga en este repo:
 - Hay tablas del INS **incrustadas como imagen**: el texto no las trae y el dato
   desaparece en silencio. Si un PDF del INS "no tiene" un dato que debería tener,
   rasterizar la página y leerla como imagen antes de concluir nada.
-
+
 ## El botón de WhatsApp es verde (21 sep 2026, `75e19fc`) — EN PROD
 
 Pedido de JC (mismo día en Vital 360 y la consola de Asistencia Viajero; Hogar NO, por decisión suya). Clase **`.btn-wa`** en `css/linea-clara-consola.css` (`#047857` + blanco = 5,48:1; hover `#065f46`), puesta en los 4 botones de aviso: `#btnWhatsApp` de `index.html`, `/polizas-activas/` y `/renovaciones/`, y `#btnAsiWa` del modal de asistencias. Es la ÚNICA excepción al "un solo azul" de la línea clara: `.btn-send` sin `.btn-wa` sigue azul. No se tocó "Preparar aviso por WhatsApp" de renovaciones (no abre WhatsApp, avanza de paso). Verificado con `getComputedStyle` en localhost y en producción.
