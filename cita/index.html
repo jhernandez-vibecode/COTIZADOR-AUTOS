@@ -156,7 +156,7 @@ a{color:var(--blue)}
     <div class="grupo"><h3>Tu vehículo y tu pago</h3>
       <div class="campo" data-c="placa"><label for="f-placa">Número de Placa o Indique si es Cero Kilómetros <span class="req">*</span></label><input id="f-placa" type="text" maxlength="80"><span class="pre-n" id="placaNota" hidden>Viene de tu cotización. Corregila si hace falta.</span><span class="err" hidden></span></div>
       <div class="campo" data-c="formaPago"><span class="lb">Forma de pago que desea contratar <span class="req">*</span></span>
-        <div class="ops c3"><label class="op rec"><input type="radio" name="formaPago" id="f-fp-a" value="Anual"><span class="op-col"><b>&#9733; Anual</b><i class="op-pr" id="pr-a" hidden></i><em class="op-tag" style="font-style:normal">Mejor precio</em></span></label><label class="op"><input type="radio" name="formaPago" id="f-fp-s" value="Semestral"><span class="op-col"><b>Semestral</b><i class="op-pr" id="pr-s" hidden></i></span></label><label class="op"><input type="radio" name="formaPago" id="f-fp-t" value="Trimestral"><span class="op-col"><b>Trimestral</b><i class="op-pr" id="pr-t" hidden></i></span></label></div><span class="err" hidden></span></div>
+        <div class="ops c3"><label class="op rec"><input type="radio" name="formaPago" id="f-fp-a" value="Anual"><span class="op-col"><b>&#9733; Anual</b><i class="op-pr" id="pr-a" hidden></i><em class="op-tag" style="font-style:normal">Mejor precio</em></span></label><label class="op"><input type="radio" name="formaPago" id="f-fp-s" value="Semestral"><span class="op-col"><b>Semestral</b><i class="op-pr" id="pr-s" hidden></i></span></label><label class="op"><input type="radio" name="formaPago" id="f-fp-t" value="Trimestral"><span class="op-col"><b>Trimestral</b><i class="op-pr" id="pr-t" hidden></i></span></label></div><span class="ay" id="fpNota" hidden>Los montos ya incluyen las asistencias que elegiste, con el recargo por fraccionamiento y el IVA.</span><span class="err" hidden></span></div>
     </div>
 
     <div class="grupo"><h3>Tu cita</h3>
@@ -221,9 +221,10 @@ a{color:var(--blue)}
   if (cot.c) $('heroT').textContent = cot.c.split(/\s+/)[0] + ', agendá tu aseguramiento';
   // El vehículo de la cotización suele traer ya el año ("Rural 2024"): no repetirlo.
   var veh = cot.v + (cot.y && cot.v.indexOf(cot.y) === -1 ? (cot.v ? ' ' : '') + cot.y : '');
-  var planes = (typeof PLANES_ASI !== 'undefined' ? cot.as.split('.') : []).map(function (id) {
-    var pl = (typeof PLANES_ASI !== 'undefined' ? PLANES_ASI : []).filter(function (x) { return x.id === id; })[0]; return pl ? pl.nom : '';
+  var planesObj = (typeof PLANES_ASI !== 'undefined' ? cot.as.split('.') : []).map(function (id) {
+    return PLANES_ASI.filter(function (x) { return x.id === id; })[0];
   }).filter(Boolean);
+  var planes = planesObj.map(function (pl) { return pl.nom; });
   if (veh || cot.p || planes.length) {
     $('resumen').hidden = false; $('resVeh').textContent = veh || 'Tu vehículo';
     if (/^[A-Za-z]{3}\d{3}$/.test(cot.p)) { $('chapa').hidden = false; $('chapaN').textContent = cot.p.slice(0, 3).toUpperCase() + ' ' + cot.p.slice(3); }
@@ -234,9 +235,18 @@ a{color:var(--blue)}
   }
   // ---- precios de la cotización dentro de cada forma de pago (pa/ps/pt del enlace) ----
   function colones(v) { var n = Number(String(v || '').replace(/\D/g, '')); return n > 0 ? '\u20a1' + n.toLocaleString('de-DE') : ''; }
-  [['pr-a', cot.pa, ' al año'], ['pr-s', cot.ps, ' por semestre'], ['pr-t', cot.pt, ' por trimestre']].forEach(function (x) {
-    var t = colones(x[1]); if (t) { $(x[0]).textContent = t + x[2]; $(x[0]).hidden = false; }
+  // Con asistencias elegidas en el configurador (28 set 2026), cada monto les suma su
+  // cuota de ESA forma de pago: recargo por fraccionamiento del INS + IVA (asiCosto).
+  var conAsi = planesObj.length && typeof asiCosto === 'function';
+  [['pr-a', cot.pa, ' al año', 'a'], ['pr-s', cot.ps, ' por semestre', 's'], ['pr-t', cot.pt, ' por trimestre', 't']].forEach(function (x) {
+    var n = Number(String(x[1] || '').replace(/\D/g, ''));
+    if (n > 0 && conAsi) n += planesObj.reduce(function (a, pl) { return a + asiCosto(pl.prima, x[3]).cuota; }, 0);
+    var t = colones(n); if (t) { $(x[0]).textContent = t + x[2]; $(x[0]).hidden = false; }
   });
+  if (conAsi && (cot.pa || cot.ps || cot.pt)) { $('fpNota').hidden = false; }
+  // Forma de pago que el cliente ya eligió en el configurador.
+  var FP_ID = { a: 'f-fp-a', s: 'f-fp-s', t: 'f-fp-t' };
+  if (FP_ID[g('fp')]) $(FP_ID[g('fp')]).checked = true;
 
   // ---- dirección: provincia > cantón > distrito (js/cr-territorio.js) ----
   var OTRO = 'No aparece en la lista';

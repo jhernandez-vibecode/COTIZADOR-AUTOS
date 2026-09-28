@@ -191,7 +191,8 @@ function buildEmail(params) {
   // para que la pagina le muestre en cuanto quedaria el seguro.
   const asistenciasHtml = conAsistencias
     ? _bloqueAsistencias({
-        url: _buildPlanesUrl({ clientName: nombre, vehicle: vehiculo, plate: _placaEsRelleno(p.plate, p.plateClass) ? '' : plate, primaAnual: prices.anual }),
+        url: _buildPlanesUrl({ clientName: nombre, vehicle: vehiculo, plate: _placaEsRelleno(p.plate, p.plateClass) ? '' : plate, year: p.year,
+                               primaAnual: prices.anual, primaSemestral: prices.semestral, primaTrimestral: prices.trimestral }),
         fontFam: fontFam
       })
     : '';
@@ -678,9 +679,20 @@ function _buildPlanesUrl(extras) {
   add('c',  x.clientName);
   add('v',  x.vehicle);
   add('p',  x.plate);
+  add('y',  x.year);
   add('pa', num(x.primaAnual));
+  // ps/pt (28 set 2026): la pagina muestra las tres formas de pago de la cotizacion.
+  add('ps', num(x.primaSemestral));
+  add('pt', num(x.primaTrimestral));
   add('pv', num(x.primaVigente));
   if (/^[astm]$/.test(String(x.formaPago || ''))) add('fp', x.formaPago);
+  // Cotizacion + formulario de cita SDI: la pagina termina en /cita/ con la forma
+  // de pago y las asistencias elegidas. A clientes con poliza (pv) no aplica.
+  if (x.primaAnual && !x.primaVigente && _citaSdi()) {
+    params.push('fc=1');
+    params.push('ae=' + encodeURIComponent(CFG.FROM_EMAIL));
+    if (CFG.PHONE) params.push('tel=' + encodeURIComponent(CFG.PHONE));
+  }
   return params.length ? base + (base.indexOf('?') === -1 ? '?' : '&') + params.join('&') : base;
 }
 

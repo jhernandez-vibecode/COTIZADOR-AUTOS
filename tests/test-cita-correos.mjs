@@ -1,5 +1,5 @@
 /** Tests de los dos correos de la cita. Datos INVENTADOS. node tests/test-cita-correos.mjs */
-import { correoCliente, correoAgente, fechaLarga, fechaCorta, nombrePila } from '../netlify/functions/lib/cita-correos.mjs';
+import { correoCliente, correoAgente, fechaLarga, fechaCorta, nombrePila, totalConAsistencias } from '../netlify/functions/lib/cita-correos.mjs';
 
 let pass = 0, fail = 0;
 function ok(n, c) { if (c) pass++; else { fail++; console.error('FAIL ' + n); } }
@@ -59,6 +59,15 @@ ok('escapa en el correo del cliente', correoCliente(xss).html.indexOf('<b>x</b>'
 
 const cero = Object.assign({}, d, { placa: 'Cero kilómetros' });
 ok('0 km: el asunto del agente dice 0 KM', correoAgente(cero, { clienteAvisado: true }).asunto.indexOf('· 0 KM ·') !== -1);
+
+// 28 set 2026: total de la forma elegida con las asistencias. Semestral 308.283 + Mascota
+// (7.200 ÷ 2 × 1,08 × 1,13 = 4.393) + Salud Premium (42.000 ÷ 2 × 1,08 × 1,13 = 25.628) = 338.304.
+ok('total semestral con asistencias (recargo 8 % + IVA)', totalConAsistencias(d) === '₡338.304 por semestre (cotización ₡308.283 + asistencias ₡30.021)');
+ok('total trimestral (recargo 11 % + IVA)', totalConAsistencias({ ...d, formaPago: 'Trimestral' }).indexOf('₡173.851 por trimestre') === 0);
+ok('total anual (solo IVA)', totalConAsistencias({ ...d, formaPago: 'Anual' }).indexOf('₡626.487 al año') === 0);
+ok('sin asistencias no hay total', totalConAsistencias({ ...d, as: [] }) === '');
+ok('sin la prima de esa forma no hay total', totalConAsistencias({ ...d, ps: '' }) === '');
+ok('agente: el correo trae el total con asistencias', ag.html.indexOf('Total con asistencias') !== -1 && ag.html.indexOf('₡338.304') !== -1);
 
 console.log(pass + ' ok, ' + fail + ' fallas');
 process.exit(fail ? 1 : 0);

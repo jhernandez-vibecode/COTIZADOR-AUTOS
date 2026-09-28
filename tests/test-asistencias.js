@@ -131,6 +131,15 @@ ok('wa del agente viaja', /[?&]wa=8888-0000/.test(u));
 ok('fp invalido no viaja', !/[?&]fp=/.test(_buildPlanesUrl({ formaPago: 'x' })));
 ok('prima en formato US "570,891.00" → 570891', /[?&]pa=570891/.test(_buildPlanesUrl({ primaAnual: '570,891.00' })));
 ok('prima basura no viaja', !/[?&]pv=/.test(_buildPlanesUrl({ primaVigente: 'abc' })));
+// 28 set 2026: la cotizacion manda sus tres formas de pago y, con el formulario SDI, la ficha para /cita/.
+var uCot = _buildPlanesUrl({ primaAnual: '570.891,00', primaSemestral: '308.283,00', primaTrimestral: '158.423,00', year: 2021 });
+ok('ps y pt viajan normalizados', /[?&]ps=308283/.test(uCot) && /[?&]pt=158423/.test(uCot));
+ok('y viaja', /[?&]y=2021/.test(uCot));
+ok('modo propio: sin fc/ae', !/[?&](fc|ae)=/.test(uCot));
+CFG.CITA_MODO = 'sdi'; CFG.CITA_URL = 'https://ejemplo.test/cita/';
+ok('formulario SDI + cotizacion: fc, ae y tel viajan', /[?&]fc=1/.test(_buildPlanesUrl({ primaAnual: '570891' })) && /[?&]ae=agente%40ejemplo\.test/.test(_buildPlanesUrl({ primaAnual: '570891' })) && /[?&]tel=8888-0000/.test(_buildPlanesUrl({ primaAnual: '570891' })));
+ok('formulario SDI + cliente con poliza (pv): SIN fc', !/[?&]fc=/.test(_buildPlanesUrl({ primaVigente: '487300', formaPago: 's' })));
+delete CFG.CITA_MODO; delete CFG.CITA_URL;
 
 console.log('=== asiParseMonto ===');
 ok('"487.300" → 487300', E.asiParseMonto('487.300') === 487300);
@@ -196,7 +205,24 @@ ok('la guia tiene la seccion #sasi oculta por defecto', /<section class="section
 ok('la guia carga el mismo modulo de datos', guia.indexOf('<script src="../js/planes-asistencia.js"></script>') !== -1);
 ok('la guia solo la muestra con asi=1', guia.indexOf("asi: _params.get('asi') === '1'") !== -1 && guia.indexOf('if (!sec || !data.asi || typeof PLANES_ASI') !== -1);
 ok('la guia re-encadena Pagos → asistencias → cita', guia.indexOf("s5next.dataset.target = 'sasi'") !== -1 && guia.indexOf("citaPrev.dataset.target = 'sasi'") !== -1);
-ok('el boton de la guia lleva pa, c, v, p y wa al configurador', guia.indexOf("add('c', data.c); add('v', data.v); add('p', data.p); add('pa', data.pa);") !== -1 && guia.indexOf("add('wa', data.wa)") !== -1);
+ok('el boton de la guia lleva c, v, p, y y wa al configurador', guia.indexOf("add('c', data.c); add('v', data.v); add('p', data.p); add('y', data.y);") !== -1 && guia.indexOf("add('wa', data.wa)") !== -1);
+// 28 set 2026: las tres formas de pago y, con el formulario SDI, lo que necesita /cita/.
+ok('el boton de la guia lleva pa, ps y pt', guia.indexOf("add('pa', data.pa); add('ps', data.ps); add('pt', data.pt);") !== -1);
+ok('el boton de la guia lleva fc/ae/tel SOLO con el formulario SDI', guia.indexOf("if (_modoCitaSdi(data)) { add('fc', '1'); add('ae', data.ae); add('tel', data.tel); }") !== -1);
+
+console.log('=== Configurador: formas de pago y cita (28 set 2026) ===');
+var conf = fs.readFileSync(path.join(__dirname, '..', 'asistencias', 'index.html'), 'utf8');
+ok('lee ps y pt de la cotizacion', /COT = \{ a: PA, s: soloDigitos\(Q\.get\('ps'\)\), t: soloDigitos\(Q\.get\('pt'\)\) \}/.test(conf));
+ok('las opciones solo existen para una COTIZACION', conf.indexOf("var OPCIONES = MODO === 'cotizada' ?") !== -1);
+ok('la cita solo para cotizacion con fc=1 y correo del agente', conf.indexOf("var CON_CITA = MODO === 'cotizada' && param('fc') === '1' && RE_MAIL.test(param('ae'));") !== -1);
+ok('el enlace a la cita lleva la forma de pago y las asistencias', conf.indexOf("add('fp', fp);") !== -1 && conf.indexOf("add('as', ids.map(function (p) { return p.id; }).join('.'));") !== -1);
+ok('cada opcion suma las asistencias con asiCosto de ESA forma (recargo + IVA)', conf.indexOf('asiCosto(p.prima, k).cuota') !== -1);
+ok('sin formulario SDI sigue el WhatsApp', conf.indexOf("esc(urlWa(ids))") !== -1);
+ok('el WhatsApp dice la forma de pago elegida', conf.indexOf("t += ' Forma de pago: ' + FP_NOM[fp] + '.';") !== -1);
+var citaPg = fs.readFileSync(path.join(__dirname, '..', 'cita', 'index.html'), 'utf8');
+ok('/cita/ marca la forma de pago que llega en fp', citaPg.indexOf("if (FP_ID[g('fp')]) $(FP_ID[g('fp')]).checked = true;") !== -1);
+ok('/cita/ suma las asistencias a cada monto con asiCosto', citaPg.indexOf('asiCosto(pl.prima, x[3]).cuota') !== -1);
+ok('/cita/ avisa que los montos incluyen las asistencias', citaPg.indexOf('id="fpNota" hidden>Los montos ya incluyen las asistencias') !== -1);
 ok('la guia no tiene un punto nuevo en la barra (E1)', (guia.match(/class="sticky-dot/g) || []).length === 5);
 var appjs2 = fs.readFileSync(path.join(__dirname, '..', 'js', 'app.js'), 'utf8');
 ok('_guideExtras de app.js manda la misma bandera (historial y WhatsApp = correo)', /asistencias:\s+!!\(\(document\.getElementById\('m-asistencias'\)/.test(appjs2));

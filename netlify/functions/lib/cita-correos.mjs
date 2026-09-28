@@ -81,10 +81,24 @@ export function correoCliente(d) {
   return { asunto: "Recibimos tu solicitud de cita · " + (esCeroKm(d.placa) ? "0 KM" : d.placa), html, texto };
 }
 
+// Cuota de la forma de pago elegida con las asistencias sumadas (28 set 2026): la de la
+// cotización ya trae recargo e IVA del INS; a las asistencias se les aplica el recargo
+// por fraccionamiento de esa forma y el IVA (asiCosto, la misma cuenta del configurador).
+const FORMA_K = { Anual: ["a", "pa", "al año"], Semestral: ["s", "ps", "por semestre"], Trimestral: ["t", "pt", "por trimestre"] };
+export function totalConAsistencias(d) {
+  const f = FORMA_K[d.formaPago];
+  const planes = (d.as || []).map((id) => PLANES.find((p) => p.id === id)).filter(Boolean);
+  const cot = Number(String((f && d[f[1]]) || "").replace(/\D/g, ""));
+  if (!f || !planes.length || !(cot > 0) || typeof planesMod.asiCosto !== "function") return "";
+  const asis = planes.reduce((a, p) => a + planesMod.asiCosto(p.prima, f[0]).cuota, 0);
+  return colones(cot + asis) + " " + f[2] + " (cotización " + colones(cot) + " + asistencias " + colones(asis) + ")";
+}
+
 export function correoAgente(d, opc) {
   const avisado = !opc || opc.clienteAvisado !== false;
   const asi = nombresAsi(d.as);
   const primas = [["Anual", d.pa], ["Semestral", d.ps], ["Trimestral", d.pt]].map(([k, v]) => colones(v) ? k + " " + colones(v) : "").filter(Boolean).join(" · ");
+  const conAsi = totalConAsistencias(d);
   // El vehículo suele traer ya el año ("Rural 2024"): no repetirlo.
   const veh = [d.v, d.y && String(d.v || "").indexOf(d.y) === -1 ? d.y : ""].filter(Boolean).join(" ");
   const placaAsunto = esCeroKm(d.placa) ? "0 KM" : d.placa;
@@ -116,7 +130,8 @@ export function correoAgente(d, opc) {
     rotulo("De la cotización") +
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0">' +
     (veh ? fila("Vehículo", veh) : "") + (primas ? fila("Primas cotizadas", primas) : "") +
-    fila("Asistencias opcionales", asi.length ? asi.join(" · ") : "Ninguna") + "</table>" +
+    fila("Asistencias opcionales", asi.length ? asi.join(" · ") : "Ninguna") +
+    (conAsi ? fila("Total con asistencias", conAsi) : "") + "</table>" +
     (wa ? '<p style="margin:18px 0 0;"><a href="https://web.whatsapp.com/send/?phone=' + wa + "&amp;text=" + encodeURIComponent(textoWa) + '" style="display:inline-block;background:#0369A1;color:#ffffff;text-decoration:none;font-family:' + F + ';font-weight:bold;border-radius:999px;padding:11px 20px;font-size:13.5px;">Escribirle por WhatsApp</a></p>' : "") +
     rotulo("Para copiar y pegar") +
     '<div style="background:#F8F9FA;border:1px dashed #8A939C;padding:12px;font-family:Consolas,Courier,monospace;font-size:12.5px;line-height:1.6;color:#1B1F23;white-space:pre-wrap;">' + esc(copiar) + "</div>" +

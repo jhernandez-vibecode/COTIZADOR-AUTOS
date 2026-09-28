@@ -3589,7 +3589,12 @@ function urlPlanesDesdeGuia() {
   const q = [];
   const add = (k, v) => { if (v !== undefined && v !== null && String(v).trim() !== '') q.push(k + '=' + encodeURIComponent(String(v).trim())); };
   add('n', data.n); add('l', data.l); add('w', data.w); add('a', data.a); add('wa', data.wa);
-  add('c', data.c); add('v', data.v); add('p', data.p); add('pa', data.pa);
+  add('c', data.c); add('v', data.v); add('p', data.p); add('y', data.y);
+  // Las tres formas de pago (28 set 2026): el configurador las muestra todas.
+  add('pa', data.pa); add('ps', data.ps); add('pt', data.pt);
+  // Con el formulario de cita SDI, el configurador termina en /cita/ con la
+  // forma de pago y las asistencias elegidas, en vez de WhatsApp.
+  if (_modoCitaSdi(data)) { add('fc', '1'); add('ae', data.ae); add('tel', data.tel); }
   return '../asistencias/' + (q.length ? '?' + q.join('&') : '');
 }
 function aplicarAsistencias() {

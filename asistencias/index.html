@@ -85,6 +85,21 @@ button{font:inherit;color:inherit}
 .hoy .k.dest .l,.hoy .k.dest .s{color:var(--t-verde-tx)}
 .delta{display:inline-flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:13px;color:var(--lc-ink-2);margin-top:6px}
 .delta i{width:8px;height:8px;border-radius:50%;background:var(--lc-blue);flex:none}
+/* las tres formas de pago de la cotización (28 set 2026): se ven todas y la elegida manda */
+.opc{margin-bottom:28px}
+.opc-t{font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--lc-ink-3);margin-bottom:10px}
+.opc-g{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.fpo{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;background:#fff;border:1px solid var(--lc-line-btn);border-radius:20px;padding:16px 18px;cursor:pointer;transition:background .15s,border-color .15s}
+.fpo:hover{background:var(--lc-blue-soft)}
+.fpo[aria-checked="true"]{border-color:var(--lc-blue);box-shadow:inset 0 0 0 1px var(--lc-blue);background:color-mix(in srgb,var(--lc-blue) 6%,#fff)}
+.fpo .fl{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14.5px}
+.fpo .fl i{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--lc-line-btn);flex:none;display:grid;place-items:center}
+.fpo[aria-checked="true"] .fl i{border-color:var(--lc-blue)}
+.fpo[aria-checked="true"] .fl i::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--lc-blue)}
+.fpo .tag{font-style:normal;font-size:11px;font-weight:600;background:var(--t-verde-bg);color:var(--t-verde-tx);border-radius:999px;padding:2px 8px}
+.fpo .fv{font-size:26px;font-weight:500;letter-spacing:-.025em;font-variant-numeric:tabular-nums;margin-top:6px;line-height:1.15}
+.fpo .fs{font-size:12.5px;color:var(--lc-ink-3)}
+.fpo .fd{font-family:var(--font-mono);font-size:11.5px;color:var(--lc-ink-2);margin-top:4px;line-height:1.45}
 .grid2{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:24px;align-items:start}
 .h3{font-size:20px;font-weight:500;letter-spacing:-.02em;margin-bottom:4px}
 .h3::before{content:"";display:block;width:28px;height:3px;border-radius:2px;background:var(--lc-prod);margin-bottom:12px}
@@ -142,6 +157,7 @@ button{font:inherit;color:inherit}
 @media (max-width:860px){
   .hoy{grid-template-columns:1fr;gap:10px}.hoy .k{padding:14px 16px}.hoy .k .v{font-size:26px}
   .grid2{grid-template-columns:1fr}.res{position:static}.saber{grid-template-columns:1fr}
+  .opc-g{grid-template-columns:1fr;gap:8px}.fpo{padding:12px 14px}.fpo .fv{font-size:22px}
   .plan{grid-template-columns:44px minmax(0,1fr) 44px;gap:12px 12px;padding:14px 14px}
   .plan .pr{grid-column:2;text-align:left;max-width:none;margin-top:-4px}
   .plan .pr small{display:inline}.plan .pr small.cuota-pl{display:block}
@@ -187,6 +203,7 @@ button{font:inherit;color:inherit}
         <div class="k"><div class="l">Asistencias elegidas</div><div class="v" id="k-asis">₡0</div><div class="s" id="k-asis-s">con IVA del 13 %</div></div>
         <div class="k dest"><div class="l" id="k-tot-l">Tu seguro quedaría en</div><div class="v" id="k-tot">—</div><div class="s" id="k-tot-s">al año</div><div class="delta" id="k-delta" hidden><i></i><span></span></div></div>
       </div>
+      <div class="opc" id="opc" hidden></div>
 
       <div class="grid2">
         <div id="planes">
@@ -199,7 +216,7 @@ button{font:inherit;color:inherit}
     </div>
 
     <div class="saber" id="saber">
-      <div class="c"><b>Cómo se activan</b>Le escribís al agente con los planes que querés y los agrega a tu póliza. El INS los cobra junto con el seguro, en la misma forma de pago que ya tenés.</div>
+      <div class="c" id="saberActiva"><b>Cómo se activan</b>Le escribís al agente con los planes que querés y los agrega a tu póliza. El INS los cobra junto con el seguro, en la misma forma de pago que ya tenés.</div>
       <div class="c"><b>Cómo se usan</b>Llamás al 800-800-8001, las 24 horas, y el INS coordina el servicio con su red. Los eventos son por año de póliza y no se acumulan.</div>
       <div class="c"><b>Lo que conviene saber</b>Sin deducible. No llevan los descuentos ni los recargos de la póliza; solo el recargo por fraccionamiento si pagás en cuotas, y el IVA del 13 %. Aplican en Costa Rica. Los detalles están en las Condiciones Operativas de Multiasistencia del INS.</div>
     </div>
@@ -246,11 +263,34 @@ button{font:inherit;color:inherit}
   var PV = soloDigitos(Q.get('pv')), PA = soloDigitos(Q.get('pa'));
   var MODO = PV ? 'vigente' : PA ? 'cotizada' : 'sola';
   var FP = { a: [1, 'año'], s: [2, 'semestre'], t: [4, 'trimestre'], m: [12, 'mes'] };
-  var fp = (MODO === 'vigente' && FP[param('fp', 'a')]) ? param('fp', 'a') : 'a';   // la cotizada es anual
-  var N = FP[fp][0];
-  var UNIDAD = fp === 'a' ? 'al año' : 'por ' + FP[fp][1];
-  var PRIMA = PV || PA;                 // por cuota (vigente) o al año (cotizada)
-  var RECARGO = ASI_RECARGO[fp];        // recargo por fraccionamiento del INS (8/11/13 %), el único que aplica
+  var FP_NOM = { a: 'Anual', s: 'Semestral', t: 'Trimestral', m: 'Mensual' };
+  // Cotizada (28 set 2026, pedido de JC): la cotización trae las tres cuotas del
+  // INS (pa/ps/pt, cada una ya con su recargo e IVA) y el cliente elige la forma
+  // de pago acá. Enlaces viejos traen solo pa: quedan en anual, como antes.
+  var COT = { a: PA, s: soloDigitos(Q.get('ps')), t: soloDigitos(Q.get('pt')) };
+  var OPCIONES = MODO === 'cotizada' ? ['a', 's', 't'].filter(function (k) { return COT[k] > 0; }) : [];
+  var fp, N, UNIDAD, PRIMA, RECARGO;
+  function setFp(k) {
+    fp = k; N = FP[fp][0];
+    UNIDAD = fp === 'a' ? 'al año' : 'por ' + FP[fp][1];
+    PRIMA = MODO === 'vigente' ? PV : MODO === 'cotizada' ? COT[fp] : 0;   // por cuota de la forma de pago
+    RECARGO = ASI_RECARGO[fp];          // recargo por fraccionamiento del INS (8/11/13 %), el único que aplica
+  }
+  setFp(MODO === 'vigente' && FP[param('fp', 'a')] ? param('fp', 'a') : 'a');
+  // Con el formulario de cita SDI (fc=1 + correo del agente), el configurador de una
+  // COTIZACIÓN termina en /cita/ con la forma de pago y las asistencias marcadas.
+  var RE_MAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  var CON_CITA = MODO === 'cotizada' && param('fc') === '1' && RE_MAIL.test(param('ae'));
+  function urlCita(ids) {
+    var q = [];
+    function add(k, v) { if (v !== undefined && v !== null && String(v).trim() !== '') q.push(k + '=' + encodeURIComponent(String(v).trim())); }
+    add('n', param('n')); add('l', param('l')); add('wa', param('wa')); add('tel', param('tel')); add('ae', param('ae'));
+    add('c', CLIENTE); add('v', VEH); add('p', param('p')); add('y', param('y'));
+    add('pa', COT.a || ''); add('ps', COT.s || ''); add('pt', COT.t || '');
+    add('fp', fp);
+    add('as', ids.map(function (p) { return p.id; }).join('.'));
+    return '../cita/?' + q.join('&');
+  }
   var PLANES = PLANES_ASI;      // fuente única: js/planes-asistencia.js
   var IVA = ASI_IVA;
   var pila = AGENTE.nombre.split(' ')[0];
@@ -286,6 +326,11 @@ button{font:inherit;color:inherit}
     $('#k-tot-l').textContent = MODO === 'vigente' ? 'Tu seguro quedaría en' : 'Tu cotización quedaría en';
     $('#k-tot').textContent = col(PRIMA);
     $('#k-tot-s').textContent = UNIDAD;
+  }
+  // Con dos o más formas de pago, las tarjetas de opciones reemplazan la fila de tres cifras.
+  if (OPCIONES.length > 1) { $('#hoy').hidden = true; $('#opc').hidden = false; }
+  if (CON_CITA && (el = $('#saberActiva'))) {
+    el.innerHTML = '<b>Cómo se activan</b>Las elegís acá y quedan en tu solicitud de cita, junto con la forma de pago. El agente las incluye al emitir tu póliza y el INS las cobra con el seguro.';
   }
 
   /* ---------- detalle de un plan ---------- */
@@ -328,9 +373,29 @@ button{font:inherit;color:inherit}
     // Sin el monto que paga hoy: JC (17 set) lo quitó porque confunde con lo que
     // va a pagar después. La placa identifica la póliza mejor que el vehículo.
     var t = 'Hola ' + pila + ', revisé los planes de asistencia y me interesan: ' + nombres.join(', ') + '.';
+    if (OPCIONES.length > 1) t += ' Forma de pago: ' + FP_NOM[fp] + '.';
     var quien = [CLIENTE ? 'Soy ' + CLIENTE : '', PLACA ? 'placa ' + PLACA : ''].filter(Boolean).join(', ');
     if (quien || VEH) t += ' ' + (quien || 'Mi vehículo') + (VEH ? ' (' + VEH + ')' : '') + '.';
     return 'https://web.whatsapp.com/send/?phone=' + WA_AGENTE + '&text=' + encodeURIComponent(t);
+  }
+
+  /* Las formas de pago de la cotización, cada una con su total: cuota del INS
+     (ya con recargo e IVA) + asistencias con el recargo de ESA forma y el IVA. */
+  function pintaOpc(ids) {
+    var box = $('#opc');
+    if (!box || OPCIONES.length < 2) return;
+    var h = '<div class="opc-t">Elegí cómo querés pagar</div><div class="opc-g" role="radiogroup" aria-label="Forma de pago">';
+    OPCIONES.forEach(function (k) {
+      var n = FP[k][0], u = k === 'a' ? 'al año' : 'por ' + FP[k][1];
+      var asis = ids.reduce(function (a, p) { return a + asiCosto(p.prima, k).cuota; }, 0);
+      var tot = COT[k] + asis;
+      h += '<button type="button" class="fpo" role="radio" data-fp="' + k + '" aria-checked="' + (k === fp) + '">' +
+        '<span class="fl"><i></i>' + FP_NOM[k] + (k === 'a' ? ' <em class="tag">Mejor precio</em>' : '') + '</span>' +
+        '<span class="fv">' + col(tot) + '</span><span class="fs">' + u + (n > 1 ? ' · ' + col(tot * n) + ' al año' : '') + '</span>' +
+        (ids.length ? '<span class="fd">Cotización ' + col(COT[k]) + ' + asistencias ' + col(asis) + '</span>' : '') +
+      '</button>';
+    });
+    box.innerHTML = h + '</div>';
   }
 
   function pintaRes() {
@@ -354,9 +419,15 @@ button{font:inherit;color:inherit}
       if (ids.length) d.querySelector('span').textContent = '+ ' + col(cuotaAsis) + ' ' + UNIDAD;
     }
 
-    var h = '<div class="rt">Tu selección' + (N > 1 ? ' · ' + UNIDAD : '') + '</div>';
+    pintaOpc(ids);
+
+    var h = '<div class="rt">Tu selección' + (OPCIONES.length > 1 ? ' · pago ' + FP_NOM[fp].toLowerCase() : N > 1 ? ' · ' + UNIDAD : '') + '</div>';
     if (!ids.length) {
       h += '<p class="vacio">Todavía no prendiste ninguno. Acá se va sumando' + (MODO !== 'sola' ? ' y te digo en cuánto queda tu ' + (MODO === 'vigente' ? 'seguro' : 'cotización') : '') + '.</p>';
+      if (CON_CITA) {
+        h += '<a class="btn btn-s" href="' + esc(urlCita(ids)) + '">Agendar mi cita sin asistencias</a>';
+        h += '<p class="nota">Te lleva al formulario de cita con el pago ' + esc(FP_NOM[fp].toLowerCase()) + ' ya marcado.</p>';
+      }
     } else {
       ids.forEach(function (p) {
         h += '<div class="fila"><span>' + esc(p.nom) + (N > 1 ? ' <small style="color:var(--lc-ink-3)">' + col(p.prima) + ' al año ÷ ' + N + '</small>' : '') + '</span><b>' + col(Math.round(p.prima / N)) + '</b></div>';
@@ -366,14 +437,19 @@ button{font:inherit;color:inherit}
       if (MODO !== 'sola') {
         h += '<div class="fila suma"><span>' + (MODO === 'vigente' ? 'Tu seguro hoy' : 'Tu cotización') + '</span><b>' + col(PRIMA) + '</b></div>';
         h += '<div class="total"><div class="l">' + (MODO === 'vigente' ? 'Tu seguro quedaría en' : 'Tu cotización quedaría en') + '</div><div class="v">' + col(tot) + '</div><div class="delta"><i></i>+ ' + col(cuotaAsis) + ' ' + UNIDAD + '</div></div>';
-        if (N > 1) h += '<p class="cuota">Al año: <b class="mono">' + col(tot * N) + '</b>, o sea <b class="mono">' + col(anualAsis) + '</b> más que hoy, ya con el recargo por fraccionamiento y el IVA.</p>';
+        if (N > 1) h += '<p class="cuota">Al año: <b class="mono">' + col(tot * N) + '</b>, o sea <b class="mono">' + col(anualAsis) + '</b> más que ' + (MODO === 'vigente' ? 'hoy' : 'sin asistencias') + ', ya con el recargo por fraccionamiento y el IVA.</p>';
         else h += '<p class="cuota">Si pagás el seguro en cuotas, a estos planes también se les aplica el recargo por fraccionamiento (8 % semestral, 11 % trimestral, 13 % mensual).</p>';
       } else {
         h += '<div class="total"><div class="l">Total al año</div><div class="v">' + col(anualAsis) + '</div></div>';
         h += '<p class="cuota">Con IVA. Si pagás el seguro en cuotas, a estos planes también se les aplica el recargo por fraccionamiento (8 % semestral, 11 % trimestral, 13 % mensual).</p>';
       }
-      h += '<a class="btn btn-p" href="' + esc(urlWa(ids)) + '" target="_blank" rel="noopener">Pedirle estos planes a ' + esc(pila) + '</a>';
-      h += '<p class="nota">Te abre WhatsApp con los planes ya escritos. El agente los agrega a tu póliza y el INS los cobra con el seguro.</p>';
+      if (CON_CITA) {
+        h += '<a class="btn btn-p" href="' + esc(urlCita(ids)) + '">Agendar mi cita con estas asistencias</a>';
+        h += '<p class="nota">Te lleva al formulario de cita con el pago ' + esc(FP_NOM[fp].toLowerCase()) + ' y ' + (ids.length === 1 ? 'la asistencia' : 'las asistencias') + ' ya marcados. El INS las cobra junto con el seguro.</p>';
+      } else {
+        h += '<a class="btn btn-p" href="' + esc(urlWa(ids)) + '" target="_blank" rel="noopener">Pedirle estos planes a ' + esc(pila) + '</a>';
+        h += '<p class="nota">Te abre WhatsApp con los planes ya escritos. El agente los agrega a tu póliza y el INS los cobra con el seguro.</p>';
+      }
     }
     res.innerHTML = h;
 
@@ -396,6 +472,11 @@ button{font:inherit;color:inherit}
     sel[id] = e.target.checked;
     e.target.closest('.plan').setAttribute('data-on', e.target.checked ? '1' : '0');
     pintaRes();
+  });
+  var opcBox = $('#opc');
+  if (opcBox) opcBox.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('[data-fp]'); if (!b) return;
+    setFp(b.getAttribute('data-fp')); pintaLista(); pintaRes();
   });
   lista.addEventListener('click', function (e) {
     var id = e.target.getAttribute && e.target.getAttribute('data-ver'); if (!id) return;
