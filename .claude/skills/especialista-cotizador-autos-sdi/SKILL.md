@@ -1433,7 +1433,7 @@ WhatsApp, la extracción y la pantalla siguen iguales.
   compartida** con rótulo "Vehículo asegurado" y el N.º de póliza debajo (la chapa sale roja si la placa trae `CL`)
   → sello "● Póliza activa" en verde pálido + párrafo → documentación adjunta → **Centro de Asistencia Digital
   debajo de los documentos** (banda pálida `#eef4f9`, píldora azul) → contactos de emergencia (teléfonos en tinta,
-  tabla de dos columnas) → aviso de terceros con **regla dorada ARRIBA** (`border-top:3px solid #C9A227`; desde el 28 sep 2026 trae un **segundo renglón**: "Importante: recuerde que este seguro no cubre actividades de UBER o similares", pedido de JC, `dfa045e`, checks `uber-*`) → nota
+  tabla de dos columnas) → aviso de terceros con **regla dorada ARRIBA** (`border-top:3px solid #C9A227`; desde el 28 sep 2026 lleva **un solo "Importante:" y dos puntos a) y b)** con sangría colgante (tabla interna): a) acuerdos con terceros, b) "Recuerde que este seguro no cubre actividades de UBER o similares". Pedido de JC, `dfa045e` + `2e49647`; checks `uber-*` e `importante-*`) → nota
   del agente (fondo `#f8fafc`, sin barra) → cross-sell → firma → `_pieSDI`.
 - **`_tarjetaVehiculo` ganó dos parámetros opcionales:** `rotulo` (default el de la cotización) y `extra` (HTML ya
   escapado bajo el vehículo). Sin ellos se comporta byte a byte como antes; el test de la cotización lo cubre.
