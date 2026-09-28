@@ -2015,8 +2015,8 @@ configurador a la guía existe cuando el agente está en modo `'sdi'`; en `'prop
 `2026-09-18-flujo-asistencias-mock-flujo.py` se descarta la parte de `entry.<fe>`/`entry.<fpl>` y se conserva `as` y `r`.
 El Google Form de JC **no se borra**: atiende los enlaces ya enviados y el modo propio.
 
-**🗓 28 de setiembre:** que la tarjeta del correo, la casilla del paso 3 y la sección de la guía de asistencias aparezcan
-solas (`asiDisponible()`); y el esquema de repuestos de la V32, que sigue SIN PLAN.
+**🗓 28 de setiembre:** ✅ **CONFIRMADO por JC el 28 sep 2026: los planes de asistencia ya salen solos**
+(`asiDisponible()` se activó en fecha). Queda el esquema de repuestos de la V32, en pausa esperando la circular con los años.
 
 ### 🔖 CHECKPOINT 18 sep 2026 — dónde quedamos (JC: *"hagamos un checkpoint con las decisiones pendientes… revisamos más tarde"*)
 
