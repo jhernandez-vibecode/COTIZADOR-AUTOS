@@ -299,8 +299,16 @@ function buildPolizaActivaEmail(params) {
   // 8. IMPORTANTE (única advertencia: regla dorada ARRIBA, no barra a la izquierda)
   '<tr><td style="padding:22px 32px 0;">' +
     '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fffbeb;border-top:3px solid #C9A227;border-radius:0 0 10px 10px;">' +
-      '<tr><td style="padding:12px 16px 13px;font-size:12.5px;color:#713f12;line-height:1.55;"><b style="color:#422006;">Importante:</b> nunca realice acuerdos con terceros sin la autorizaci&oacute;n previa del INS, para no afectar la validez de su cobertura.</td></tr>' +
-      '<tr><td style="padding:0 16px 13px;font-size:12.5px;color:#713f12;line-height:1.55;"><b style="color:#422006;">Importante:</b> recuerde que este seguro <b style="color:#422006;">no cubre</b> actividades de UBER o similares.</td></tr>' +
+      '<tr><td style="padding:12px 16px 13px;font-size:12.5px;color:#713f12;line-height:1.55;">' +
+        '<b style="color:#422006;">Importante:</b>' +
+        // Un solo "Importante" y los puntos como a) y b) (JC, 28 sep 2026). Tabla para la sangría colgante.
+        '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:6px;">' +
+          '<tr><td valign="top" style="width:20px;padding:0 0 6px;font-size:12.5px;color:#422006;font-weight:700;line-height:1.55;">a)</td>' +
+            '<td style="padding:0 0 6px;font-size:12.5px;color:#713f12;line-height:1.55;">Nunca realice acuerdos con terceros sin la autorizaci&oacute;n previa del INS, para no afectar la validez de su cobertura.</td></tr>' +
+          '<tr><td valign="top" style="width:20px;font-size:12.5px;color:#422006;font-weight:700;line-height:1.55;">b)</td>' +
+            '<td style="font-size:12.5px;color:#713f12;line-height:1.55;">Recuerde que este seguro <b style="color:#422006;">no cubre</b> actividades de UBER o similares.</td></tr>' +
+        '</table>' +
+      '</td></tr>' +
     '</table>' +
   '</td></tr>' +
 

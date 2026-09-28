@@ -57,6 +57,8 @@ ok('emergencia-8001',   html.indexOf('800-800-8001') !== -1);
 ok('terceros',          /acuerdos con terceros/i.test(html));
 ok('uber-no-cubre',     /no cubre<\/b> actividades de UBER o similares/.test(html));      // JC 28 sep: segundo punto del recuadro Importante
 ok('uber-tras-terceros', html.indexOf('acuerdos con terceros') < html.indexOf('actividades de UBER'));
+ok('importante-una-vez', (html.match(/Importante:/g) || []).length === 1);                  // JC 28 sep: un solo "Importante" con a) y b)
+ok('importante-a-b',     /a\)<\/td>[\s\S]*acuerdos con terceros[\s\S]*b\)<\/td>[\s\S]*actividades de UBER/.test(html));
 ok('xsell-viaje',       /Seguros de Viaje/.test(html) && html.indexOf('https://seguros-viajero.appsegurosdigitales.com/') !== -1);
 ok('xsell-estudiantil', /Seguro Estudiantil/.test(html));
 ok('NO-pollitos',       !/pollito/i.test(html));
