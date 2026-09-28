@@ -1720,6 +1720,29 @@ asistencias…").
 - **CSS del modal** al final de `css/linea-clara-consola.css` (bloque `.asi-*`), solo `index.html`.
 - **Aviso "Qué hay de nuevo"** `2026-09-17` + entrada en el pie.
 
+### Las tres formas de pago y el paso a la cita (28 sep 2026, merge `0f07cf3`) — EN PROD
+
+JC: *"cuando el cliente pasa a la página de asistencias y escoge solo le calcula el monto anual, deben verse las opciones
+y en lugar de que me mande un whatsapp debería enviarlo al formulario de cita… con la elección de forma de pago y las
+asistencias"* + *"recuerda que los fraccionamientos de pago llevan recargos"*. Capturas de localhost aprobadas ("Dale,
+publicalo"). Tag de rollback **`pre-asistencias-formas-pago-28sep`**.
+
+- **Configurador, modo cotizada:** lee `pa`/`ps`/`pt` (`COT`); con 2+ formas, `#opc` (tarjetas `.fpo`, role radio)
+  reemplaza a `#hoy`. Cada tarjeta = cuota del INS (ya trae su recargo e IVA) + Σ `asiCosto(prima, k).cuota` (recargo de
+  ESA forma + IVA). La elegida (`setFp`) manda en el resumen, la barra móvil y los precios de cada plan. Enlaces viejos
+  (solo `pa`) quedan en anual como antes. Modo vigente (`pv`) no cambió.
+- **`CON_CITA`** = cotizada + `fc=1` + `ae` válido → el botón es **"Agendar mi cita con estas asistencias"** (o "…sin
+  asistencias") a `../cita/?…&fp=&as=`. Sin formulario SDI sigue el WhatsApp, ahora con "Forma de pago: X".
+- **`/cita/`:** marca el radio según `fp`; con `as` cada monto suma las asistencias con `asiCosto` y aparece `#fpNota`.
+- **Enlaces que alimentan al configurador:** `urlPlanesDesdeGuia()` pasa `y`, `ps`, `pt` y, con `_modoCitaSdi(data)`,
+  `fc/ae/tel`; `_buildPlanesUrl` acepta `year`, `primaSemestral`, `primaTrimestral` y agrega `fc/ae/tel` solo si hay
+  `primaAnual`, no hay `primaVigente` y `_citaSdi()`. `CLAVES_P` de `/p` NO cambió (el enlace cotizado no se acorta).
+- **Correo "Cita solicitada":** fila "Total con asistencias" (`totalConAsistencias(d)` en `cita-correos.mjs`).
+- Caso de control: 308.283 + Mascota 4.393 + Salud Premium 25.628 = **₡338.304 por semestre**; anual 626.487; trimestral 173.851.
+- Tests: +17 en `test-asistencias.js` (178), +6 en `test-cita-correos.mjs` (41). Smoke: clic real guía → configurador →
+  cita en localhost; en prod el configurador con datos inventados y `POST /cita/enviar {verificar}` → `autorizado:true`.
+  **No se envió ninguna solicitud de cita real** (el total del correo al agente está cubierto por test, no por envío).
+
 ### La sección de asistencias en el explicador (17 sep 2026, tarde) — E1/E2/E3 aprobadas por JC
 
 JC: *"si debemos incluir esto aunque se haga más largo el explicador"*. Mockup sobre una copia de la guía (capturas
