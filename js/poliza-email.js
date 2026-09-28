@@ -300,6 +300,7 @@ function buildPolizaActivaEmail(params) {
   '<tr><td style="padding:22px 32px 0;">' +
     '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fffbeb;border-top:3px solid #C9A227;border-radius:0 0 10px 10px;">' +
       '<tr><td style="padding:12px 16px 13px;font-size:12.5px;color:#713f12;line-height:1.55;"><b style="color:#422006;">Importante:</b> nunca realice acuerdos con terceros sin la autorizaci&oacute;n previa del INS, para no afectar la validez de su cobertura.</td></tr>' +
+      '<tr><td style="padding:0 16px 13px;font-size:12.5px;color:#713f12;line-height:1.55;"><b style="color:#422006;">Importante:</b> recuerde que este seguro <b style="color:#422006;">no cubre</b> actividades de UBER o similares.</td></tr>' +
     '</table>' +
   '</td></tr>' +
 
