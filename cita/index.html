@@ -207,7 +207,8 @@ a{color:var(--blue)}
   var P = new URLSearchParams(location.search);
   var g = function (k) { return (P.get(k) || '').trim(); };
   var ag = { n: g('n'), l: g('l'), wa: g('wa'), tel: g('tel'), ae: g('ae') };
-  var cot = { c: g('c'), v: g('v'), p: g('p'), y: g('y'), pa: g('pa'), ps: g('ps'), pt: g('pt'), as: g('as') };
+  // va (monto asegurado) e ia (interés asegurable) no se muestran: viajan al correo del agente (12 oct 2026).
+  var cot = { c: g('c'), v: g('v'), p: g('p'), y: g('y'), pa: g('pa'), ps: g('ps'), pt: g('pt'), as: g('as'), va: g('va'), ia: g('ia') };
   var $ = function (id) { return document.getElementById(id); };
   var RE_MAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;   // el mismo regex laxo de js/wizard.js
   var pilaAg = ag.n.split(/\s+/)[0] || 'tu agente';

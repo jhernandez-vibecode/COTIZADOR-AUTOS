@@ -652,7 +652,9 @@ function _guideExtras() {
     prices:        S.data.prices,
     // La misma bandera que buildEmail: casilla del paso 3 + desde el 28 set 2026.
     asistencias:   !!((document.getElementById('m-asistencias') || {}).checked &&
-                      typeof asiDisponible === 'function' && asiDisponible())
+                      typeof asiDisponible === 'function' && asiDisponible()),
+    // El mismo interes que buildEmail: viaja a /cita/ con el formulario SDI.
+    interes:       S.formData ? S.formData.interes : ''
   };
 }
 

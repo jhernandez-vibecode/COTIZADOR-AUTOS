@@ -17,6 +17,18 @@ export const INGRESOS = [
   "De ₡2.000.000 a ₡4.000.000", "Más de ₡4.000.000",
 ];
 
+// Interes asegurable (12 oct 2026, pedido de JC). NO viene en el PDF del INS
+// (revisadas 551 cotizaciones): es el desplegable que el agente elige en la
+// vista 2 del cotizador. Viaja como clave (`ia`) y aca se traduce al mismo
+// texto que pone el correo de cotizacion (_interestText en
+// js/email-template.js; tests/test-cita-correos.mjs vigila que coincidan).
+export const INTERESES = {
+  "propietario": "Propietario Registral",
+  "cero-km": "Vehículo Cero Kilómetros (en proceso de compra)",
+  "traspaso": "En proceso de traspaso",
+  "compra": "En proceso de compra",
+};
+
 const RE_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // Retorno, salto y NUL revientan cabeceras. El ESPACIO NO va aca: todo nombre
 // real trae espacios (misma trampa que lib/validacion.mjs). NUL escapado a proposito.
@@ -119,6 +131,14 @@ export function validarCita(body, ctx) {
 
   // Asistencias: se descarta el id desconocido, no toda la solicitud.
   d.as = [...new Set(String(body.as || "").split(".").map((s) => s.trim()).filter((s) => IDS_PLANES.has(s)))];
+
+  // Monto asegurado e interes asegurable de la cotizacion (12 oct 2026). Son
+  // datos de apoyo para el agente: si llegan raros se descartan, nunca tumban
+  // la solicitud del cliente.
+  const va = String(body.va == null ? "" : body.va).trim();
+  d.va = /^\d{1,13}$/.test(va) && Number(va) > 0 ? va : "";
+  const ia = String(body.ia == null ? "" : body.ia).trim();
+  d.ia = Object.prototype.hasOwnProperty.call(INTERESES, ia) ? ia : "";
 
   return { ok: true, datos: d };
 }
