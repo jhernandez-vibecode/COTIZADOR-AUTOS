@@ -509,17 +509,11 @@ Diseñado y aprobado en mockup, sin implementar. Ver "Pendientes" en el router.
 > vuelve un destructor con retardo. **Los otros cotizadores con historial en localStorage no se
 > revisaron: si alguno respalda con merge + cap, tiene este mismo bug.**
 >
-> **Recuperar lo ya perdido — rama `feat/rescate-versiones`, SIN MERGEAR.** El fix detiene la
-> perdida hacia adelante pero no devuelve lo que el respaldo ya piso: eso solo vive en las
-> **versiones anteriores** del archivo en Drive (`files/{id}/revisions`, alcanzables con el scope
-> `drive.appdata` que la app ya tiene). `driveListRevisions` / `driveReadRevision` **ya estan en
-> main** y hoy no las llama nadie. La pantalla `/rescate/` + `js/rescate.js` (rama) las lee todas,
-> fusiona lo que falte conservando estados, es idempotente y aguanta los 3 casos de fallo (sin
-> respaldo / sin versiones / Drive caido). Verificada en navegador con datos INVENTADOS — los
-> comprobantes y clientes reales no entran al repo. **JC eligio publicar primero solo el arreglo**
-> y revisar la pantalla aparte: no mergear sin su OK. ⏳ Google purga versiones viejas con el
-> tiempo y con cada escritura: cuanto mas tarde, menos chance de rescatar julio. Plan B: reconstruir
-> desde los correos enviados del Gmail del agente (sin los estados de seguimiento).
+> **Recuperar lo ya perdido — DESCARTADO por JC el 12 oct 2026** ("Descarta completamente el
+> rescate del historial"). No reproponerlo. La pantalla `/rescate/` + `js/rescate.js` vivia en la
+> rama `feat/rescate-versiones`, que se borro (local y GitHub); queda el tag
+> `descartado-rescate-versiones-12oct` -> `00f9a56`. `driveListRevisions` / `driveReadRevision`
+> (solo existian para esa pantalla) se quitaron de main en `a7a37af`.
 >
 > **Pendiente viejo que salio a la luz:** el boton 🗑 de la 📊 **no borra de Drive** —
 > `mergeHistories` es union, asi que la entrada vuelve al restaurar. No lo introdujo este fix.
