@@ -90,7 +90,8 @@ ok('cliente: NO lleva monto ni interes (es dato para el agente)', (() => { const
 // La lista del servidor tiene que decir lo mismo que el desplegable del cotizador.
 {
   const src = fs.readFileSync(new URL('../js/email-template.js', import.meta.url), 'utf8');
-  const i = src.indexOf('function _interestText'), j = src.indexOf('\n}\n', i) + 2;
+  // El cierre se busca tolerando CRLF: git lo pone en la copia de trabajo de Windows.
+  const i = src.indexOf('function _interestText'), fin = /\r?\n\}\r?\n/.exec(src.slice(i)), j = i + fin.index + fin[0].length;
   const interestText = new Function(src.slice(i, j) + '\nreturn _interestText;')();
   ok('INTERESES = _interestText del correo de cotizacion', Object.keys(INTERESES).length === 4 && Object.keys(INTERESES).every((k) => interestText(k) === INTERESES[k]));
   const idx = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
