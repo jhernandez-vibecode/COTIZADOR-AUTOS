@@ -2954,3 +2954,10 @@ Merge `4136ce8` (tag `pre-cita-monto-interes-12oct`), verificado en prod. Dos re
 correo al agente. El interes asegurable NO viene en el PDF del INS (551 cotizaciones revisadas): es el desplegable
 `f-interes` del paso 2; viaja como `ia` solo con Formulario SDI. El monto viaja como `va`. Detalle vigente en la SKILL
 router, seccion "Formulario propio de cita -> Monto asegurado e interes asegurable".
+
+## CHECKPOINT 12 oct 2026 (cierre del dia)
+
+Arbol limpio, main = `ce8a21c`, suite 27/27. Hecho y en prod: marca "SDI Seguros Digitales INS" (`da77c6c`),
+`/renovaciones/` a 375 px (`a4b003e`), rescate del historial DESCARTADO por JC (`a7a37af`, tag
+`descartado-rescate-versiones-12oct`), monto asegurado e interes asegurable en el correo "Cita solicitada"
+(`4136ce8`, tag `pre-cita-monto-interes-12oct`). Lo que espera a JC y lo abierto: SKILL router, inicio de "Pendientes".

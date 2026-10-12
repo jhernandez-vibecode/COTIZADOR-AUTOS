@@ -5,7 +5,7 @@ description: ESPECIALISTA COTIZADOR AUTOS SDI — App web vanilla JS que extrae 
 
 # Especialista Cotizador SDI — Seguros Autos INS
 
-Leer COMPLETO antes de tocar código. **🔖 Hay un CHECKPOINT del 19 sep 2026 al inicio de "Pendientes": leerlo primero (lo que queda del formulario de cita — prueba del segundo agente —, y G1/G4/G5 que JC tiene sin responder).** Estado a **19 septiembre 2026**: **formulario propio de cita `/cita/` EN PRODUCCIÓN, apagado por defecto** (interruptor "Formulario de cita" en ⚙; página con las 9 preguntas del Google Form + correo; Function `POST /cita/enviar` que confirma al cliente y avisa al agente por Resend; merge `6c35767`, tag `pre-cita-formulario-propio`; ver "Formulario propio de cita"). Previo (**18 septiembre 2026**): la pantalla de "Agendar mi cita" de la guía ya no parece una cita confirmada (`67f1f22`), y el flujo "Quiero estas asistencias" → guía → formulario prellenado está DISEÑADO y sin implementar. Previo (**17 septiembre 2026**): **los planes de asistencia del INS (cobertura ASI, SVA V32) ya están en producción** — módulo de datos único, tarjeta en el correo de cotización (apagada hasta el 28 sep por `asiDisponible()`), página `/asistencias/` con el configurador que suma la prima y **el cuarto envío de la consola: modal "Asistencias a cliente"** para clientes con póliza vigente (ver "Planes de asistencia del INS"). Previo (**13 septiembre 2026**): **los correos de Póliza activa y de Renovación confirmada estrenan la línea clara** (orden nuevo, tarjeta del vehículo compartida, iconos PNG en el cross-sell; ver "El correo de Póliza activa en línea clara" y "El correo de Renovación confirmada en línea clara"; con este segundo, los TRES correos de la consola van en línea clara). Previo (**10 septiembre 2026**): **TODA la app está en la línea clara SDI** —
+Leer COMPLETO antes de tocar código. **🔖 Hay un CHECKPOINT del 12 oct 2026 al inicio de "Pendientes": leerlo primero (lo hecho ese día, lo que espera a JC y lo que sigue abierto).** Estado a **19 septiembre 2026**: **formulario propio de cita `/cita/` EN PRODUCCIÓN, apagado por defecto** (interruptor "Formulario de cita" en ⚙; página con las 9 preguntas del Google Form + correo; Function `POST /cita/enviar` que confirma al cliente y avisa al agente por Resend; merge `6c35767`, tag `pre-cita-formulario-propio`; ver "Formulario propio de cita"). Previo (**18 septiembre 2026**): la pantalla de "Agendar mi cita" de la guía ya no parece una cita confirmada (`67f1f22`), y el flujo "Quiero estas asistencias" → guía → formulario prellenado está DISEÑADO y sin implementar. Previo (**17 septiembre 2026**): **los planes de asistencia del INS (cobertura ASI, SVA V32) ya están en producción** — módulo de datos único, tarjeta en el correo de cotización (apagada hasta el 28 sep por `asiDisponible()`), página `/asistencias/` con el configurador que suma la prima y **el cuarto envío de la consola: modal "Asistencias a cliente"** para clientes con póliza vigente (ver "Planes de asistencia del INS"). Previo (**13 septiembre 2026**): **los correos de Póliza activa y de Renovación confirmada estrenan la línea clara** (orden nuevo, tarjeta del vehículo compartida, iconos PNG en el cross-sell; ver "El correo de Póliza activa en línea clara" y "El correo de Renovación confirmada en línea clara"; con este segundo, los TRES correos de la consola van en línea clara). Previo (**10 septiembre 2026**): **TODA la app está en la línea clara SDI** —
 consola, explicador y las cuatro sub-páginas (`/polizas-activas/`, `/renovaciones/`, `/cancelacion/`, `/marcas-recargo/`,
 commit `5f3719c`, tag `pre-subpaginas-linea-clara-10sep`; ver "Las sub-páginas en línea clara"). Solo los correos siguen
 aparte (Arial en el cliente). La consola (`index.html`) y el explicador (`/explicacion/`) fueron los primeros. La consola va por `css/linea-clara-consola.css` (commit `c5cc457`, tag
@@ -2031,6 +2031,48 @@ Contrastadas con 5 PDF oficiales que entregó JC (viven en `OneDrive\ARCHIVO DIG
 - **Cláusula 33:** ver la sección de la calculadora — el factor va **sobre prima anual**.
 
 ## Pendientes
+
+### 🔖 CHECKPOINT 12 oct 2026 (cierre del día) — marca nueva, rescate descartado, monto e interés en la cita
+
+**Árbol limpio, todo pusheado, `main` = `ce8a21c`.** Suite: **27 archivos en verde** (`test-cita-url.js` 96 ·
+`test-cita-correos.mjs` 52 · `test-cita-validacion.mjs` 46). Las 4 copias de la documentación sincronizadas.
+
+**Hecho el 12 oct, en orden (todo EN PROD y verificado):**
+
+| Commit | Qué |
+|---|---|
+| `da77c6c` | Marca "SDI Seguros Digitales INS" (kit v1.4): PNG nuevo `img/sdi-logo-email-ins.png` en el pie de los 5 correos, títulos, `og:site_name`, pie del explicador, remitente "Citas · …". 🔴 El PNG viejo `img/sdi-logo-email.png` NO se borra: SASINS lo carga desde este dominio |
+| `a4b003e` | `/renovaciones/` cabe a 375 px (los pasos bajan a una segunda fila en ≤640 px) |
+| `a7a37af` | **Rescate del historial DESCARTADO por JC** ("Descarta completamente"). Rama `feat/rescate-versiones` borrada (local y GitHub), tag `descartado-rescate-versiones-12oct`; fuera `driveListRevisions`/`driveReadRevision`. **No reproponer** |
+| `4136ce8` | **Monto asegurado e interés asegurable en el correo "Cita solicitada"** (renglones en "De la cotización"). Tag de rollback `pre-cita-monto-interes-12oct`. Ver "Formulario propio de cita → Monto asegurado e interés asegurable" |
+| `680e1ab` | El test de guardia de `INTERESES` tolera CRLF (falló tras el merge, no era el código) |
+
+🔴 **Lo que hay que recordar de la jornada:**
+- **El interés asegurable NO viene en el PDF del INS** (551 cotizaciones revisadas). JC creía que sí. Es el desplegable
+  `f-interes` del paso 2: si no lo elige, el correo dice "No se indicó al cotizar". Viaja como `ia` **solo con Formulario SDI**.
+- **No se envió ninguna cita real** para probar el cambio: el correo con los dos datos lo va a ver JC con el próximo
+  cliente que agende desde una cotización nueva. Si algo no cuadra ahí, mirar primero si eligió el interés en el paso 2.
+- **Trampas de edición en Windows** (pasaron las tres en la jornada): (1) algunos fuentes y la SKILL están en **CRLF**
+  y un `grep $'\r'` en Git Bash NO lo detecta — medir con Python (`b.count(b'\r\n')`); (2) un heredoc de bash con
+  secuencias de escape de barra invertida (salto de línea, retorno) **las convierte en el carácter real** dentro del
+  script — en scripts de edición usar `chr(10)`/`chr(13)`; (3) tras un merge git puede dejar un `.js` en CRLF: un test
+  que busque texto con saltos de línea literales tiene que tolerar los dos.
+
+**⏳ ESPERA A JC (no empezar sin él):**
+1. **Repuestos SVA V32** — en pausa desde el 23 sep: falta la circular/HTML del INS con los **años** de cada opción
+   (la V32 quitó el kilometraje). Sin esa fuente no se ponen años. Ver el frente 2 de "SVA V32".
+2. **Asistencias G1, G4 y G5** (ver el checkpoint del 19 sep y el del 18 sep, más abajo).
+3. **Consultar al INS el "Básico Extendido 7-15"** de Multiasistencia (ver "Asistencia en carretera por plan").
+4. **Le toca a él:** filtro de Gmail para "Cita solicitada" en las dos cuentas · quitar "mediante una videollamada" de su
+   Google Form · (opcional) volver a guardar su perfil en ⚙ si quiere el nombre con tilde.
+
+**⚪ ABIERTO, SIN URGENCIA (proponerlo cuando toque):**
+- `/renovaciones/` entre 641 y ~1000 px: la barra de pasos todavía se sale (scrollWidth 947 a 768).
+- **El botón 🗑 del 📊 sigue sin borrar de Drive**: `deleteHistoryEntry` hace `splice` sin dejar lápida, así que la
+  entrada vuelve al restaurar. (La nota del 9 sep que decía que la lápida de la purga "cerraba de paso" este pendiente
+  era inexacta: la purga deja lápida, el 🗑 no.) Arreglo natural: que el 🗑 deje la misma lápida `{id,date,purged,updatedAt}`.
+- Replicar "Solo WhatsApp" en `/polizas-activas/` y el cotizador · pie con registro de cambios en el explicador ·
+  entregabilidad de `segurosdelins.com` (SPF `?all`, sin DKIM ni DMARC) · revisar el bug del tope en otros cotizadores.
 
 ### 🔖 CHECKPOINT 19 sep 2026 (cierre del día) — formulario de cita en producción, probado por JC con envíos reales
 
