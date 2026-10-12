@@ -27,7 +27,7 @@ const CFG = {
   // Logotipo SDI del pie del correo. Va como imagen y no recreado con tablas
   // porque su tipografia esta vectorizada en el kit de marca, y en correo las
   // fuentes web no cargan: cualquier version hecha con texto caeria a Arial.
-  LOGO_SDI_URL: 'https://cotizador.appsegurosdigitales.com/img/sdi-logo-email.png',
+  LOGO_SDI_URL: 'https://cotizador.appsegurosdigitales.com/img/sdi-logo-email-ins.png',
   WEBSITE:     'www.segurosdelins.com',
 
   // Pie del correo

@@ -106,7 +106,7 @@ export default async function handler(req, context) {
 
   const ag = correoAgente(d, { clienteAvisado });
   try {
-    await enviar(apiKey, { from: "Citas · Seguros Digitales SDI <" + dir + ">", to: [d.ae], reply_to: d.correo, subject: ag.asunto, html: ag.html, text: ag.texto });
+    await enviar(apiKey, { from: "Citas · SDI Seguros Digitales INS <" + dir + ">", to: [d.ae], reply_to: d.correo, subject: ag.asunto, html: ag.html, text: ag.texto });
   } catch (e) {
     console.error("[cita] no salio el del agente", e && e.message);
     return json(502, { error: "No pudimos enviar tu solicitud." });

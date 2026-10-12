@@ -303,7 +303,7 @@ function _bloqueAsistencias(o) {
  * licencia daba 3,32:1, y la licencia SUGESE es dato regulatorio.
  */
 /** Ultimo recurso si CFG no trae la URL: un src vacio dejaria un hueco roto. */
-const SDI_LOGO_POR_DEFECTO = 'https://cotizador.appsegurosdigitales.com/img/sdi-logo-email.png';
+const SDI_LOGO_POR_DEFECTO = 'https://cotizador.appsegurosdigitales.com/img/sdi-logo-email-ins.png';
 
 function _pieSDI(o) {
   const linea = function (t, top) {
@@ -311,8 +311,9 @@ function _pieSDI(o) {
   };
   const logo = o.logo || SDI_LOGO_POR_DEFECTO;
   return '        <tr><td bgcolor="' + SDI_NAVY + '" style="background:' + SDI_NAVY + ';color:#cbd5e1;padding:30px 32px 26px;text-align:center;">\n' +
-    // 120 px sobre un correo de 600: el pie firma, no compite con el contenido.
-    '          <img src="' + _escMarca(logo) + '" alt="Seguros Digitales SDI" width="120" style="display:block;margin:0 auto;border:0;outline:none;text-decoration:none;width:120px;height:auto;" />\n' +
+    // 146 px (~51 de alto, lo mismo que el logo anterior a 120) sobre un correo
+    // de 600: el pie firma, no compite con el contenido.
+    '          <img src="' + _escMarca(logo) + '" alt="SDI Seguros Digitales INS" width="146" style="display:block;margin:0 auto;border:0;outline:none;text-decoration:none;width:146px;height:auto;" />\n' +
     '          <p style="margin:18px 0 0;font-size:12px;">' +
       '<a href="mailto:' + _escMarca(o.correo) + '" style="color:#7dd3fc;text-decoration:none;font-weight:600;">' + _escMarca(o.correo) + '</a>' +
       (o.web ? ' &middot; <a href="https://' + _escMarca(o.web) + '" style="color:#7dd3fc;text-decoration:none;font-weight:600;">' + _escMarca(o.web) + '</a>' : '') +
@@ -321,7 +322,7 @@ function _pieSDI(o) {
     '          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:18px;"><tr>' +
       '<td style="border-top:1px solid #1e3a5f;height:1px;line-height:1px;font-size:0;">&nbsp;</td></tr></table>\n' +
     '          ' + linea('&copy; Propiedad intelectual de ' + _escMarca(o.agente), 14) + '\n' +
-    '          ' + linea('Seguros Digitales SDI &mdash; Todos los derechos reservados', 3) + '\n' +
+    '          ' + linea('SDI Seguros Digitales INS &mdash; Todos los derechos reservados', 3) + '\n' +
     '          ' + linea('Agente exclusivo INS &middot; Licencia SUGESE ' + _escMarca(o.licencia), 3) + '\n' +
     '        </td></tr>';
 }

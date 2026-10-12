@@ -55,6 +55,8 @@ App interna del agente INS Juan Carlos Hernández (licencia SUGESE 08-1318) para
 
 **125 commits (contados en git el 22 jul 2026). EN PRODUCCIÓN.** Todos los módulos activos y probados. Para el número al día: `git log --oneline | wc -l` en el clon local.
 
+> **12 oct 2026 — Marca "SDI Seguros Digitales INS"** (kit v1.4): el pie de los correos (cotización, póliza, renovación, asistencias y cita) usa el PNG nuevo `img/sdi-logo-email-ins.png` (464×162; `width="146"` = los mismos ~51 px de alto; en la cita sigue `height="34"`), el compacto 02 solo cambió su aria-label, y pasan a "SDI Seguros Digitales INS" los títulos, `og:site_name`, `alt`, el pie del explicador ("…SDI Seguros Digitales INS®"), el pie de los correos y el remitente "Citas · …". 🔴 `img/sdi-logo-email.png` (el viejo) NO se borra ni se pisa: SASINS lo carga desde este dominio.
+
 > **11 jun 2026 — Outlook ELIMINADO por completo.** La app envía SOLO por Gmail. No existen `outlook-auth.js`, `outlook-sender.js`, MSAL, `S.provider`, `CFG.MSAL_*`/`OUTLOOK_*`, ni selector de proveedor. Si una tarea pide "agregar Outlook" o menciona Microsoft Graph, confirmar con JC antes — fue eliminado intencionalmente.
 
 - Producción: [cotizador.appsegurosdigitales.com](https://cotizador.appsegurosdigitales.com)

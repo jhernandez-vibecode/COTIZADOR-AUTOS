@@ -12,7 +12,7 @@ import planesMod from "../../../js/planes-asistencia.js";
 const PLANES = planesMod.PLANES_ASI || [];
 
 const LOGO_INS = "https://cotizador.appsegurosdigitales.com/img/ins-logo.png";
-const LOGO_SDI = "https://cotizador.appsegurosdigitales.com/img/sdi-logo-email.png";
+const LOGO_SDI = "https://cotizador.appsegurosdigitales.com/img/sdi-logo-email-ins.png";
 const DIAS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
 const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "setiembre", "octubre", "noviembre", "diciembre"];
 // Abreviatura de correo (3 letras): NO es un slice de MESES porque "setiembre"
@@ -68,7 +68,7 @@ export function correoCliente(d) {
     '<p style="margin:0 0 14px;font-family:' + F + ';font-size:13px;color:#5A6570;">Podés pagar con tarjeta (enlace de pago), transferencia a cuentas del INS, SINPE Móvil o en insenlinea.grupoins.com.</p>' +
     p("Cualquier duda, respondé este correo" + contacto + ".<br><b>" + esc(d.n) + '</b><br><span style="font-size:12.5px;color:#5A6570;">Agente exclusivo del INS &middot; Licencia SUGESE ' + esc(d.l) + "</span>") +
     "</td></tr>" +
-    '<tr><td bgcolor="#0C2340" align="center" style="padding:18px;font-family:' + F + ';font-size:11.5px;color:#94a3b8;"><img src="' + LOGO_SDI + '" alt="Seguros Digitales SDI" height="34" style="height:34px;width:auto;border:0;display:block;margin:0 auto 8px;">Plataforma tecnológica Seguros Digitales SDI</td></tr>'
+    '<tr><td bgcolor="#0C2340" align="center" style="padding:18px;font-family:' + F + ';font-size:11.5px;color:#94a3b8;"><img src="' + LOGO_SDI + '" alt="SDI Seguros Digitales INS" height="34" style="height:34px;width:auto;border:0;display:block;margin:0 auto 8px;">Plataforma tecnológica SDI Seguros Digitales INS</td></tr>'
   );
   const texto = [
     "Hola " + pila + ",", "",

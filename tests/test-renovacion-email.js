@@ -125,19 +125,19 @@ ok('xsell-vacio-fallback', html.indexOf('https://www.segurosdelins.com') !== -1)
 ok('firma-licencia', html.indexOf('08-1318') !== -1);
 ok('firma-tel',      html.indexOf('8822-1348') !== -1);
 ok('firma-correo',   html.indexOf('jhernandez@segurosdelins.com') !== -1);
-ok('footer-sdi',     /Seguros Digitales SDI/.test(html));
+ok('footer-sdi',     /SDI Seguros Digitales INS/.test(html));
 // Logo SDI del pie: desde el 25 ago 2026 va como IMAGEN y no recreado con
 // tablas. Su tipografía está vectorizada en el kit y en correo las fuentes web
 // no cargan, así que una versión hecha con texto caería a Arial y no sería el
 // logo. Antes este check buscaba los cuatro colores de las barras.
-ok('logo-imagen-oficial', html.indexOf('sdi-logo-email.png') !== -1
-                          && html.indexOf('alt="Seguros Digitales SDI"') !== -1);
+ok('logo-imagen-oficial', html.indexOf('sdi-logo-email-ins.png') !== -1
+                          && html.indexOf('alt="SDI Seguros Digitales INS"') !== -1);
 ok('logo-no-recreado-con-tablas', html.indexOf('>SDI</td>') === -1);
 ok('pie-nota-legal-completa', html.indexOf('Propiedad intelectual de') !== -1
                               && html.indexOf('Todos los derechos reservados') !== -1
                               && html.indexOf('Agente exclusivo INS') !== -1);
 // Cara al cliente: INS arriba, SDI solo al pie.
-ok('marca-ins-arriba', html.indexOf('Seguros del INS') < html.indexOf('Seguros Digitales SDI'));
+ok('marca-ins-arriba', html.indexOf('Seguros del INS') < html.indexOf('SDI Seguros Digitales INS'));
 
 // ---------- Nota del agente: registro "usted" (D6) ----------
 var conNota = buildRenovacionEmail(Object.assign({}, base, { notaAdicional: 'Cualquier duda me escribe.' }));

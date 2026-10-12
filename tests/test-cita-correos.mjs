@@ -31,6 +31,8 @@ ok('cliente: NO repite domicilio ni ingreso', cl.html.indexOf('porton gris') ===
 ok('cliente: trato de vos', /Preparate/.test(cl.html) && !/\busted\b/i.test(cl.html));
 ok('cliente: sin border-left', cl.html.indexOf('border-left') === -1);
 ok('cliente: logos alojados con URL absoluta', /src="https:\/\/cotizador\.appsegurosdigitales\.com\/img\/ins-logo\.png"/.test(cl.html));
+// 12 oct 2026: marca "SDI Seguros Digitales INS" (logo con la leyenda nueva, archivo nuevo al lado del viejo).
+ok('cliente: pie SDI con el logo y el nombre nuevos', /src="https:\/\/cotizador\.appsegurosdigitales\.com\/img\/sdi-logo-email-ins\.png"/.test(cl.html) && cl.html.indexOf('Plataforma tecnológica SDI Seguros Digitales INS') !== -1);
 ok('cliente: trae texto plano', typeof cl.texto === 'string' && cl.texto.indexOf('BDF482') !== -1 && cl.texto.indexOf('<') === -1);
 ok('cliente sin asistencias: no sale el renglon', correoCliente(Object.assign({}, d, { as: [] })).html.indexOf('Asistencias opcionales') === -1);
 

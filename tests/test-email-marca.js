@@ -71,7 +71,7 @@ var pie = M._pieSDI({
   tel: '0000-0000', agente: 'Nombre Del Agente', licencia: '00-0000'
 });
 ok('lleva el logotipo como imagen', pie.indexOf('<img src="https://ejemplo.test/sdi.png"') !== -1);
-ok('la imagen tiene alt, por si se bloquea', pie.indexOf('alt="Seguros Digitales SDI"') !== -1);
+ok('la imagen tiene alt, por si se bloquea', pie.indexOf('alt="SDI Seguros Digitales INS"') !== -1);
 ok('nota legal: propiedad intelectual', pie.indexOf('Propiedad intelectual de Nombre Del Agente') !== -1);
 ok('nota legal: derechos reservados', pie.indexOf('Todos los derechos reservados') !== -1);
 ok('nota legal: agente exclusivo y licencia', pie.indexOf('Agente exclusivo INS') !== -1 && pie.indexOf('00-0000') !== -1);
@@ -82,7 +82,7 @@ ok('sin logotipo recreado con tablas', pie.indexOf('>SDI</td>') === -1);
 
 var pieSinLogo = M._pieSDI({ correo: 'a@b.test', tel: '1', agente: 'X', licencia: 'Y' });
 ok('sin URL de logo cae al respaldo, nunca a un src vacío',
-   pieSinLogo.indexOf('src=""') === -1 && pieSinLogo.indexOf('sdi-logo-email.png') !== -1);
+   pieSinLogo.indexOf('src=""') === -1 && pieSinLogo.indexOf('sdi-logo-email-ins.png') !== -1);
 ok('el correo del agente se escapa', M._pieSDI({ correo: '"><b>x', tel: '1', agente: 'X', licencia: 'Y' }).indexOf('"><b>x') === -1);
 
 // ===== 5. Las formas de pago =====

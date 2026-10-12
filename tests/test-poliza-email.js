@@ -66,7 +66,7 @@ ok('xsell-vacio-fallback', html.indexOf('https://www.segurosdelins.com') !== -1)
 ok('firma-licencia',    html.indexOf('08-1318') !== -1);
 ok('firma-tel',         html.indexOf('8822-1348') !== -1);
 ok('firma-correo',      html.indexOf('jhernandez@segurosdelins.com') !== -1);
-ok('footer-sdi',        /Seguros Digitales SDI/.test(html));
+ok('footer-sdi',        /SDI Seguros Digitales INS/.test(html));
 ok('doctype',           /^<!DOCTYPE html>/.test(html));
 
 // --- Rediseño línea clara SDI (13 sep 2026) ---
