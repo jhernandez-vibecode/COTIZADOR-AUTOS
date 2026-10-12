@@ -208,7 +208,8 @@ ok('la guia re-encadena Pagos → asistencias → cita', guia.indexOf("s5next.da
 ok('el boton de la guia lleva c, v, p, y y wa al configurador', guia.indexOf("add('c', data.c); add('v', data.v); add('p', data.p); add('y', data.y);") !== -1 && guia.indexOf("add('wa', data.wa)") !== -1);
 // 28 set 2026: las tres formas de pago y, con el formulario SDI, lo que necesita /cita/.
 ok('el boton de la guia lleva pa, ps y pt', guia.indexOf("add('pa', data.pa); add('ps', data.ps); add('pt', data.pt);") !== -1);
-ok('el boton de la guia lleva fc/ae/tel SOLO con el formulario SDI', guia.indexOf("if (_modoCitaSdi(data)) { add('fc', '1'); add('ae', data.ae); add('tel', data.tel); }") !== -1);
+// 12 oct 2026: dentro del mismo if van va (monto asegurado) e ia (interés asegurable), para el correo del agente.
+ok('el boton de la guia lleva fc/ae/tel/va/ia SOLO con el formulario SDI', guia.indexOf("if (_modoCitaSdi(data)) { add('fc', '1'); add('ae', data.ae); add('tel', data.tel); add('va', data.va); add('ia', data.ia); }") !== -1);
 
 console.log('=== Configurador: formas de pago y cita (28 set 2026) ===');
 var conf = fs.readFileSync(path.join(__dirname, '..', 'asistencias', 'index.html'), 'utf8');

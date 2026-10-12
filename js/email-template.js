@@ -110,7 +110,8 @@ function buildEmail(params) {
   // A donde va el boton "Agendar mi cita ahora": /cita/ si el agente usa el
   // formulario propio; si no, su enlace de siempre.
   const agendaHref = _buildCitaUrl({ clientName: nombre, vehicle: vehiculo, year: p.year,
-    plate: _placaEsRelleno(p.plate, p.plateClass) ? '' : p.plate, prices: prices }) || CFG.AGENDA_URL;
+    plate: _placaEsRelleno(p.plate, p.plateClass) ? '' : p.plate, prices: prices,
+    valor: p.valor, interes: p.interes }) || CFG.AGENDA_URL;
 
   // ¿Este correo lleva la tarjeta de planes de asistencia? Solo con la casilla
   // del paso 3 prendida Y desde el 28 set 2026 (asiDisponible). La misma
@@ -136,7 +137,9 @@ function buildEmail(params) {
     // Para que la guia muestre LAS MISMAS coberturas que este correo.
     coberturas:    p.coberturas,
     // Para que la guia muestre la seccion de asistencias solo si este correo trajo la tarjeta.
-    asistencias:   conAsistencias
+    asistencias:   conAsistencias,
+    // Viaja a /cita/ para el correo del agente (solo con el formulario SDI).
+    interes:       p.interes
   });
 
   // Familia de fuentes con fallback (Outlook ignora Google Fonts → cae a Helvetica)
@@ -192,7 +195,8 @@ function buildEmail(params) {
   const asistenciasHtml = conAsistencias
     ? _bloqueAsistencias({
         url: _buildPlanesUrl({ clientName: nombre, vehicle: vehiculo, plate: _placaEsRelleno(p.plate, p.plateClass) ? '' : plate, year: p.year,
-                               primaAnual: prices.anual, primaSemestral: prices.semestral, primaTrimestral: prices.trimestral }),
+                               primaAnual: prices.anual, primaSemestral: prices.semestral, primaTrimestral: prices.trimestral,
+                               valor: p.valor, interes: p.interes }),
         fontFam: fontFam
       })
     : '';
@@ -606,6 +610,9 @@ function _buildGuideUrl(extras) {
     params.push('fc=1');
     params.push('ae=' + encodeURIComponent(CFG.FROM_EMAIL));
     if (CFG.PHONE) params.push('tel=' + encodeURIComponent(CFG.PHONE));
+    // ia: el interes asegurable que eligio el agente, para su correo de la cita
+    // (12 oct 2026). El monto asegurado ya viaja en `va`.
+    if (_interestText(x.interes)) add('ia', x.interes);
   }
 
   if (params.length === 0) return base;
@@ -635,6 +642,9 @@ function _buildCitaUrl(extras) {
   add('wa', CFG.WHATSAPP); add('tel', CFG.PHONE); add('ae', CFG.FROM_EMAIL);
   add('c', x.clientName); add('v', x.vehicle); add('p', x.plate); add('y', x.year);
   if (x.prices) { add('pa', num(x.prices.anual)); add('ps', num(x.prices.semestral)); add('pt', num(x.prices.trimestral)); }
+  // Para el correo del agente (12 oct 2026): monto asegurado e interes asegurable.
+  add('va', num(x.valor));
+  if (_interestText(x.interes)) add('ia', x.interes);
   return CFG.CITA_URL + '?' + params.join('&');
 }
 
@@ -692,6 +702,9 @@ function _buildPlanesUrl(extras) {
     params.push('fc=1');
     params.push('ae=' + encodeURIComponent(CFG.FROM_EMAIL));
     if (CFG.PHONE) params.push('tel=' + encodeURIComponent(CFG.PHONE));
+    // Pasan de largo hasta /cita/, para el correo del agente (12 oct 2026).
+    add('va', num(x.valor));
+    if (_interestText(x.interes)) add('ia', x.interes);
   }
   return params.length ? base + (base.indexOf('?') === -1 ? '?' : '&') + params.join('&') : base;
 }

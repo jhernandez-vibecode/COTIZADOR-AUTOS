@@ -9,6 +9,7 @@
 // =====================================================================
 
 import planesMod from "../../../js/planes-asistencia.js";
+import { INTERESES } from "./cita-validacion.mjs";
 const PLANES = planesMod.PLANES_ASI || [];
 
 const LOGO_INS = "https://cotizador.appsegurosdigitales.com/img/ins-logo.png";
@@ -99,6 +100,10 @@ export function correoAgente(d, opc) {
   const asi = nombresAsi(d.as);
   const primas = [["Anual", d.pa], ["Semestral", d.ps], ["Trimestral", d.pt]].map(([k, v]) => colones(v) ? k + " " + colones(v) : "").filter(Boolean).join(" · ");
   const conAsi = totalConAsistencias(d);
+  // Monto asegurado e interés asegurable (JC, 12 oct 2026). El monto sale del PDF
+  // del INS; el interés lo elige el agente en el cotizador (el PDF no lo trae).
+  const montoAseg = colones(d.va);
+  const interes = INTERESES[d.ia] || "No se indicó al cotizar";
   // El vehículo suele traer ya el año ("Rural 2024"): no repetirlo.
   const veh = [d.v, d.y && String(d.v || "").indexOf(d.y) === -1 ? d.y : ""].filter(Boolean).join(" ");
   const placaAsunto = esCeroKm(d.placa) ? "0 KM" : d.placa;
@@ -129,7 +134,8 @@ export function correoAgente(d, opc) {
     fila("Forma de pago", d.formaPago) + fila("Fecha", fechaCR(d.fecha)) + fila("Rango de horas", d.franja) + "</table>" +
     rotulo("De la cotización") +
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0">' +
-    (veh ? fila("Vehículo", veh) : "") + (primas ? fila("Primas cotizadas", primas) : "") +
+    (veh ? fila("Vehículo", veh) : "") + (montoAseg ? fila("Monto asegurado", montoAseg) : "") +
+    fila("Interés asegurable", interes) + (primas ? fila("Primas cotizadas", primas) : "") +
     fila("Asistencias opcionales", asi.length ? asi.join(" · ") : "Ninguna") +
     (conAsi ? fila("Total con asistencias", conAsi) : "") + "</table>" +
     (wa ? '<p style="margin:18px 0 0;"><a href="https://web.whatsapp.com/send/?phone=' + wa + "&amp;text=" + encodeURIComponent(textoWa) + '" style="display:inline-block;background:#0369A1;color:#ffffff;text-decoration:none;font-family:' + F + ';font-weight:bold;border-radius:999px;padding:11px 20px;font-size:13.5px;">Escribirle por WhatsApp</a></p>' : "") +
@@ -140,6 +146,6 @@ export function correoAgente(d, opc) {
   return {
     asunto: ["Cita solicitada", placaAsunto, fechaCorta(d.fecha), FRANJA_CORTA[d.franja] || d.franja, d.nombre].join(" · "),
     html,
-    texto: "CITA SOLICITADA\n" + fechaLarga(d.fecha) + " · " + d.franja + "\n\n" + copiar + (veh ? "\nVehículo: " + veh : "") + (primas ? "\nPrimas: " + primas : "") + (avisado ? "" : "\n\nNo se pudo enviar la confirmación al cliente."),
+    texto: "CITA SOLICITADA\n" + fechaLarga(d.fecha) + " · " + d.franja + "\n\n" + copiar + (veh ? "\nVehículo: " + veh : "") + (montoAseg ? "\nMonto asegurado: " + montoAseg : "") + "\nInterés asegurable: " + interes + (primas ? "\nPrimas: " + primas : "") + (avisado ? "" : "\n\nNo se pudo enviar la confirmación al cliente."),
   };
 }

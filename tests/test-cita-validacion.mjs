@@ -2,7 +2,7 @@
  * Tests de netlify/functions/lib/cita-validacion.mjs — qué solicitud de cita
  * se acepta. Datos INVENTADOS. Correr: node tests/test-cita-validacion.mjs
  */
-import { validarCita, hoyCR, esDiaHabil, agentesAutorizados, FORMAS, FRANJAS, INGRESOS }
+import { validarCita, hoyCR, esDiaHabil, agentesAutorizados, FORMAS, FRANJAS, INGRESOS, INTERESES }
   from '../netlify/functions/lib/cita-validacion.mjs';
 
 let pass = 0, fail = 0;
@@ -64,6 +64,17 @@ ok('as repetido no se duplica', JSON.stringify(v({ as: 'vip.vip' }).datos.as) ==
 ok('cuerpo null no revienta', validarCita(null, { agentes, now: AHORA }).ok === false);
 ok('las tres formas son las del formulario', FORMAS.join('|') === 'Anual|Semestral|Trimestral');
 ok('las cuatro franjas son las del formulario', FRANJAS.join('|') === '8:00 am a 10:00 am|10:00 am a 12:00 md|01:00 pm a 03:00 pm|03:00 pm a 05:00 pm');
+
+// 12 oct 2026: monto asegurado (va) e interes asegurable (ia). Son datos de apoyo
+// para el agente: si llegan raros se descartan, pero la solicitud del cliente sigue.
+ok('va con digitos viaja', v({ va: '15000000' }).datos.va === '15000000');
+ok('va con basura se descarta sin tumbar la solicitud', v({ va: '15.000.000<b>' }).ok === true && v({ va: '15.000.000<b>' }).datos.va === '');
+ok('va en cero no viaja', v({ va: '0' }).datos.va === '');
+ok('ia de la lista viaja', v({ ia: 'cero-km' }).datos.ia === 'cero-km');
+ok('ia desconocido se descarta sin tumbar la solicitud', v({ ia: 'inventado' }).ok === true && v({ ia: 'inventado' }).datos.ia === '');
+ok('ia no acepta claves heredadas del objeto', v({ ia: 'toString' }).datos.ia === '' && v({ ia: '__proto__' }).datos.ia === '');
+ok('sin va ni ia la solicitud sigue valida', v().ok === true && v().datos.va === '' && v().datos.ia === '');
+ok('los cuatro intereses son los del cotizador', Object.keys(INTERESES).join('|') === 'propietario|cero-km|traspaso|compra');
 
 console.log(pass + ' ok, ' + fail + ' fallas');
 process.exit(fail ? 1 : 0);

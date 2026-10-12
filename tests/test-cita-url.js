@@ -48,7 +48,27 @@ ok('cita: cliente, vehiculo, placa y primas', ['c=Mariela', 'v=TOYOTA%20RAV4', '
 var ms = buildEmail({ nombre: 'Mariela', vehiculo: 'TOYOTA RAV4', plate: 'BDF482', year: 2021, prices: extras.prices });
 ok('el boton del correo va a /cita/', /href="https:\/\/ejemplo\.test\/cita\/\?[^"]*ae=agente%40ejemplo\.test/.test(ms));
 ok('sin correo del perfil, sdi se comporta como propio', (function () { var e = CFG.FROM_EMAIL; CFG.FROM_EMAIL = ''; var r = _buildCitaUrl(extras) === '' && !/[?&]fc=/.test(_buildGuideUrl(extras)); CFG.FROM_EMAIL = e; return r; })());
+
+// 12 oct 2026 (JC): monto asegurado e interes asegurable para el correo de la cita.
+var exIa = Object.assign({}, extras, { valor: '15,000,000.00', interes: 'traspaso' });
+ok('sdi: la guia lleva ia (va ya viajaba)', _buildGuideUrl(exIa).indexOf('ia=traspaso') !== -1 && _buildGuideUrl(exIa).indexOf('va=15000000') !== -1);
+ok('sdi: interes con basura no viaja', !/[?&]ia=/.test(_buildGuideUrl(Object.assign({}, exIa, { interes: '<script>' }))));
+ok('sdi: sin interes no viaja ia', !/[?&]ia=/.test(_buildGuideUrl(Object.assign({}, exIa, { interes: '' }))));
+var cuIa = _buildCitaUrl(exIa);
+ok('sdi: el boton del correo a /cita/ lleva va e ia', cuIa.indexOf('va=15000000') !== -1 && cuIa.indexOf('ia=traspaso') !== -1);
+var msIa = buildEmail({ nombre: 'Mariela', vehiculo: 'TOYOTA RAV4', plate: 'BDF482', year: 2021, prices: extras.prices, valor: '15,000,000.00', interes: 'traspaso' });
+ok('sdi: buildEmail pasa valor e interes al boton de agendar', /href="https:\/\/ejemplo\.test\/cita\/\?[^"]*va=15000000[^"]*ia=traspaso/.test(msIa));
+ok('sdi: buildEmail pasa el interes al enlace de la guia', /explicacion\/\?[^"]*ia=traspaso/.test(msIa));
+var plCot = _buildPlanesUrl({ clientName: 'Mariela', primaAnual: '570,891.00', valor: '15,000,000.00', interes: 'traspaso' });
+ok('sdi: el configurador de una cotizacion lleva va e ia (para pasarlos a /cita/)', plCot.indexOf('va=15000000') !== -1 && plCot.indexOf('ia=traspaso') !== -1);
+var plVig = _buildPlanesUrl({ clientName: 'Mariela', primaVigente: '487.300', formaPago: 't', valor: '15,000,000.00', interes: 'traspaso' });
+ok('sdi: el configurador de un cliente con poliza NO lleva va ni ia', !/[?&]va=/.test(plVig) && !/[?&]ia=/.test(plVig));
 CFG.CITA_MODO = 'propio';
+ok('propio: el enlace de la guia queda byte a byte igual con interes', _buildGuideUrl(exIa) === _buildGuideUrl(Object.assign({}, exIa, { interes: '' })) && !/[?&]ia=/.test(_buildGuideUrl(exIa)));
+ok('propio: el configurador no lleva va ni ia', !/[?&](va|ia)=/.test(_buildPlanesUrl({ clientName: 'Mariela', primaAnual: '570,891.00', valor: '15,000,000.00', interes: 'traspaso' })));
+var app = leer('js/app.js');
+var ge = app.slice(app.indexOf('function _guideExtras'), app.indexOf('function updatePreview'));
+ok('app: _guideExtras pasa el interes (historial y WhatsApp = mismo enlace que el correo)', ge.indexOf("interes:       S.formData ? S.formData.interes : ''") !== -1);
 
 console.log('-- perfil --');
 var perfil = leer('js/agent-profile.js');
@@ -75,6 +95,12 @@ ok('el sitio web NO viaja a /cita/ (la guia lo rellena con un valor por defecto)
 ok('as con basura no viaja', _urlCita(dg, '<script>').indexOf('as=') === -1);
 ok('la guia lee fc, ae y tel', guia.indexOf("fc: _params.get('fc') === '1'") !== -1 && guia.indexOf("ae: _params.get('ae') || ''") !== -1 && guia.indexOf("tel: _params.get('tel') || ''") !== -1);
 ok('el boton navega a /cita/ solo en modo sdi', guia.indexOf('if (_modoCitaSdi(data))') !== -1);
+// 12 oct 2026: monto asegurado e interes asegurable pasan de la guia a /cita/.
+var ugIa = _urlCita(Object.assign({}, dg, { va: 15000000, ia: 'compra' }), '');
+ok('la guia pasa va e ia a /cita/', ugIa.indexOf('va=15000000') !== -1 && ugIa.indexOf('ia=compra') !== -1);
+ok('sin va ni ia no se inventan', !/[?&](va|ia)=/.test(_urlCita(Object.assign({}, dg, { va: null, ia: '' }), '')));
+ok('la guia lee ia', guia.indexOf("ia: _params.get('ia') || ''") !== -1);
+ok('el configurador pasa va e ia a /cita/', leer('asistencias/index.html').indexOf("add('va', param('va')); add('ia', param('ia'));") !== -1);
 
 console.log('-- la pagina /cita/ --');
 var pg = fs.existsSync(path.join(__dirname, '..', 'cita', 'index.html')) ? leer('cita/index.html') : '';
@@ -95,6 +121,7 @@ ok('WhatsApp por web.whatsapp, nunca wa.me', pg.indexOf('https://web.whatsapp.co
 ok('[hidden] le gana al display', pg.indexOf('[hidden]{display:none!important}') !== -1);
 ok('campo trampa presente y sin type=hidden', /id="f-sitio"/.test(pg) && !/id="f-sitio"[^>]*type="hidden"/.test(pg));
 ok('envia a /cita/enviar', pg.indexOf("fetch('/cita/enviar'") !== -1);
+ok('lee va e ia del enlace y los manda en el envio (12 oct 2026)', pg.indexOf("va: g('va'), ia: g('ia')") !== -1 && pg.indexOf('Object.assign({}, r, ag, cot)') !== -1);
 ok('nada del agente escrito a mano', pg.indexOf('08-1318') === -1 && !/Juan Carlos/.test(pg) && pg.indexOf('8822') === -1);
 ok('sin genero', !/protegid[ao]\b|asegurad[ao] al instante/.test(pg.replace(/queda asegurado/g, '')));
 ok('la fecha dice setiembre como los correos, no el septiembre del navegador', pg.indexOf("'setiembre'") !== -1 && pg.indexOf('toLocaleDateString') === -1);

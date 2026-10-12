@@ -288,6 +288,7 @@ button{font:inherit;color:inherit}
     add('c', CLIENTE); add('v', VEH); add('p', param('p')); add('y', param('y'));
     add('pa', COT.a || ''); add('ps', COT.s || ''); add('pt', COT.t || '');
     add('fp', fp);
+    add('va', param('va')); add('ia', param('ia'));   // para el correo del agente (12 oct 2026)
     add('as', ids.map(function (p) { return p.id; }).join('.'));
     return '../cita/?' + q.join('&');
   }

@@ -1,5 +1,7 @@
 /** Tests de los dos correos de la cita. Datos INVENTADOS. node tests/test-cita-correos.mjs */
+import fs from 'node:fs';
 import { correoCliente, correoAgente, fechaLarga, fechaCorta, nombrePila, totalConAsistencias } from '../netlify/functions/lib/cita-correos.mjs';
+import { INTERESES } from '../netlify/functions/lib/cita-validacion.mjs';
 
 let pass = 0, fail = 0;
 function ok(n, c) { if (c) pass++; else { fail++; console.error('FAIL ' + n); } }
@@ -70,6 +72,30 @@ ok('total anual (solo IVA)', totalConAsistencias({ ...d, formaPago: 'Anual' }).i
 ok('sin asistencias no hay total', totalConAsistencias({ ...d, as: [] }) === '');
 ok('sin la prima de esa forma no hay total', totalConAsistencias({ ...d, ps: '' }) === '');
 ok('agente: el correo trae el total con asistencias', ag.html.indexOf('Total con asistencias') !== -1 && ag.html.indexOf('₡338.304') !== -1);
+
+// 12 oct 2026 (JC): monto asegurado e interes asegurable en el correo del agente.
+const conDatos = correoAgente({ ...d, va: '15000000', ia: 'propietario' }, { clienteAvisado: true });
+ok('agente: monto asegurado con punto de miles', conDatos.html.indexOf('Monto asegurado') !== -1 && conDatos.html.indexOf('₡15.000.000') !== -1);
+ok('agente: interes asegurable con el texto del cotizador', conDatos.html.indexOf('Interés asegurable') !== -1 && conDatos.html.indexOf('Propietario Registral') !== -1);
+ok('agente: los dos van en "De la cotización", despues del vehiculo y antes de las primas', (() => {
+  const h = conDatos.html, i = h.indexOf('De la cotización');
+  return i !== -1 && i < h.indexOf('TOYOTA RAV4') && h.indexOf('TOYOTA RAV4') < h.indexOf('Monto asegurado') &&
+    h.indexOf('Monto asegurado') < h.indexOf('Interés asegurable') && h.indexOf('Interés asegurable') < h.indexOf('Primas cotizadas');
+})());
+ok('agente: texto plano trae los dos', conDatos.texto.indexOf('Monto asegurado: ₡15.000.000') !== -1 && conDatos.texto.indexOf('Interés asegurable: Propietario Registral') !== -1);
+ok('agente: sin interes avisa que no se indico', ag.html.indexOf('No se indicó al cotizar') !== -1 && ag.texto.indexOf('Interés asegurable: No se indicó al cotizar') !== -1);
+ok('agente: sin monto no sale el renglon', ag.html.indexOf('Monto asegurado') === -1);
+ok('agente: cero km se lee completo', correoAgente({ ...d, ia: 'cero-km' }, { clienteAvisado: true }).html.indexOf('Vehículo Cero Kilómetros (en proceso de compra)') !== -1);
+ok('cliente: NO lleva monto ni interes (es dato para el agente)', (() => { const c = correoCliente({ ...d, va: '15000000', ia: 'propietario' }); return c.html.indexOf('15.000.000') === -1 && c.html.indexOf('Propietario Registral') === -1 && c.texto.indexOf('Propietario') === -1; })());
+// La lista del servidor tiene que decir lo mismo que el desplegable del cotizador.
+{
+  const src = fs.readFileSync(new URL('../js/email-template.js', import.meta.url), 'utf8');
+  const i = src.indexOf('function _interestText'), j = src.indexOf('\n}\n', i) + 2;
+  const interestText = new Function(src.slice(i, j) + '\nreturn _interestText;')();
+  ok('INTERESES = _interestText del correo de cotizacion', Object.keys(INTERESES).length === 4 && Object.keys(INTERESES).every((k) => interestText(k) === INTERESES[k]));
+  const idx = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+  ok('INTERESES = opciones del desplegable f-interes', Object.keys(INTERESES).every((k) => idx.indexOf('<option value="' + k + '">') !== -1));
+}
 
 console.log(pass + ' ok, ' + fail + ' fallas');
 process.exit(fail ? 1 : 0);

@@ -36,6 +36,8 @@ ok('g-acepta-espacios', esNuestro('n=Juan%20Carlos%20Hernandez%20Vargas&c=DELGAD
 // la lista blanca, el acortador rechaza el enlace y cae al largo EN SILENCIO
 // (paso con `cb` del 25 ago al 17 set).
 ok('g-acepta-cita', esNuestro('n=Agente%20Prueba&fc=1&ae=agente%40ejemplo.test&tel=8888-1111&wa=8888-1111', CLAVES));
+// 12 oct 2026: `ia` (interes asegurable) viaja en la guia rumbo al correo de la cita.
+ok('g-acepta-interes', esNuestro('n=Agente%20Prueba&va=15000000&fc=1&ae=agente%40ejemplo.test&ia=propietario', CLAVES));
 ok('a-acepta-espacios', esNuestro('n=Juan%20Carlos%20Hernandez%20Vargas&lic=08-1318', CLAVES_A));
 
 // ---------- Guia de emergencias (/a) ----------

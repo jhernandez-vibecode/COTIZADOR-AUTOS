@@ -3049,7 +3049,10 @@ const data = {
   // de agendar abre /cita/ en vez de la pantalla "Falta un paso". tel: su teléfono.
   fc: _params.get('fc') === '1',
   ae: _params.get('ae') || '',
-  tel: _params.get('tel') || ''
+  tel: _params.get('tel') || '',
+  // ia: interés asegurable que eligió el agente (12 oct 2026). La guía no lo
+  // muestra: solo lo pasa a /cita/ para el correo del agente, junto con `va`.
+  ia: _params.get('ia') || ''
 };
 
 const fmt = (n) => '₡' + Number(n).toLocaleString('de-DE');
@@ -3161,6 +3164,8 @@ function _urlCita(d, as) {
   add('n', d.n); add('l', d.l); add('wa', d.wa); add('tel', d.tel); add('ae', d.ae);
   add('c', d.c); add('v', d.v); add('p', d.p); add('y', d.y);
   add('pa', d.pa); add('ps', d.ps); add('pt', d.pt);
+  // Para el correo del agente (12 oct 2026): monto asegurado e interés asegurable.
+  add('va', d.va); add('ia', d.ia);
   if (/^[a-z]+(\.[a-z]+)*$/.test(String(as || ''))) add('as', as);
   return '../cita/?' + q.join('&');
 }
@@ -3594,7 +3599,7 @@ function urlPlanesDesdeGuia() {
   add('pa', data.pa); add('ps', data.ps); add('pt', data.pt);
   // Con el formulario de cita SDI, el configurador termina en /cita/ con la
   // forma de pago y las asistencias elegidas, en vez de WhatsApp.
-  if (_modoCitaSdi(data)) { add('fc', '1'); add('ae', data.ae); add('tel', data.tel); }
+  if (_modoCitaSdi(data)) { add('fc', '1'); add('ae', data.ae); add('tel', data.tel); add('va', data.va); add('ia', data.ia); }
   return '../asistencias/' + (q.length ? '?' + q.join('&') : '');
 }
 function aplicarAsistencias() {
