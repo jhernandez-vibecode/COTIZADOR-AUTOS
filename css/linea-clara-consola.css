@@ -335,6 +335,11 @@ body.page-marcas{background:#fff}
 .wa-nota .btn[style]{border-radius:999px!important;min-height:38px;padding:0 16px!important}   /* el botón de descargar trae medidas en línea */
 .wa-prev-wrap{background:var(--lc-band);border-radius:20px}
 .wa-prev{background:#fff;border-radius:14px;box-shadow:none;border:1px solid var(--lc-line);color:var(--lc-ink)}
+/* renovaciones en celular y tableta (12 oct 2026): "Renovación confirmada" + los 4 pasos no caben en una fila
+   (a 375 se salía 25 px y a 768, 180); hasta 1024 los pasos bajan a una segunda fila. Escritorio igual */
+@media (max-width:1024px){
+  body.page-renovacion .header-inner{flex-wrap:wrap;height:auto;min-height:58px;padding:10px 16px;row-gap:8px}
+}
 .form-row span[style*="--gray-500"]{color:var(--lc-ink-3)!important}   /* ayudas bajo los campos, con color en línea */
 .form-label span[style*="--gray-500"]{color:var(--lc-ink-3)!important}
 .card[style*="margin-top"]{margin-top:24px!important}

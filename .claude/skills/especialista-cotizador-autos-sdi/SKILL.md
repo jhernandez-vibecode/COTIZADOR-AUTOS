@@ -57,6 +57,8 @@ App interna del agente INS Juan Carlos Hernández (licencia SUGESE 08-1318) para
 
 > **12 oct 2026 — Marca "SDI Seguros Digitales INS"** (kit v1.4): el pie de los correos (cotización, póliza, renovación, asistencias y cita) usa el PNG nuevo `img/sdi-logo-email-ins.png` (464×162; `width="146"` = los mismos ~51 px de alto; en la cita sigue `height="34"`), el compacto 02 solo cambió su aria-label, y pasan a "SDI Seguros Digitales INS" los títulos, `og:site_name`, `alt`, el pie del explicador ("…SDI Seguros Digitales INS®"), el pie de los correos y el remitente "Citas · …". 🔴 `img/sdi-logo-email.png` (el viejo) NO se borra ni se pisa: SASINS lo carga desde este dominio.
 
+> **12 oct 2026 — `/renovaciones/` cabe a 375 px:** título + `#stepNav` no entraban en una fila (scrollWidth 401 a 375, los pasos terminaban en x=399.6); en ≤640 px `body.page-renovacion .header-inner` pasa a `flex-wrap:wrap` (height auto, padding 10px 16px, row-gap 8px) y los pasos bajan a una segunda fila (cabecera 114 → 131 px). Solo `css/linea-clara-consola.css`, bloque de renovaciones; a 1280 la captura es idéntica byte a byte; suite 27/27. ⚪ Aparte, sin tocar: entre 641 y ~1000 px la misma barra se sale (scrollWidth 947 a 768).
+
 > **11 jun 2026 — Outlook ELIMINADO por completo.** La app envía SOLO por Gmail. No existen `outlook-auth.js`, `outlook-sender.js`, MSAL, `S.provider`, `CFG.MSAL_*`/`OUTLOOK_*`, ni selector de proveedor. Si una tarea pide "agregar Outlook" o menciona Microsoft Graph, confirmar con JC antes — fue eliminado intencionalmente.
 
 - Producción: [cotizador.appsegurosdigitales.com](https://cotizador.appsegurosdigitales.com)
