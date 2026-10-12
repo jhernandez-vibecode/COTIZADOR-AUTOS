@@ -1624,9 +1624,7 @@ asegurado… el interés asegurable"*. Imagen del correo con datos inventados �
 - Enlaces ya enviados: desde la guía llega el monto (`va` ya viajaba en la guía) pero no el interés.
 - Tests: +31 checks (cita-url 96, cita-correos 52, cita-validacion 46, enlace +1). 🔴 El test de guardia busca el cierre
   de `_interestText` **tolerando CRLF**: tras el merge git dejó `email-template.js` con CRLF en Windows y la primera
-  versión (que buscaba `
-}
-`) falló. Smoke: clic real guía → `/cita/` → envío interceptado con `va` e `ia` → ese cuerpo
+  versión (que buscaba el cierre de la función solo con LF) falló. Smoke: clic real guía → `/cita/` → envío interceptado con `va` e `ia` → ese cuerpo
   por `validarCita` + `correoAgente` reales. Prod: `/g` con `ia` → 200 y el 302 lo conserva; `/cita/enviar {verificar}` →
   `autorizado:true`. **No se envió ninguna cita real.**
 
