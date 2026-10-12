@@ -57,6 +57,8 @@ App interna del agente INS Juan Carlos Hernández (licencia SUGESE 08-1318) para
 
 > **12 oct 2026 — Marca "SDI Seguros Digitales INS"** (kit v1.4): el pie de los correos (cotización, póliza, renovación, asistencias y cita) usa el PNG nuevo `img/sdi-logo-email-ins.png` (464×162; `width="146"` = los mismos ~51 px de alto; en la cita sigue `height="34"`), el compacto 02 solo cambió su aria-label, y pasan a "SDI Seguros Digitales INS" los títulos, `og:site_name`, `alt`, el pie del explicador ("…SDI Seguros Digitales INS®"), el pie de los correos y el remitente "Citas · …". 🔴 `img/sdi-logo-email.png` (el viejo) NO se borra ni se pisa: SASINS lo carga desde este dominio.
 
+> **12 oct 2026 — El correo "Cita solicitada" trae el monto asegurado y el interés asegurable** (merge `4136ce8`, tag de rollback `pre-cita-monto-interes-12oct`, verificado en prod). Dos renglones en "De la cotización", entre Vehículo y Primas. 🔴 **El interés asegurable NO viene en el PDF del INS** (revisadas 551 cotizaciones: la página 1 trae `Valor Asegurado`, nunca el interés): es el desplegable `f-interes` del paso 2. Viaja como **`ia`** (clave: propietario · cero-km · traspaso · compra) y **solo con Formulario SDI** — en modo propio la guía queda byte a byte igual. El monto viaja como **`va`**. Ver "Formulario propio de cita → Monto e interés asegurable".
+
 > **12 oct 2026 — `/renovaciones/` cabe a 375 px:** título + `#stepNav` no entraban en una fila (scrollWidth 401 a 375, los pasos terminaban en x=399.6); en ≤640 px `body.page-renovacion .header-inner` pasa a `flex-wrap:wrap` (height auto, padding 10px 16px, row-gap 8px) y los pasos bajan a una segunda fila (cabecera 114 → 131 px). Solo `css/linea-clara-consola.css`, bloque de renovaciones; a 1280 la captura es idéntica byte a byte; suite 27/27. ⚪ Aparte, sin tocar: entre 641 y ~1000 px la misma barra se sale (scrollWidth 947 a 768).
 
 > **11 jun 2026 — Outlook ELIMINADO por completo.** La app envía SOLO por Gmail. No existen `outlook-auth.js`, `outlook-sender.js`, MSAL, `S.provider`, `CFG.MSAL_*`/`OUTLOOK_*`, ni selector de proveedor. Si una tarea pide "agregar Outlook" o menciona Microsoft Graph, confirmar con JC antes — fue eliminado intencionalmente.
@@ -1604,6 +1606,30 @@ Reglas que deja:
 - La sesión de Netlify en el Chrome de Claude caduca: para leer los registros de la Function JC tiene que volver a iniciar
   sesión (Claude no ingresa credenciales). Por eso existe `#falloDet`.
 
+### Monto asegurado e interés asegurable en el correo del agente (12 oct 2026) — EN PROD
+
+JC: *"Necesito agregar dos datos a la plantilla del correo que me llega cuando un cliente agenda la cita… el monto
+asegurado… el interés asegurable"*. Imagen del correo con datos inventados → *"Dale, publicalo"*. Merge `4136ce8`.
+
+- 🔴 **El interés asegurable NO viene en el PDF** (JC creía que sí; revisadas 551 cotizaciones de Descargas). Es el
+  desplegable `f-interes` del paso 2. Si el agente no elige ninguno, el correo dice **"No se indicó al cotizar"**.
+- **Tres caminos a `/cita/`, los tres llevan `va` + `ia`:** la guía (`_urlCita`, `data.ia`), el botón "Agendar mi cita
+  ahora" del correo (`_buildCitaUrl`) y el configurador de asistencias (`_buildPlanesUrl` y `urlPlanesDesdeGuia` los
+  agregan dentro del bloque de cita SDI; `asistencias/index.html` los reenvía en su `urlCita`). `_guideExtras()` pasa
+  `interes` para que el enlace del historial/WhatsApp sea el mismo del correo. `CLAVES` de `/g` acepta `ia`.
+- `/cita/` **no los muestra**: los manda en el POST (`cot.va`, `cot.ia`). El correo al CLIENTE no cambió.
+- **Servidor:** `INTERESES` en `cita-validacion.mjs` (clave → texto, el mismo de `_interestText`; un test de guardia
+  compara las dos listas y las opciones de `f-interes`). `va` que no sea 1-13 dígitos o `ia` desconocido (incluidas
+  claves heredadas como `toString`) **se descartan sin tumbar la solicitud**. `correoAgente` importa `INTERESES`.
+- Enlaces ya enviados: desde la guía llega el monto (`va` ya viajaba en la guía) pero no el interés.
+- Tests: +31 checks (cita-url 96, cita-correos 52, cita-validacion 46, enlace +1). 🔴 El test de guardia busca el cierre
+  de `_interestText` **tolerando CRLF**: tras el merge git dejó `email-template.js` con CRLF en Windows y la primera
+  versión (que buscaba `
+}
+`) falló. Smoke: clic real guía → `/cita/` → envío interceptado con `va` e `ia` → ese cuerpo
+  por `validarCita` + `correoAgente` reales. Prod: `/g` con `ia` → 200 y el 302 lo conserva; `/cita/enviar {verificar}` →
+  `autorizado:true`. **No se envió ninguna cita real.**
+
 ### Infraestructura (19 sep 2026)
 
 - **Resend**, cuenta `segurosdelins`, **plan gratuito = 3 dominios, 3.000 correos/mes, 100/día** (leído en su página
@@ -2007,12 +2033,6 @@ Contrastadas con 5 PDF oficiales que entregó JC (viven en `OneDrive\ARCHIVO DIG
 - **Cláusula 33:** ver la sección de la calculadora — el factor va **sobre prima anual**.
 
 ## Pendientes
-
-- ⏳ **Monto asegurado e interés asegurable en el correo "Cita solicitada" (12 oct 2026) — LISTO en la rama
-  `feat/cita-monto-interes` (`169cb5a`), esperando el OK de JC para publicar.** Tag de rollback `pre-cita-monto-interes-12oct`.
-  🔴 El interés asegurable **NO viene en el PDF del INS** (revisadas 551 cotizaciones): es el desplegable `f-interes` del
-  paso 2. Viaja como `ia` (solo con Formulario SDI) por los tres caminos a `/cita/`; el monto viaja como `va`. Sin interés,
-  el correo dice "No se indicó al cotizar". Al publicar: merge, push y documentar en la sección del formulario de cita.
 
 ### 🔖 CHECKPOINT 19 sep 2026 (cierre del día) — formulario de cita en producción, probado por JC con envíos reales
 

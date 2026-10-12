@@ -2947,3 +2947,10 @@ script que lo generó y aplicó: `…/2026-09-19-asistencia-por-plan-mock.py`.
 - Smoke en localhost (`http-server -c-1`): 2015 con G+M, 2024 solo G, enlace sin `cb`, 2003; clic real en las pestañas; 375 px
   sin desborde; consola 0; `_urlCita` y los 5 dots intactos. De paso: un check de `test-cita-url.js` buscaba la línea literal
   vieja de "Tu plan" y se le apuntó a la nueva.
+
+## 12 oct 2026 — monto asegurado e interes asegurable en el correo "Cita solicitada"
+
+Merge `4136ce8` (tag `pre-cita-monto-interes-12oct`), verificado en prod. Dos renglones en "De la cotizacion" del
+correo al agente. El interes asegurable NO viene en el PDF del INS (551 cotizaciones revisadas): es el desplegable
+`f-interes` del paso 2; viaja como `ia` solo con Formulario SDI. El monto viaja como `va`. Detalle vigente en la SKILL
+router, seccion "Formulario propio de cita -> Monto asegurado e interes asegurable".
