@@ -81,6 +81,10 @@ document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('f-electric').addEventListener('change', schedulePreview);
   document.getElementById('f-asia').addEventListener('change', schedulePreview);
   document.getElementById('f-gama').addEventListener('change', schedulePreview);
+  // Sin esto, apagar los planes no se veía en la vista previa hasta tocar otro
+  // campo (el envío sí lo respetaba). 13 oct 2026.
+  var mAsi = document.getElementById('m-asistencias');
+  if (mAsi) mAsi.addEventListener('change', schedulePreview);
 
   // ============ VISTA 4 · Reset + compartir WhatsApp ============
   document.getElementById('btnReset').addEventListener('click', function () {
@@ -189,6 +193,7 @@ document.addEventListener('DOMContentLoaded', function () {
   if (savedProfile) {
     applyProfile(savedProfile);
     paintRailAgent();          // ya con los datos del agente aplicados
+    _aplicarAsiPorDefecto();   // el interruptor de planes arranca según su preferencia
     // La limpieza del registro (cotizaciones sin póliza de más de 90 días) NO
     // se hace acá: vive en driveBackup y corre solo cuando el respaldo quedó
     // confirmado. Borrar en el arranque dejaba sin red al agente que no tiene
@@ -274,6 +279,8 @@ function openProfileModal(firstTime) {
   var pCitaSdi = document.getElementById('p-cita-sdi'), pCitaPropio = document.getElementById('p-cita-propio');
   if (pCitaSdi && pCitaPropio) { pCitaSdi.checked = CFG.CITA_MODO === 'sdi'; pCitaPropio.checked = !pCitaSdi.checked; }
   var pCitaAviso = document.getElementById('p-cita-aviso'); if (pCitaAviso) pCitaAviso.hidden = true;
+  var pAsiSi = document.getElementById('p-asi-si'), pAsiNo = document.getElementById('p-asi-no');
+  if (pAsiSi && pAsiNo) { pAsiNo.checked = CFG.ASI_OFRECER === false; pAsiSi.checked = !pAsiNo.checked; }
   // Envío de pólizas activas (links del correo "Póliza Activa")
   var pAssist = document.getElementById('p-assist');
   var pXViaje = document.getElementById('p-xsell-viaje');
@@ -415,6 +422,7 @@ function handleProfileSave() {
     website:   cleanWebsite,
     agendaUrl: cleanAgenda,
     citaModo:  (document.getElementById('p-cita-sdi') || {}).checked ? 'sdi' : 'propio',
+    asiOfrecer: !(document.getElementById('p-asi-no') || {}).checked,
     assistUrl:           assistUrl,
     xsellViajeUrl:       xsellViajeUrl,
     xsellEstudiantilUrl: xsellEstudiantilUrl
@@ -423,6 +431,7 @@ function handleProfileSave() {
     saveProfile(profile);
     applyProfile(profile);
     paintRailAgent();          // el pie del menú y las iniciales del header
+    _aplicarAsiPorDefecto();   // la preferencia nueva se nota ya, también en la cotización abierta
   } catch (e) {
     showToast(e.message, 'error');
     return;
@@ -835,6 +844,17 @@ function downloadPDF() {
  * Limpia todo el estado para empezar una nueva cotizacion.
  * Conserva accessToken (dura 1h, util para multiples envios seguidos).
  */
+/**
+ * Pone el interruptor "Incluir los planes de asistencia" (paso 3) según la
+ * preferencia del agente en ⚙ (CFG.ASI_OFRECER, 13 oct 2026). Corre al
+ * arrancar, al guardar el perfil y en cada cotización nueva (resetAll). En
+ * cada cotización el agente lo puede cambiar igual.
+ */
+function _aplicarAsiPorDefecto() {
+  var c = document.getElementById('m-asistencias');
+  if (c) c.checked = CFG.ASI_OFRECER !== false;
+}
+
 function resetAll() {
   S.step        = 1;
   S.data        = null;
@@ -857,6 +877,9 @@ function resetAll() {
   if (asia) asia.checked = false;
   var gama = document.getElementById('f-gama');
   if (gama) gama.checked = false;
+  // El de planes vuelve a la preferencia del agente: si lo apagó en una
+  // cotización, la siguiente no tiene que arrancar apagada por arrastre.
+  _aplicarAsiPorDefecto();
   var gamaSuggest = document.getElementById('gamaSuggest');
   if (gamaSuggest) gamaSuggest.style.display = 'none';
   S.lastEntry = null;
