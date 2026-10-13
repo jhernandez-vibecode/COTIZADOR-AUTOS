@@ -2973,3 +2973,9 @@ Merge `2647ffe` (tag `pre-cita-elegir-visible-13oct`), verificado en prod. Pedid
 parecía ya elegido. Clase `campo elige` en forma de pago y horario (círculo, línea de ayuda, anual en blanco, rojo si falta,
 el aviso se borra al tocar). "Prefiero no indicarlo" va en la página y en `INGRESOS` del servidor. De paso se midió la
 conversión cotización → cita: ~13 % antes y ~12 % después del formulario propio (85→11 y 117→14). Detalle en la SKILL router.
+
+## 13 oct 2026 (tarde) — /cita/ sin casilla de autorización
+
+Merge `7b6f363` (tag `pre-cita-sin-casilla-13oct`). JC pidió quitar la casilla obligatoria ("este freno"). Eligió, entre tres
+opciones, quitarla y dejar el texto "Al enviar esta solicitud autorizás…" sobre el botón: enviar es la autorización. La página
+manda `consent: true` y la Function lo sigue exigiendo. El texto no se quita: es la única constancia del consentimiento.
