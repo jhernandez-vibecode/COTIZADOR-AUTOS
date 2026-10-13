@@ -15,6 +15,7 @@ export const FRANJAS = ["8:00 am a 10:00 am", "10:00 am a 12:00 md", "01:00 pm a
 export const INGRESOS = [
   "Menos de ₡500.000", "De ₡500.000 a ₡1.000.000", "De ₡1.000.000 a ₡2.000.000",
   "De ₡2.000.000 a ₡4.000.000", "Más de ₡4.000.000",
+  "Prefiero no indicarlo", // 13 oct 2026, pedido de JC
 ];
 
 // Interes asegurable (12 oct 2026, pedido de JC). NO viene en el PDF del INS
