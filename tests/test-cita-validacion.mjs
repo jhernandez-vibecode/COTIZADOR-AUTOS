@@ -74,6 +74,9 @@ ok('ia de la lista viaja', v({ ia: 'cero-km' }).datos.ia === 'cero-km');
 ok('ia desconocido se descarta sin tumbar la solicitud', v({ ia: 'inventado' }).ok === true && v({ ia: 'inventado' }).datos.ia === '');
 ok('ia no acepta claves heredadas del objeto', v({ ia: 'toString' }).datos.ia === '' && v({ ia: '__proto__' }).datos.ia === '');
 ok('sin va ni ia la solicitud sigue valida', v().ok === true && v().datos.va === '' && v().datos.ia === '');
+// 13 oct 2026 (JC): el cliente puede no indicar el ingreso, y el agente lo ve escrito.
+ok('ingreso "Prefiero no indicarlo" pasa y viaja tal cual', v({ ingreso: 'Prefiero no indicarlo' }).ok === true && v({ ingreso: 'Prefiero no indicarlo' }).datos.ingreso === 'Prefiero no indicarlo');
+ok('la lista de ingresos cierra con "Prefiero no indicarlo"', INGRESOS[INGRESOS.length - 1] === 'Prefiero no indicarlo' && INGRESOS.length === 6);
 ok('los cuatro intereses son los del cotizador', Object.keys(INTERESES).join('|') === 'propietario|cero-km|traspaso|compra');
 
 console.log(pass + ' ok, ' + fail + ' fallas');

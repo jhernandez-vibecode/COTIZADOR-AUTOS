@@ -148,6 +148,17 @@ ok('guía: repuestos ya no repite "Tuyo"', guia.indexOf('match-tag">Tuyo<') === 
 ok('no promete videollamada: la inspeccion es con fotos (JC, 19 set 2026)', !/video\s?llamada/i.test(pg));
 ok('la pantalla de fallo muestra el motivo y el correo del agente (diagnostico por foto)', pg.indexOf('id="falloDet"') !== -1 && pg.indexOf("fallo(r, x.st, x.j && x.j.error)") !== -1);
 ok('la pagina no repite el ano del vehiculo', pg.indexOf("[cot.v, cot.y].filter(Boolean).join(' ')") === -1 && pg.indexOf('cot.v.indexOf(cot.y) === -1') !== -1);
+console.log('-- elegir visible (JC, 13 oct 2026) --');
+var cssPg = (pg.match(/<style>[\s\S]*?<\/style>/) || [''])[0];
+ok('forma de pago y horario llevan la clase elige', /class="campo elige" data-c="formaPago"/.test(pg) && /class="campo elige" data-c="franja"/.test(pg));
+ok('ayuda bajo la forma de pago', pg.indexOf('Tocá una de las tres opciones para elegirla.') !== -1);
+ok('ayuda bajo el horario', pg.indexOf('Tocá uno de los cuatro horarios para elegirlo.') !== -1);
+ok('círculo de selección visible en cada opción', cssPg.indexOf('.elige .op>span::before{') !== -1 && cssPg.indexOf('.elige .op input:checked+span::before{') !== -1);
+ok('el anual ya no lleva fondo verde (parecía elegido)', cssPg.indexOf('.elige .op.rec>span{border-color:var(--line-btn);background:#fff}') !== -1);
+ok('sin elegir, las tarjetas se marcan en rojo', cssPg.indexOf('.campo.mal.elige .op>span{border-color:#9F1239}') !== -1);
+ok('horario a una columna en el celular', cssPg.indexOf('@media (max-width:600px){.elige .ops.c2{grid-template-columns:1fr}}') !== -1);
+ok('ingreso: opción "Prefiero no indicarlo" al final', pg.indexOf('<option value="Más de ₡4.000.000">Más de ₡4.000.000</option><option value="Prefiero no indicarlo">Prefiero no indicarlo</option></select>') !== -1);
+ok('al elegir, el aviso rojo se borra en el acto', pg.indexOf("['formaPago', 'franja'].forEach(function (k) {") !== -1 && pg.indexOf("r.addEventListener('change', function () { marcar(k, ''); })") !== -1);
 ok('noindex', pg.indexOf('name="robots" content="noindex"') !== -1);
 
 console.log('\n' + pass + ' ok, ' + fail + ' fallas');

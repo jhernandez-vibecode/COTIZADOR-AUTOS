@@ -109,6 +109,21 @@ a{color:var(--blue)}
 .op.rec input:checked+span .op-tag{color:#fff}
 @media (max-width:600px){.fila3{grid-template-columns:1fr}}
 
+/* 13 oct 2026 (JC): la forma de pago y el horario se leen como algo que hay que elegir.
+   Círculo de selección visible en cada opción; el anual ya no lleva fondo verde (parecía elegido). */
+.elige .elige-ayuda{font-size:13px;color:var(--ink2)}
+.elige .op>span{position:relative;justify-content:flex-start;text-align:left;padding:10px 12px 10px 42px;min-height:52px}
+.elige .op>span.op-col{align-items:flex-start;justify-content:center;min-height:66px}
+.elige .op>span::before{content:"";position:absolute;left:14px;top:50%;transform:translateY(-50%);width:20px;height:20px;border-radius:50%;border:2px solid #8A939C;background:#fff;box-sizing:border-box}
+.elige .op:hover>span{border-color:var(--blue)}
+.elige .op.rec>span{border-color:var(--line-btn);background:#fff}
+.elige .op .op-tag{display:inline-block;margin-top:3px;background:var(--ok-bg);color:var(--ok-tx);border-radius:999px;padding:1px 8px;font-size:11px}
+.elige .op input:checked+span{background:var(--blue);border-color:var(--blue);color:#fff}
+.elige .op input:checked+span::before{border-color:#fff;background:radial-gradient(circle,var(--blue) 0 4px,#fff 5px)}
+.elige .op.rec input:checked+span .op-tag{background:rgba(255,255,255,.18);color:#fff}
+.campo.mal.elige .op>span{border-color:#9F1239}
+@media (max-width:600px){.elige .ops.c2{grid-template-columns:1fr}}
+
 /* validación y trampa anti-robot (propias de /cita/, no del mockup) */
 .campo input,.campo textarea,.campo select{min-width:0;max-width:100%}
 .campo input[type=date]{-webkit-appearance:none;appearance:none;min-height:46px}   /* iOS no encoge el campo de fecha */
@@ -149,19 +164,19 @@ a{color:var(--blue)}
         <textarea id="f-direccion" maxlength="300" autocomplete="street-address" placeholder="Ej.: 200 m norte de la escuela, casa portón gris"></textarea><span class="err" hidden></span></div>
       <div class="fila2">
         <div class="campo" data-c="ocupacion"><label for="f-ocupacion">Ocupación u Oficio</label><input id="f-ocupacion" type="text" maxlength="80"></div>
-        <div class="campo" data-c="ingreso"><label for="f-ingreso">Ingreso Mensual Promedio</label><select id="f-ingreso"><option value="">Seleccioná un rango</option><option value="Menos de ₡500.000">Menos de ₡500.000</option><option value="De ₡500.000 a ₡1.000.000">De ₡500.000 a ₡1.000.000</option><option value="De ₡1.000.000 a ₡2.000.000">De ₡1.000.000 a ₡2.000.000</option><option value="De ₡2.000.000 a ₡4.000.000">De ₡2.000.000 a ₡4.000.000</option><option value="Más de ₡4.000.000">Más de ₡4.000.000</option></select><span class="ay">Opcional. Un rango aproximado es suficiente. Se solicita para cumplir con la Ley 8204 y la política «Conozca a su cliente».</span></div>
+        <div class="campo" data-c="ingreso"><label for="f-ingreso">Ingreso Mensual Promedio</label><select id="f-ingreso"><option value="">Seleccioná un rango</option><option value="Menos de ₡500.000">Menos de ₡500.000</option><option value="De ₡500.000 a ₡1.000.000">De ₡500.000 a ₡1.000.000</option><option value="De ₡1.000.000 a ₡2.000.000">De ₡1.000.000 a ₡2.000.000</option><option value="De ₡2.000.000 a ₡4.000.000">De ₡2.000.000 a ₡4.000.000</option><option value="Más de ₡4.000.000">Más de ₡4.000.000</option><option value="Prefiero no indicarlo">Prefiero no indicarlo</option></select><span class="ay">Opcional. Un rango aproximado es suficiente. Se solicita para cumplir con la Ley 8204 y la política «Conozca a su cliente».</span></div>
       </div>
     </div>
 
     <div class="grupo"><h3>Tu vehículo y tu pago</h3>
       <div class="campo" data-c="placa"><label for="f-placa">Número de Placa o Indique si es Cero Kilómetros <span class="req">*</span></label><input id="f-placa" type="text" maxlength="80"><span class="pre-n" id="placaNota" hidden>Viene de tu cotización. Corregila si hace falta.</span><span class="err" hidden></span></div>
-      <div class="campo" data-c="formaPago"><span class="lb">Forma de pago que desea contratar <span class="req">*</span></span>
+      <div class="campo elige" data-c="formaPago"><span class="lb">Forma de pago que desea contratar <span class="req">*</span></span><span class="elige-ayuda">Tocá una de las tres opciones para elegirla.</span>
         <div class="ops c3"><label class="op rec"><input type="radio" name="formaPago" id="f-fp-a" value="Anual"><span class="op-col"><b>&#9733; Anual</b><i class="op-pr" id="pr-a" hidden></i><em class="op-tag" style="font-style:normal">Mejor precio</em></span></label><label class="op"><input type="radio" name="formaPago" id="f-fp-s" value="Semestral"><span class="op-col"><b>Semestral</b><i class="op-pr" id="pr-s" hidden></i></span></label><label class="op"><input type="radio" name="formaPago" id="f-fp-t" value="Trimestral"><span class="op-col"><b>Trimestral</b><i class="op-pr" id="pr-t" hidden></i></span></label></div><span class="ay" id="fpNota" hidden>Los montos ya incluyen las asistencias que elegiste, con el recargo por fraccionamiento y el IVA.</span><span class="err" hidden></span></div>
     </div>
 
     <div class="grupo"><h3>Tu cita</h3>
       <div class="campo" data-c="fecha"><label for="f-fecha">Por favor, indique la fecha en la que desea programar el aseguramiento de su vehículo <span class="req">*</span></label><span class="ay">Tome en cuenta que nuestro horario comercial es de lunes a viernes de 8:00 am a 5:00 pm</span><input id="f-fecha" type="date"><span class="err" hidden></span></div>
-      <div class="campo" data-c="franja"><span class="lb">Por favor, seleccione el rango de horas que prefiere para coordinar el aseguramiento. <span class="req">*</span></span><span class="ay">Es necesario que a esa hora tenga disponible su vehículo para las fotografías que vamos a necesitar y verificar el estado de conservación.</span>
+      <div class="campo elige" data-c="franja"><span class="lb">Por favor, seleccione el rango de horas que prefiere para coordinar el aseguramiento. <span class="req">*</span></span><span class="ay">Es necesario que a esa hora tenga disponible su vehículo para las fotografías que vamos a necesitar y verificar el estado de conservación.</span><span class="elige-ayuda">Tocá uno de los cuatro horarios para elegirlo.</span>
         <div class="ops c2"><label class="op"><input type="radio" name="franja" id="f-h1" value="8:00 am a 10:00 am"><span>8:00 am a 10:00 am</span></label><label class="op"><input type="radio" name="franja" id="f-h2" value="10:00 am a 12:00 md"><span>10:00 am a 12:00 md</span></label><label class="op"><input type="radio" name="franja" id="f-h3" value="01:00 pm a 03:00 pm"><span>01:00 pm a 03:00 pm</span></label><label class="op"><input type="radio" name="franja" id="f-h4" value="03:00 pm a 05:00 pm"><span>03:00 pm a 05:00 pm</span></label></div><span class="err" hidden></span></div>
     </div>
 
@@ -317,6 +332,10 @@ a{color:var(--blue)}
     if (!r.consent) e.consent = 'Necesitamos tu autorización para tramitar el seguro.';
     return e;
   }
+  // 13 oct 2026: al tocar una forma de pago o un horario, el aviso rojo se va en el acto.
+  ['formaPago', 'franja'].forEach(function (k) {
+    document.querySelectorAll('input[name="' + k + '"]').forEach(function (r) { r.addEventListener('change', function () { marcar(k, ''); }); });
+  });
   $('f-fecha').addEventListener('change', function () { var f = this.value; marcar('fecha', f && f >= hoy && !habil(f) ? 'Atendemos de lunes a viernes. Elegí otro día.' : ''); });
 
   function waIntl(v) { var n = String(v || '').replace(/\D/g, ''); return n.length === 8 ? '506' + n : n; }
