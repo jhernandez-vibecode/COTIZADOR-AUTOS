@@ -73,6 +73,7 @@ a{color:var(--blue)}
 .op input:focus-visible+span{outline:3px solid rgba(3,105,161,.35);outline-offset:2px}
 .consent{display:grid;grid-template-columns:22px minmax(0,1fr);gap:10px;font-size:13px;color:var(--ink2);background:#F8F9FA;border-radius:14px;padding:14px}
 .consent input{width:20px;height:20px;margin:1px 0 0;accent-color:var(--blue)}
+.consent.consent-txt{display:block;margin:0}   /* 13 oct 2026: sin casilla, solo el texto sobre el botón */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;min-height:48px;padding:0 24px;font:600 15px var(--body);border:1px solid var(--blue);cursor:pointer;text-decoration:none;background:var(--blue);color:#fff}
 .btn.s{background:#fff;color:var(--blue)}
 .pie-f{font-size:12.5px;color:var(--ink3);text-align:center}
@@ -181,7 +182,7 @@ a{color:var(--blue)}
     </div>
 
     <div class="trampa" aria-hidden="true"><label for="f-sitio">Sitio web</label><input id="f-sitio" type="text" tabindex="-1" autocomplete="off"></div>
-    <div class="campo" data-c="consent"><label class="consent"><input type="checkbox" id="f-consent"><span>Autorizo el uso de estos datos únicamente para tramitar mi seguro de automóviles con el INS. <b>No se usan para publicidad</b> ni se comparten con terceros.</span></label><span class="err" hidden></span></div>
+    <div class="campo" data-c="consent"><p class="consent consent-txt">Al enviar esta solicitud autorizás el uso de estos datos únicamente para tramitar tu seguro de automóviles con el INS. <b>No se usan para publicidad</b> ni se comparten con terceros.</p><span class="err" hidden></span></div>
     <button class="btn" type="submit" id="btnEnviar">Enviar mi solicitud</button>
     <p class="pie-f">Si el horario solicitado no está disponible, te contacto de inmediato para reprogramar al espacio más cercano.</p>
   </form></div>
@@ -314,7 +315,8 @@ a{color:var(--blue)}
     return { nombre: $('f-nombre').value.trim(), telefono: $('f-telefono').value.trim(), correo: $('f-correo').value.trim(),
       direccion: armarDireccion(), senas: $('f-direccion').value.trim(), ocupacion: $('f-ocupacion').value.trim(), ingreso: $('f-ingreso').value,
       placa: $('f-placa').value.trim(), formaPago: radio('formaPago'), fecha: $('f-fecha').value, franja: radio('franja'),
-      consent: $('f-consent').checked, sitio: $('f-sitio').value };
+      // 13 oct 2026 (JC): sin casilla. Enviar es la autorización: el texto que lo dice va justo arriba del botón.
+      consent: true, sitio: $('f-sitio').value };
   }
   function validar(r) {
     var e = {};
@@ -329,7 +331,6 @@ a{color:var(--blue)}
     else if (r.fecha < hoy) e.fecha = 'Esa fecha ya pasó.';
     else if (!habil(r.fecha)) e.fecha = 'Atendemos de lunes a viernes. Elegí otro día.';
     if (!r.franja) e.franja = 'Elegí un rango de horas.';
-    if (!r.consent) e.consent = 'Necesitamos tu autorización para tramitar el seguro.';
     return e;
   }
   // 13 oct 2026: al tocar una forma de pago o un horario, el aviso rojo se va en el acto.

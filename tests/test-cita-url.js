@@ -159,6 +159,13 @@ ok('sin elegir, las tarjetas se marcan en rojo', cssPg.indexOf('.campo.mal.elige
 ok('horario a una columna en el celular', cssPg.indexOf('@media (max-width:600px){.elige .ops.c2{grid-template-columns:1fr}}') !== -1);
 ok('ingreso: opción "Prefiero no indicarlo" al final', pg.indexOf('<option value="Más de ₡4.000.000">Más de ₡4.000.000</option><option value="Prefiero no indicarlo">Prefiero no indicarlo</option></select>') !== -1);
 ok('al elegir, el aviso rojo se borra en el acto', pg.indexOf("['formaPago', 'franja'].forEach(function (k) {") !== -1 && pg.indexOf("r.addEventListener('change', function () { marcar(k, ''); })") !== -1);
+console.log('-- sin casilla de autorizacion (JC, 13 oct 2026) --');
+ok('ya no hay casilla de autorización', pg.indexOf('id="f-consent"') === -1 && pg.indexOf('type="checkbox"') === -1);
+ok('el texto dice que enviar es la autorización', pg.indexOf('Al enviar esta solicitud autorizás el uso de estos datos únicamente para tramitar tu seguro de automóviles con el INS.') !== -1);
+var iTxt = pg.indexOf('consent-txt">'), iBtn = pg.indexOf('id="btnEnviar"');
+ok('el texto va justo antes del botón de enviar', iTxt !== -1 && iBtn > iTxt && pg.slice(iTxt, iBtn).indexOf('class="campo') === -1 && iBtn - iTxt < 400);
+ok('el envío lleva consent: true (la Function lo sigue exigiendo)', pg.indexOf("consent: true, sitio: $('f-sitio').value") !== -1);
+ok('ya no se frena por la casilla', pg.indexOf('Necesitamos tu autorización') === -1);
 ok('noindex', pg.indexOf('name="robots" content="noindex"') !== -1);
 
 console.log('\n' + pass + ' ok, ' + fail + ' fallas');
