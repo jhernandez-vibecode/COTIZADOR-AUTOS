@@ -110,6 +110,19 @@
           <p id="p-cita-aviso" hidden style="margin:6px 0 0;font-size:12px;color:#7C5A00;background:#FBF3DC;border-radius:8px;padding:8px 10px;"></p>
         </div>
 
+        <div class="form-row">
+          <label class="form-label">Planes de asistencia del INS</label>
+          <label style="display:flex;gap:10px;align-items:flex-start;margin:6px 0;font-size:13px;">
+            <input type="radio" name="p-asi" id="p-asi-si" value="si" style="margin-top:3px;">
+            <span><b>Ofrecerlos</b> — en cada cotización el interruptor del paso 3 arranca prendido: el correo lleva la tarjeta de los planes y la guía del cliente su sección. Es lo de siempre.</span>
+          </label>
+          <label style="display:flex;gap:10px;align-items:flex-start;margin:6px 0;font-size:13px;">
+            <input type="radio" name="p-asi" id="p-asi-no" value="no" style="margin-top:3px;">
+            <span><b>No ofrecerlos</b> — el interruptor arranca apagado. Si en una cotización sí querés ofrecerlos, lo prendés ahí mismo.</span>
+          </label>
+          <p style="margin:6px 0 0;font-size:12px;color:var(--gray-500,#64748b);">No cambia el envío “Asistencias a cliente” del menú.</p>
+        </div>
+
         <div style="margin:18px 0 6px;padding-top:14px;border-top:1px solid var(--gray-200,#e5e7eb);">
           <p style="margin:0;font-size:13px;font-weight:700;color:var(--navy,#0c2340);">Envío de pólizas activas</p>
           <p style="margin:2px 0 0;font-size:11px;color:var(--gray-500,#64748b);">Links que aparecen en el correo de “Póliza Activa”. Si dejás un cross-sell vacío, el botón lleva a tu sitio web.</p>
@@ -669,7 +682,7 @@
           <div class="toggle-row" id="asiRow" hidden>
             <label class="toggle-label" for="m-asistencias">
               <span>Incluir los planes de asistencia del INS</span>
-              <span class="toggle-hint">Agrega una tarjeta después de las formas de pago con los seis planes y su precio, más el enlace a la página donde el cliente los arma y ve en cuánto queda su seguro. Apagalo si en esta cotización no querés ofrecerlos.</span>
+              <span class="toggle-hint">Agrega una tarjeta después de las formas de pago con los seis planes y su precio, más el enlace a la página donde el cliente los arma y ve en cuánto queda su seguro. Apagalo si en esta cotización no querés ofrecerlos. Cómo arranca lo decidís en ⚙ Configuración.</span>
             </label>
             <label class="toggle-switch">
               <input type="checkbox" id="m-asistencias" checked />
@@ -731,8 +744,9 @@
        toca la app se agrega una linea aca. -->
   <footer class="app-foot">
     <details>
-      <summary>Última actualización: 12 oct 2026 — El correo "Cita solicitada" trae el monto asegurado y el interés asegurable</summary>
+      <summary>Última actualización: 13 oct 2026 — En Configuración decidís si ofrecer los planes de asistencia</summary>
       <ul>
+        <li><b>13 oct 2026</b> — <b>Nuevo en ⚙ Configuración: "Planes de asistencia del INS", con dos opciones.</b> "Ofrecerlos" es lo de siempre: en cada cotización el interruptor del paso 3 arranca prendido. Con "No ofrecerlos" arranca apagado, y si en una cotización sí querés ofrecerlos lo prendés ahí mismo. Además, al mover ese interruptor la vista previa del correo se actualiza enseguida, y al enviar otra cotización vuelve a como lo dejaste en Configuración. No cambia el envío "Asistencias a cliente" del menú.</li>
         <li><b>12 oct 2026</b> — <b>El correo "Cita solicitada" que le llega con el Formulario SDI ahora trae el monto asegurado y el interés asegurable</b>, en el bloque "De la cotización". El monto sale del PDF de la cotización. El interés asegurable es el que usted elige en el paso 2 (el PDF del INS no lo trae); si no elige ninguno, el correo dice "No se indicó al cotizar". El cliente no ve ninguno de los dos datos. Aplica completo a las cotizaciones que envíe desde hoy.</li>
         <li><b>12 oct 2026</b> — <b>En el celular y la tableta, la pantalla de Renovación confirmada ya se ve completa:</b> los cuatro pasos bajan debajo del título en vez de salirse por el borde. En la computadora se ve igual.</li>
         <li><b>12 oct 2026</b> — <b>La plataforma pasa a llamarse SDI Seguros Digitales INS:</b> el logo al pie de los correos que recibe el cliente (cotización, póliza activa, renovación, asistencias y solicitud de cita) trae la leyenda nueva, y cambian los textos del pie de la guía del cliente, del pie de los correos, del remitente del aviso "Cita solicitada" y del nombre en las pestañas del navegador. El logo de la consola sigue igual, solo dice "SDI". Todo lo demás funciona igual.</li>
