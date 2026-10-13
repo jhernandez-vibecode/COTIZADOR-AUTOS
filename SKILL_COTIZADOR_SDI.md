@@ -2961,3 +2961,9 @@ Arbol limpio, main = `ce8a21c`, suite 27/27. Hecho y en prod: marca "SDI Seguros
 `/renovaciones/` a 375 px (`a4b003e`), rescate del historial DESCARTADO por JC (`a7a37af`, tag
 `descartado-rescate-versiones-12oct`), monto asegurado e interes asegurable en el correo "Cita solicitada"
 (`4136ce8`, tag `pre-cita-monto-interes-12oct`). Lo que espera a JC y lo abierto: SKILL router, inicio de "Pendientes".
+
+## 13 oct 2026 — preferencia "Planes de asistencia del INS" en Configuracion
+
+Merge `39989d7` (tag `pre-asi-preferencia-13oct`), verificado en prod. Ofrecerlos (default) / No ofrecerlos: decide
+como arranca el interruptor `#m-asistencias` del paso 3. Perfil `asiOfrecer` -> `CFG.ASI_OFRECER`. De paso, el
+interruptor repinta la vista previa y `resetAll` lo devuelve a la preferencia. Detalle vigente en la SKILL router.

@@ -57,6 +57,8 @@ App interna del agente INS Juan Carlos Hernández (licencia SUGESE 08-1318) para
 
 > **12 oct 2026 — Marca "SDI Seguros Digitales INS"** (kit v1.4): el pie de los correos (cotización, póliza, renovación, asistencias y cita) usa el PNG nuevo `img/sdi-logo-email-ins.png` (464×162; `width="146"` = los mismos ~51 px de alto; en la cita sigue `height="34"`), el compacto 02 solo cambió su aria-label, y pasan a "SDI Seguros Digitales INS" los títulos, `og:site_name`, `alt`, el pie del explicador ("…SDI Seguros Digitales INS®"), el pie de los correos y el remitente "Citas · …". 🔴 `img/sdi-logo-email.png` (el viejo) NO se borra ni se pisa: SASINS lo carga desde este dominio.
 
+> **13 oct 2026 — Preferencia "Planes de asistencia del INS" en ⚙** (merge `39989d7`, tag de rollback `pre-asi-preferencia-13oct`, verificado en prod). Dos opciones: **Ofrecerlos** (lo de siempre) / **No ofrecerlos**. Decide cómo ARRANCA el interruptor `#m-asistencias` del paso 3 en cada cotización; en cada una se puede cambiar igual. Perfil `asiOfrecer` → `CFG.ASI_OFRECER` (default `true`; perfiles viejos siguen ofreciéndolos). De paso: el interruptor ahora repinta la vista previa y `resetAll` lo devuelve a la preferencia. NO toca el modal "Asistencias a cliente". Ver "Planes de asistencia del INS → Qué hay".
+
 > **12 oct 2026 — El correo "Cita solicitada" trae el monto asegurado y el interés asegurable** (merge `4136ce8`, tag de rollback `pre-cita-monto-interes-12oct`, verificado en prod). Dos renglones en "De la cotización", entre Vehículo y Primas. 🔴 **El interés asegurable NO viene en el PDF del INS** (revisadas 551 cotizaciones: la página 1 trae `Valor Asegurado`, nunca el interés): es el desplegable `f-interes` del paso 2. Viaja como **`ia`** (clave: propietario · cero-km · traspaso · compra) y **solo con Formulario SDI** — en modo propio la guía queda byte a byte igual. El monto viaja como **`va`**. Ver "Formulario propio de cita → Monto e interés asegurable".
 
 > **12 oct 2026 — `/renovaciones/` cabe a 375 px:** título + `#stepNav` no entraban en una fila (scrollWidth 401 a 375, los pasos terminaban en x=399.6); en ≤640 px `body.page-renovacion .header-inner` pasa a `flex-wrap:wrap` (height auto, padding 10px 16px, row-gap 8px) y los pasos bajan a una segunda fila (cabecera 114 → 131 px). Solo `css/linea-clara-consola.css`, bloque de renovaciones; a 1280 la captura es idéntica byte a byte; suite 27/27. ⚪ Aparte, sin tocar: entre 641 y ~1000 px la misma barra se sale (scrollWidth 947 a 768).
@@ -1721,6 +1723,13 @@ asistencias…").
   activa, otra app y otro repo).
 - **`index.html` vista 3 → casilla `#m-asistencias` en `#asiRow`** (arranca `hidden`; `app.js` la destapa solo con
   `asiDisponible()`). `app.js` pasa `incluirAsistencias` a `buildEmail` en los **dos** llamados (vista previa y envío).
+- **Preferencia del agente en ⚙ (13 oct 2026, opción B de JC):** radios `#p-asi-si` / `#p-asi-no` ("Planes de
+  asistencia del INS", debajo de "Formulario de cita"). Perfil `asiOfrecer` (`saveProfile`: `p.asiOfrecer !== false`;
+  `applyProfile` con guard `!== undefined`) → `CFG.ASI_OFRECER` (default `true` en `config.js`). `_aplicarAsiPorDefecto()`
+  (app.js) pone la casilla según la preferencia **al arrancar** (después de `applyProfile`), **al guardar el perfil** y
+  **en `resetAll`**. La casilla tiene listener `change` → `schedulePreview` (antes no lo tenía: apagarla no se veía en la
+  vista previa hasta tocar otro campo, aunque el envío sí la respetaba). El HTML conserva `checked` por defecto.
+  `tests/test-asi-preferencia.js` (19 checks, verificado por mutación y con los archivos en CRLF).
 - **`js/asistencias-email.js`** — `buildAsistenciasEmail(p)` (el correo a clientes con póliza: header navy + filete,
   HOLA + nombre, "Tu seguro hoy" con la prima grande en Courier, "con el plan más económico pasaría a ₡X", los seis
   planes con precio, botón al configurador, nota, firma, `_pieSDI`), `buildAsistenciasWaTexto`/`buildAsistenciasWaUrl`
