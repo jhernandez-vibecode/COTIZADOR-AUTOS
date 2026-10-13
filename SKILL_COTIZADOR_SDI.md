@@ -2967,3 +2967,9 @@ Arbol limpio, main = `ce8a21c`, suite 27/27. Hecho y en prod: marca "SDI Seguros
 Merge `39989d7` (tag `pre-asi-preferencia-13oct`), verificado en prod. Ofrecerlos (default) / No ofrecerlos: decide
 como arranca el interruptor `#m-asistencias` del paso 3. Perfil `asiOfrecer` -> `CFG.ASI_OFRECER`. De paso, el
 interruptor repinta la vista previa y `resetAll` lo devuelve a la preferencia. Detalle vigente en la SKILL router.
+## 13 oct 2026 — /cita/: forma de pago y horario con círculo visible + ingreso "Prefiero no indicarlo"
+
+Merge `2647ffe` (tag `pre-cita-elegir-visible-13oct`), verificado en prod. Pedido de JC tras ver el mockup: el anual verde
+parecía ya elegido. Clase `campo elige` en forma de pago y horario (círculo, línea de ayuda, anual en blanco, rojo si falta,
+el aviso se borra al tocar). "Prefiero no indicarlo" va en la página y en `INGRESOS` del servidor. De paso se midió la
+conversión cotización → cita: ~13 % antes y ~12 % después del formulario propio (85→11 y 117→14). Detalle en la SKILL router.
