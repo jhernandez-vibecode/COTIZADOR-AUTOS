@@ -2178,7 +2178,7 @@ main{max-width:none;padding:44px 24px 56px;background:var(--lc-band)}
   .s4-body{padding:14px 18px 22px}
   .sub-card{padding:18px 16px}
   .qrow{grid-template-columns:32px 1fr;gap:8px 12px}   /* la etiqueta larga de repuestos baja a su propia línea (sin sr: 4 filas) */
-  .qrow>:last-child{grid-column:2;justify-self:start}
+  .qrow>:last-child{grid-column:2;justify-self:start}  .qrow .badge-q{white-space:normal}   /* 14 oct 2026: "Alternativo / Genérico o usado" no cabía en una línea y se salía de la tarjeta */
   .step-btn{flex:1;justify-content:center;padding:0 14px;font-size:14px}
   .closing{padding:34px 20px 28px;border-radius:24px}
   .footer{padding:30px 18px 36px}
@@ -2690,7 +2690,7 @@ main{max-width:none;padding:44px 24px 56px;background:var(--lc-band)}
           <div class="qrow">
             <div class="age-icon fresh">✦</div>
             <div>
-              <div class="age">Carro nuevo (≤3 años, ≤36,000 km)</div>
+              <div class="age">Vehículo en garantía (0 a 6 años)</div>
               <div class="place">Agencia oficial de la marca</div>
             </div>
             <span class="badge-q">Repuesto Original</span>
@@ -2699,7 +2699,7 @@ main{max-width:none;padding:44px 24px 56px;background:var(--lc-band)}
           <div class="qrow">
             <div class="age-icon good">★</div>
             <div>
-              <div class="age">Extensión de Garantía (≤5 años, ≤60,000 km)</div>
+              <div class="age">Extensión de Garantía (hasta 5 años)</div>
               <div class="place">Agencia oficial o taller autorizado</div>
             </div>
             <span class="badge-q">Repuesto Original</span>
@@ -2709,7 +2709,7 @@ main{max-width:none;padding:44px 24px 56px;background:var(--lc-band)}
             <div class="age-icon plus">★</div>
             <div>
               <div class="age">
-                Extensión de Garantía Plus (≤8 años, ≤80,000 km)
+                Extensión de Garantía Plus (hasta 8 años)
                 <span class="you-tag">Tu plan</span>
               </div>
               <div class="place">Agencia oficial o taller autorizado</div>
@@ -2722,7 +2722,7 @@ main{max-width:none;padding:44px 24px 56px;background:var(--lc-band)}
           <div class="qrow">
             <div class="age-icon older">○</div>
             <div>
-              <div class="age">Más de 3 años o más de 36,000 km (sin extensión)</div>
+              <div class="age">Alternativo, genérico o usado</div>
               <div class="place">Taller multimarca o especializado</div>
             </div>
             <span class="badge-q gen">Alternativo / Genérico o usado</span>
