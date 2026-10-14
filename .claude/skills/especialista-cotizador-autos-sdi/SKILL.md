@@ -63,6 +63,8 @@ App interna del agente INS Juan Carlos Hernández (licencia SUGESE 08-1318) para
 
 > **13 oct 2026 (tarde) — `/cita/` sin casilla de autorización** (merge `7b6f363`, tag de rollback `pre-cita-sin-casilla-13oct`). JC probó la página nueva y pidió quitar "este freno": la casilla obligatoria, cuyo aviso rojo además se quedaba visible tras marcarla. Se le ofrecieron tres caminos y eligió el recomendado: la casilla se va y queda el texto `p.consent.consent-txt` "Al enviar esta solicitud autorizás el uso de estos datos únicamente para tramitar tu seguro de automóviles con el INS. No se usan para publicidad ni se comparten con terceros.", justo arriba del botón. `leer()` manda `consent: true`; la validación de la Function (`body.consent !== true` → 400) NO cambió. Ver C4 en "Formulario propio de cita". Tests: cita-url 110.
 
+> **14 oct 2026 — Repuestos sin kilometraje y con los años de la V32** (merge `16ad037`, tag de rollback `pre-repuestos-sin-km-14oct`). Una cliente le preguntó a JC por el km que mostraba la guía. Antes de tocar se midieron las **100 cotizaciones del INS desde el 28 sep** (V32): "Vehículo en garantía" 60 (modelos 2020-2027), "Alternativo genérico/usado (7 o más años)" 25 (2012-2017), "Extensión de garantía Plus" 15 (2018-2019); la matriz de pagos trae los encabezados **"(0 A 6 AÑOS)"** y **"(7 AÑOS O MÁS)"**. A los de "Vehículo en garantía" la guía les decía "Carro nuevo (≤3 años, ≤36,000 km)" aunque el carro fuera 2020. JC eligió entre dos opciones (solo quitar km / quitar km y pasar a V32) la segunda, y que el correo también suelte el km. Filas nuevas (mismo orden, el mapa `sr` 0·g·p·n no cambió): "Vehículo en garantía (0 a 6 años)" · "Extensión de Garantía (hasta 5 años)" (solo enlaces viejos) · "Extensión de Garantía Plus (hasta 8 años)" · "Alternativo, genérico o usado". `_sustitucionText`: Plus "hasta 8 años," y Garantía "hasta 5 años," sin km. De paso: en ≤600 px la etiqueta "Alternativo / Genérico o usado" (nowrap, 202 px) se salía ~36 px de la tarjeta, y pasaba igual con el texto viejo → `.qrow .badge-q{white-space:normal}` en la media query móvil. 3 checks nuevos en `test-explicador-url.js` (fallan al revertir). Ver la tabla de `sr` en "Explicador" y el frente 2 de "SVA V32" en Pendientes.
+
 > **12 oct 2026 — El correo "Cita solicitada" trae el monto asegurado y el interés asegurable** (merge `4136ce8`, tag de rollback `pre-cita-monto-interes-12oct`, verificado en prod). Dos renglones en "De la cotización", entre Vehículo y Primas. 🔴 **El interés asegurable NO viene en el PDF del INS** (revisadas 551 cotizaciones: la página 1 trae `Valor Asegurado`, nunca el interés): es el desplegable `f-interes` del paso 2. Viaja como **`ia`** (clave: propietario · cero-km · traspaso · compra) y **solo con Formulario SDI** — en modo propio la guía queda byte a byte igual. El monto viaja como **`va`**. Ver "Formulario propio de cita → Monto e interés asegurable".
 
 > **12 oct 2026 — `/renovaciones/` cabe a 375 px:** título + `#stepNav` no entraban en una fila (scrollWidth 401 a 375, los pasos terminaban en x=399.6); en ≤640 px `body.page-renovacion .header-inner` pasa a `flex-wrap:wrap` (height auto, padding 10px 16px, row-gap 8px) y los pasos bajan a una segunda fila (cabecera 114 → 131 px). Solo `css/linea-clara-consola.css`, bloque de renovaciones; a 1280 la captura es idéntica byte a byte; suite 27/27. ⚪ Aparte, sin tocar: entre 641 y ~1000 px la misma barra se sale (scrollWidth 947 a 768).
@@ -362,10 +364,14 @@ Sexta sección, **entre `s5` (Pagos) y el cierre**. La pidió JC para bajar la f
 
 | Código | Tipo | Badge visible |
 |--------|------|--------------|
-| `p` | Garantía Plus (≤8 años / ≤80,000 km) | Repuesto Original |
-| `g` | Garantía (≤5 años / ≤60,000 km) | Repuesto Original |
-| `0` | Carro nuevo (≤3 años / ≤36,000 km) | Repuesto Original |
-| `n` | Sin extensión (>3 años o >36,000 km) | Alternativo / Genérico o usado |
+| `0` | Vehículo en garantía (0 a 6 años) — también le cae "Original Multimarca" | Repuesto Original |
+| `g` | Extensión de Garantía (hasta 5 años) — ya no se vende en la V32, queda por enlaces viejos | Repuesto Original |
+| `p` | Extensión de Garantía Plus (hasta 8 años) | Repuesto Original |
+| `n` | Alternativo, genérico o usado | Alternativo / Genérico o usado |
+
+🔴 **Desde el 14 oct 2026 la sección 4 NO menciona kilómetros** (la V32 los quitó) y el orden de las filas en el HTML
+es el del mapa `{ '0': 0, 'g': 1, 'p': 2, 'n': 3 }`: si se agrega o mueve una fila hay que tocar el mapa y el test
+`guía, sección 4` de `test-explicador-url.js`. Los años salen de la cotización del INS, no de las Condiciones.
 
 Si `sr` no viene en el URL (correos viejos), se muestran las 4 filas con Plus resaltado por defecto.
 
@@ -2243,6 +2249,15 @@ explicador: "hasta 5 años o 60.000 km").
      `explicacion/index.html` sección 4 (4 filas `.qrow` con "≤36,000 km", "≤60,000 km", "≤80,000 km", "más de
      36,000 km"; falta fila para **Original Multimarca**, que hoy comparte el código `sr=0`). Enlaces V31 ya
      enviados deben conservar su texto. Mockup primero, como siempre.
+
+     ✅ **14 oct 2026 — el kilometraje ya salió de la guía y del correo** (merge `16ad037`). La fuente de los años
+     terminó siendo **la propia cotización del INS**: 100 PDF V32 traen la matriz agrupada "(0 A 6 AÑOS)" /
+     "(7 AÑOS O MÁS)" y los modelos cuadran (Vehículo en garantía 2020-2027, Plus 2018-2019). JC aprobó las filas
+     con esos años. Los enlaces ya enviados también cambian (el HTML es fijo); se aceptó porque las cotizaciones
+     V31 ya vencieron (15 días). **Queda abierto:** (a) el tope de Plus "hasta 8 años" viene de la V31 y cuadra
+     con los datos, pero ningún PDF V32 lo escribe — si llega la circular, confirmarlo; (b) **Original Multimarca**
+     sigue cayendo en `sr=0` y vería "Vehículo en garantía · Agencia oficial de la marca", que no le corresponde
+     (0 de 100 cotizaciones lo usaron); necesita código y fila propios si JC empieza a cotizarlo.
   🔴 **Los datos del dossier se verifican leyendo cada página COMO IMAGEN.** El emparejamiento
   servicio↔límite por coordenadas se equivoca en las filas apretadas (Salud Premium). Conteos correctos:
   11 · 8 · 16 · 30 · 7 · 21.

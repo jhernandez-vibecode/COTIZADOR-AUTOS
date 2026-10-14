@@ -2979,3 +2979,13 @@ conversión cotización → cita: ~13 % antes y ~12 % después del formulario pr
 Merge `7b6f363` (tag `pre-cita-sin-casilla-13oct`). JC pidió quitar la casilla obligatoria ("este freno"). Eligió, entre tres
 opciones, quitarla y dejar el texto "Al enviar esta solicitud autorizás…" sobre el botón: enviar es la autorización. La página
 manda `consent: true` y la Function lo sigue exigiendo. El texto no se quita: es la única constancia del consentimiento.
+
+## 14 oct 2026 — repuestos sin kilometraje y con los años de la V32
+
+Merge `16ad037` (tag `pre-repuestos-sin-km-14oct`). Una cliente preguntó por el km que mostraba la guía; la V32 lo quitó.
+Medidas 100 cotizaciones V32 (matriz "0 A 6 AÑOS" / "7 AÑOS O MÁS"; Vehículo en garantía 2020-2027, Plus 2018-2019,
+Alternativo 2012-2017). JC eligió quitar el km y pasar las filas a la V32, y quitarlo también del correo. Filas: Vehículo en
+garantía (0 a 6 años) · Extensión de Garantía (hasta 5 años, solo enlaces viejos) · Plus (hasta 8 años) · Alternativo,
+genérico o usado. De paso, la etiqueta "Alternativo / Genérico o usado" ya no se sale de la tarjeta en celular.
+Abierto: confirmar el tope de Plus con la circular y darle fila propia a Original Multimarca. Detalle en la SKILL router.
+
