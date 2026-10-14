@@ -411,9 +411,9 @@ function _reposKind(label) {
 function _sustitucionText(label) {
   switch (_reposKind(label)) {
     case 'plus':
-      return 'Tu vehículo aplica a repuestos originales de agencia: cobertura hasta 8 años o 80.000 km, según la Extensión de Garantía Plus.';
+      return 'Tu vehículo aplica a repuestos originales de agencia: cobertura hasta 8 años, según la Extensión de Garantía Plus.';
     case 'garantia':
-      return 'Tu vehículo aplica a repuestos originales de agencia: cobertura hasta 5 años o 60.000 km, según la Extensión de Garantía.';
+      return 'Tu vehículo aplica a repuestos originales de agencia: cobertura hasta 5 años, según la Extensión de Garantía.';
     case 'vehiculo':
       return 'Tu vehículo aplica a repuestos originales de agencia mientras se mantenga en garantía de fábrica.';
     case 'original':

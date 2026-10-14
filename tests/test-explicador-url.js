@@ -161,5 +161,45 @@ test('valor y precios con formato CR ("10,000,000.00") se normalizan a "10000000
   if (url.includes('.00')) throw new Error('No deberian quedar decimales .00');
 });
 
+// 14 oct 2026 (JC): la SVA V32 del INS quitó el kilometraje de la sustitución
+// de repuestos; solo cuentan los años. Ni el correo ni la guía pueden volver a
+// prometer kilómetros. Las filas de la guía siguen el orden fijo que usa el
+// mapa de `sr` (0, g, p, n) y llevan los años que trae la cotización del INS.
+test('sustitucionText: ningún tipo de repuesto menciona kilómetros (V32)', () => {
+  const tipos = ['Extensión de garantía Plus', 'Extensión de garantía',
+    'Vehículo en garantía', 'Original Multimarca',
+    'Alternativo genérico/usado (7 o más años)', ''];
+  for (const t of tipos) {
+    const txt = _sustitucionText(t);
+    if (/\bkm\b|kil[oó]metr/i.test(txt)) throw new Error(`"${t}" todavía dice: ${txt}`);
+  }
+});
+
+test('guía, sección 4: las 4 filas de repuestos sin km y con los años de la V32', () => {
+  const html = fs.readFileSync(
+    path.join(__dirname, '..', 'explicacion', 'index.html'), 'utf8');
+  const i = html.indexOf('<!-- A. CALIDAD -->');
+  const j = html.indexOf('<!-- B. ELÉCTRICOS -->');
+  if (i < 0 || j < i) throw new Error('no encontré el bloque de calidad de repuestos');
+  const bloque = html.slice(i, j);
+  if (/\bkm\b|kil[oó]metr/i.test(bloque)) throw new Error('la sección de repuestos todavía menciona km');
+  const ages = [...bloque.matchAll(/<div class="age">([\s\S]*?)<\/div>/g)]
+    .map(m => m[1].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim());
+  assertEq(ages.length, 4);
+  // El orden es el del mapa { '0': 0, 'g': 1, 'p': 2, 'n': 3 } del explicador.
+  assertContains(ages[0], 'Vehículo en garantía (0 a 6 años)');
+  assertContains(ages[1], 'Extensión de Garantía (hasta 5 años)');
+  assertContains(ages[2], 'Extensión de Garantía Plus (hasta 8 años)');
+  assertContains(ages[3], 'Alternativo, genérico o usado');
+  if (!html.includes("const map = { '0': 0, 'g': 1, 'p': 2, 'n': 3 };")) {
+    throw new Error('cambió el mapa de sr: revisar el orden de las filas');
+  }
+});
+
+test('correo y guía dicen los mismos años para Plus y Garantía', () => {
+  assertContains(_sustitucionText('Extensión de garantía Plus'), 'hasta 8 años,');
+  assertContains(_sustitucionText('Extensión de garantía'), 'hasta 5 años,');
+});
+
 console.log(`\n${pass} pass, ${fail} fail`);
 process.exit(fail > 0 ? 1 : 0);
