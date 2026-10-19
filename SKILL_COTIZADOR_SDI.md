@@ -2924,24 +2924,31 @@ era correcta para un carro de 7-15 años con G+M; a un 7-15 con solo G le promet
 **`pre-asistencia-por-plan-19sep`**. Mockup (8 casos): `docs/superpowers/specs/2026-09-19-asistencia-por-plan-mockup.png`;
 script que lo generó y aplicó: `…/2026-09-19-asistencia-por-plan-mock.py`.
 
-- **Fuente:** `documentos-ins/co-multiasistencia-170.pdf` (INS, 3 feb 2026), leído **como imagen**. Tablas de *Particulares y
-  carga liviana · Uso personal*: G Limitado y Básico **p.12**, G Plus **p.13**, M Limitado Extendido y Plus Extendido **p.21**.
+🔴 **19 oct 2026 — fuente nueva** (merge `c9c400c`, tag de rollback `pre-basico-extendido-19oct`, verificado en prod). JC trajo
+las Condiciones Operativas que el INS emite desde octubre con cada póliza (14 págs., `…_Condiciones_Operativas__PARTCL_UPersonal_…`).
+Trae el **Básico Extendido 7-15**: 6×$175 · 7×$175 · 4×$125 · 4×costo · 4×$100 · 3×$100 · 3×$100 (= V30 de 2025). Las otras
+cinco tablas no cambiaron. Quedó como `documentos-ins/co-multiasistencia-170.pdf` (también el adjunto de Póliza activa) y
+`ASIST_LIMITES.basico.M` ya tiene su tabla. **Ya no dice "por año calendario"**: la nota de la guía dejó de afirmarlo. Las
+páginas de abajo son de la versión de febrero; en la de octubre G va en la **p.3** y M en la **p.5**.
+
+- **Fuente:** `documentos-ins/co-multiasistencia-170.pdf` (INS, 19 oct 2026; antes la de 3 feb 2026), leído **como imagen**. Tablas de *Particulares y
+  carga liviana · Uso personal*: (feb) G Limitado y Básico **p.12**, G Plus **p.13**, M Limitado Extendido y Plus Extendido **p.21** · (oct) G **p.3**, M **p.5**.
   La tabla completa con página por cifra vive en `docs/fuentes-ins/REGLAS-INS-VERIFICADAS.md`.
 - 🔴 **G y M NO se suman (p.10):** con M rigen SOLO los límites del Plan Extendido. La guía decide por `cb`: trae `M` → tabla
   Extendida y subtítulo "Coberturas G y M"; solo `G` → tabla de G y subtítulo "Cobertura G" (**la M no se menciona si la
   cotización no la trae** — JC casi siempre vende las dos, pero a veces le piden cotizar sin M); sin `cb` (enlaces viejos) →
   tabla de G como **piso** + nota "si tu póliza incluye la M, la cantidad es mayor". Nunca promete de más.
-- 🔴 **El PDF vigente NO trae el "Básico Extendido 7-15" de particulares/uso personal** (la p.21 salta de Limitado a Plus; el
+- ✅ **RESUELTO el 19 oct 2026** (la versión de octubre trae la tabla y coincide con la V30). Registro: 🔴 **El PDF de feb 2026 NO trae el "Básico Extendido 7-15" de particulares/uso personal** (la p.21 salta de Limitado a Plus; el
   de la p.24 es de USO COMERCIAL y no aplica). **Decisión de JC (opción B): no se publica esa cifra**; un 7-15 con M ve la
   tabla de G + "tu cotización incluye además la M, que amplía la cantidad de servicios; tu agente te confirma el detalle"
   (`extendidoSinTabla`). Las cifras de la versión 2025 (V30, p.20: 6/7/4/4/4/3/3) quedan anotadas en REGLAS por si el INS
   confirma que fue un error de compaginación — **pendiente de JC: consultarlo al INS**. Si lo confirma, basta poner el arreglo
   en `ASIST_LIMITES.basico.M` (o `python …mock.py real a`) y ajustar el test.
 - **Tres pestañas clicables** (`#planTabs [data-plan]`: plus · basico · limitado) que repintan `#svcGrid [data-svc]` y la nota
-  `#svcNota` ("por año calendario (1 de enero al 31 de diciembre)… Fuente: Condiciones Operativas…"). "· Tu plan" va en la del
-  vehículo. **Más de 20 años** (el INS no suscribe G ni M, p.7): se esconden pestañas, tabla y nota; queda un texto sin cifras.
+  `#svcNota` ("Cantidad máxima de servicios y monto máximo por servicio… Fuente: Condiciones Operativas…"; sin "año calendario" desde
+  el 19 oct). "· Tu plan" va en la del vehículo. **Más de 20 años** (el INS no suscribe G ni M, p.3 de oct): se esconden pestañas, tabla y nota; queda un texto sin cifras.
 - Lógica pura entre los marcadores **`[GUIA-ASIST-PURO]`** (`ASIST_ORDEN`, `ASIST_LIMITES`, `_planAsistencia`,
-  `_limitesAsistencia`), justo después de `[/GUIA-CB-PURO]`. `tests/test-asistencia-por-plan.js` (30 checks) la extrae por los
+  `_limitesAsistencia`), justo después de `[/GUIA-CB-PURO]`. `tests/test-asistencia-por-plan.js` (35 checks; el respaldo `M: null` → piso de G se prueba aparte) la extrae por los
   marcadores. **Si el INS publica otra versión del PDF: releer las páginas como imagen, actualizar `ASIST_LIMITES`, el test y REGLAS.**
 - La edad sigue siendo `año actual − y`, como antes. El HTML estático (sin `y`) arranca en Básico G.
 - Smoke en localhost (`http-server -c-1`): 2015 con G+M, 2024 solo G, enlace sin `cb`, 2003; clic real en las pestañas; 375 px
@@ -2988,4 +2995,12 @@ Alternativo 2012-2017). JC eligió quitar el km y pasar las filas a la V32, y qu
 garantía (0 a 6 años) · Extensión de Garantía (hasta 5 años, solo enlaces viejos) · Plus (hasta 8 años) · Alternativo,
 genérico o usado. De paso, la etiqueta "Alternativo / Genérico o usado" ya no se sale de la tarjeta en celular.
 Abierto: confirmar el tope de Plus con la circular y darle fila propia a Original Multimarca. Detalle en la SKILL router.
+
+## 19 oct 2026 — Condiciones Operativas de Multiasistencia de octubre (Básico Extendido)
+
+Merge `c9c400c` (tag `pre-basico-extendido-19oct`). JC trajo el PDF que el INS emite ahora con cada póliza
+(14 págs., particulares y carga liviana de uso personal). Leído como imagen (p.3 y p.5): trae el Básico Extendido 7-15
+(6/7/4/4/4/3/3, igual a la V30) y las otras cinco tablas no cambiaron. La guía ya lo muestra a un 7-15 con M; la nota ya no
+dice "por año calendario" porque el documento nuevo no lo indica. El PDF reemplazó a `documentos-ins/co-multiasistencia-170.pdf`
+(adjunto de Póliza activa). Test 35 checks, suite 28/28, smoke local (6 casos) y prod (dos dominios + captura).
 

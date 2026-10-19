@@ -63,6 +63,8 @@ App interna del agente INS Juan Carlos Hernández (licencia SUGESE 08-1318) para
 
 > **13 oct 2026 (tarde) — `/cita/` sin casilla de autorización** (merge `7b6f363`, tag de rollback `pre-cita-sin-casilla-13oct`). JC probó la página nueva y pidió quitar "este freno": la casilla obligatoria, cuyo aviso rojo además se quedaba visible tras marcarla. Se le ofrecieron tres caminos y eligió el recomendado: la casilla se va y queda el texto `p.consent.consent-txt` "Al enviar esta solicitud autorizás el uso de estos datos únicamente para tramitar tu seguro de automóviles con el INS. No se usan para publicidad ni se comparten con terceros.", justo arriba del botón. `leer()` manda `consent: true`; la validación de la Function (`body.consent !== true` → 400) NO cambió. Ver C4 en "Formulario propio de cita". Tests: cita-url 110.
 
+> **19 oct 2026 — Asistencia en carretera con las Condiciones Operativas de Multiasistencia de octubre** (merge `c9c400c`, tag de rollback `pre-basico-extendido-19oct`, verificado en prod en los dos dominios). JC trajo el PDF que el INS emite ahora con cada póliza (`…_017_Condiciones_Operativas__PARTCL_UPersonal_20261019_….pdf`, 14 págs., particulares y carga liviana de uso personal; sin datos del cliente). Leído como imagen: **trae el Básico Extendido 7-15** (6×$175 · 7×$175 · 4×$125 · 4×costo · 4×$100 · 3×$100 · 3×$100, igual a la V30) y las otras cinco tablas **no cambiaron**. Un 7-15 con M ya ve su Plan Básico Extendido en vez del piso de G con aviso. 🔴 **El documento nuevo ya no dice "por año calendario"** (no define cómo se cuentan los eventos): la nota `#svcNota` dejó de afirmarlo. El PDF reemplazó a `documentos-ins/co-multiasistencia-170.pdf` (mismo nombre → también es el adjunto "C.O. Multiasistencia" de Póliza activa). No trae las tablas de uso comercial: de 400 cotizaciones en Descargas, 399 eran de uso personal. Ver "Asistencia en carretera por plan".
+
 > **14 oct 2026 — Repuestos sin kilometraje y con los años de la V32** (merge `16ad037`, tag de rollback `pre-repuestos-sin-km-14oct`). Una cliente le preguntó a JC por el km que mostraba la guía. Antes de tocar se midieron las **100 cotizaciones del INS desde el 28 sep** (V32): "Vehículo en garantía" 60 (modelos 2020-2027), "Alternativo genérico/usado (7 o más años)" 25 (2012-2017), "Extensión de garantía Plus" 15 (2018-2019); la matriz de pagos trae los encabezados **"(0 A 6 AÑOS)"** y **"(7 AÑOS O MÁS)"**. A los de "Vehículo en garantía" la guía les decía "Carro nuevo (≤3 años, ≤36,000 km)" aunque el carro fuera 2020. JC eligió entre dos opciones (solo quitar km / quitar km y pasar a V32) la segunda, y que el correo también suelte el km. Filas nuevas (mismo orden, el mapa `sr` 0·g·p·n no cambió): "Vehículo en garantía (0 a 6 años)" · "Extensión de Garantía (hasta 5 años)" (solo enlaces viejos) · "Extensión de Garantía Plus (hasta 8 años)" · "Alternativo, genérico o usado". `_sustitucionText`: Plus "hasta 8 años," y Garantía "hasta 5 años," sin km. De paso: en ≤600 px la etiqueta "Alternativo / Genérico o usado" (nowrap, 202 px) se salía ~36 px de la tarjeta, y pasaba igual con el texto viejo → `.qrow .badge-q{white-space:normal}` en la media query móvil. 3 checks nuevos en `test-explicador-url.js` (fallan al revertir). Ver la tabla de `sr` en "Explicador" y el frente 2 de "SVA V32" en Pendientes.
 
 > **12 oct 2026 — El correo "Cita solicitada" trae el monto asegurado y el interés asegurable** (merge `4136ce8`, tag de rollback `pre-cita-monto-interes-12oct`, verificado en prod). Dos renglones en "De la cotización", entre Vehículo y Primas. 🔴 **El interés asegurable NO viene en el PDF del INS** (revisadas 551 cotizaciones: la página 1 trae `Valor Asegurado`, nunca el interés): es el desplegable `f-interes` del paso 2. Viaja como **`ia`** (clave: propietario · cero-km · traspaso · compra) y **solo con Formulario SDI** — en modo propio la guía queda byte a byte igual. El monto viaja como **`va`**. Ver "Formulario propio de cita → Monto e interés asegurable".
@@ -325,24 +327,31 @@ era correcta para un carro de 7-15 años con G+M; a un 7-15 con solo G le promet
 **`pre-asistencia-por-plan-19sep`**. Mockup (8 casos): `docs/superpowers/specs/2026-09-19-asistencia-por-plan-mockup.png`;
 script que lo generó y aplicó: `…/2026-09-19-asistencia-por-plan-mock.py`.
 
-- **Fuente:** `documentos-ins/co-multiasistencia-170.pdf` (INS, 3 feb 2026), leído **como imagen**. Tablas de *Particulares y
-  carga liviana · Uso personal*: G Limitado y Básico **p.12**, G Plus **p.13**, M Limitado Extendido y Plus Extendido **p.21**.
+🔴 **19 oct 2026 — fuente nueva** (merge `c9c400c`, tag de rollback `pre-basico-extendido-19oct`, verificado en prod). JC trajo
+las Condiciones Operativas que el INS emite desde octubre con cada póliza (14 págs., `…_Condiciones_Operativas__PARTCL_UPersonal_…`).
+Trae el **Básico Extendido 7-15**: 6×$175 · 7×$175 · 4×$125 · 4×costo · 4×$100 · 3×$100 · 3×$100 (= V30 de 2025). Las otras
+cinco tablas no cambiaron. Quedó como `documentos-ins/co-multiasistencia-170.pdf` (también el adjunto de Póliza activa) y
+`ASIST_LIMITES.basico.M` ya tiene su tabla. **Ya no dice "por año calendario"**: la nota de la guía dejó de afirmarlo. Las
+páginas de abajo son de la versión de febrero; en la de octubre G va en la **p.3** y M en la **p.5**.
+
+- **Fuente:** `documentos-ins/co-multiasistencia-170.pdf` (INS, 19 oct 2026; antes la de 3 feb 2026), leído **como imagen**. Tablas de *Particulares y
+  carga liviana · Uso personal*: (feb) G Limitado y Básico **p.12**, G Plus **p.13**, M Limitado Extendido y Plus Extendido **p.21** · (oct) G **p.3**, M **p.5**.
   La tabla completa con página por cifra vive en `docs/fuentes-ins/REGLAS-INS-VERIFICADAS.md`.
 - 🔴 **G y M NO se suman (p.10):** con M rigen SOLO los límites del Plan Extendido. La guía decide por `cb`: trae `M` → tabla
   Extendida y subtítulo "Coberturas G y M"; solo `G` → tabla de G y subtítulo "Cobertura G" (**la M no se menciona si la
   cotización no la trae** — JC casi siempre vende las dos, pero a veces le piden cotizar sin M); sin `cb` (enlaces viejos) →
   tabla de G como **piso** + nota "si tu póliza incluye la M, la cantidad es mayor". Nunca promete de más.
-- 🔴 **El PDF vigente NO trae el "Básico Extendido 7-15" de particulares/uso personal** (la p.21 salta de Limitado a Plus; el
+- ✅ **RESUELTO el 19 oct 2026** (la versión de octubre trae la tabla y coincide con la V30). Registro: 🔴 **El PDF de feb 2026 NO trae el "Básico Extendido 7-15" de particulares/uso personal** (la p.21 salta de Limitado a Plus; el
   de la p.24 es de USO COMERCIAL y no aplica). **Decisión de JC (opción B): no se publica esa cifra**; un 7-15 con M ve la
   tabla de G + "tu cotización incluye además la M, que amplía la cantidad de servicios; tu agente te confirma el detalle"
   (`extendidoSinTabla`). Las cifras de la versión 2025 (V30, p.20: 6/7/4/4/4/3/3) quedan anotadas en REGLAS por si el INS
   confirma que fue un error de compaginación — **pendiente de JC: consultarlo al INS**. Si lo confirma, basta poner el arreglo
   en `ASIST_LIMITES.basico.M` (o `python …mock.py real a`) y ajustar el test.
 - **Tres pestañas clicables** (`#planTabs [data-plan]`: plus · basico · limitado) que repintan `#svcGrid [data-svc]` y la nota
-  `#svcNota` ("por año calendario (1 de enero al 31 de diciembre)… Fuente: Condiciones Operativas…"). "· Tu plan" va en la del
-  vehículo. **Más de 20 años** (el INS no suscribe G ni M, p.7): se esconden pestañas, tabla y nota; queda un texto sin cifras.
+  `#svcNota` ("Cantidad máxima de servicios y monto máximo por servicio… Fuente: Condiciones Operativas…"; sin "año calendario" desde
+  el 19 oct). "· Tu plan" va en la del vehículo. **Más de 20 años** (el INS no suscribe G ni M, p.3 de oct): se esconden pestañas, tabla y nota; queda un texto sin cifras.
 - Lógica pura entre los marcadores **`[GUIA-ASIST-PURO]`** (`ASIST_ORDEN`, `ASIST_LIMITES`, `_planAsistencia`,
-  `_limitesAsistencia`), justo después de `[/GUIA-CB-PURO]`. `tests/test-asistencia-por-plan.js` (30 checks) la extrae por los
+  `_limitesAsistencia`), justo después de `[/GUIA-CB-PURO]`. `tests/test-asistencia-por-plan.js` (35 checks; el respaldo `M: null` → piso de G se prueba aparte) la extrae por los
   marcadores. **Si el INS publica otra versión del PDF: releer las páginas como imagen, actualizar `ASIST_LIMITES`, el test y REGLAS.**
 - La edad sigue siendo `año actual − y`, como antes. El HTML estático (sin `y`) arranca en Básico G.
 - Smoke en localhost (`http-server -c-1`): 2015 con G+M, 2024 solo G, enlace sin `cb`, 2003; clic real en las pestañas; 375 px
@@ -542,6 +551,7 @@ Carpeta `documentos-ins/` con PDFs oficiales del INS, **servida en prod** (netli
 
 - **Cotización**: adjunta el **Deber de Información Autos** además del PDF de cotización (`app.js` pasó de `buildMIME` a **`buildMIMEMulti`**).
 - **Póliza**: adjunta los **5 estándar** (C.O. Multiasistencia, Pacto Amistoso, C.O. Accidente Menor/DAM, Condiciones Generales SVA, Perfeccionamiento) además de los PDF que sube el agente.
+- **C.O. Multiasistencia = la versión del 19 oct 2026** (la que el INS emite por póliza, 14 págs., solo particulares y carga liviana de **uso personal**). La anterior (3 feb 2026, 43 págs., todos los usos) sigue en git (`pre-basico-extendido-19oct`). Si JC empieza a asegurar uso comercial, ese cliente necesitaría la versión de su uso.
 - **CÓMO ACTUALIZAR versiones** (lo pidió JC): reemplazar el PDF en `documentos-ins/` (mismo nombre) o cambiar `path`/`name` en el manifiesto → commit + push. `test-standard-docs.js` verifica manifiesto↔archivos existen + nombres ASCII.
 - **Ojo**: `deber-de-informacion-autos.pdf` y `perfeccionamiento-sva-v31.pdf` son el **MISMO documento** del INS (información previa al perfeccionamiento = cumple el deber de información). Se guardan como archivos separados por módulo para poder divergir a futuro.
 
@@ -2081,7 +2091,7 @@ Contrastadas con 5 PDF oficiales que entregó JC (viven en `OneDrive\ARCHIVO DIG
 1. **Repuestos SVA V32** — en pausa desde el 23 sep: falta la circular/HTML del INS con los **años** de cada opción
    (la V32 quitó el kilometraje). Sin esa fuente no se ponen años. Ver el frente 2 de "SVA V32".
 2. **Asistencias G1, G4 y G5** (ver el checkpoint del 19 sep y el del 18 sep, más abajo).
-3. **Consultar al INS el "Básico Extendido 7-15"** de Multiasistencia (ver "Asistencia en carretera por plan").
+3. ~~Consultar al INS el "Básico Extendido 7-15"~~ — **RESUELTO el 19 oct 2026**: la versión de octubre de las Condiciones Operativas lo trae (ver "Asistencia en carretera por plan").
 4. **Le toca a él:** filtro de Gmail para "Cita solicitada" en las dos cuentas · quitar "mediante una videollamada" de su
    Google Form · (opcional) volver a guardar su perfil en ⚙ si quiere el nombre con tilde.
 
