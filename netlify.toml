@@ -35,6 +35,14 @@
   status = 404
   force = true
 
+# Copia versionada del recordatorio de citas (Apps Script que cada agente
+# instala en SU cuenta de Google). No corre en este sitio.
+[[redirects]]
+  from = "/apps-script/*"
+  to = "/404.html"
+  status = 404
+  force = true
+
 # Codigo fuente de las funciones. Netlify no publica este directorio, pero el
 # 404 explicito lo deja cerrado aunque alguien cambie la configuracion.
 # (documentos-ins/ SI se sirve: esos PDF se adjuntan a los correos al cliente
