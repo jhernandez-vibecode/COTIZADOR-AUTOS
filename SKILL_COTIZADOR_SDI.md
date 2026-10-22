@@ -13,6 +13,14 @@ description: >
 
 # Cotizador SDI — Checkpoint extendido (historico largo)
 
+## 22 oct 2026 — recordatorio de citas a las 6:00 am (`8b2bf77`)
+
+JC: que al agendar una solicitud (botón "Agregar a Calendario" de Gmail) le llegue un correo el día de la cita a las 6:00 am con las citas de ese día. Camino recorrido: (1) se le propusieron dos opciones; eligió primero la "Agenda diaria" de Calendar, sin código; (2) se verificó en su Calendar que quedó activa en el calendario principal, donde están sus citas (23 oct Nicole 9:00, 27 oct Ariel 10:00), pero **no deja escoger la hora** (sale de madrugada) y una notificación por correo por evento obliga a calcular horas a mano; (3) JC: *"hagámoslo con código mejor"*.
+
+Resultado: `apps-script/recordatorio-citas/` (Apps Script que cada agente instala en su cuenta; en la de JC, proyecto "Recordatorio de citas SDI"). Mockup del correo con datos inventados generado con la función real → aprobado → Claude pegó el código en su Chrome (hash verificado) → JC aceptó los permisos → `instalar()` creó el activador diario → `probar()` mandó "[Prueba] Citas de hoy · vie 23 oct · 1 cita" con los datos reales de la cita. JC pidió que la prueba llegara a jhernandez@segurosdelins.com y no a su Outlook de pruebas.
+
+Decisiones: permisos de solo lectura (servicios avanzados en vez de GmailApp, que pide Gmail completo); la hora sale del evento y la franja pedida del título; sin citas no hay correo; los datos del cliente se leen del texto de `correoAgente()` y el test lo amarra. Detalle en la SKILL ("Recordatorio de citas a las 6:00 am").
+
 ## 9 set 2026 (5ª tanda) — cierre de la revision: wizard.js, app.js < 1000 y una sola pantalla
 
 Los tres ultimos puntos del informe thermo-nuclear, en una sola jornada.
