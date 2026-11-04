@@ -48,7 +48,10 @@ const marco = (adentro) => '<!DOCTYPE html><html lang="es"><body style="margin:0
 export function correoCliente(d) {
   const pila = nombrePila(d);
   const asi = nombresAsi(d.as);
-  const placaTxt = esCeroKm(d.placa) ? "tu vehículo cero kilómetros" : "el vehículo con placa <b>" + esc(d.placa) + "</b>";
+  // Cero kilometros (JC, 4 nov 2026): sin inspeccion ni fotos; el unico requisito es la factura.
+  const km0 = !!d.k0 || esCeroKm(d.placa);
+  const solicitudDe = km0 ? "aseguramiento" : "aseguramiento e inspección virtual";
+  const placaTxt = km0 ? "tu vehículo cero kilómetros" : "el vehículo con placa <b>" + esc(d.placa) + "</b>";
   const contacto = d.tel ? " o escribime al " + esc(d.tel) : "";
   const html = marco(
     '<tr><td bgcolor="#0C2340" align="center" style="padding:22px 24px;"><img src="' + LOGO_INS + '" alt="INS" height="26" style="height:26px;width:auto;border:0;">' +
@@ -59,13 +62,14 @@ export function correoCliente(d) {
     '<div style="font-family:' + F + ';font-size:11px;letter-spacing:.08em;color:#6B7681;font-weight:bold;">HOLA</div>' +
     '<div style="font-family:' + F + ';font-size:22px;font-weight:bold;color:#1B1F23;margin-bottom:14px;">' + esc(pila) + "</div>" +
     '<div style="margin-bottom:14px;">' + sello("Solicitud recibida") + "</div>" +
-    p("Gracias por tu confianza. Recibimos tu solicitud de aseguramiento e inspección virtual para " + placaTxt + ".") +
+    p("Gracias por tu confianza. Recibimos tu solicitud de " + solicitudDe + " para " + placaTxt + ".") +
     '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:14px;">' +
     fila("Fecha solicitada", fechaLarga(d.fecha)) + fila("Horario", d.franja) + fila("Forma de pago", d.formaPago) +
     (asi.length ? fila("Asistencias opcionales", asi.join(" · ")) : "") + "</table>" +
     p("<b>Estamos revisando tu solicitud.</b> En breve te confirmo el espacio y te envío las instrucciones finales. Si ese horario no está disponible, nos ponemos en contacto con vos para reprogramar al espacio más cercano.") +
     rotulo("¿Qué pasará el día de tu cita?") +
-    p("<b>1. Preparate.</b> A la hora agendada, tené tu vehículo a mano, limpio y en un lugar iluminado.<br><b>2. Subí tus fotos.</b> Te envío un código QR a tu correo; lo escaneás con el celular y cargás las fotos ahí mismo.<br><b>3. Aceptación.</b> Una vez revisado, te envío la póliza y la aceptás desde el celular con un token de seguridad, sin papeles.<br><b>4. Pago y listo.</b> Realizás el pago y tu vehículo queda asegurado al instante.") +
+    (km0 ? p("<b>1. Pedí la factura a la agencia.</b> Una factura proforma con los datos finales del vehículo o una copia de la factura de compra. Es el único requisito: no hace falta inspección ni fotos.<br><b>2. Enviámela.</b> Respondé este correo con la factura adjunta o mandámela por WhatsApp.<br><b>3. Aceptación.</b> Con la factura, te envío la póliza y la aceptás desde el celular con un token de seguridad, sin papeles.<br><b>4. Pago y listo.</b> Realizás el pago y tu vehículo queda asegurado al instante.") :
+    p("<b>1. Preparate.</b> A la hora agendada, tené tu vehículo a mano, limpio y en un lugar iluminado.<br><b>2. Subí tus fotos.</b> Te envío un código QR a tu correo; lo escaneás con el celular y cargás las fotos ahí mismo.<br><b>3. Aceptación.</b> Una vez revisado, te envío la póliza y la aceptás desde el celular con un token de seguridad, sin papeles.<br><b>4. Pago y listo.</b> Realizás el pago y tu vehículo queda asegurado al instante.")) +
     '<p style="margin:0 0 14px;font-family:' + F + ';font-size:13px;color:#5A6570;">Podés pagar con tarjeta (enlace de pago), transferencia a cuentas del INS, SINPE Móvil o en insenlinea.grupoins.com.</p>' +
     p("Cualquier duda, respondé este correo" + contacto + ".<br><b>" + esc(d.n) + '</b><br><span style="font-size:12.5px;color:#5A6570;">Agente exclusivo del INS &middot; Licencia SUGESE ' + esc(d.l) + "</span>") +
     "</td></tr>" +
@@ -73,7 +77,8 @@ export function correoCliente(d) {
   );
   const texto = [
     "Hola " + pila + ",", "",
-    "Recibimos tu solicitud de aseguramiento e inspección virtual" + (esCeroKm(d.placa) ? "." : " para el vehículo con placa " + d.placa + "."),
+    "Recibimos tu solicitud de " + solicitudDe + (km0 ? " para tu vehículo cero kilómetros." : " para el vehículo con placa " + d.placa + "."),
+    km0 ? "Como tu vehículo es cero kilómetros, el único requisito es una factura proforma con los datos finales del vehículo o una copia de la factura de compra. Pedísela a la agencia y enviámela respondiendo este correo o por WhatsApp." : null,
     "Fecha solicitada: " + fechaLarga(d.fecha), "Horario: " + d.franja, "Forma de pago: " + d.formaPago,
     asi.length ? "Asistencias opcionales: " + asi.join(", ") : null, "",
     "Estamos revisando tu solicitud. En breve te confirmo el espacio. Si ese horario no está disponible, nos ponemos en contacto con vos para reprogramar al espacio más cercano.", "",
@@ -114,7 +119,9 @@ export function correoAgente(d, opc) {
   const agenteCorto = String(d.n).trim().split(/\s+/).slice(0, 2).join(" ");
   const textoWa = "Hola " + nombrePila(d) + ", soy " + agenteCorto + ", tu agente del INS. Recibí tu solicitud de aseguramiento para el " +
     fechaLarga(d.fecha) + ", de " + d.franja + ", y te confirmo el espacio.\n\n" +
-    "Ese día, a primera hora, te enviamos a tu correo un código QR para iniciar el aseguramiento: lo escaneás con el celular y subís las fotos del vehículo ahí mismo.\n\n" +
+    (d.k0 || esCeroKm(d.placa)
+      ? "Como tu vehículo es cero kilómetros, no hacen falta fotos: solo necesito la factura proforma con los datos finales del vehículo o una copia de la factura de compra. Me la podés enviar por aquí o por correo.\n\n"
+      : "Ese día, a primera hora, te enviamos a tu correo un código QR para iniciar el aseguramiento: lo escaneás con el celular y subís las fotos del vehículo ahí mismo.\n\n") +
     "Cualquier duda, escribime por aquí.";
   const copiar = [
     [d.nombre, d.telefono, d.correo].join(" | "), d.direccion.replace(/\s*\n\s*/g, " "),

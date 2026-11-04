@@ -23,6 +23,7 @@ export const CLAVES = new Set([
   "asi", "wa",                              // seccion de asistencias en la guia + WhatsApp del agente (17 set 2026)
   "fc", "ae", "tel",                        // formulario propio de cita /cita/ (19 set 2026)
   "ia",                                     // interes asegurable, para el correo de la cita (12 oct 2026)
+  "k0",                                     // cero kilometros: requisito = factura, sin fotos (4 nov 2026)
 ]);
 
 // Parametros de la guia de emergencias (ver polizaAsistenciaUrl en

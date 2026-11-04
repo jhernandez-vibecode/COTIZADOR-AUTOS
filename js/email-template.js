@@ -109,7 +109,10 @@ function buildEmail(params) {
 
   // A donde va el boton "Agendar mi cita ahora": /cita/ si el agente usa el
   // formulario propio; si no, su enlace de siempre.
-  const agendaHref = _buildCitaUrl({ clientName: nombre, vehicle: vehiculo, year: p.year,
+  // Cero kilometros (4 nov 2026): el unico requisito es la factura de la agencia,
+  // sin fotos. La guia, /cita/ y el configurador cambian sus pasos con `k0=1`.
+  const ceroKm = _esCeroKm(p.interes, p.plateClass);
+  const agendaHref = _buildCitaUrl({ clientName: nombre, vehicle: vehiculo, year: p.year, ceroKm: ceroKm,
     plate: _placaEsRelleno(p.plate, p.plateClass) ? '' : p.plate, prices: prices,
     valor: p.valor, interes: p.interes }) || CFG.AGENDA_URL;
 
@@ -139,7 +142,9 @@ function buildEmail(params) {
     // Para que la guia muestre la seccion de asistencias solo si este correo trajo la tarjeta.
     asistencias:   conAsistencias,
     // Viaja a /cita/ para el correo del agente (solo con el formulario SDI).
-    interes:       p.interes
+    interes:       p.interes,
+    // k0=1: la guia explica el aseguramiento del cero kilometros (factura, sin fotos).
+    ceroKm:        ceroKm
   });
 
   // Familia de fuentes con fallback (Outlook ignora Google Fonts → cae a Helvetica)
@@ -196,7 +201,7 @@ function buildEmail(params) {
     ? _bloqueAsistencias({
         url: _buildPlanesUrl({ clientName: nombre, vehicle: vehiculo, plate: _placaEsRelleno(p.plate, p.plateClass) ? '' : plate, year: p.year,
                                primaAnual: prices.anual, primaSemestral: prices.semestral, primaTrimestral: prices.trimestral,
-                               valor: p.valor, interes: p.interes }),
+                               valor: p.valor, interes: p.interes, ceroKm: ceroKm }),
         fontFam: fontFam
       })
     : '';
@@ -367,6 +372,16 @@ function buildEmail(params) {
  * @param {string} key - valor del select (propietario, cero-km, traspaso, compra)
  * @returns {string} texto a mostrar, o '' si no hay seleccion
  */
+/**
+ * true si la cotizacion es de un cero kilometros: el agente lo marco en
+ * "Interes asegurable" O el PDF del INS trae la placa temporal (decision de
+ * JC, 4 nov 2026: cualquiera de los dos, para no depender de acordarse).
+ */
+function _esCeroKm(interes, plateClass) {
+  if (interes === 'cero-km') return true;
+  return typeof _claseEsTemporal === 'function' && _claseEsTemporal(plateClass);
+}
+
 function _interestText(key) {
   const map = {
     'propietario': 'Propietario Registral',
@@ -596,6 +611,9 @@ function _buildGuideUrl(extras) {
   // Formato: "A-300000000.B-15000000.C.G.M" — codigo, y el monto detras de un
   // guion cuando el PDF lo trae. El punto y el guion no se escapan en un URL.
   add('cb', _codificarCoberturas(x.coberturas));
+  // k0=1 (4 nov 2026): cero kilometros. La guia cambia "el dia de tu cita":
+  // el unico requisito es la factura de la agencia, sin fotos.
+  if (x.ceroKm) params.push('k0=1');
   // asi=1: la guia muestra la seccion "Sumale asistencias" (17 set 2026). Solo
   // cuando el correo llevo la tarjeta; sin esto los enlaces viejos no cambian.
   // wa: el WhatsApp del agente, que la guia le pasa al configurador.
@@ -645,6 +663,7 @@ function _buildCitaUrl(extras) {
   // Para el correo del agente (12 oct 2026): monto asegurado e interes asegurable.
   add('va', num(x.valor));
   if (_interestText(x.interes)) add('ia', x.interes);
+  if (x.ceroKm) params.push('k0=1');
   return CFG.CITA_URL + '?' + params.join('&');
 }
 
@@ -705,6 +724,7 @@ function _buildPlanesUrl(extras) {
     // Pasan de largo hasta /cita/, para el correo del agente (12 oct 2026).
     add('va', num(x.valor));
     if (_interestText(x.interes)) add('ia', x.interes);
+    if (x.ceroKm) params.push('k0=1');
   }
   return params.length ? base + (base.indexOf('?') === -1 ? '?' : '&') + params.join('&') : base;
 }

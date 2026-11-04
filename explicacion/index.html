@@ -3048,6 +3048,9 @@ const data = {
   // fc=1 + ae: el agente usa el formulario propio de cita (19 set 2026). El botón
   // de agendar abre /cita/ en vez de la pantalla "Falta un paso". tel: su teléfono.
   fc: _params.get('fc') === '1',
+  // k0=1: cero kilómetros (4 nov 2026). El día de la cita cambia: el único
+  // requisito es la factura de la agencia, sin inspección ni fotos.
+  k0: _params.get('k0') === '1',
   ae: _params.get('ae') || '',
   tel: _params.get('tel') || '',
   // ia: interés asegurable que eligió el agente (12 oct 2026). La guía no lo
@@ -3166,6 +3169,7 @@ function _urlCita(d, as) {
   add('pa', d.pa); add('ps', d.ps); add('pt', d.pt);
   // Para el correo del agente (12 oct 2026): monto asegurado e interés asegurable.
   add('va', d.va); add('ia', d.ia);
+  if (d.k0) q.push('k0=1');
   if (/^[a-z]+(\.[a-z]+)*$/.test(String(as || ''))) add('as', as);
   return '../cita/?' + q.join('&');
 }
@@ -3575,6 +3579,34 @@ function applyPersonalization() {
   // cobertura al propio vehículo. Va DESPUÉS del bloque og/ag de arriba,
   // porque decide sobre la variante del deducible que quedó activa.
   aplicarSecciones(_parseCbMapa(data.cb));
+  aplicarCeroKm();
+}
+
+/**
+ * Cero kilómetros (JC, 4 nov 2026): el único requisito es una factura proforma
+ * con los datos finales del vehículo o una copia de la factura de compra. No hay
+ * inspección ni fotos, así que "¿Qué pasará el día de tu cita?" cambia sus dos
+ * primeros pasos y deja de mencionar las fotos. Sin `k0` no se toca nada.
+ */
+function aplicarCeroKm() {
+  if (!data.k0) return;
+  const sec = document.getElementById('qtcita');
+  if (!sec) return;
+  const sub = sec.querySelector('.section-sub');
+  if (sub) sub.innerHTML = 'Como tu vehículo es <b>cero kilómetros</b>, no hay inspección ni fotos. Solo necesitás un documento de la agencia.';
+  const pasos = sec.querySelectorAll('.cita-step');
+  const poner = (i, emoji, titulo, desc) => {
+    const p = pasos[i]; if (!p) return;
+    const t = p.querySelector('.step-title'), d = p.querySelector('.step-desc');
+    if (t && titulo) t.innerHTML = '<span class="emoji">' + emoji + '</span>' + titulo;
+    if (d) d.innerHTML = desc;
+  };
+  poner(0, '🧾', 'Pedí la factura a la agencia',
+    'Solicitale a la agencia una <b>factura proforma con los datos finales del vehículo</b> o una <b>copia de la factura de compra</b>. Es el único requisito.');
+  poner(1, '📅', 'Completá el formulario de cita',
+    'Agendá tu cita de aseguramiento con el botón de abajo y <b>enviale la factura a tu agente</b> por correo o WhatsApp.');
+  poner(2, '', '',
+    'Con la factura, te enviamos la póliza. La aceptás desde tu celular ingresando un <b>Token de seguridad</b>. Sin papeles físicos, sin firmas presenciales.');
 }
 
 
@@ -3599,7 +3631,7 @@ function urlPlanesDesdeGuia() {
   add('pa', data.pa); add('ps', data.ps); add('pt', data.pt);
   // Con el formulario de cita SDI, el configurador termina en /cita/ con la
   // forma de pago y las asistencias elegidas, en vez de WhatsApp.
-  if (_modoCitaSdi(data)) { add('fc', '1'); add('ae', data.ae); add('tel', data.tel); add('va', data.va); add('ia', data.ia); }
+  if (_modoCitaSdi(data)) { add('fc', '1'); add('ae', data.ae); add('tel', data.tel); add('va', data.va); add('ia', data.ia); if (data.k0) add('k0', '1'); }
   return '../asistencias/' + (q.length ? '?' + q.join('&') : '');
 }
 function aplicarAsistencias() {

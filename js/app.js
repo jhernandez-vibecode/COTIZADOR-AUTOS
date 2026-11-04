@@ -663,7 +663,9 @@ function _guideExtras() {
     asistencias:   !!((document.getElementById('m-asistencias') || {}).checked &&
                       typeof asiDisponible === 'function' && asiDisponible()),
     // El mismo interes que buildEmail: viaja a /cita/ con el formulario SDI.
-    interes:       S.formData ? S.formData.interes : ''
+    interes:       S.formData ? S.formData.interes : '',
+    // El mismo cero kilometros que buildEmail (k0=1 en la guia).
+    ceroKm:        _esCeroKm(S.formData ? S.formData.interes : '', S.data.plateClass)
   };
 }
 

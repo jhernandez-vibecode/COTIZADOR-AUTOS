@@ -140,6 +140,8 @@ export function validarCita(body, ctx) {
   d.va = /^\d{1,13}$/.test(va) && Number(va) > 0 ? va : "";
   const ia = String(body.ia == null ? "" : body.ia).trim();
   d.ia = Object.prototype.hasOwnProperty.call(INTERESES, ia) ? ia : "";
+  // Cero kilometros (4 nov 2026): cambia los pasos del correo al cliente. Solo `true` literal.
+  d.k0 = body.k0 === true || d.ia === "cero-km";
 
   return { ok: true, datos: d };
 }

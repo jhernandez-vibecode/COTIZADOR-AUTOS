@@ -224,12 +224,27 @@ a{color:var(--blue)}
   var g = function (k) { return (P.get(k) || '').trim(); };
   var ag = { n: g('n'), l: g('l'), wa: g('wa'), tel: g('tel'), ae: g('ae') };
   // va (monto asegurado) e ia (interés asegurable) no se muestran: viajan al correo del agente (12 oct 2026).
-  var cot = { c: g('c'), v: g('v'), p: g('p'), y: g('y'), pa: g('pa'), ps: g('ps'), pt: g('pt'), as: g('as'), va: g('va'), ia: g('ia') };
+  var cot = { c: g('c'), v: g('v'), p: g('p'), y: g('y'), pa: g('pa'), ps: g('ps'), pt: g('pt'), as: g('as'), va: g('va'), ia: g('ia'),
+    // k0: cero kilómetros (4 nov 2026). El único requisito es la factura de la agencia, sin fotos.
+    k0: g('k0') === '1' };
   var $ = function (id) { return document.getElementById(id); };
   var RE_MAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;   // el mismo regex laxo de js/wizard.js
   var pilaAg = ag.n.split(/\s+/)[0] || 'tu agente';
 
   if (!ag.n || !RE_MAIL.test(ag.ae)) { $('citaSinDatos').hidden = false; return; }
+
+  // Cero kilómetros (JC, 4 nov 2026): no hay inspección ni fotos. El único requisito es una
+  // factura proforma con los datos finales del vehículo o una copia de la factura de compra.
+  // Las preguntas siguen palabra por palabra; cambian las ayudas y "el día de tu cita".
+  if (cot.k0) {
+    var ayCorreo = document.querySelector('[data-c="correo"] .ay');
+    if (ayCorreo) ayCorreo.textContent = 'Aquí te llega la confirmación.';
+    var ayFranja = document.querySelector('[data-c="franja"] .ay');
+    if (ayFranja) ayFranja.textContent = 'Como tu vehículo es cero kilómetros, no hacen falta fotos ni tenerlo a mano.';
+    var p4 = document.querySelectorAll('#citaOk .pasos4 span');
+    if (p4[0]) p4[0].innerHTML = '<b>Pedí la factura a la agencia.</b> Una factura proforma con los datos finales del vehículo o una copia de la factura de compra. Es el único requisito.';
+    if (p4[1]) p4[1].innerHTML = '<b>Enviásela a tu agente.</b> Por correo o WhatsApp. No hace falta inspección ni fotos.';
+  }
 
   // ---- pintar (todo por textContent: nada del URL entra como HTML) ----
   $('agNom').textContent = ag.n;
