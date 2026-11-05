@@ -17,8 +17,9 @@ const d = {
 
 // El circuito real: el asunto y el texto que arma correoAgente() son lo que lee el recordatorio.
 // Si cambia el formato del correo al agente, esto falla.
-const ag = correoAgente(d, { clienteAvisado: true });
+const ag = correoAgente(d, { email: 'agente@ejemplo.test', nombre: 'Agente Prueba Uno', licencia: '00-0000' }, { clienteAvisado: true });
 const t = R.rcDatosDelTitulo(ag.asunto);
+ok('titulo: el asunto nuevo empieza con 📅 y sigue siendo cita; los viejos tambien', ag.asunto.indexOf('📅 Cita solicitada') === 0 && R.rcEsCita('Cita solicitada · AAQ592 · mar 27 oct'));
 ok('titulo: es cita', R.rcEsCita(ag.asunto) && R.rcEsCita('  cita solicitada · X') && !R.rcEsCita('Revisión Google Ads'));
 ok('titulo: placa', t.placa === 'BDF482');
 ok('titulo: fecha corta', t.fecha === 'mar 22 sep');

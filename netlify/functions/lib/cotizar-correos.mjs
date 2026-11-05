@@ -110,7 +110,8 @@ export function correoAgente(d, info) {
   const texto = ["NUEVA SOLICITUD DE COTIZACIÓN", "",
     ...cliente.map(([k, v]) => k + ": " + v), "", ...veh.map(([k, v]) => k + ": " + v), "",
     "Solicitud del " + info.fecha + "."].join("\n");
-  return { asunto: "Cotización solicitada · " + vehiculoCorto(d) + " · " + d.nombre, html, texto };
+  // 📝 al inicio (JC, 5 nov 2026): en la bandeja se distingue de la cita (📅) sin leer el asunto.
+  return { asunto: "📝 Cotización solicitada · " + vehiculoCorto(d) + " · " + d.nombre, html, texto };
 }
 
 /** Fila para la hoja de registro de JC (mismo orden que los encabezados del Apps Script). */

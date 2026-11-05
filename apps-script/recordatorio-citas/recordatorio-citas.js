@@ -48,8 +48,9 @@ function rcEsc(s) {
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+// Desde el 5 nov 2026 el asunto (y el título del evento) empieza con 📅: se salta lo que no es letra.
 function rcEsCita(titulo) {
-  return String(titulo || '').trim().toLowerCase().indexOf(RC.PREFIJO.toLowerCase()) === 0;
+  return String(titulo || '').replace(/^[^A-Za-zÁÉÍÓÚáéíóúÑñ]+/, '').toLowerCase().indexOf(RC.PREFIJO.toLowerCase()) === 0;
 }
 
 // "2026-10-27" -> Date a medianoche UTC, solo para sacar día de la semana y mes.

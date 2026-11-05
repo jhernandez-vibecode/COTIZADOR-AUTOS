@@ -42,7 +42,7 @@ ok('cliente: trae texto plano', typeof cl.texto === 'string' && cl.texto.indexOf
 ok('cliente sin asistencias: no sale el renglon', correoCliente(Object.assign({}, d, { as: [] }), AG).html.indexOf('Asistencias opcionales') === -1);
 
 const ag = correoAgente(d, AG, { clienteAvisado: true });
-ok('agente: asunto ordenable', ag.asunto === 'Cita solicitada · BDF482 · mar 22 sep · 3-5 pm · Mariela Quesada Rojas');
+ok('agente: asunto ordenable con 📅 al inicio', ag.asunto === '📅 Cita solicitada · BDF482 · mar 22 sep · 3-5 pm · Mariela Quesada Rojas');
 ok('agente: trae las 10 respuestas', ['Mariela Quesada Rojas', 'mariela@ejemplo.test', '8888-0000', 'Casa porton gris', 'Contadora', 'De ₡1.000.000 a ₡2.000.000', 'BDF482', 'Semestral', '22/09/2026', '03:00 pm a 05:00 pm'].every((t) => ag.html.indexOf(t) !== -1));
 ok('agente: primas con punto de miles', ag.html.indexOf('₡570.891') !== -1 && ag.html.indexOf('₡308.283') !== -1);
 ok('agente: WhatsApp al cliente por web.whatsapp', ag.html.indexOf('https://web.whatsapp.com/send/?phone=50688880000') !== -1 && ag.html.indexOf('wa.me') === -1);

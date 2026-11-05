@@ -150,7 +150,9 @@ export function correoAgente(d, ag, opc) {
     "</td></tr>"
   );
   return {
-    asunto: ["Cita solicitada", placaAsunto, fechaCorta(d.fecha), FRANJA_CORTA[d.franja] || d.franja, d.nombre].join(" · "),
+    // 📅 al inicio (JC, 5 nov 2026): se distingue de la cotizacion (📝). El recordatorio de las
+    // 6:00 am (apps-script/recordatorio-citas) salta lo que no es letra antes de "Cita solicitada".
+    asunto: ["📅 Cita solicitada", placaAsunto, fechaCorta(d.fecha), FRANJA_CORTA[d.franja] || d.franja, d.nombre].join(" · "),
     html,
     texto: "CITA SOLICITADA\n" + fechaLarga(d.fecha) + " · " + d.franja + "\n\n" + copiar + (veh ? "\nVehículo: " + veh : "") + (montoAseg ? "\nMonto asegurado: " + montoAseg : "") + "\nInterés asegurable: " + interes + (primas ? "\nPrimas: " + primas : "") + (avisado ? "" : "\n\nNo se pudo enviar la confirmación al cliente."),
   };
