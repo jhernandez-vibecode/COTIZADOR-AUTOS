@@ -146,7 +146,6 @@ function _cotzPintar() {
       '<span class="cotz-dot" style="background:' + _cotzColor(a.email) + '">' + _cotzEsc(_cotzIni(a.email)) + '</span>' +
       '<span class="cotz-quien"><b>' + _cotzEsc(_cotzNombre(a.email)) + '</b><small>' + _cotzEsc(a.email) + '</small>' +
         (f ? '' : '<em>Falta que entre al cotizador con esta cuenta y guarde su ⚙. Mientras tanto se salta su turno.</em>') +
-        '<label class="cotz-cargo-lb">Cargo en la firma<input class="cotz-cargo" data-i="' + i + '" maxlength="90" placeholder="Agente exclusivo del INS" value="' + _cotzEsc(a.cargo) + '"></label>' +
       '</span>' +
       '<span class="cotz-step"><button type="button" data-i="' + i + '" data-d="-1" aria-label="Menos"' + (a.peso <= 0 ? ' disabled' : '') + '>−</button><output>' + a.peso + '</output><button type="button" data-i="' + i + '" data-d="1" aria-label="Más"' + (a.peso >= 9 ? ' disabled' : '') + '>+</button></span>' +
       '<span class="cotz-pct">' + (total ? Math.round(a.peso * 100 / total) : 0) + ' %' +
@@ -203,14 +202,6 @@ function _cotzEnganchar(c) {
       _cotzCambio();
     });
   });
-  c.querySelectorAll('.cotz-cargo').forEach(function (inp) {
-    inp.addEventListener('input', function () {
-      r.agentes[+inp.dataset.i].cargo = inp.value;
-      _cotz.sucio = true;
-      var g = c.querySelector('#cotzGuardar'); g.disabled = false;
-      c.querySelector('.cotz-guardar small').textContent = 'Hay cambios sin guardar.';
-    });
-  });
   c.querySelectorAll('.cotz-quitar').forEach(function (b) {
     b.addEventListener('click', function () { r.agentes.splice(+b.dataset.i, 1); _cotzCambio(); });
   });
@@ -222,7 +213,7 @@ function _cotzEnganchar(c) {
     if (!esEmailValido(e)) { showToast('Escribí el correo del agente.', 'error'); return; }
     if (r.agentes.some(function (a) { return a.email === e; })) { showToast('Ese agente ya está en la lista.', 'error'); return; }
     if (r.agentes.length >= 10) { showToast('Máximo 10 agentes.', 'error'); return; }
-    r.agentes.push({ email: e, peso: 1, cargo: '' });
+    r.agentes.push({ email: e, peso: 1 });
     _cotzCambio();
   });
   c.querySelector('#cotzGuardar').addEventListener('click', function () {

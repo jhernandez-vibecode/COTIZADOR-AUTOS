@@ -49,7 +49,7 @@ ok('nadie con ficha: al admin', corrida(R(true, [1, 1, 1]), 2, () => false) === 
 ok('normalizar: el admin entra aunque no venga (peso 0)', (() => { const n = normalizarReparto({ on: true, agentes: [{ email: DOS, peso: 2 }] }, ADM); return n.ok && n.reparto.agentes[0].email === ADM && n.reparto.agentes[0].peso === 0; })());
 ok('normalizar: peso 10 no', !normalizarReparto({ on: true, agentes: [{ email: ADM, peso: 10 }] }, ADM).ok);
 ok('normalizar: correo repetido no', !normalizarReparto({ on: true, agentes: [{ email: ADM, peso: 1 }, { email: 'AGENTE.UNO@ejemplo.test', peso: 1 }] }, ADM).ok);
-ok('normalizar: cargo con < no', !normalizarReparto({ on: true, agentes: [{ email: ADM, peso: 1, cargo: '<b>x' }] }, ADM).ok);
+ok('normalizar: el reparto ya no guarda cargo (vive en SDI_ASESORES)', (() => { const n = normalizarReparto({ on: true, agentes: [{ email: ADM, peso: 1, cargo: 'x' }] }, ADM); return n.ok && !('cargo' in n.reparto.agentes[0]); })());
 ok('reparto inicial: apagado y solo el admin', (() => { const r = repartoInicial(ADM); return !r.on && r.agentes.length === 1 && vuelta(r).length === 1; })());
 
 console.log('-- validacion (preguntas del Google Form) --');
@@ -69,15 +69,15 @@ ok('ficha sin apellido → no', !validarFicha({ nombre: 'Agente', licencia: '00-
 ok('ficha con WhatsApp corto → no', !validarFicha({ nombre: 'Agente Prueba', whatsapp: '123' }).ok);
 
 console.log('-- correos --');
-const AG = { email: DOS, nombre: 'Agente Prueba Dos', licencia: '00-0002', whatsapp: '8888-2222', telefono: '', cargo: 'Asesor de Seguros · Oficina de Agente Prueba Uno, agente' };
+const AG = { email: DOS, nombre: 'Agente Prueba Dos', licencia: '00-0002', whatsapp: '8888-2222', telefono: '', cargo: 'Asesor de Seguros', oficina: 'Oficina de Agente Prueba Uno, agente' };
 const cc = correoCliente(vu.datos, AG);
 ok('cliente: lo firma el agente que le toco', cc.html.includes('Soy <b>Agente Prueba Dos</b>') && cc.html.includes('Asesor de Seguros<br>Oficina de Agente Prueba Uno, agente · Licencia SUGESE 00-0002') && cc.texto.includes('Asesor de Seguros\nOficina de Agente Prueba Uno, agente · Licencia SUGESE 00-0002'));
-ok('cargo simple: una sola linea con la licencia', correoCliente(vu.datos, { ...AG, cargo: 'Agente exclusivo del INS' }).html.includes('Agente exclusivo del INS · Licencia SUGESE 00-0002<br>'));
+ok('agente (sin cargo): una sola linea con la licencia', correoCliente(vu.datos, { ...AG, cargo: '', oficina: '' }).html.includes('Agente exclusivo del INS · Licencia SUGESE 00-0002<br>'));
 ok('cliente: pie "Gestionado por SDI" / "Seguros Digitales INS"', cc.html.includes('Gestionado por SDI</b><br>Seguros Digitales INS') && cc.texto.endsWith('Gestionado por SDI\nSeguros Digitales INS'));
 ok('cliente: no repite la cedula', !cc.html.includes('1 0000 0000') && !cc.texto.includes('1 0000 0000'));
 ok('cliente: WhatsApp por web.whatsapp.com, nunca wa.me', cc.html.includes('https://web.whatsapp.com/send/?phone=50688882222') && !cc.html.includes('wa.me'));
 ok('cliente: sin WhatsApp no hay boton', !correoCliente(vu.datos, { ...AG, whatsapp: '' }).html.includes('web.whatsapp.com'));
-ok('cliente: cargo por defecto', correoCliente(vu.datos, { ...AG, cargo: '' }).html.includes('Agente exclusivo del INS · Licencia SUGESE 00-0002'));
+ok('cliente: cargo por defecto', correoCliente(vu.datos, { ...AG, cargo: '', oficina: '' }).html.includes('Agente exclusivo del INS · Licencia SUGESE 00-0002'));
 ok('cliente: asunto con la placa / 0 KM', cc.asunto === 'Recibimos tu solicitud de cotización · BDF482' && correoCliente(vn.datos, AG).asunto === 'Recibimos tu solicitud de cotización · 0 KM');
 ok('cliente: escapa lo que escribe el cliente', !correoCliente({ ...vu.datos, placa: '<script>' }, AG).html.includes('<script>'));
 const ca = correoAgente(vu.datos, { agente: AG, n: 4, de: 5, repartido: true, fecha: '5 nov 2026, 8:14 am', registrada: true });

@@ -21,6 +21,8 @@ const src = fs.readFileSync(
   path.join(__dirname, '..', 'js', 'email-template.js'),
   'utf8'
 );
+// email-marca.js va antes, como en index.html (de ahi salen _cgAsesor y la firma del asesor).
+Object.assign(global, require('../js/email-marca.js'));
 eval(src);
 
 let pass = 0, fail = 0;

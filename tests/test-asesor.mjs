@@ -11,6 +11,7 @@ import { createRequire } from 'node:module';
 import { CLAVES } from '../netlify/functions/lib/validacion.mjs';
 import { validarCita } from '../netlify/functions/lib/cita-validacion.mjs';
 import { correoCliente } from '../netlify/functions/lib/cita-correos.mjs';
+import { firmaDe } from '../netlify/functions/lib/agentes.mjs';
 
 const require = createRequire(import.meta.url);
 const raiz = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -18,7 +19,7 @@ const leer = (p) => fs.readFileSync(path.join(raiz, p), 'utf8');
 let pass = 0, fail = 0;
 function ok(n, c) { if (c) { pass++; console.log('  ok    ' + n); } else { fail++; console.log('  FALLA ' + n); } }
 
-const CARGO = 'Asesor de Seguros · Oficina de Agente Titular, agente';
+const ASESOR_FIRMA = { cargo: 'Asesor de Seguros', oficina: 'Oficina de Agente Titular, agente' };
 const ASESOR = 'asesor@ejemplo.test';
 const A = require('../js/planes-asistencia.js');
 Object.keys(A).forEach((k) => { globalThis[k] = A[k]; });
@@ -29,16 +30,19 @@ globalThis.CFG = {
   GUIDE_URL: 'https://ejemplo.test/explicacion/', PLANES_URL: 'https://ejemplo.test/asistencias/',
   CITA_URL: 'https://ejemplo.test/cita/', CITA_MODO: 'propio',
   LOGO_URL: 'https://ejemplo.test/img/ins-logo.png', LOGO_SDI_URL: 'https://ejemplo.test/img/sdi.png',
-  ASESORES: { [ASESOR]: CARGO },
 };
 const M = require('../js/email-marca.js');
+// Asesor de prueba en la lista UNICA (SDI_ASESORES de email-marca.js), como si fuera Jose.
+M.SDI_ASESORES[ASESOR] = ASESOR_FIRMA;
 Object.keys(M).forEach((k) => { globalThis[k] = M[k]; });
 (0, eval)(leer('js/email-template.js'));
 const P = require('../js/poliza-email.js');
 
 console.log('-- config --');
-ok('config.js: Jose es asesor de la oficina de Fernando', /'tramites@segurosdelins\.com': 'Asesor de Seguros · Oficina de Fernando Hernández, agente'/.test(leer('js/config.js')));
-ok('el cargo se busca sin importar mayusculas', _cargoAsesor('ASESOR@Ejemplo.test') === CARGO && _cargoAsesor('otro@ejemplo.test') === '');
+ok('email-marca.js: Jose es asesor de la oficina de Fernando', JSON.stringify(require('../js/email-marca.js').SDI_ASESORES['tramites@segurosdelins.com']) === JSON.stringify({ cargo: 'Asesor de Seguros', oficina: 'Oficina de Fernando Hernández, agente' }));
+ok('config.js ya no tiene su propia lista', !/ASESORES:/.test(leer('js/config.js')));
+ok('el asesor se busca sin importar mayusculas', _asesor('ASESOR@Ejemplo.test') === ASESOR_FIRMA && _asesor('otro@ejemplo.test') === null);
+ok('cg del enlace: "cargo · oficina"', _cgAsesor(ASESOR) === 'Asesor de Seguros · Oficina de Agente Titular, agente' && _cgAsesor('otro@ejemplo.test') === '');
 
 console.log('-- correo de cotizacion --');
 const precios = { anual: '570,891.00', semestral: '308,283.00', trimestral: '158,423.00' };
@@ -68,16 +72,16 @@ ok('guia: lee cg y firma con el', /cg: \(_params\.get\('cg'\) \|\| ''\)/.test(gu
 ok('guia: pasa cg a /cita/ y al configurador', guia.includes("add('cg', d.cg)") && guia.includes("add('cg', data.cg)"));
 ok('configurador: cg en el pie y hacia /cita/', /param\('cg'\) \? param\('cg'\)/.test(leer('asistencias/index.html')) && leer('asistencias/index.html').includes("add('cg', param('cg'))"));
 ok('/cita/: pie con el cargo', leer('cita/index.html').includes("(ag.cg || 'agente exclusivo del INS')"));
-const base = { nombre: 'Mariela Quesada Rojas', telefono: '8888-0000', correo: 'mariela@ejemplo.test', direccion: 'Heredia, Belen', placa: 'BDF482', formaPago: 'Anual', fecha: '2030-01-07', franja: '8:00 am a 10:00 am', consent: true, n: 'Asesor Prueba Uno', l: '00-0009', ae: 'agente@ejemplo.test', c: 'Mariela' };
-const ctx = { agentes: new Set(['agente@ejemplo.test']), now: new Date('2030-01-01T15:00:00Z') };
-const vc = validarCita({ ...base, cg: CARGO }, ctx);
-ok('servidor de la cita: acepta cg', vc.ok && vc.datos.cg === CARGO);
-ok('servidor de la cita: cg con < se descarta', validarCita({ ...base, cg: '<b>x' }, ctx).datos.cg === '');
-const cc = correoCliente({ ...vc.datos, as: [] });
-ok('confirmacion de la cita: firma de asesor', cc.html.includes('Asesor de Seguros<br>Oficina de Agente Titular, agente &middot; Licencia SUGESE 00-0009') && !cc.html.includes('Agente exclusivo del INS'));
+const base = { nombre: 'Mariela Quesada Rojas', telefono: '8888-0000', correo: 'mariela@ejemplo.test', direccion: 'Heredia, Belen', placa: 'BDF482', formaPago: 'Anual', fecha: '2030-01-07', franja: '8:00 am a 10:00 am', consent: true, ae: ASESOR, c: 'Mariela' };
+const ctx = { agentes: new Set([ASESOR, 'agente@ejemplo.test']), now: new Date('2030-01-01T15:00:00Z') };
+const vc = validarCita({ ...base, cg: 'Departamento de Cobros', n: 'Banco Falso' }, ctx);
+ok('servidor de la cita: no acepta firma del navegador (n, cg)', vc.ok && !('cg' in vc.datos) && !('n' in vc.datos));
+const fichaAs = { nombre: 'Asesor Prueba Uno', licencia: '00-0009', telefono: '8888-2222', whatsapp: '' };
+const cc = correoCliente({ ...vc.datos, as: [] }, firmaDe(ASESOR, fichaAs));
+ok('confirmacion de la cita: firma de asesor', cc.html.includes('Asesor de Seguros<br>Oficina de Agente Titular, agente · Licencia SUGESE 00-0009') && !cc.html.includes('Agente exclusivo del INS'));
 ok('confirmacion de la cita: texto plano tambien', cc.texto.includes('Asesor de Seguros\nOficina de Agente Titular, agente - Licencia SUGESE 00-0009'));
-const cn = correoCliente({ ...validarCita(base, ctx).datos, as: [] });
-ok('confirmacion de la cita: agente igual que siempre', cn.html.includes('Agente exclusivo del INS &middot; Licencia SUGESE 00-0009') && cn.texto.includes('Agente exclusivo del INS - Licencia SUGESE 00-0009'));
+const cn = correoCliente({ ...validarCita({ ...base, ae: 'agente@ejemplo.test' }, ctx).datos, as: [] }, firmaDe('agente@ejemplo.test', fichaAs));
+ok('confirmacion de la cita: agente igual que siempre', cn.html.includes('Agente exclusivo del INS · Licencia SUGESE 00-0009') && cn.texto.includes('Agente exclusivo del INS - Licencia SUGESE 00-0009'));
 
 console.log('\n' + pass + ' ok, ' + fail + ' fallas');
 process.exit(fail ? 1 : 0);

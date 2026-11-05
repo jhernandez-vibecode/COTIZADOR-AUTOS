@@ -303,18 +303,29 @@ function _bloqueAsistencias(o) {
  * licencia daba 3,32:1, y la licencia SUGESE es dato regulatorio.
  */
 /**
- * Cargo de un ASESOR (JC, 5 nov 2026): vende con la licencia de otro agente, asi que su
- * firma no puede decir "Tu agente" ni "Agente exclusivo". '' si el correo es de un agente.
- * La lista vive en CFG.ASESORES (js/config.js).
+ * ASESORES (JC, 5 nov 2026: "solo para José, fijo"): venden con la licencia de otro
+ * agente, asi que su firma no puede decir "Tu agente" ni "Agente exclusivo".
+ * UNICA lista del proyecto: la usan los correos de la consola y tambien el servidor
+ * (netlify/functions/lib/agentes.mjs la importa de este archivo).
  */
-function _cargoAsesor(correo) {
-  var m = (typeof CFG !== 'undefined' && CFG && CFG.ASESORES) || {};
-  return m[String(correo || '').trim().toLowerCase()] || '';
+var SDI_ASESORES = {
+  'tramites@segurosdelins.com': { cargo: 'Asesor de Seguros', oficina: 'Oficina de Fernando Hernández, agente' },
+};
+/** {cargo, oficina} del asesor, o null si el correo es de un agente. */
+function _asesor(correo) {
+  return SDI_ASESORES[String(correo || '').trim().toLowerCase()] || null;
 }
-/** "Asesor de Seguros · Oficina de X, agente" → ['Asesor de Seguros', 'Oficina de X, agente']. */
-function _partesCargo(cargo) {
-  var c = String(cargo || ''), i = c.indexOf(' · ');
-  return i > 0 ? [c.slice(0, i), c.slice(i + 3)] : [c, ''];
+/** Renglones del cargo del asesor (['Asesor de Seguros', 'Oficina de X, agente']); [] si es agente. */
+function _lineasAsesor(correo) {
+  var a = _asesor(correo);
+  return a ? [a.cargo, a.oficina].filter(Boolean) : [];
+}
+/**
+ * El parametro cg de los enlaces a la guia, /cita/ y el configurador: "cargo · oficina".
+ * Es el formato del ENLACE (los ya enviados lo traen asi); solo la guia lo parte (_partesCg).
+ */
+function _cgAsesor(correo) {
+  return _lineasAsesor(correo).join(' · ');
 }
 
 /** Ultimo recurso si CFG no trae la URL: un src vacio dejaria un hueco roto. */
@@ -326,7 +337,7 @@ function _pieSDI(o) {
   };
   const logo = o.logo || SDI_LOGO_POR_DEFECTO;
   // Asesor (5 nov 2026): sin "Propiedad intelectual de" y con su oficina en vez de "Agente exclusivo INS".
-  const pc = _partesCargo(_cargoAsesor(o.correo));
+  const asesor = _asesor(o.correo);
   return '        <tr><td bgcolor="' + SDI_NAVY + '" style="background:' + SDI_NAVY + ';color:#cbd5e1;padding:30px 32px 26px;text-align:center;">\n' +
     // 146 px (~51 de alto, lo mismo que el logo anterior a 120) sobre un correo
     // de 600: el pie firma, no compite con el contenido.
@@ -338,9 +349,9 @@ function _pieSDI(o) {
     '          <p style="margin:6px 0 0;font-size:12px;color:#cbd5e1;">Tel: ' + _escMarca(o.tel) + '</p>\n' +
     '          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:18px;"><tr>' +
       '<td style="border-top:1px solid #1e3a5f;height:1px;line-height:1px;font-size:0;">&nbsp;</td></tr></table>\n' +
-    (pc[0] ? '' : '          ' + linea('&copy; Propiedad intelectual de ' + _escMarca(o.agente), 14) + '\n') +
-    '          ' + linea('SDI Seguros Digitales INS &mdash; Todos los derechos reservados', pc[0] ? 14 : 3) + '\n' +
-    '          ' + linea((pc[0] ? _escMarca(pc[1] || pc[0]) : 'Agente exclusivo INS') + ' &middot; Licencia SUGESE ' + _escMarca(o.licencia), 3) + '\n' +
+    (asesor ? '' : '          ' + linea('&copy; Propiedad intelectual de ' + _escMarca(o.agente), 14) + '\n') +
+    '          ' + linea('SDI Seguros Digitales INS &mdash; Todos los derechos reservados', asesor ? 14 : 3) + '\n' +
+    '          ' + linea((asesor ? _escMarca(asesor.oficina || asesor.cargo) : 'Agente exclusivo INS') + ' &middot; Licencia SUGESE ' + _escMarca(o.licencia), 3) + '\n' +
     '        </td></tr>';
 }
 
@@ -732,7 +743,7 @@ if (typeof module !== 'undefined' && module.exports) {
     _fileteSDI: _fileteSDI, _analizarPlaca: _analizarPlaca, _placaEsRelleno: _placaEsRelleno,
     _claseEsCL: _claseEsCL, _claseEsTemporal: _claseEsTemporal,
     _tarjetaVehiculo: _tarjetaVehiculo, _bloqueSobrio: _bloqueSobrio, _pieSDI: _pieSDI,
-    _cargoAsesor: _cargoAsesor, _partesCargo: _partesCargo,
+    SDI_ASESORES: SDI_ASESORES, _asesor: _asesor, _lineasAsesor: _lineasAsesor, _cgAsesor: _cgAsesor,
     _ahorroAnual: _ahorroAnual, _bloquePagos: _bloquePagos, _bloqueAsistencias: _bloqueAsistencias,
     _bloqueCoberturas: _bloqueCoberturas, _filasCoberturas: _filasCoberturas, _notaDeducibles: _notaDeducibles, _cuadrosDeducibles: _cuadrosDeducibles,
     _deduciblePorCobertura: _deduciblePorCobertura, _montoCR: _montoCR, _enPalabras: _enPalabras,

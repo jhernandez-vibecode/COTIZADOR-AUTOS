@@ -16,15 +16,13 @@ import { createHash } from "node:crypto";
 
 export const PESO_MAX = 9;
 export const MAX_AGENTES = 10;
-export const CARGO_DEFECTO = "Agente exclusivo del INS";
 const RE_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const RE_CONTROL = /[\r\n\u0000<>]/;
 
 export const normCorreo = (s) => String(s || "").trim().toLowerCase();
 
 /** Reparto inicial: apagado y solo el admin. */
 export function repartoInicial(admin) {
-  return { on: false, agentes: [{ email: normCorreo(admin), peso: 1, cargo: "" }] };
+  return { on: false, agentes: [{ email: normCorreo(admin), peso: 1 }] };
 }
 
 /**
@@ -44,11 +42,9 @@ export function normalizarReparto(entrada, admin) {
     vistos.add(email);
     const peso = Number(a.peso);
     if (!Number.isInteger(peso) || peso < 0 || peso > PESO_MAX) return { ok: false, error: "El número de cada agente va de 0 a " + PESO_MAX + "." };
-    const cargo = String(a.cargo || "").trim().replace(/\s+/g, " ");
-    if (cargo.length > 90 || RE_CONTROL.test(cargo)) return { ok: false, error: "El cargo de " + email + " no es válido." };
-    agentes.push({ email, peso, cargo });
+    agentes.push({ email, peso });
   }
-  if (adm && !vistos.has(adm)) agentes.unshift({ email: adm, peso: 0, cargo: "" });
+  if (adm && !vistos.has(adm)) agentes.unshift({ email: adm, peso: 0 });
   return { ok: true, reparto: { on: entrada.on === true, agentes } };
 }
 

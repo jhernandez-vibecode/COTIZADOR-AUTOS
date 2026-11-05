@@ -87,8 +87,9 @@ export function validarCita(body, ctx) {
   // Una linea, con tope. [campo, tope, obligatorio]
   const LINEAS = [
     ["nombre", 120, true], ["telefono", 80, true], ["correo", 80, true], ["ocupacion", 80, false],
-    ["placa", 80, true], ["n", 120, true], ["l", 80, true], ["tel", 80, false], ["wa", 80, false],
-    ["ae", 80, true], ["c", 80, false], ["v", 80, false], ["y", 8, false],
+    // Del agente solo se recibe el correo (ae): su nombre, licencia, telefonos y cargo los
+    // pone el servidor desde su ficha (lib/agentes.mjs). Lo que mande la pagina se ignora.
+    ["placa", 80, true], ["ae", 80, true], ["c", 80, false], ["v", 80, false], ["y", 8, false],
     ["pa", 16, false], ["ps", 16, false], ["pt", 16, false],
   ];
   for (const [k, max, oblig] of LINEAS) {
@@ -142,9 +143,6 @@ export function validarCita(body, ctx) {
   d.ia = Object.prototype.hasOwnProperty.call(INTERESES, ia) ? ia : "";
   // Cero kilometros (4 nov 2026): cambia los pasos del correo al cliente. Solo `true` literal.
   d.k0 = body.k0 === true || d.ia === "cero-km";
-  // Cargo de un asesor (5 nov 2026): firma de la confirmacion. Si llega raro, se ignora.
-  const cg = String(body.cg == null ? "" : body.cg).trim();
-  d.cg = cg.length <= 120 && !/[\r\n\u0000<>]/.test(cg) ? cg : "";
 
   return { ok: true, datos: d };
 }

@@ -11,29 +11,16 @@
 // El correo al CLIENTE no repite la cedula.
 // =====================================================================
 import { TIPOS, vehiculoCorto } from "./cotizar-validacion.mjs";
-import { CARGO_DEFECTO } from "./cotizar-reparto.mjs";
-import { textoSeguro } from "./cita-agente.mjs";
+import { F, LOGO_INS, LOGO_SDI, esc, colones, waIntl, fila, FILETE, marco, textoCliente, rolFirma } from "./correo-base.mjs";
 
-const LOGO_INS = "https://cotizador.appsegurosdigitales.com/img/ins-logo.png";
-const LOGO_SDI = "https://cotizador.appsegurosdigitales.com/img/sdi-logo-email-ins.png";
-const F = "Arial,Helvetica,sans-serif";
-
-const esc = (s) => String(s == null ? "" : s)
-  .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-export const colones = (n) => (Number(n) > 0 ? "₡" + Number(n).toLocaleString("de-DE") : "");
-export const waIntl = (v) => { const n = String(v || "").replace(/\D/g, ""); return n.length === 8 ? "506" + n : n; };
 export const pila = (nombre) => String(nombre || "").trim().split(/\s+/)[0] || "";
 const dosNombres = (n) => String(n || "").trim().split(/\s+/).slice(0, 2).join(" ");
 
-const FILETE = '<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td width="60%" height="4" bgcolor="#0369A1"></td><td width="25%" bgcolor="#0D9488"></td><td width="10%" bgcolor="#EA580C"></td><td width="5%" bgcolor="#C9A227"></td></tr></table>';
-const marco = (adentro) => '<!DOCTYPE html><html lang="es"><body style="margin:0;background:#f1f5f9;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:20px 10px;"><table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;">' + adentro + "</table></td></tr></table></body></html>";
 const ENCABEZADO = "<tr><td>" + FILETE + "</td></tr>" +
   '<tr><td bgcolor="#0C2340" align="center" style="padding:20px 24px;"><img src="' + LOGO_INS + '" alt="INS" height="26" style="height:26px;width:auto;border:0;"></td></tr>';
 const PIE = '<tr><td bgcolor="#0C2340" align="center" style="padding:18px;font-family:' + F + ';font-size:11.5px;line-height:1.5;color:#94a3b8;">' +
   '<img src="' + LOGO_SDI + '" alt="SDI Seguros Digitales INS" height="34" style="height:34px;width:auto;border:0;display:block;margin:0 auto 8px;">' +
   '<b style="color:#ffffff;">Gestionado por SDI</b><br>Seguros Digitales INS</td></tr>';
-const fila = (k, v) => '<tr><td style="padding:6px 10px 6px 0;border-bottom:1px solid #EDEFF2;color:#5A6570;width:42%;vertical-align:top;font-family:' + F + ';font-size:13.5px;">' + esc(k) +
-  '</td><td style="padding:6px 0;border-bottom:1px solid #EDEFF2;font-weight:bold;vertical-align:top;font-family:' + F + ';font-size:13.5px;color:#1B1F23;">' + esc(v).replace(/\n/g, "<br>") + "</td></tr>";
 const caja = (titulo, filas) => '<div style="border:1px solid #DADCE0;border-radius:10px;padding:10px 14px;margin:0 0 14px;">' +
   '<div style="font-family:' + F + ';font-size:11px;letter-spacing:.06em;color:#6B7681;font-weight:bold;text-transform:uppercase;margin-bottom:4px;">' + esc(titulo) + "</div>" +
   '<table role="presentation" width="100%" cellpadding="0" cellspacing="0">' + filas + "</table></div>";
@@ -41,23 +28,11 @@ const p = (html, extra) => '<p style="margin:0 0 14px;font-family:' + F + ';font
 const boton = (href, texto, color) => '<a href="' + esc(href) + '" style="display:inline-block;background:' + color + ';color:#ffffff;text-decoration:none;font-family:' + F + ';font-weight:bold;border-radius:999px;padding:11px 20px;font-size:14px;margin:0 6px 6px 0;">' + esc(texto) + "</a>";
 const linkWa = (num, texto) => "https://web.whatsapp.com/send/?phone=" + waIntl(num) + "&text=" + encodeURIComponent(texto);
 
-/**
- * Lineas del cargo. "Agente exclusivo del INS · Licencia SUGESE 08-1318" en una linea.
- * Si el cargo trae " · " (JC, 5 nov 2026, Jose), lo primero va arriba solo y el resto
- * abajo con la licencia: "Asesor de Seguros" / "Oficina de Fernando Hernández, agente · Licencia SUGESE 08-1319".
- */
-export function lineaCargo(agente) {
-  const cargo = String(agente.cargo || "").trim() || CARGO_DEFECTO;
-  const i = cargo.indexOf(" · ");
-  const lic = agente.licencia ? " · Licencia SUGESE " + agente.licencia : "";
-  return i > 0 ? cargo.slice(0, i) + "\n" + cargo.slice(i + 3) + lic : cargo + lic;
-}
+/** Renglones bajo el nombre en la firma, en texto (la pagina /cotizar/ los muestra con pre-line). */
+export const lineaCargo = (ag) => rolFirma(ag).join("\n");
 
-// Al CLIENTE solo le vuelve acotado lo que escribio quien lleno el formulario (5 nov 2026):
-// sin barras ni dos puntos, y el punto solo entre digitos ("2.5"): no cabe un enlace.
-const marcaCliente = (s) => String(s == null ? "" : s).replace(/[^\p{L}\p{N} .\-]/gu, "").replace(/\.(?!\d)|(?<!\d)\./g, "").replace(/\s+/g, " ").trim().slice(0, 80);
-/** Lo del cliente con el texto libre acotado. */
-const paraCliente = (d) => ({ ...d, placa: textoSeguro(d.placa, 12), marcaModelo: marcaCliente(d.marcaModelo) });
+/** Al CLIENTE solo le vuelve acotado lo que escribio quien lleno el formulario (5 nov 2026): no cabe un enlace. */
+const paraCliente = (d) => ({ ...d, placa: textoCliente(d.placa, 12), marcaModelo: textoCliente(d.marcaModelo, 80, { decimales: true }) });
 
 /** Filas del vehiculo, comunes a los dos correos. */
 function filasVehiculo(d, conTodo) {
@@ -72,11 +47,11 @@ function filasVehiculo(d, conTodo) {
 /**
  * Confirmacion al cliente, firmada por el agente que le toco.
  * @param {object} d  datos validados
- * @param {object} agente  {email, nombre, licencia, whatsapp, telefono, cargo}
+ * @param {object} agente  la firma del agente (lib/agentes.mjs: firmaDe)
  */
 export function correoCliente(datos, agente) {
   const d = paraCliente(datos);
-  const nom = textoSeguro(pila(d.nombre), 30);
+  const nom = textoCliente(pila(d.nombre), 30);
   const wa = agente.whatsapp ? linkWa(agente.whatsapp, "Hola " + dosNombres(agente.nombre) + ", soy " + nom + ". Te escribo por la cotización de mi vehículo.") : "";
   const veh = filasVehiculo(d, false);
   const html = marco(
@@ -90,7 +65,7 @@ export function correoCliente(datos, agente) {
     p(wa ? "Si tenés alguna duda, respondé este correo o escribime por WhatsApp." : "Si tenés alguna duda, respondé este correo.") +
     (wa ? '<p style="margin:0 0 14px;">' + boton(wa, "Escribirme por WhatsApp", "#037D61") + "</p>" : "") +
     '<div style="border-top:1px solid #EDEFF2;padding-top:12px;font-family:' + F + ';font-size:13px;line-height:1.55;color:#1B1F23;"><b style="font-size:14px;">' + esc(agente.nombre) + "</b><br>" +
-    esc(lineaCargo(agente)).replace(/\n/g, "<br>") + "<br>" + [agente.whatsapp ? "WhatsApp " + esc(agente.whatsapp) : "", esc(agente.email)].filter(Boolean).join(" &middot; ") + "</div>" +
+    rolFirma(agente).map(esc).join("<br>") + "<br>" + [agente.whatsapp ? "WhatsApp " + esc(agente.whatsapp) : "", esc(agente.email)].filter(Boolean).join(" &middot; ") + "</div>" +
     "</td></tr>" + PIE
   );
   const texto = [
@@ -99,7 +74,7 @@ export function correoCliente(datos, agente) {
     ...veh.map(([k, v]) => k + ": " + v), "",
     "Qué sigue:", "1. Te envío la cotización a este correo, en horario hábil.", "2. Si te gusta, agendamos la cita para asegurarlo.", "",
     "Si tenés alguna duda, respondé este correo" + (agente.whatsapp ? " o escribime por WhatsApp al " + agente.whatsapp : "") + ".", "",
-    agente.nombre, lineaCargo(agente), "",
+    agente.nombre, ...rolFirma(agente), "",
     "Gestionado por SDI", "Seguros Digitales INS",
   ].join("\n");
   return { asunto: "Recibimos tu solicitud de cotización · " + (d.tipo === "usado" ? d.placa : "0 KM"), html, texto };

@@ -91,15 +91,17 @@ ok('validacion: k0 true pasa', v1.ok && v1.datos.k0 === true);
 ok('validacion: k0 que no es true literal no cuenta', v2.ok && v2.datos.k0 === false);
 ok('validacion: interes cero-km tambien cuenta', v3.ok && v3.datos.k0 === true);
 
+// La firma del agente la pone el servidor desde su ficha (lib/agentes.mjs: firmaDe).
+const AG = { email: 'agente@ejemplo.test', nombre: 'Agente Prueba Uno', licencia: '00-0000', telefono: '8888-1111', whatsapp: '8888-1111', cargo: '', oficina: '' };
 const dN = { ...base, placa: 'BDF482', k0: false, as: [] };
 const d0 = { ...base, placa: 'BDF482', k0: true, as: [] };
-const cN = correoCliente(dN), c0 = correoCliente(d0);
+const cN = correoCliente(dN, AG), c0 = correoCliente(d0, AG);
 ok('cliente normal: sigue con fotos e inspeccion', /Subí tus fotos/.test(cN.html) && /inspección virtual/.test(cN.html));
 ok('cliente 0 km: sin fotos ni inspeccion virtual', !/Subí tus fotos/.test(c0.html) && !/inspección virtual/.test(c0.html));
 ok('cliente 0 km: pide la factura a la agencia', /Pedí la factura a la agencia/.test(c0.html) && /copia de la factura de compra/.test(c0.html));
 ok('cliente 0 km: texto plano tambien pide la factura', /factura proforma/.test(c0.texto) && !/inspección virtual/.test(c0.texto));
 ok('cliente 0 km: el asunto no cambia de forma (placa)', c0.asunto === 'Recibimos tu solicitud de cita · BDF482');
-const aN = correoAgente(dN), a0 = correoAgente(d0);
+const aN = correoAgente(dN, AG), a0 = correoAgente(d0, AG);
 const waTxt = (h) => decodeURIComponent((h.match(/&amp;text=([^"]+)"/) || [])[1] || '');
 ok('WhatsApp normal: codigo QR y fotos', /código QR/.test(waTxt(aN.html)));
 ok('WhatsApp 0 km: pide la factura, sin QR', /factura proforma/.test(waTxt(a0.html)) && !/código QR/.test(waTxt(a0.html)));

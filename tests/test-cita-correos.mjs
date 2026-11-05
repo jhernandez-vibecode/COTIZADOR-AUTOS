@@ -10,16 +10,19 @@ const d = {
   nombre: 'Mariela Quesada Rojas', telefono: '8888-0000', correo: 'mariela@ejemplo.test',
   direccion: 'Heredia, Belen.\nCasa porton gris', ocupacion: 'Contadora', ingreso: 'De ₡1.000.000 a ₡2.000.000',
   placa: 'BDF482', formaPago: 'Semestral', fecha: '2026-09-22', franja: '03:00 pm a 05:00 pm',
-  n: 'Agente Prueba Uno', l: '00-0000', tel: '8888-1111', wa: '8888-1111', ae: 'agente@ejemplo.test',
+  ae: 'agente@ejemplo.test',
   c: 'Mariela', v: 'TOYOTA RAV4', y: '2021', pa: '570891', ps: '308283', pt: '158423', as: ['mascota', 'premium']
 };
+
+// La firma del agente la pone el servidor desde su ficha (lib/agentes.mjs: firmaDe).
+const AG = { email: 'agente@ejemplo.test', nombre: 'Agente Prueba Uno', licencia: '00-0000', telefono: '8888-1111', whatsapp: '8888-1111', cargo: '', oficina: '' };
 
 ok('fechaLarga', fechaLarga('2026-09-22') === 'martes 22 de setiembre de 2026');
 ok('fechaCorta', fechaCorta('2026-09-22') === 'mar 22 sep');
 ok('nombrePila usa c', nombrePila(d) === 'Mariela');
 ok('nombrePila sin c usa la primera palabra', nombrePila({ c: '', nombre: 'Ana Mora' }) === 'Ana');
 
-const cl = correoCliente(d);
+const cl = correoCliente(d, AG);
 ok('cliente: asunto con placa', cl.asunto === 'Recibimos tu solicitud de cita · BDF482');
 ok('cliente: saluda por el nombre de pila', cl.html.indexOf('>Mariela<') !== -1);
 ok('cliente: dice Solicitud recibida', cl.html.indexOf('Solicitud recibida') !== -1);
@@ -36,9 +39,9 @@ ok('cliente: logos alojados con URL absoluta', /src="https:\/\/cotizador\.appseg
 // 12 oct 2026: marca "SDI Seguros Digitales INS" (logo con la leyenda nueva, archivo nuevo al lado del viejo).
 ok('cliente: pie SDI con el logo y el nombre nuevos', /src="https:\/\/cotizador\.appsegurosdigitales\.com\/img\/sdi-logo-email-ins\.png"/.test(cl.html) && cl.html.indexOf('Plataforma tecnológica SDI Seguros Digitales INS') !== -1);
 ok('cliente: trae texto plano', typeof cl.texto === 'string' && cl.texto.indexOf('BDF482') !== -1 && cl.texto.indexOf('<') === -1);
-ok('cliente sin asistencias: no sale el renglon', correoCliente(Object.assign({}, d, { as: [] })).html.indexOf('Asistencias opcionales') === -1);
+ok('cliente sin asistencias: no sale el renglon', correoCliente(Object.assign({}, d, { as: [] }), AG).html.indexOf('Asistencias opcionales') === -1);
 
-const ag = correoAgente(d, { clienteAvisado: true });
+const ag = correoAgente(d, AG, { clienteAvisado: true });
 ok('agente: asunto ordenable', ag.asunto === 'Cita solicitada · BDF482 · mar 22 sep · 3-5 pm · Mariela Quesada Rojas');
 ok('agente: trae las 10 respuestas', ['Mariela Quesada Rojas', 'mariela@ejemplo.test', '8888-0000', 'Casa porton gris', 'Contadora', 'De ₡1.000.000 a ₡2.000.000', 'BDF482', 'Semestral', '22/09/2026', '03:00 pm a 05:00 pm'].every((t) => ag.html.indexOf(t) !== -1));
 ok('agente: primas con punto de miles', ag.html.indexOf('₡570.891') !== -1 && ag.html.indexOf('₡308.283') !== -1);
@@ -50,19 +53,19 @@ ok('WhatsApp al cliente: trae la fecha y la franja', waTxt.indexOf('martes 22 de
 ok('WhatsApp al cliente: avisa del codigo QR a primera hora del dia agendado', /a primera hora/.test(waTxt) && /código QR/.test(waTxt) && /iniciar el aseguramiento/.test(waTxt));
 ok('WhatsApp al cliente: trato de vos, sin usted', !/\busted\b/i.test(waTxt) && /escaneás/.test(waTxt));
 // 19 set 2026 (JC): el vehiculo ya trae el ano ("Rural 2024") y salia "Rural 2024 2024".
-const conAno = correoAgente(Object.assign({}, d, { v: 'Rural 2024', y: '2024' }), { clienteAvisado: true });
+const conAno = correoAgente(Object.assign({}, d, { v: 'Rural 2024', y: '2024' }), AG, { clienteAvisado: true });
 ok('agente: no repite el ano si el vehiculo ya lo trae', conAno.html.indexOf('Rural 2024 2024') === -1 && conAno.html.indexOf('Rural 2024') !== -1 && conAno.texto.indexOf('2024 2024') === -1);
 ok('agente: si el vehiculo NO trae el ano, se agrega', ag.html.indexOf('TOYOTA RAV4 2021') !== -1);
 ok('agente: bloque para copiar', ag.html.indexOf('Para copiar y pegar') !== -1);
 ok('agente: sin nota de fallo cuando el cliente fue avisado', ag.html.indexOf('No se pudo enviar la confirmaci') === -1);
-ok('agente: con nota cuando NO fue avisado', correoAgente(d, { clienteAvisado: false }).html.indexOf('No se pudo enviar la confirmaci') !== -1);
+ok('agente: con nota cuando NO fue avisado', correoAgente(d, AG, { clienteAvisado: false }).html.indexOf('No se pudo enviar la confirmaci') !== -1);
 
 const xss = Object.assign({}, d, { nombre: '<img src=x onerror=alert(1)>', direccion: '<svg onload=alert(1)>', c: '<b>x</b>' });
-ok('escapa en el correo del agente', correoAgente(xss, { clienteAvisado: true }).html.indexOf('<img src=x') === -1 && correoAgente(xss, { clienteAvisado: true }).html.indexOf('<svg') === -1);
-ok('escapa en el correo del cliente', correoCliente(xss).html.indexOf('<b>x</b>') === -1);
+ok('escapa en el correo del agente', correoAgente(xss, AG, { clienteAvisado: true }).html.indexOf('<img src=x') === -1 && correoAgente(xss, AG, { clienteAvisado: true }).html.indexOf('<svg') === -1);
+ok('escapa en el correo del cliente', correoCliente(xss, AG).html.indexOf('<b>x</b>') === -1);
 
 const cero = Object.assign({}, d, { placa: 'Cero kilómetros' });
-ok('0 km: el asunto del agente dice 0 KM', correoAgente(cero, { clienteAvisado: true }).asunto.indexOf('· 0 KM ·') !== -1);
+ok('0 km: el asunto del agente dice 0 KM', correoAgente(cero, AG, { clienteAvisado: true }).asunto.indexOf('· 0 KM ·') !== -1);
 
 // 28 set 2026: total de la forma elegida con las asistencias. Semestral 308.283 + Mascota
 // (7.200 ÷ 2 × 1,08 × 1,13 = 4.393) + Salud Premium (42.000 ÷ 2 × 1,08 × 1,13 = 25.628) = 338.304.
@@ -74,7 +77,7 @@ ok('sin la prima de esa forma no hay total', totalConAsistencias({ ...d, ps: '' 
 ok('agente: el correo trae el total con asistencias', ag.html.indexOf('Total con asistencias') !== -1 && ag.html.indexOf('₡338.304') !== -1);
 
 // 12 oct 2026 (JC): monto asegurado e interes asegurable en el correo del agente.
-const conDatos = correoAgente({ ...d, va: '15000000', ia: 'propietario' }, { clienteAvisado: true });
+const conDatos = correoAgente({ ...d, va: '15000000', ia: 'propietario' }, AG, { clienteAvisado: true });
 ok('agente: monto asegurado con punto de miles', conDatos.html.indexOf('Monto asegurado') !== -1 && conDatos.html.indexOf('₡15.000.000') !== -1);
 ok('agente: interes asegurable con el texto del cotizador', conDatos.html.indexOf('Interés asegurable') !== -1 && conDatos.html.indexOf('Propietario Registral') !== -1);
 ok('agente: los dos van en "De la cotización", despues del vehiculo y antes de las primas', (() => {
@@ -85,8 +88,8 @@ ok('agente: los dos van en "De la cotización", despues del vehiculo y antes de 
 ok('agente: texto plano trae los dos', conDatos.texto.indexOf('Monto asegurado: ₡15.000.000') !== -1 && conDatos.texto.indexOf('Interés asegurable: Propietario Registral') !== -1);
 ok('agente: sin interes avisa que no se indico', ag.html.indexOf('No se indicó al cotizar') !== -1 && ag.texto.indexOf('Interés asegurable: No se indicó al cotizar') !== -1);
 ok('agente: sin monto no sale el renglon', ag.html.indexOf('Monto asegurado') === -1);
-ok('agente: cero km se lee completo', correoAgente({ ...d, ia: 'cero-km' }, { clienteAvisado: true }).html.indexOf('Vehículo Cero Kilómetros (en proceso de compra)') !== -1);
-ok('cliente: NO lleva monto ni interes (es dato para el agente)', (() => { const c = correoCliente({ ...d, va: '15000000', ia: 'propietario' }); return c.html.indexOf('15.000.000') === -1 && c.html.indexOf('Propietario Registral') === -1 && c.texto.indexOf('Propietario') === -1; })());
+ok('agente: cero km se lee completo', correoAgente({ ...d, ia: 'cero-km' }, AG, { clienteAvisado: true }).html.indexOf('Vehículo Cero Kilómetros (en proceso de compra)') !== -1);
+ok('cliente: NO lleva monto ni interes (es dato para el agente)', (() => { const c = correoCliente({ ...d, va: '15000000', ia: 'propietario' }, AG); return c.html.indexOf('15.000.000') === -1 && c.html.indexOf('Propietario Registral') === -1 && c.texto.indexOf('Propietario') === -1; })());
 // La lista del servidor tiene que decir lo mismo que el desplegable del cotizador.
 {
   const src = fs.readFileSync(new URL('../js/email-template.js', import.meta.url), 'utf8');

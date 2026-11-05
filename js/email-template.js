@@ -565,15 +565,11 @@ function _codificarCoberturas(coberturas) {
   }).filter(Boolean).join('.');
 }
 
-/** Cargo del asesor del perfil (5 nov 2026). Tolera que email-marca.js no este cargado (tests). */
-function _cargoDelPerfil() { return typeof _cargoAsesor === 'function' ? _cargoAsesor(CFG.FROM_EMAIL) : ''; }
-
-/** Linea bajo el nombre en la firma: "Tu agente · Lic." o, si es asesor (5 nov 2026), su cargo en dos lineas. */
+/** Linea bajo el nombre en la firma: "Tu agente · Lic." o, si es asesor (5 nov 2026), su cargo y su oficina. */
 function _firmaRolCotizacion() {
-  const cg = _cargoDelPerfil();
-  const pc = cg ? _partesCargo(cg) : ['', ''];
-  if (!pc[0]) return 'Tu agente &middot; Lic. SUGESE ' + _escape(CFG.LICENSE);
-  return _escape(pc[0]) + '<br>' + (pc[1] ? _escape(pc[1]) + ' &middot; ' : '') + 'Lic. SUGESE ' + _escape(CFG.LICENSE);
+  const lineas = _lineasAsesor(CFG.FROM_EMAIL);
+  if (!lineas.length) return 'Tu agente &middot; Lic. SUGESE ' + _escape(CFG.LICENSE);
+  return lineas.map(_escape).join('<br>') + ' &middot; Lic. SUGESE ' + _escape(CFG.LICENSE);
 }
 
 function _buildGuideUrl(extras) {
@@ -626,7 +622,7 @@ function _buildGuideUrl(extras) {
   // el unico requisito es la factura de la agencia, sin fotos.
   if (x.ceroKm) params.push('k0=1');
   // cg: cargo del asesor (5 nov 2026). La guia, /cita/ y el configurador firman con el.
-  if (_cargoDelPerfil()) params.push('cg=' + encodeURIComponent(_cargoDelPerfil()));
+  if (_cgAsesor(CFG.FROM_EMAIL)) params.push('cg=' + encodeURIComponent(_cgAsesor(CFG.FROM_EMAIL)));
   // asi=1: la guia muestra la seccion "Sumale asistencias" (17 set 2026). Solo
   // cuando el correo llevo la tarjeta; sin esto los enlaces viejos no cambian.
   // wa: el WhatsApp del agente, que la guia le pasa al configurador.
@@ -669,7 +665,7 @@ function _buildCitaUrl(extras) {
   };
   const num = function (val) { const n = (typeof asiMonto === 'function') ? asiMonto(val) : 0; return n > 0 ? String(n) : ''; };
   const x = extras || {};
-  add('n', CFG.FROM_NAME); add('l', CFG.LICENSE); add('cg', _cargoDelPerfil());
+  add('n', CFG.FROM_NAME); add('l', CFG.LICENSE); add('cg', _cgAsesor(CFG.FROM_EMAIL));
   add('wa', CFG.WHATSAPP); add('tel', CFG.PHONE); add('ae', CFG.FROM_EMAIL);
   add('c', x.clientName); add('v', x.vehicle); add('p', x.plate); add('y', x.year);
   if (x.prices) { add('pa', num(x.prices.anual)); add('ps', num(x.prices.semestral)); add('pt', num(x.prices.trimestral)); }
@@ -702,7 +698,7 @@ function _buildPlanesUrl(extras) {
   if (!base) return '';
   const params = [];
   if (CFG.FROM_NAME)  params.push('n='  + encodeURIComponent(CFG.FROM_NAME));
-  if (_cargoDelPerfil()) params.push('cg=' + encodeURIComponent(_cargoDelPerfil()));
+  if (_cgAsesor(CFG.FROM_EMAIL)) params.push('cg=' + encodeURIComponent(_cgAsesor(CFG.FROM_EMAIL)));
   if (CFG.LICENSE)    params.push('l='  + encodeURIComponent(CFG.LICENSE));
   if (CFG.WEBSITE)    params.push('w='  + encodeURIComponent(CFG.WEBSITE));
   if (CFG.AGENDA_URL) params.push('a='  + encodeURIComponent(CFG.AGENDA_URL));
