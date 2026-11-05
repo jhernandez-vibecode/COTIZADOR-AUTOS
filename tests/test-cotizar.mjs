@@ -181,6 +181,8 @@ ok('abrir el ⚙ pregunta si es el admin', /cotzAlAbrirPerfil\(\)/.test(appJs));
 ok('la seccion del reparto arranca escondida', /id="cotzSec" hidden/.test(idx));
 ok('el script se carga antes de app.js', idx.indexOf('js/cotizar-agente.js') > 0 && idx.indexOf('js/cotizar-agente.js') < idx.indexOf('js/app.js'));
 ok('la sesion se pide con scope "openid email"', cfgJs.includes("scope: 'openid email'"));
+ok('al abrir el ⚙ el reparto se vuelve a leer (no queda una vista vieja)', /function cotzAlAbrirPerfil[\s\S]{0,400}_cotz\.vista = null/.test(cfgJs));
+ok('cerrar el ⚙ con el reparto sin guardar pregunta', /cotzHayCambiosSinGuardar\(\) &&/.test(appJs));
 
 console.log('\n' + pass + ' ok, ' + fail + ' fallas');
 process.exit(fail ? 1 : 0);

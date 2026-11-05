@@ -86,6 +86,11 @@ function cotzTrasGuardarPerfil(profile) {
 function cotzAlAbrirPerfil() {
   var sec = document.getElementById('cotzSec');
   if (!sec) return;
+  // Siempre arranca cerrado: al abrirlo se lee del servidor. Antes quedaba pintada la vista
+  // de la vez anterior y parecia que un cambio no se habia guardado (JC, 5 nov 2026).
+  _cotz.vista = null; _cotz.editado = null; _cotz.sucio = false;
+  var cuerpo = document.getElementById('cotzCuerpo');
+  if (cuerpo) cuerpo.innerHTML = '<button class="btn btn-primary" type="button" id="btnCotzAbrir">Ver y cambiar el reparto</button>';
   _cotzPost({ accion: 'consulta', email: CFG.FROM_EMAIL }).then(function (x) {
     sec.hidden = !(x.st === 200 && x.j.admin);
   }).catch(function () { sec.hidden = true; });
@@ -183,6 +188,9 @@ function _cotzPintar() {
 }
 
 function _cotzCambio() { _cotz.sucio = true; _cotzPintar(); }
+
+/** Lo llama closeProfileModal (app.js): si hay cambios del reparto sin guardar, avisa. */
+function cotzHayCambiosSinGuardar() { return !!(_cotz.vista && _cotz.sucio); }
 
 function _cotzEnganchar(c) {
   var r = _cotz.editado;

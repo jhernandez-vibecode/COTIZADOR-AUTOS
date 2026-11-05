@@ -310,6 +310,8 @@ function openProfileModal(firstTime) {
 }
 
 function closeProfileModal() {
+  if (typeof cotzHayCambiosSinGuardar === 'function' && cotzHayCambiosSinGuardar() &&
+      !confirm('Cambiaste el reparto de cotizaciones y no lo guardaste. ¿Cerrar sin guardar?')) return;
   document.getElementById('profileModal').classList.remove('active');
 }
 
