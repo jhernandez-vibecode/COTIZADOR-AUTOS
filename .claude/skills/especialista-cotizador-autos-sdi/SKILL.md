@@ -2091,7 +2091,11 @@ Mockup aprobado por JC el 5 nov (`docs/superpowers/specs/2026-11-05-cotizacion-f
 - **Correos** (Resend, mismas `CITA_API_KEY`/`CITA_FROM`; remitente `cotizaciones@` del mismo dominio): al cliente «Recibimos tu solicitud de cotización · PLACA/0 KM», firmado y con `reply_to` del agente, SIN la cédula; al agente «Cotización solicitada · PLACA · Nombre» con la chapa «Te tocó por turno · n de N», todas las respuestas, WhatsApp al cliente y «Abrir el cotizador». Orden: cliente → hoja → agente; si falla el del agente → 502 y la página ofrece el Google Form.
 - **Privacidad:** las respuestas no se guardan en Netlify ni en los logs; van en los dos correos y en la hoja de JC. En Blobs: reparto, turno, fichas y huellas del límite (6/h por IP, 3/h por correo, doble clic 60 s).
 
-**⏳ Para encenderlo (le toca a JC, en este orden):**
+**✅ ENCENDIDO el 5 nov 2026 (9:00 am):** `COTIZAR_ADMIN`, `COTIZAR_REGISTRO_URL` y `COTIZAR_REGISTRO_CLAVE` en Netlify (redeploy hecho). Hoja «Registro · Formulario de cotización SDI» en el Drive de JC (proyecto Apps Script «Registro de cotizaciones SDI», implementado como aplicación web). Ficha de JC guardada; reparto 3-1-1 encendido con José (cargo puesto) y Cristian. **José y Cristian SIN ficha todavía → todo le llega a JC** hasta que guarden su ⚙ (cada uno pone su WhatsApp ahí). Prueba real de JC OK: dos correos + fila en la hoja.
+🔴 **Trampa vista:** la primera prueba mandó los correos pero NO anotó la fila: `doPost` corría «Completada» sin log = clave distinta. Se arregló volviendo a pegar la clave en Netlify + redeploy. Si la hoja deja de anotar: mirar Ejecuciones del Apps Script; sin error = clave.
+**⏳ Falta:** cambiar los 4 enlaces de la página «Seguro de Automóviles» de segurosdelins.com (3 botones de «Insertar código» y 1 enlace de texto, todos al Google Form de cotización) a `/cotizar/`. Revisar también los destinos de Google Ads (no tocar sin autorización).
+
+**(histórico) Para encenderlo, en este orden:**
 1. Netlify → variables: `COTIZAR_ADMIN` = `jhernandez@segurosdelins.com`. Sin ella todo responde 503 y nada cambia para nadie.
 2. Hoja: pegar `apps-script/registro-cotizaciones/` en script.google.com (cuenta de JC), ejecutar `instalar()`, implementar como aplicación web (yo / cualquier persona) y poner `COTIZAR_REGISTRO_URL` y `COTIZAR_REGISTRO_CLAVE` en Netlify. Sin ellas los correos salen igual, sin anotar en la hoja.
 3. JC, José y Cristian guardan su ⚙ una vez con su cuenta (JC primero, para que su ficha exista).
