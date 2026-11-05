@@ -70,6 +70,8 @@ a{color:var(--blue)}
 .op span small{display:block;font-weight:400;font-size:12px;color:var(--ink3)}
 .tipo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .tipo .op span{min-height:64px;font-size:14.5px}
+.tipo .op span{display:grid;grid-template-columns:18px minmax(0,1fr);column-gap:10px;align-content:center}
+.tipo .op span small{grid-column:2}
 .campo .err{font-size:12.5px;color:var(--rosa-tx);font-weight:600}
 .campo.mal input,.campo.mal textarea,.campo.mal .op span{border-color:var(--rosa-tx)}
 .consent{font-size:12.5px;color:var(--ink3)}
@@ -91,6 +93,13 @@ a{color:var(--blue)}
 .listo .ag small{color:var(--ink3);font-size:12px}
 .fallo{background:var(--oro-bg);color:var(--oro-tx);border-radius:16px;padding:16px 18px;font-size:14px}
 .fallo b{display:block;font-size:15.5px;margin-bottom:2px}
+.bluebook{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:12px;align-items:center;background:var(--blue-soft);border:1px solid #B9D3E6;border-radius:16px;padding:12px 14px;margin-top:-4px}
+.bluebook .bb-ico{width:34px;height:34px;border-radius:50%;background:var(--blue);color:#fff;font-weight:700;font-size:17px;display:flex;align-items:center;justify-content:center}
+.bluebook p{font-size:13px;color:var(--ink2);line-height:1.4}
+.bluebook p b{display:block;color:var(--blue-ink);font-size:14px;font-weight:600;margin-bottom:1px}
+.bb-btn{display:inline-flex;align-items:center;gap:6px;background:var(--blue);color:#fff;text-decoration:none;font-weight:600;font-size:13.5px;border-radius:999px;padding:9px 16px;white-space:nowrap}
+.bb-btn:hover{background:var(--blue-ink)}
+@media (max-width:600px){.bluebook{grid-template-columns:34px minmax(0,1fr)}.bb-btn{grid-column:1/-1;justify-content:center}}
 .trampa{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
 @media (max-width:600px){
   .fila2,.pasos{grid-template-columns:1fr}
@@ -164,7 +173,11 @@ a{color:var(--blue)}
         <div class="campo" data-k="placa"><label for="placa">Número de placa <span class="req">*</span></label><input id="placa" autocomplete="off" autocapitalize="characters"></div>
         <div class="campo" data-k="valor-u"><label for="valor-u">Valor de mercado de su vehículo <span class="req">*</span></label><input id="valor-u" inputmode="numeric" placeholder="₡"></div>
       </div>
-      <p class="ay" style="margin-top:-6px">Si no conoce el valor de su vehículo en el mercado consulte aquí: <a href="https://crautos.com/bluebook/" target="_blank" rel="noopener">crautos.com/bluebook</a></p>
+      <div class="bluebook">
+        <span class="bb-ico" aria-hidden="true">?</span>
+        <p><b>¿No sabe cuánto vale su vehículo?</b>Si no conoce el valor de su vehículo en el mercado consulte aquí:</p>
+        <a class="bb-btn" href="https://crautos.com/bluebook/" target="_blank" rel="noopener">Consultar en crautos.com/bluebook <span aria-hidden="true">↗</span></a>
+      </div>
       <div class="campo" data-k="info-u"><label for="info-u">Información Adicional</label><textarea id="info-u" placeholder="Opcional"></textarea></div>
     </div>
 
