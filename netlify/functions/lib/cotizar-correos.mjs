@@ -99,7 +99,6 @@ export function correoCliente(d, agente) {
  */
 export function correoAgente(d, info) {
   const ag = info.agente;
-  const turno = info.repartido ? "Te tocó por turno · " + info.n + " de " + info.de : "Solicitud del formulario de cotización";
   const textoWa = "Hola " + pila(d.nombre) + ", soy " + dosNombres(ag.nombre) + ", agente del INS. Recibí tu solicitud de cotización para tu vehículo " +
     (d.tipo === "usado" ? "placa " + d.placa : d.marcaModelo) + " y te la preparo en un momento.";
   const cliente = [["Nombre del propietario", d.nombre], ["Número de Cédula", d.cedula], ["Teléfono", d.telefono], ["Correo", d.correo]];
@@ -110,8 +109,8 @@ export function correoAgente(d, info) {
   const html = marco(
     ENCABEZADO +
     '<tr><td style="padding:22px 24px;">' +
-    '<span style="display:inline-block;background:#FBF3DC;color:#7C5A00;border-radius:999px;padding:4px 12px;font-family:' + F + ';font-size:12px;font-weight:bold;">' + esc(turno) + "</span>" +
-    '<div style="font-family:' + F + ';font-size:21px;font-weight:bold;color:#1B1F23;margin:12px 0 14px;">Nueva solicitud de cotización</div>' +
+    // Sin chip del turno (JC, 5 nov 2026: "quitemos este chip"). El turno queda en la hoja de registro.
+    '<div style="font-family:' + F + ';font-size:21px;font-weight:bold;color:#1B1F23;margin:0 0 14px;">Nueva solicitud de cotización</div>' +
     (info.clienteAvisado === false ? '<div style="margin:0 0 14px;background:#FBF3DC;color:#7C5A00;border-top:3px solid #C9A227;padding:10px 12px;font-family:' + F + ';font-size:13px;">No se pudo enviar la confirmación al cliente. Avisale vos que recibiste su solicitud.</div>' : "") +
     caja("Cliente", cliente.map(([k, v]) => fila(k, v)).join("")) +
     caja("Vehículo", veh.map(([k, v]) => fila(k, v)).join("")) +
@@ -119,7 +118,7 @@ export function correoAgente(d, info) {
     p("Solicitud del " + esc(info.fecha) + "." + (info.registrada ? " Quedó anotada en la hoja de registro." : ""), "font-size:12px;color:#6B7681;") +
     "</td></tr>" + PIE
   );
-  const texto = ["NUEVA SOLICITUD DE COTIZACIÓN", turno, "",
+  const texto = ["NUEVA SOLICITUD DE COTIZACIÓN", "",
     ...cliente.map(([k, v]) => k + ": " + v), "", ...veh.map(([k, v]) => k + ": " + v), "",
     "Solicitud del " + info.fecha + "."].join("\n");
   return { asunto: "Cotización solicitada · " + vehiculoCorto(d) + " · " + d.nombre, html, texto };

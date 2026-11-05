@@ -80,10 +80,10 @@ ok('cliente: cargo por defecto', correoCliente(vu.datos, { ...AG, cargo: '' }).h
 ok('cliente: asunto con la placa / 0 KM', cc.asunto === 'Recibimos tu solicitud de cotización · BDF482' && correoCliente(vn.datos, AG).asunto === 'Recibimos tu solicitud de cotización · 0 KM');
 ok('cliente: escapa lo que escribe el cliente', !correoCliente({ ...vu.datos, placa: '<script>' }, AG).html.includes('<script>'));
 const ca = correoAgente(vu.datos, { agente: AG, n: 4, de: 5, repartido: true, fecha: '5 nov 2026, 8:14 am', registrada: true });
-ok('agente: dice el turno', ca.html.includes('Te tocó por turno · 4 de 5') && ca.texto.includes('Te tocó por turno · 4 de 5'));
+ok('agente: sin el chip del turno (JC, 5 nov)', !ca.html.includes('Te tocó por turno') && !ca.texto.includes('Te tocó por turno') && !ca.html.includes('#FBF3DC;color:#7C5A00;border-radius:999px'));
 ok('agente: trae la cedula y todas las respuestas', ca.html.includes('1 0000 0000') && ca.html.includes('(no indicó)') && ca.html.includes(INTERESES_COT[0]));
 ok('agente: asunto', ca.asunto === 'Cotización solicitada · BDF482 · Mariela Quesada Rojas');
-ok('agente: nuevo trae marca, combustible y tipo', (() => { const h = correoAgente(vn.datos, { agente: AG, n: 0, de: 0, repartido: false, fecha: 'x' }).html; return h.includes('Toyota RAV4 2027') && h.includes('Híbrido') && h.includes('Rural') && h.includes('Solicitud del formulario de cotización'); })());
+ok('agente: nuevo trae marca, combustible y tipo', (() => { const h = correoAgente(vn.datos, { agente: AG, n: 0, de: 0, repartido: false, fecha: 'x' }).html; return h.includes('Toyota RAV4 2027') && h.includes('Híbrido') && h.includes('Rural'); })());
 ok('agente: aviso si no salio el del cliente', correoAgente(vu.datos, { agente: AG, n: 1, de: 1, repartido: true, fecha: 'x', clienteAvisado: false }).html.includes('No se pudo enviar la confirmación al cliente'));
 ok('hoja: fila con el agente y el turno', (() => { const f = filaRegistro(vu.datos, { agente: AG, n: 4, de: 5, repartido: true, fecha: 'x' }); return f.agente === 'Agente Prueba Dos' && f.turno === '4 de 5' && f.cedula === '1 0000 0000'; })());
 
