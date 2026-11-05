@@ -15,7 +15,6 @@ import { CARGO_DEFECTO } from "./cotizar-reparto.mjs";
 
 const LOGO_INS = "https://cotizador.appsegurosdigitales.com/img/ins-logo.png";
 const LOGO_SDI = "https://cotizador.appsegurosdigitales.com/img/sdi-logo-email-ins.png";
-export const URL_COTIZADOR = "https://cotizador.appsegurosdigitales.com/";
 const F = "Arial,Helvetica,sans-serif";
 
 const esc = (s) => String(s == null ? "" : s)
@@ -120,7 +119,8 @@ export function correoAgente(d, info) {
     (info.clienteAvisado === false ? '<div style="margin:0 0 14px;background:#FBF3DC;color:#7C5A00;border-top:3px solid #C9A227;padding:10px 12px;font-family:' + F + ';font-size:13px;">No se pudo enviar la confirmación al cliente. Avisale vos que recibiste su solicitud.</div>' : "") +
     caja("Cliente", cliente.map(([k, v]) => fila(k, v)).join("")) +
     caja("Vehículo", veh.map(([k, v]) => fila(k, v)).join("")) +
-    '<p style="margin:0 0 10px;">' + (waIntl(d.telefono).length >= 11 ? boton(linkWa(d.telefono, textoWa), "WhatsApp a " + pila(d.nombre), "#037D61") : "") + boton(URL_COTIZADOR, "Abrir el cotizador", "#0369A1") + "</p>" +
+    // Sin botón "Abrir el cotizador" (JC, 5 nov 2026: "quitemos el botón abrir cotizador").
+    (waIntl(d.telefono).length >= 11 ? '<p style="margin:0 0 10px;">' + boton(linkWa(d.telefono, textoWa), "WhatsApp a " + pila(d.nombre), "#037D61") + "</p>" : "") +
     p("Solicitud del " + esc(info.fecha) + "." + (info.registrada ? " Quedó anotada en la hoja de registro." : ""), "font-size:12px;color:#6B7681;") +
     "</td></tr>" + PIE
   );

@@ -82,6 +82,7 @@ ok('cliente: asunto con la placa / 0 KM', cc.asunto === 'Recibimos tu solicitud 
 ok('cliente: escapa lo que escribe el cliente', !correoCliente({ ...vu.datos, placa: '<script>' }, AG).html.includes('<script>'));
 const ca = correoAgente(vu.datos, { agente: AG, n: 4, de: 5, repartido: true, fecha: '5 nov 2026, 8:14 am', registrada: true });
 ok('agente: sin el chip del turno (JC, 5 nov)', !ca.html.includes('Te tocó por turno') && !ca.texto.includes('Te tocó por turno') && !ca.html.includes('#FBF3DC;color:#7C5A00;border-radius:999px'));
+ok('agente: sin el boton Abrir el cotizador (JC, 5 nov)', !ca.html.includes('Abrir el cotizador') && ca.html.includes('WhatsApp a '));
 ok('agente: trae la cedula y todas las respuestas', ca.html.includes('1 0000 0000') && ca.html.includes('(no indicó)') && ca.html.includes(INTERESES_COT[0]));
 ok('agente: asunto', ca.asunto === 'Cotización solicitada · BDF482 · Mariela Quesada Rojas');
 ok('agente: nuevo trae marca, combustible y tipo', (() => { const h = correoAgente(vn.datos, { agente: AG, n: 0, de: 0, repartido: false, fecha: 'x' }).html; return h.includes('Toyota RAV4 2027') && h.includes('Híbrido') && h.includes('Rural'); })());
