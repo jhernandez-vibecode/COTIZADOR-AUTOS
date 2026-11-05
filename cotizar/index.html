@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cotizá tu seguro de automóviles · Seguros del INS</title>
+<meta name="description" content="Solicitá la cotización de tu seguro de automóviles del INS sin salir de casa.">
+<meta name="robots" content="noindex">
+<link rel="icon" type="image/svg+xml" href="../img/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&family=Google+Sans+Code:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   /cotizar/ · formulario propio de solicitud de COTIZACION · linea clara SDI v1.3
+   Transcrito del mockup aprobado por JC el 5 nov 2026:
+   docs/superpowers/specs/2026-11-05-cotizacion-formulario-propio-mockup.html
+   Las preguntas son las del Google Form "Cotización Seguro Automóviles."
+   palabra por palabra (solo se corrigio la errata "Numéro").
+   ============================================================ */
+:root{
+  --blue:#0369A1;--blue-ink:#02557F;--blue-soft:#E8F1F8;--band:#EEF4F9;
+  --line:#DADCE0;--line-btn:#8A939C;--line-soft:#EDEFF2;
+  --ink:#1B1F23;--ink2:#5A6570;--ink3:#6B7681;--navy:#0C2340;
+  --ok-bg:#E9F5F0;--ok-tx:#037D61;--oro-bg:#FBF3DC;--oro-tx:#7C5A00;--rosa-tx:#9F1239;
+  --body:'Google Sans Flex','Inter',system-ui,sans-serif;--mono:'Google Sans Code','Inter',ui-monospace,monospace;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:#fff;color:var(--ink);font-family:var(--body);font-size:14.5px;line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3,p{margin:0}h1,h2,h3{font-weight:500;letter-spacing:-.02em;line-height:1.15;text-wrap:balance}
+a{color:var(--blue)}
+[hidden]{display:none!important}
+.filete{height:4px;background:linear-gradient(90deg,#0369A1 0 60%,#0D9488 60% 85%,#EA580C 85% 95%,#C9A227 95% 100%)}
+.pg-top{background:#F8F9FA;border-bottom:1px solid var(--line-soft);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 20px;height:50px}
+.pg-top img{height:21px;width:auto;display:block}
+.pg-top .marca{font-size:12px;color:var(--ink2);text-align:right;line-height:1.3}
+.pg-top .marca b{color:var(--ink);font-weight:600;display:block}
+.hero{padding:30px 20px 22px;text-align:center}
+.hero .c2{display:inline-flex;align-items:center;gap:8px;background:var(--blue-soft);color:var(--blue-ink);border-radius:999px;padding:5px 13px;font-size:12.5px;font-weight:600}
+.hero .c2 i{width:8px;height:8px;border-radius:50%;background:var(--blue)}
+.hero h1{font-size:clamp(26px,5vw,38px);margin:14px 0 10px}
+.hero p{color:var(--ink2);max-width:56ch;margin:0 auto;font-size:15px}
+.pasos{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:760px;margin:20px auto 0;text-align:left}
+.pasos div{border:1px solid var(--line);border-radius:16px;padding:12px 14px;font-size:13px;color:var(--ink2)}
+.pasos b{display:flex;align-items:center;gap:8px;color:var(--ink);font-weight:600;font-size:13.5px;margin-bottom:3px}
+.pasos b i{font-style:normal;width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:12px;flex:0 0 22px}
+.hero .horario{max-width:760px;margin:12px auto 0;font-size:12.5px;color:var(--ink3)}
+.band{background:var(--band);padding:22px 16px 34px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:28px;padding:26px 28px;max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+.grupo{display:flex;flex-direction:column;gap:14px}
+.grupo>h3{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);border-bottom:1px solid var(--line);padding-bottom:7px}
+.fila2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.campo{display:flex;flex-direction:column;gap:5px;min-width:0}
+.campo label,.campo .lb{font-weight:600;font-size:13.5px}
+.campo .req{color:var(--rosa-tx)}
+.campo .ay,.ay{font-size:12.5px;color:var(--ink3);line-height:1.45}
+.campo input,.campo textarea{font:400 15px var(--body);color:var(--ink);border:1px solid var(--line-btn);border-radius:12px;padding:11px 13px;background:#fff;width:100%;min-width:0;max-width:100%}
+.campo textarea{min-height:74px;resize:vertical}
+.campo input:focus,.campo textarea:focus{outline:3px solid rgba(3,105,161,.25);border-color:var(--blue)}
+.ops{display:grid;gap:8px}
+.ops.c3{grid-template-columns:repeat(3,1fr)}.ops.c2{grid-template-columns:1fr 1fr}.ops.c4{grid-template-columns:repeat(4,1fr)}.ops.c1{grid-template-columns:1fr}
+.op{position:relative}
+.op input{position:absolute;opacity:0;inset:0;cursor:pointer;margin:0}
+.op span{display:flex;align-items:center;gap:10px;min-height:46px;height:100%;border:1px solid var(--line-btn);border-radius:14px;padding:8px 12px;font-weight:600;font-size:13.5px;background:#fff;line-height:1.3}
+.op span::before{content:"";flex:0 0 18px;height:18px;border-radius:50%;border:2px solid var(--line-btn);background:#fff}
+.op:hover span{border-color:var(--blue)}
+.op input:checked+span{border-color:var(--blue);background:var(--blue-soft);color:var(--blue-ink)}
+.op input:checked+span::before{border-color:var(--blue);background:radial-gradient(circle,var(--blue) 0 4px,#fff 5px)}
+.op input:focus-visible+span{outline:3px solid rgba(3,105,161,.35);outline-offset:2px}
+.op span small{display:block;font-weight:400;font-size:12px;color:var(--ink3)}
+.tipo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tipo .op span{min-height:64px;font-size:14.5px}
+.campo .err{font-size:12.5px;color:var(--rosa-tx);font-weight:600}
+.campo.mal input,.campo.mal textarea,.campo.mal .op span{border-color:var(--rosa-tx)}
+.consent{font-size:12.5px;color:var(--ink3)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:600 15px var(--body);background:var(--blue);color:#fff;border:1px solid var(--blue);border-radius:999px;min-height:50px;padding:0 22px;cursor:pointer;width:100%;text-decoration:none}
+.btn.s{background:#fff;color:var(--blue-ink);border-color:var(--line-btn)}
+.btn[disabled]{opacity:.6;cursor:default}
+.pie-f{font-size:12.5px;color:var(--ink3);text-align:center}
+.pie{display:flex;flex-direction:column;align-items:center;gap:4px;padding:18px 20px 22px;border-top:1px solid var(--line-soft);text-align:center}
+.pie img{height:22px;width:auto;margin-bottom:2px}
+.pie .g{font-size:12.5px;color:var(--ink2);font-weight:600}
+.pie .s{font-size:11.5px;color:var(--ink3)}
+.listo{text-align:center;align-items:center}
+.listo .ok{width:56px;height:56px;border-radius:50%;background:var(--ok-bg);color:var(--ok-tx);display:flex;align-items:center;justify-content:center;font-size:28px}
+.listo h2{font-size:24px}
+.listo p{color:var(--ink2);max-width:52ch}
+.listo .ag{border:1px solid var(--line);border-radius:18px;padding:12px 16px;display:flex;gap:12px;align-items:center;text-align:left;width:100%;max-width:460px}
+.listo .ag .av{width:42px;height:42px;border-radius:50%;background:var(--blue-soft);color:var(--blue-ink);font-weight:600;display:flex;align-items:center;justify-content:center;flex:0 0 42px}
+.listo .ag b{display:block}
+.listo .ag small{color:var(--ink3);font-size:12px}
+.fallo{background:var(--oro-bg);color:var(--oro-tx);border-radius:16px;padding:16px 18px;font-size:14px}
+.fallo b{display:block;font-size:15.5px;margin-bottom:2px}
+.trampa{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+@media (max-width:600px){
+  .fila2,.pasos{grid-template-columns:1fr}
+  .ops.c4{grid-template-columns:1fr 1fr}
+  .ops.c3 .op span{padding:8px 9px;gap:7px}
+  .panel{padding:20px 16px;border-radius:22px}
+  .band{padding:16px 10px 26px}
+  .hero{padding:24px 16px 18px}
+}
+</style>
+</head>
+<body>
+<div class="filete"></div>
+<div class="pg-top"><img src="../img/ins-logo-azul.png" alt="INS"><div class="marca"><b>Seguro de Automóviles</b>Agentes exclusivos del INS</div></div>
+
+<div class="hero" id="hero">
+  <span class="c2"><i></i>Cotización sin costo</span>
+  <h1>¡Asegura tu vehículo sin salir de casa!</h1>
+  <p>Completá este formulario y te enviamos la cotización por correo.</p>
+  <div class="pasos">
+    <div><b><i>1</i>Completá el formulario</b>Con los datos del vehículo y del propietario.</div>
+    <div><b><i>2</i>Recibí tu cotización</b>Un agente del INS te la envía por correo.</div>
+    <div><b><i>3</i>Aseguralo</b>Si te gusta, agendamos la cita y listo.</div>
+  </div>
+  <p class="horario">Las solicitudes se atienden en horario hábil, de lunes a viernes.</p>
+</div>
+
+<div class="band">
+  <form class="panel" id="frm" novalidate>
+    <div class="trampa" aria-hidden="true"><label>Sitio web <input name="sitio" id="sitio" tabindex="-1" autocomplete="off"></label></div>
+    <div class="grupo">
+      <h3>Tus datos</h3>
+      <div class="campo" data-k="correo"><label for="correo">Correo electrónico <span class="req">*</span></label><input id="correo" type="email" autocomplete="email" inputmode="email"></div>
+      <div class="fila2">
+        <div class="campo" data-k="nombre"><label for="nombre">Nombre del propietario <span class="req">*</span></label><input id="nombre" autocomplete="name"></div>
+        <div class="campo" data-k="cedula"><label for="cedula">Número de Cédula <span class="req">*</span></label><input id="cedula" inputmode="numeric"></div>
+      </div>
+      <div class="campo" data-k="telefono"><label for="telefono">Número de teléfono de contacto <span class="req">*</span></label><input id="telefono" type="tel" autocomplete="tel" inputmode="tel"></div>
+    </div>
+
+    <div class="grupo">
+      <h3>El vehículo</h3>
+      <div class="campo" data-k="interes" role="radiogroup" aria-labelledby="lb-interes">
+        <span class="lb" id="lb-interes">Indicar el Interés Asegurable sobre el Vehículo <span class="req">*</span></span>
+        <span class="ay">Es el interés sustancial, legal y económico parcial o total demostrable al momento en que ocurre un evento siniestral y que el Asegurado tuviere en la preservación del automóvil asegurado contra su pérdida o destrucción.</span>
+        <div class="ops c1">
+          <label class="op"><input type="radio" name="interes" value="Soy el actual propietario Registral"><span>Soy el actual propietario Registral</span></label>
+          <label class="op"><input type="radio" name="interes" value="Lo acabo de comprar, está en proceso de traspaso"><span>Lo acabo de comprar, está en proceso de traspaso</span></label>
+          <label class="op"><input type="radio" name="interes" value="Lo voy a comprar pero aún no he firmado el traspaso"><span>Lo voy a comprar pero aún no he firmado el traspaso</span></label>
+        </div>
+      </div>
+      <div class="campo" data-k="uso" role="radiogroup" aria-labelledby="lb-uso">
+        <span class="lb" id="lb-uso">Uso del Vehículo <span class="req">*</span></span>
+        <div class="ops c2">
+          <label class="op"><input type="radio" name="uso" value="Personal"><span>Personal</span></label>
+          <label class="op"><input type="radio" name="uso" value="Comercial"><span>Comercial</span></label>
+        </div>
+      </div>
+      <div class="campo" data-k="tipo" role="radiogroup" aria-labelledby="lb-tipo">
+        <span class="lb" id="lb-tipo">Su vehículo es: <span class="req">*</span></span>
+        <div class="tipo">
+          <label class="op"><input type="radio" name="tipo" value="usado"><span>Usado<small>Ya tiene placa</small></span></label>
+          <label class="op"><input type="radio" name="tipo" value="nuevo"><span>Nuevo Cero Kilómetros<small>Recién salido de la agencia</small></span></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="grupo" id="g-usado" hidden>
+      <h3>Vehículo usado</h3>
+      <div class="fila2">
+        <div class="campo" data-k="placa"><label for="placa">Número de placa <span class="req">*</span></label><input id="placa" autocomplete="off" autocapitalize="characters"></div>
+        <div class="campo" data-k="valor-u"><label for="valor-u">Valor de mercado de su vehículo <span class="req">*</span></label><input id="valor-u" inputmode="numeric" placeholder="₡"></div>
+      </div>
+      <p class="ay" style="margin-top:-6px">Si no conoce el valor de su vehículo en el mercado consulte aquí: <a href="https://crautos.com/bluebook/" target="_blank" rel="noopener">crautos.com/bluebook</a></p>
+      <div class="campo" data-k="info-u"><label for="info-u">Información Adicional</label><textarea id="info-u" placeholder="Opcional"></textarea></div>
+    </div>
+
+    <div class="grupo" id="g-nuevo" hidden>
+      <h3>Vehículo nuevo cero kilómetros</h3>
+      <div class="fila2">
+        <div class="campo" data-k="inscribe"><label for="inscribe">A nombre de quién se inscribe <span class="req">*</span></label><input id="inscribe"></div>
+        <div class="campo" data-k="cedula2"><label for="cedula2">Número de Cédula <span class="req">*</span></label><input id="cedula2" inputmode="numeric"></div>
+      </div>
+      <div class="fila2">
+        <div class="campo" data-k="marcaModelo"><label for="marcaModelo">Marca y Modelo <span class="req">*</span></label><input id="marcaModelo"></div>
+        <div class="campo" data-k="valor-n"><label for="valor-n">Valor de Factura del Vehículo Nuevo <span class="req">*</span></label><input id="valor-n" inputmode="numeric" placeholder="₡"></div>
+      </div>
+      <div class="campo" data-k="combustible" role="radiogroup" aria-labelledby="lb-comb">
+        <span class="lb" id="lb-comb">Tipo de Combustible <span class="req">*</span></span>
+        <div class="ops c4">
+          <label class="op"><input type="radio" name="combustible" value="Gasolina"><span>Gasolina</span></label>
+          <label class="op"><input type="radio" name="combustible" value="Diesel"><span>Diesel</span></label>
+          <label class="op"><input type="radio" name="combustible" value="Eléctrico"><span>Eléctrico</span></label>
+          <label class="op"><input type="radio" name="combustible" value="Híbrido"><span>Híbrido</span></label>
+        </div>
+      </div>
+      <div class="campo" data-k="tipoVeh" role="radiogroup" aria-labelledby="lb-tv">
+        <span class="lb" id="lb-tv">Tipo de Vehículo <span class="req">*</span></span>
+        <div class="ops c3">
+          <label class="op"><input type="radio" name="tipoVeh" value="Sedan"><span>Sedan</span></label>
+          <label class="op"><input type="radio" name="tipoVeh" value="Rural"><span>Rural</span></label>
+          <label class="op"><input type="radio" name="tipoVeh" value="Pick Up"><span>Pick Up</span></label>
+        </div>
+      </div>
+      <div class="campo" data-k="info-n"><label for="info-n">Información Adicional</label><textarea id="info-n" placeholder="Opcional"></textarea></div>
+    </div>
+
+    <p class="consent">Al enviar esta solicitud autorizás el uso de estos datos únicamente para cotizar tu seguro de automóviles con el INS. No se usan para publicidad ni se comparten con terceros.</p>
+    <button class="btn" type="submit" id="btnEnviar">Solicitar mi cotización</button>
+    <p class="pie-f">Te llega una confirmación a tu correo con el nombre del agente que te va a atender.</p>
+  </form>
+
+  <div class="panel listo" id="listo" hidden>
+    <div class="ok" aria-hidden="true">✓</div>
+    <h2 id="listoH">¡Listo! Recibimos tu solicitud</h2>
+    <p>Te va a atender:</p>
+    <div class="ag"><div class="av" id="agIni"></div><div><b id="agNom"></b><small id="agCargo"></small></div></div>
+    <p id="listoP"></p>
+  </div>
+
+  <div class="panel" id="fallo" hidden>
+    <div class="fallo"><b>No pudimos enviar tu solicitud</b><span id="falloP">Tus respuestas siguen en el formulario. Podés intentar de nuevo o usar nuestro formulario de respaldo.</span></div>
+    <button class="btn" type="button" id="falloReintentar">Volver al formulario</button>
+    <a class="btn s" href="https://forms.gle/c34JknQmwu5ZnmX48" target="_blank" rel="noopener">Usar el formulario de respaldo</a>
+  </div>
+</div>
+
+<div class="pie">
+  <img src="../img/sdi-logo-compacto.svg" alt="">
+  <span class="g">Gestionado por SDI</span>
+  <span class="s">Seguros Digitales INS</span>
+</div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var radio = function (n) { var r = document.querySelector('input[name="' + n + '"]:checked'); return r ? r.value : ''; };
+  var val = function (id) { return $(id).value.trim(); };
+
+  function mostrar(id) {
+    ['frm', 'listo', 'fallo'].forEach(function (x) { $(x).hidden = x !== id; });
+    $('hero').hidden = id !== 'frm';
+    window.scrollTo(0, 0);
+  }
+
+  // Usado / nuevo: sus campos aparecen en la misma pagina.
+  document.querySelectorAll('input[name=tipo]').forEach(function (r) {
+    r.addEventListener('change', function () {
+      var t = radio('tipo');
+      $('g-usado').hidden = t !== 'usado';
+      $('g-nuevo').hidden = t !== 'nuevo';
+    });
+  });
+
+  // Montos: se ven con separador de miles mientras se escriben.
+  ['valor-u', 'valor-n'].forEach(function (id) {
+    $(id).addEventListener('input', function () {
+      var n = this.value.replace(/\D/g, '').slice(0, 12);
+      this.value = n ? '₡ ' + Number(n).toLocaleString('de-DE') : '';
+    });
+  });
+
+  // Errores: el aviso se quita al corregir.
+  function marcar(k, msg) {
+    var c = document.querySelector('.campo[data-k="' + k + '"]');
+    if (!c) return;
+    c.classList.toggle('mal', !!msg);
+    var e = c.querySelector('.err');
+    if (msg) { if (!e) { e = document.createElement('span'); e.className = 'err'; c.appendChild(e); } e.textContent = msg; }
+    else if (e) e.remove();
+  }
+  document.querySelectorAll('.campo').forEach(function (c) {
+    c.addEventListener('input', function () { marcar(c.dataset.k, ''); });
+    c.addEventListener('change', function () { marcar(c.dataset.k, ''); });
+  });
+
+  function leer() {
+    var t = radio('tipo');
+    return {
+      sitio: val('sitio'), correo: val('correo'), nombre: val('nombre'), cedula: val('cedula'), telefono: val('telefono'),
+      interes: radio('interes'), uso: radio('uso'), tipo: t,
+      placa: t === 'usado' ? val('placa') : '',
+      valor: t === 'usado' ? val('valor-u') : val('valor-n'),
+      inscribe: t === 'nuevo' ? val('inscribe') : '', cedula2: t === 'nuevo' ? val('cedula2') : '',
+      marcaModelo: t === 'nuevo' ? val('marcaModelo') : '',
+      combustible: t === 'nuevo' ? radio('combustible') : '', tipoVeh: t === 'nuevo' ? radio('tipoVeh') : '',
+      info: t === 'usado' ? val('info-u') : t === 'nuevo' ? val('info-n') : ''
+    };
+  }
+
+  // Lo mismo que revisa el servidor, para avisar antes de enviar.
+  function revisar(d) {
+    var f = [];
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.correo)) f.push(['correo', 'Revisá el correo electrónico.']);
+    if (!d.nombre) f.push(['nombre', 'Falta el nombre del propietario.']);
+    if (!d.cedula) f.push(['cedula', 'Falta el número de cédula.']);
+    if (d.telefono.replace(/\D/g, '').length < 8) f.push(['telefono', 'El teléfono tiene que tener 8 dígitos.']);
+    if (!d.interes) f.push(['interes', 'Elegí una opción.']);
+    if (!d.uso) f.push(['uso', 'Elegí una opción.']);
+    if (!d.tipo) f.push(['tipo', 'Elegí si es usado o nuevo.']);
+    if (d.tipo === 'usado') {
+      if (!d.placa) f.push(['placa', 'Falta el número de placa.']);
+      if (!d.valor) f.push(['valor-u', 'Falta el valor de mercado.']);
+    }
+    if (d.tipo === 'nuevo') {
+      if (!d.inscribe) f.push(['inscribe', 'Falta a nombre de quién se inscribe.']);
+      if (!d.cedula2) f.push(['cedula2', 'Falta el número de cédula.']);
+      if (!d.marcaModelo) f.push(['marcaModelo', 'Falta la marca y el modelo.']);
+      if (!d.valor) f.push(['valor-n', 'Falta el valor de factura.']);
+      if (!d.combustible) f.push(['combustible', 'Elegí una opción.']);
+      if (!d.tipoVeh) f.push(['tipoVeh', 'Elegí una opción.']);
+    }
+    return f;
+  }
+  function enfocar(k) {
+    var c = document.querySelector('.campo[data-k="' + k + '"]');
+    if (!c) return;
+    c.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    var i = c.querySelector('input,textarea'); if (i) setTimeout(function () { i.focus({ preventScroll: true }); }, 300);
+  }
+
+  var enviando = false;
+  $('frm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    if (enviando) return;
+    var d = leer();
+    var faltas = revisar(d);
+    faltas.forEach(function (x) { marcar(x[0], x[1]); });
+    if (faltas.length) { enfocar(faltas[0][0]); return; }
+    enviando = true;
+    $('btnEnviar').disabled = true; $('btnEnviar').textContent = 'Enviando…';
+    fetch('/cotizar/enviar', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(d) })
+      .then(function (resp) { return resp.json().catch(function () { return {}; }).then(function (j) { return { st: resp.status, j: j }; }); })
+      .then(function (x) {
+        if (x.st === 200 && x.j.ok) return listo(d, x.j);
+        if (x.st === 400 && x.j.campo) {
+          var k = { valor: d.tipo === 'nuevo' ? 'valor-n' : 'valor-u', info: d.tipo === 'nuevo' ? 'info-n' : 'info-u' }[x.j.campo] || x.j.campo;
+          marcar(k, x.j.error); enfocar(k); return;
+        }
+        $('falloP').textContent = (x.j && x.j.error ? x.j.error + ' ' : '') + 'Tus respuestas siguen en el formulario. Podés intentar de nuevo o usar nuestro formulario de respaldo.';
+        mostrar('fallo');
+      })
+      .catch(function () { mostrar('fallo'); })
+      .then(function () { enviando = false; $('btnEnviar').disabled = false; $('btnEnviar').textContent = 'Solicitar mi cotización'; });
+  });
+  $('falloReintentar').addEventListener('click', function () { mostrar('frm'); });
+
+  function listo(d, j) {
+    var pila = d.nombre.split(/\s+/)[0];
+    var ag = j.agente || {};
+    $('listoH').textContent = '¡Listo, ' + pila + '! Recibimos tu solicitud';
+    $('agNom').textContent = ag.nombre || 'Un agente del INS';
+    $('agCargo').textContent = ag.cargo || '';
+    $('agIni').textContent = String(ag.nombre || 'INS').split(/\s+/).slice(0, 2).map(function (w) { return w.charAt(0); }).join('').toUpperCase();
+    $('listoP').textContent = j.clienteAvisado === false
+      ? 'Te vamos a enviar la cotización a ' + d.correo + '. La confirmación no salió, pero tu solicitud sí llegó.'
+      : 'Te enviamos una confirmación a ' + d.correo + '. Si no la ves, revisá la carpeta de spam o promociones.';
+    if (j.repetida) $('listoP').textContent = 'Esta solicitud ya nos había llegado: no hace falta enviarla de nuevo.';
+    if (!j.agente) $('agNom').parentNode.parentNode.hidden = true;
+    mostrar('listo');
+  }
+})();
+</script>
+</body>
+</html>

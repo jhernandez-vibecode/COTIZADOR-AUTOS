@@ -2080,7 +2080,25 @@ Contrastadas con 5 PDF oficiales que entregó JC (viven en `OneDrive\ARCHIVO DIG
 
 ## Pendientes
 
-### 🔖 CHECKPOINT 4 nov 2026 — formulario propio de COTIZACIÓN con rotación entre agentes (ARRANCA el 5 nov, mockup primero)
+### 🔖 CHECKPOINT 5 nov 2026 — formulario propio de COTIZACIÓN con reparto entre agentes: PROGRAMADO, publicado APAGADO
+
+Mockup aprobado por JC el 5 nov (`docs/superpowers/specs/2026-11-05-cotizacion-formulario-propio-mockup.html` + PNG de compu, celular y firmas). Tag de rollback `pre-cotizar-formulario-propio-5nov`. Rama `feat/cotizar-formulario-propio`. `tests/test-cotizar.mjs` (80 checks; reparto, validación, correos, sesión de Google, la Function entera con almacenamiento y fetch falsos, página, Apps Script y ⚙). Suite: 31 archivos en verde.
+
+- **Qué hay:** página pública `/cotizar/` (las preguntas del Google Form palabra por palabra; solo se corrigió la errata «Numéro»; usado y 0 km en la misma página; pie «Gestionado por SDI» / «Seguros Digitales INS»; si falla, botón al Google Form de respaldo). Function `netlify/functions/cotizar.mjs` (solo inyecta Blobs) con la lógica en `lib/cotizar-handler.mjs`: `POST /cotizar/enviar` (cliente) y `POST /cotizar/agente` con `accion` consulta · ficha · ver · guardar. Libs puras: `cotizar-reparto.mjs`, `cotizar-validacion.mjs`, `cotizar-correos.mjs`, `google-sesion.mjs`. Front del ⚙: `js/cotizar-agente.js` + sección `#cotzSec` en `index.html` + estilos `.cotz-*` al final de `css/linea-clara-consola.css`. Hoja: `apps-script/registro-cotizaciones/`.
+- 🔴 **Reparto EDITABLE (JC, 5 nov):** cada agente lleva un peso 0-9 = cuántas solicitudes SEGUIDAS le tocan por vuelta (3-1-1 → JC, JC, JC, José, Cristian). Por turnos, nunca al azar. Peso 0 = fuera. Apagado o todos en 0 = todo al admin. Cambiar lista o pesos reinicia la vuelta (firma del reparto). Rápidos 3-1-1/5-1-1/2-2-2/3-2-1/1-1-0 (solo con 3 agentes); «Agregar agente» por correo (máx. 10). Vive en Blobs (store `cotizar`, clave `reparto`; turno en `turno`). Solo lo ve y cambia el admin (`COTIZAR_ADMIN`).
+- 🔴 **Fichas = el ⚙ de cada agente, copiado al servidor.** El perfil vive en el localStorage de cada uno y el servidor NO lo ve; por eso al «Guardar» el ⚙, si el agente está en el reparto, `cotzTrasGuardarPerfil` manda nombre, licencia, WhatsApp y teléfono a `ficha:<correo>`, firmado con su sesión de Google (token GIS aparte, scope `openid email`; el servidor lo valida con tokeninfo: Client ID propio + correo verificado). **Agente sin ficha = se salta su turno** (nunca una confirmación firmada por nadie) y el panel lo avisa en amarillo. Sin WhatsApp en la ficha, la confirmación sale sin el botón.
+- **Cargo en la firma:** lo pone el admin por agente en el panel (vacío = «Agente exclusivo del INS»). José Alonso Hernández (`tramites@segurosdelins.com`) NO es agente: cargo «Asesor de Seguros · Oficina de Fernando Hernández, agente» y licencia 08-1319 (la de Fernando), datos de JC del 5 nov. Cristian Hernández Vargas (`chernandez@seguros-ins.com`) licencia 23-4069, cargo por defecto.
+- **Correos** (Resend, mismas `CITA_API_KEY`/`CITA_FROM`; remitente `cotizaciones@` del mismo dominio): al cliente «Recibimos tu solicitud de cotización · PLACA/0 KM», firmado y con `reply_to` del agente, SIN la cédula; al agente «Cotización solicitada · PLACA · Nombre» con la chapa «Te tocó por turno · n de N», todas las respuestas, WhatsApp al cliente y «Abrir el cotizador». Orden: cliente → hoja → agente; si falla el del agente → 502 y la página ofrece el Google Form.
+- **Privacidad:** las respuestas no se guardan en Netlify ni en los logs; van en los dos correos y en la hoja de JC. En Blobs: reparto, turno, fichas y huellas del límite (6/h por IP, 3/h por correo, doble clic 60 s).
+
+**⏳ Para encenderlo (le toca a JC, en este orden):**
+1. Netlify → variables: `COTIZAR_ADMIN` = `jhernandez@segurosdelins.com`. Sin ella todo responde 503 y nada cambia para nadie.
+2. Hoja: pegar `apps-script/registro-cotizaciones/` en script.google.com (cuenta de JC), ejecutar `instalar()`, implementar como aplicación web (yo / cualquier persona) y poner `COTIZAR_REGISTRO_URL` y `COTIZAR_REGISTRO_CLAVE` en Netlify. Sin ellas los correos salen igual, sin anotar en la hoja.
+3. JC, José y Cristian guardan su ⚙ una vez con su cuenta (JC primero, para que su ficha exista).
+4. JC: ⚙ → «Reparto de cotizaciones» → agregar los dos correos, poner el cargo de José, 3-1-1, encender, Guardar.
+5. Probar una solicitud real y recién ahí cambiar el enlace público del Google Form a `cotizador.appsegurosdigitales.com/cotizar/`. Antes revisar si el Google Form tiene un script o una hoja colgados. El Google Form no se toca ni se borra.
+
+### (histórico) CHECKPOINT 4 nov 2026 — formulario propio de COTIZACIÓN con rotación entre agentes (ARRANCA el 5 nov, mockup primero)
 
 Exploración aprobada por JC; **nada de código todavía**. Primer paso: mockup con datos inventados (formulario en compu y celular, confirmación al cliente, correo al agente). No tocar código sin su aprobación.
 

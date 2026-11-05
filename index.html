@@ -123,6 +123,12 @@
           <p style="margin:6px 0 0;font-size:12px;color:var(--gray-500,#64748b);">No cambia el envío “Asistencias a cliente” del menú.</p>
         </div>
 
+        <!-- Formulario de cotización: reparto entre agentes (5 nov 2026). Solo lo ve el administrador. -->
+        <div class="cotz-sec" id="cotzSec" hidden>
+          <p class="cotz-h">Reparto de cotizaciones</p>
+          <p class="cotz-sub">Formulario de cotización · quién recibe cada solicitud nueva. Cada agente lleva un número: cuántas solicitudes seguidas le tocan en cada vuelta. Va por turnos, no al azar.</p>
+          <div id="cotzCuerpo"><button class="btn btn-primary" type="button" id="btnCotzAbrir">Ver y cambiar el reparto</button></div>
+        </div>
         <div style="margin:18px 0 6px;padding-top:14px;border-top:1px solid var(--gray-200,#e5e7eb);">
           <p style="margin:0;font-size:13px;font-weight:700;color:var(--navy,#0c2340);">Envío de pólizas activas</p>
           <p style="margin:2px 0 0;font-size:11px;color:var(--gray-500,#64748b);">Links que aparecen en el correo de “Póliza Activa”. Si dejás un cross-sell vacío, el botón lleva a tu sitio web.</p>
@@ -744,8 +750,9 @@
        toca la app se agrega una linea aca. -->
   <footer class="app-foot">
     <details>
-      <summary>Última actualización: 4 nov 2026 — Cero kilómetros: solo la factura de la agencia, sin fotos</summary>
+      <summary>Última actualización: 5 nov 2026 — Formulario propio de cotización con reparto entre agentes</summary>
       <ul>
+        <li><b>5 nov 2026</b> — <b>Formulario propio de cotización en <code>/cotizar/</code>, para reemplazar al Google Form.</b> Trae las mismas preguntas y reparte las solicitudes entre agentes por turnos. El reparto se cambia en ⚙ → «Reparto de cotizaciones», que solo ve el administrador: encenderlo o apagarlo y poner cuántas solicitudes seguidas le tocan a cada agente por vuelta (3-1-1, 5-1-1, 2-2-2…). La confirmación al cliente la firma el agente que le tocó, con los datos que cada uno guarda en su ⚙. Cada solicitud se anota en una hoja de Google. Queda apagado hasta configurarlo en Netlify; el Google Form sigue funcionando igual.</li>
         <li><b>4 nov 2026</b> — <b>Cuando la cotización es de un vehículo cero kilómetros, el cliente ya no lee que tiene que tomar fotos.</b> La guía, el formulario de cita y el correo de confirmación le explican que el único requisito es una factura proforma con los datos finales del vehículo o una copia de la factura de compra, que la pida a la agencia, que complete el formulario de cita y que se la envíe a usted por correo o WhatsApp. Se activa solo si en el paso 2 elige "Cero Kilómetros" en Interés asegurable o si el PDF del INS trae la placa temporal. El mensaje de WhatsApp del correo "Cita solicitada" también pide la factura en vez de hablar del código QR. Aplica a las cotizaciones que envíe desde hoy.</li>
         <li><b>19 oct 2026</b> — <b>La asistencia en carretera de la guía del cliente quedó al día con las Condiciones Operativas de Multiasistencia que el INS emite desde octubre.</b> Los carros de 7 a 15 años con la Multiasistencia Extendida (M) ahora ven los límites de su Plan Básico Extendido (por ejemplo, 6 remolques por avería y 7 por accidente); antes veían los de la G con un aviso, porque el documento anterior del INS no traía esa tabla. Los demás planes no cambiaron. La nota debajo de la tabla ya no dice "por año calendario", porque el documento nuevo no lo indica. Y el documento "C.O. Multiasistencia" que se adjunta al enviar una póliza activa es ahora la versión de octubre. También cambia en los enlaces ya enviados.</li>
         <li><b>14 oct 2026</b> — <b>En la guía del cliente y en el correo de cotización, los repuestos ya no mencionan kilómetros:</b> desde la versión nueva del seguro (28 de setiembre) el INS solo toma en cuenta los años del vehículo. Además, la guía usa los nombres y los años que trae hoy la cotización del INS: "Vehículo en garantía (0 a 6 años)", "Extensión de Garantía Plus (hasta 8 años)" y "Alternativo, genérico o usado". Antes, a un cliente con "Vehículo en garantía" le decía "Carro nuevo (hasta 3 años)" aunque su carro fuera de 2020. Cada cliente sigue viendo solo la fila de su repuesto. También cambia en los enlaces ya enviados.</li>
@@ -953,6 +960,7 @@
   <script src="js/datos-ui.js"></script>
   <script src="js/novedades.js"></script>
   <script src="js/asistencias-ui.js"></script>
+  <script src="js/cotizar-agente.js"></script>
   <script src="js/app.js"></script>
 
   <script>
