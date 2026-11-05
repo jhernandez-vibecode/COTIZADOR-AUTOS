@@ -120,7 +120,7 @@ export function crearHandler(deps = {}) {
     const info = { agente: ag, n: sel.n, de: sel.de, repartido: sel.repartido, fecha: fechaCR(now), clienteAvisado: true, registrada: false };
 
     const remite = "cotizaciones@" + direccionDe(from).split("@")[1];
-    const cl = correoCliente(d, ag);
+    const cl = correoCliente(d, ag, now);
     try {
       await enviarCorreo(fetchFn, apiKey, { from: visible(ag.nombre) + " · SDI <" + remite + ">", to: [d.correo], reply_to: ag.email, subject: cl.asunto, html: cl.html, text: cl.texto });
     } catch (e) { info.clienteAvisado = false; console.error("[cotizar] no salio el del cliente", e && e.message); }

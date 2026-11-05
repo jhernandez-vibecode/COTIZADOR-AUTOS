@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Confirmación al cliente · 3 opciones</title>
+<style>
+  body{margin:0;background:#E9EDF2;font-family:Arial,Helvetica,sans-serif;color:#1B1F23}
+  .top{max-width:1240px;margin:0 auto;padding:22px 16px 6px}
+  h1{font-size:20px;margin:0 0 6px}
+  .sub{font-size:13.5px;color:#5A6570;margin:0 0 14px;line-height:1.5}
+  .sw{display:inline-flex;background:#fff;border:1px solid #B8C0C8;border-radius:999px;padding:3px}
+  .sw button{border:0;background:none;font:inherit;font-size:13.5px;padding:7px 14px;border-radius:999px;cursor:pointer;color:#1B1F23}
+  .sw button.on{background:#0C2340;color:#fff}
+  .grid{max-width:1240px;margin:0 auto;padding:14px 16px 40px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  @media(max-width:1000px){.grid{grid-template-columns:1fr}}
+  .op h2{font-size:15px;margin:0 0 4px}
+  .op .q{font-size:12.5px;color:#5A6570;margin:0 0 10px;line-height:1.45;min-height:36px}
+  .asunto{font-size:12px;background:#fff;border:1px solid #DADCE0;border-radius:8px 8px 0 0;padding:8px 12px;color:#3C4650}
+  .asunto b{color:#1B1F23}
+  .mail{background:#fff;border:1px solid #DADCE0;border-top:0;border-radius:0 0 8px 8px;overflow:hidden}
+  .fuera{display:none}
+  body.modo-fuera .fuera{display:block}
+  body.modo-fuera .dentro{display:none}
+  p.t{margin:0 0 12px;font-size:14px;line-height:1.55}
+  .firma{border-top:1px solid #EDEFF2;padding-top:10px;font-size:12.5px;line-height:1.5;color:#3C4650}
+  .firma b{color:#1B1F23;font-size:13.5px}
+  .btn{display:inline-block;background:#037D61;color:#fff;text-decoration:none;font-weight:bold;font-size:13.5px;padding:10px 16px;border-radius:999px}
+</style></head>
+<body>
+<div class="top">
+  <h1>Confirmación al cliente · 3 opciones más básicas</h1>
+  <p class="sub">Datos de ejemplo (Mariela, placa BDF482). Horario supuesto: <b>lunes a viernes, 8:00 am a 5:00 pm</b>; fuera de eso (noche, sábado, domingo y feriados) se agrega el aviso del siguiente día hábil.<br>
+  Cambiá abajo cómo se ve cada una según la hora en que el cliente envía.</p>
+  <div class="sw"><button id="b1" class="on" onclick="m(0)">Llega en horario (martes 10:15 am)</button><button id="b2" onclick="m(1)">Llega fuera de horario (sábado 7:40 pm)</button></div>
+</div>
+
+<div class="grid">
+
+<!-- ================= OPCIÓN 1 · CARTA ================= -->
+<section class="op">
+  <h2>1 · Carta simple</h2>
+  <p class="q">Sin encabezado ni pie azul: parece un correo escrito a mano. Solo texto, firma y el logo SDI chiquito al final.</p>
+  <div class="asunto">Asunto: <b>Recibimos tu solicitud de cotización · BDF482</b></div>
+  <div class="mail" style="padding:22px 24px">
+    <p class="t">Hola, Mariela:</p>
+    <p class="t">Recibimos tu solicitud de cotización para el vehículo placa <b>BDF482</b>. Gracias por escribirnos.</p>
+    <p class="t dentro">Te envío la cotización a este correo hoy mismo, durante el día.</p>
+    <p class="t fuera">Nos escribiste fuera de nuestro horario (lunes a viernes, de 8:00 am a 5:00 pm), así que te envío la cotización <b>el lunes 9 de noviembre</b>.</p>
+    <p class="t">Si tenés alguna duda, respondé este correo o escribime al WhatsApp 8822-1348.</p>
+    <div class="firma"><b>Juan Carlos Hernández Vargas</b><br>Agente exclusivo del INS · Licencia SUGESE 08-1318</div>
+    <img src="https://cotizador.appsegurosdigitales.com/img/sdi-logo-email-ins.png" alt="SDI Seguros Digitales INS" style="height:26px;width:auto;margin-top:14px;opacity:.85">
+  </div>
+</section>
+
+<!-- ================= OPCIÓN 2 · TARJETA CORTA ================= -->
+<section class="op">
+  <h2>2 · Tarjeta corta</h2>
+  <p class="q">Se queda la marca (filete, logo INS y pie SDI) pero el cuerpo baja a tres líneas. El aviso va en un recuadro claro.</p>
+  <div class="asunto">Asunto: <b>Recibimos tu solicitud de cotización · BDF482</b></div>
+  <div class="mail">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td width="60%" height="4" bgcolor="#0369A1"></td><td width="25%" bgcolor="#0D9488"></td><td width="10%" bgcolor="#EA580C"></td><td width="5%" bgcolor="#C9A227"></td></tr></table>
+    <div style="background:#0C2340;text-align:center;padding:16px"><img src="https://cotizador.appsegurosdigitales.com/img/ins-logo.png" alt="INS" style="height:24px;width:auto"></div>
+    <div style="padding:22px 24px">
+      <div style="font-size:20px;font-weight:bold;margin:0 0 10px">¡Hola, Mariela! Recibimos tu solicitud</div>
+      <p class="t">Estoy preparando la cotización del seguro para tu vehículo placa <b>BDF482</b>.</p>
+      <p class="t dentro">Te la envío a este correo hoy mismo.</p>
+      <div class="fuera" style="background:#EAF3FB;border:1px solid #BFD9EE;border-radius:10px;padding:12px 14px;margin:0 0 12px;font-size:14px;line-height:1.5;color:#0C2340">
+        <b>Nos escribiste fuera de horario.</b><br>Atendemos de lunes a viernes, de 8:00 am a 5:00 pm. Te enviamos la cotización <b>el lunes 9 de noviembre</b>.
+      </div>
+      <p style="margin:0 0 14px"><a class="btn" href="#">Escribirme por WhatsApp</a></p>
+      <div class="firma"><b>Juan Carlos Hernández Vargas</b><br>Agente exclusivo del INS · Licencia SUGESE 08-1318<br>WhatsApp 8822-1348</div>
+    </div>
+    <div style="background:#0C2340;text-align:center;padding:16px;font-size:11.5px;color:#94a3b8"><img src="https://cotizador.appsegurosdigitales.com/img/sdi-logo-email-ins.png" alt="SDI Seguros Digitales INS" style="height:30px;width:auto;display:block;margin:0 auto 6px"><b style="color:#fff">Gestionado por SDI</b><br>Seguros Digitales INS</div>
+  </div>
+</section>
+
+<!-- ================= OPCIÓN 3 · CUÁNDO TE LLEGA ================= -->
+<section class="op">
+  <h2>3 · «Cuándo te llega» al frente</h2>
+  <p class="q">Lo primero que lee es el día en que recibe la cotización, en grande. Debajo, una línea de saludo y la firma. Sin encabezado azul.</p>
+  <div class="asunto">Asunto: <b class="dentro" style="display:inline">Tu cotización llega hoy · BDF482</b><b class="fuera" style="display:none">Tu cotización llega el lunes 9 de noviembre · BDF482</b></div>
+  <div class="mail">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td width="60%" height="4" bgcolor="#0369A1"></td><td width="25%" bgcolor="#0D9488"></td><td width="10%" bgcolor="#EA580C"></td><td width="5%" bgcolor="#C9A227"></td></tr></table>
+    <div style="padding:22px 24px">
+      <p class="t">Hola, Mariela. Recibimos tu solicitud para el vehículo placa <b>BDF482</b>.</p>
+      <div style="border:1px solid #DADCE0;border-radius:12px;padding:14px 16px;margin:0 0 14px;text-align:center">
+        <div style="font-size:11px;letter-spacing:.06em;color:#6B7681;font-weight:bold;text-transform:uppercase">Tu cotización llega</div>
+        <div class="dentro" style="font-size:24px;font-weight:bold;color:#0C2340;margin-top:4px">Hoy</div>
+        <div class="fuera" style="font-size:24px;font-weight:bold;color:#0C2340;margin-top:4px">Lunes 9 de noviembre</div>
+        <div class="fuera" style="font-size:12.5px;color:#5A6570;margin-top:4px">Atendemos de lunes a viernes, de 8:00 am a 5:00 pm.</div>
+      </div>
+      <p class="t">Si tenés alguna duda, respondé este correo o escribime al WhatsApp 8822-1348.</p>
+      <div class="firma"><b>Juan Carlos Hernández Vargas</b><br>Agente exclusivo del INS · Licencia SUGESE 08-1318</div>
+      <img src="https://cotizador.appsegurosdigitales.com/img/sdi-logo-email-ins.png" alt="SDI Seguros Digitales INS" style="height:26px;width:auto;margin-top:14px;opacity:.85">
+    </div>
+  </div>
+</section>
+
+</div>
+<script>
+function m(f){document.body.classList.toggle('modo-fuera',!!f);document.getElementById('b1').classList.toggle('on',!f);document.getElementById('b2').classList.toggle('on',!!f);
+  document.querySelectorAll('.asunto .dentro').forEach(e=>e.style.display=f?'none':'inline');document.querySelectorAll('.asunto .fuera').forEach(e=>e.style.display=f?'inline':'none');}
+</script>
+</body></html>

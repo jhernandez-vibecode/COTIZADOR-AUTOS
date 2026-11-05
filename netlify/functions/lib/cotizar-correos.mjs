@@ -11,6 +11,7 @@
 // El correo al CLIENTE no repite la cedula.
 // =====================================================================
 import { TIPOS, vehiculoCorto } from "./cotizar-validacion.mjs";
+import { HORARIO, siguienteHabil } from "./horario.mjs";
 import { F, LOGO_INS, LOGO_SDI, esc, colones, waIntl, fila, FILETE, marco, textoCliente, rolFirma } from "./correo-base.mjs";
 
 export const pila = (nombre) => String(nombre || "").trim().split(/\s+/)[0] || "";
@@ -34,45 +35,41 @@ export const lineaCargo = (ag) => rolFirma(ag).join("\n");
 /** Al CLIENTE solo le vuelve acotado lo que escribio quien lleno el formulario (5 nov 2026): no cabe un enlace. */
 const paraCliente = (d) => ({ ...d, placa: textoCliente(d.placa, 12), marcaModelo: textoCliente(d.marcaModelo, 80, { decimales: true }) });
 
-/** Filas del vehiculo, comunes a los dos correos. */
-function filasVehiculo(d, conTodo) {
-  const r = [["Vehículo", d.tipo === "usado" ? "Usado · placa " + d.placa : "Nuevo cero kilómetros · " + d.marcaModelo],
-    [d.tipo === "usado" ? "Valor de mercado" : "Valor de factura", colones(d.valor)]];
-  if (d.tipo === "nuevo") r.push(["Combustible", d.combustible], ["Tipo de vehículo", d.tipoVeh]);
-  r.push(["Uso", d.uso], ["Interés asegurable", d.interes]);
-  if (conTodo && d.tipo === "nuevo") r.splice(1, 0, ["A nombre de quién se inscribe", d.inscribe], ["Cédula de quien inscribe", d.cedula2]);
-  return r;
-}
+/** Recuadro del aviso fuera de horario (borde completo, sin border-left). */
+const avisoHorario = (cuando) => '<div style="background:#EAF3FB;border:1px solid #BFD9EE;border-radius:10px;padding:12px 14px;margin:0 0 14px;font-family:' + F + ';font-size:14px;line-height:1.5;color:#0C2340;">' +
+  "<b>Nos escribiste fuera de horario.</b><br>Atendemos de " + HORARIO.texto + ". Te enviamos la cotización <b>" + esc(cuando) + "</b>.</div>";
 
 /**
- * Confirmacion al cliente, firmada por el agente que le toco.
+ * Confirmacion al cliente, firmada por el agente que le toco. Version basica (opcion 2 del
+ * mockup que eligio JC el 5 nov 2026: docs/superpowers/specs/2026-11-05-confirmacion-cliente-basica-mockup.html):
+ * saludo, una linea con el vehiculo, cuando le llega la cotizacion, WhatsApp y firma.
+ * Fuera de horario (lib/horario.mjs) agrega el recuadro con el siguiente dia habil.
  * @param {object} d  datos validados
  * @param {object} agente  la firma del agente (lib/agentes.mjs: firmaDe)
+ * @param {Date} [ahora]  cuando entro la solicitud
  */
-export function correoCliente(datos, agente) {
+export function correoCliente(datos, agente, ahora = new Date()) {
   const d = paraCliente(datos);
   const nom = textoCliente(pila(d.nombre), 30);
   const wa = agente.whatsapp ? linkWa(agente.whatsapp, "Hola " + dosNombres(agente.nombre) + ", soy " + nom + ". Te escribo por la cotización de mi vehículo.") : "";
-  const veh = filasVehiculo(d, false);
+  const h = siguienteHabil(ahora);
+  const veh = d.tipo === "usado" ? "tu vehículo placa " : "tu vehículo nuevo ";
+  const vehDato = d.tipo === "usado" ? d.placa : d.marcaModelo;
   const html = marco(
     ENCABEZADO +
     '<tr><td style="padding:22px 24px;">' +
     '<div style="font-family:' + F + ';font-size:21px;font-weight:bold;color:#1B1F23;margin:0 0 12px;">¡Hola, ' + esc(nom) + "! Recibimos tu solicitud</div>" +
-    p("Gracias por cotizar con nosotros. Soy <b>" + esc(agente.nombre) + "</b> y voy a preparar tu cotización del seguro para tu vehículo.") +
-    caja("Lo que nos enviaste", veh.map(([k, v]) => fila(k, v)).join("")) +
-    '<div style="font-family:' + F + ';font-size:11px;letter-spacing:.06em;color:#6B7681;font-weight:bold;text-transform:uppercase;margin-bottom:4px;">Qué sigue</div>' +
-    '<ol style="margin:0 0 14px;padding-left:20px;font-family:' + F + ';font-size:14px;line-height:1.55;color:#1B1F23;"><li>Te envío la cotización a este correo, en horario hábil.</li><li>Si te gusta, agendamos la cita para asegurarlo.</li></ol>' +
-    p(wa ? "Si tenés alguna duda, respondé este correo o escribime por WhatsApp." : "Si tenés alguna duda, respondé este correo.") +
+    p("Estoy preparando la cotización del seguro para " + veh + "<b>" + esc(vehDato) + "</b>.") +
+    (h.enHorario ? p("Te la envío a este correo hoy mismo.") : avisoHorario(h.cuando)) +
     (wa ? '<p style="margin:0 0 14px;">' + boton(wa, "Escribirme por WhatsApp", "#037D61") + "</p>" : "") +
     '<div style="border-top:1px solid #EDEFF2;padding-top:12px;font-family:' + F + ';font-size:13px;line-height:1.55;color:#1B1F23;"><b style="font-size:14px;">' + esc(agente.nombre) + "</b><br>" +
     rolFirma(agente).map(esc).join("<br>") + "<br>" + [agente.whatsapp ? "WhatsApp " + esc(agente.whatsapp) : "", esc(agente.email)].filter(Boolean).join(" &middot; ") + "</div>" +
     "</td></tr>" + PIE
   );
   const texto = [
-    "Hola " + nom + ",", "",
-    "Recibimos tu solicitud de cotización. Soy " + agente.nombre + " y voy a preparar tu cotización del seguro para tu vehículo.", "",
-    ...veh.map(([k, v]) => k + ": " + v), "",
-    "Qué sigue:", "1. Te envío la cotización a este correo, en horario hábil.", "2. Si te gusta, agendamos la cita para asegurarlo.", "",
+    "¡Hola, " + nom + "! Recibimos tu solicitud.", "",
+    "Estoy preparando la cotización del seguro para " + veh + vehDato + ".",
+    h.enHorario ? "Te la envío a este correo hoy mismo." : "Nos escribiste fuera de horario. Atendemos de " + HORARIO.texto + ". Te enviamos la cotización " + h.cuando + ".", "",
     "Si tenés alguna duda, respondé este correo" + (agente.whatsapp ? " o escribime por WhatsApp al " + agente.whatsapp : "") + ".", "",
     agente.nombre, ...rolFirma(agente), "",
     "Gestionado por SDI", "Seguros Digitales INS",

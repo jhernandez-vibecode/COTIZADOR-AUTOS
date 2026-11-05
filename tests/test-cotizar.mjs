@@ -71,7 +71,7 @@ ok('ficha con WhatsApp corto → no', !validarFicha({ nombre: 'Agente Prueba', w
 console.log('-- correos --');
 const AG = { email: DOS, nombre: 'Agente Prueba Dos', licencia: '00-0002', whatsapp: '8888-2222', telefono: '', cargo: 'Asesor de Seguros', oficina: 'Oficina de Agente Prueba Uno, agente' };
 const cc = correoCliente(vu.datos, AG);
-ok('cliente: lo firma el agente que le toco', cc.html.includes('Soy <b>Agente Prueba Dos</b>') && cc.html.includes('Asesor de Seguros<br>Oficina de Agente Prueba Uno, agente · Licencia SUGESE 00-0002') && cc.texto.includes('Asesor de Seguros\nOficina de Agente Prueba Uno, agente · Licencia SUGESE 00-0002'));
+ok('cliente: lo firma el agente que le toco', cc.html.includes('<b style="font-size:14px;">Agente Prueba Dos</b>') && cc.html.includes('Asesor de Seguros<br>Oficina de Agente Prueba Uno, agente · Licencia SUGESE 00-0002') && cc.texto.includes('Asesor de Seguros\nOficina de Agente Prueba Uno, agente · Licencia SUGESE 00-0002'));
 ok('agente (sin cargo): una sola linea con la licencia', correoCliente(vu.datos, { ...AG, cargo: '', oficina: '' }).html.includes('Agente exclusivo del INS · Licencia SUGESE 00-0002<br>'));
 ok('cliente: pie "Gestionado por SDI" / "Seguros Digitales INS"', cc.html.includes('Gestionado por SDI</b><br>Seguros Digitales INS') && cc.texto.endsWith('Gestionado por SDI\nSeguros Digitales INS'));
 ok('cliente: no repite la cedula', !cc.html.includes('1 0000 0000') && !cc.texto.includes('1 0000 0000'));
@@ -79,6 +79,11 @@ ok('cliente: WhatsApp por web.whatsapp.com, nunca wa.me', cc.html.includes('http
 ok('cliente: sin WhatsApp no hay boton', !correoCliente(vu.datos, { ...AG, whatsapp: '' }).html.includes('web.whatsapp.com'));
 ok('cliente: cargo por defecto', correoCliente(vu.datos, { ...AG, cargo: '', oficina: '' }).html.includes('Agente exclusivo del INS · Licencia SUGESE 00-0002'));
 ok('cliente: asunto con la placa / 0 KM', cc.asunto === 'Recibimos tu solicitud de cotización · BDF482' && correoCliente(vn.datos, AG).asunto === 'Recibimos tu solicitud de cotización · 0 KM');
+ok('cliente basico (JC, 5 nov): sin la tabla de lo que envio ni el Que sigue', !cc.html.includes('Lo que nos enviaste') && !cc.html.includes('Qué sigue') && cc.html.includes('tu vehículo placa <b>BDF482</b>'));
+const EN = new Date('2026-11-10T16:15:00Z'), FUERA = new Date('2026-11-07T01:40:00Z');
+ok('cliente en horario (martes 10:15 am): hoy mismo, sin recuadro', (() => { const c = correoCliente(vu.datos, AG, EN); return c.html.includes('Te la envío a este correo hoy mismo.') && !c.html.includes('fuera de horario'); })());
+ok('cliente fuera de horario (viernes 7:40 pm): el lunes 9 de noviembre', (() => { const c = correoCliente(vu.datos, AG, FUERA); return c.html.includes('Nos escribiste fuera de horario.') && c.html.includes('<b>el lunes 9 de noviembre</b>') && c.texto.includes('el lunes 9 de noviembre') && !c.html.includes('hoy mismo'); })());
+ok('cliente 0 KM: vehiculo nuevo con marca y modelo', correoCliente(vn.datos, AG, EN).html.includes('tu vehículo nuevo <b>Toyota RAV4 2027</b>'));
 ok('cliente: escapa lo que escribe el cliente', !correoCliente({ ...vu.datos, placa: '<script>' }, AG).html.includes('<script>'));
 const ca = correoAgente(vu.datos, { agente: AG, n: 4, de: 5, repartido: true, fecha: '5 nov 2026, 8:14 am', registrada: true });
 ok('agente: sin el chip del turno (JC, 5 nov)', !ca.html.includes('Te tocó por turno') && !ca.texto.includes('Te tocó por turno') && !ca.html.includes('#FBF3DC;color:#7C5A00;border-radius:999px'));
