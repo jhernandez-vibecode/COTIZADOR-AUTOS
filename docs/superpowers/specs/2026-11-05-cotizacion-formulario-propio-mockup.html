@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cotización propia · mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&family=Google+Sans+Code:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* MOCKUP 5 nov 2026 · formulario propio de COTIZACIÓN con reparto entre agentes.
+   Datos INVENTADOS. Nada de esto está conectado: es para que JC apruebe la cara. */
+:root{
+  --blue:#0369A1;--blue-ink:#02557F;--blue-soft:#E8F1F8;--band:#EEF4F9;
+  --line:#DADCE0;--line-btn:#8A939C;--line-soft:#EDEFF2;
+  --ink:#1B1F23;--ink2:#5A6570;--ink3:#6B7681;--navy:#0C2340;
+  --ok-bg:#E9F5F0;--ok-tx:#037D61;--oro-bg:#FBF3DC;--oro-tx:#7C5A00;--rosa-bg:#FCE8EC;--rosa-tx:#9F1239;
+  --teal:#0D9488;--naranja:#EA580C;
+  --body:'Google Sans Flex','Inter',system-ui,sans-serif;--mono:'Google Sans Code','Inter',ui-monospace,monospace;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:#fff;color:var(--ink);font-family:var(--body);font-size:14.5px;line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3,p{margin:0}h1,h2,h3{font-weight:500;letter-spacing:-.02em;line-height:1.15;text-wrap:balance}
+a{color:var(--blue)}
+[hidden]{display:none!important}
+.filete{height:4px;background:linear-gradient(90deg,#0369A1 0 60%,#0D9488 60% 85%,#EA580C 85% 95%,#C9A227 95% 100%)}
+
+/* ===== envoltorio del mockup (no es parte del producto) ===== */
+.mk-top{position:sticky;top:0;z-index:5;background:var(--navy);color:#fff;padding:10px 20px;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between}
+.mk-top b{font-weight:600}
+.mk-top small{opacity:.75}
+.mk-tabs{display:flex;flex-wrap:wrap;gap:6px}
+.mk-tabs button{font:600 12.5px var(--body);border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;border-radius:999px;padding:6px 13px;cursor:pointer}
+.mk-tabs button[aria-pressed=true]{background:#fff;color:var(--navy)}
+.mk-sec{padding:28px 20px 40px;border-bottom:8px solid var(--band)}
+.mk-sec>h2.mk-h{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);max-width:1100px;margin:0 auto 6px}
+.mk-sec>p.mk-p{max-width:1100px;margin:0 auto 18px;color:var(--ink2);font-size:13.5px}
+.mk-dos{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:28px;max-width:1100px;margin:0 auto;align-items:start}
+.mk-marco{border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.mk-marco .bar{background:#F1F3F4;padding:7px 12px;font:500 11.5px var(--mono);color:var(--ink3);border-bottom:1px solid var(--line)}
+.mk-cel{border:10px solid #1B1F23;border-radius:40px;overflow:hidden;width:400px;height:820px;background:#fff}
+.mk-cel iframe{border:0;width:100%;height:100%;display:block}
+.mk-nota{max-width:1100px;margin:16px auto 0;background:var(--oro-bg);color:var(--oro-tx);border-radius:14px;padding:12px 16px;font-size:13px}
+.mk-nota b{font-weight:600}
+@media (max-width:980px){.mk-dos{grid-template-columns:1fr}.mk-cel{margin:0 auto;width:min(400px,100%)}}
+
+/* ===== la página pública ===== */
+.pg-top{background:#F8F9FA;border-bottom:1px solid var(--line-soft);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 20px;height:50px}
+.pg-top img{height:21px;width:auto;display:block}
+.pg-top .marca{font-size:12px;color:var(--ink2);text-align:right;line-height:1.3}
+.pg-top .marca b{color:var(--ink);font-weight:600;display:block}
+.hero{padding:30px 20px 22px;text-align:center}
+.hero .c2{display:inline-flex;align-items:center;gap:8px;background:var(--blue-soft);color:var(--blue-ink);border-radius:999px;padding:5px 13px;font-size:12.5px;font-weight:600}
+.hero .c2 i{width:8px;height:8px;border-radius:50%;background:var(--blue)}
+.hero h1{font-size:clamp(26px,5vw,38px);margin:14px 0 10px}
+.hero p{color:var(--ink2);max-width:56ch;margin:0 auto;font-size:15px}
+.pasos{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:760px;margin:20px auto 0;text-align:left}
+.pasos div{border:1px solid var(--line);border-radius:16px;padding:12px 14px;font-size:13px;color:var(--ink2)}
+.pasos b{display:flex;align-items:center;gap:8px;color:var(--ink);font-weight:600;font-size:13.5px;margin-bottom:3px}
+.pasos b i{font-style:normal;width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:12px}
+.horario{max-width:760px;margin:12px auto 0;font-size:12.5px;color:var(--ink3);text-align:center}
+.band{background:var(--band);padding:22px 16px 34px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:28px;padding:26px 28px;max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+.grupo{display:flex;flex-direction:column;gap:14px}
+.grupo>h3{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);border-bottom:1px solid var(--line);padding-bottom:7px}
+.fila2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.campo{display:flex;flex-direction:column;gap:5px;min-width:0}
+.campo label,.campo .lb{font-weight:600;font-size:13.5px}
+.campo .req{color:var(--rosa-tx)}
+.campo .ay{font-size:12.5px;color:var(--ink3);line-height:1.45}
+.campo input,.campo textarea{font:400 15px var(--body);color:var(--ink);border:1px solid var(--line-btn);border-radius:12px;padding:11px 13px;background:#fff;width:100%;min-width:0}
+.campo textarea{min-height:74px;resize:vertical}
+.ops{display:grid;gap:8px}
+.ops.c3{grid-template-columns:repeat(3,1fr)}.ops.c2{grid-template-columns:1fr 1fr}.ops.c4{grid-template-columns:repeat(4,1fr)}.ops.c1{grid-template-columns:1fr}
+.op{position:relative}
+.op input{position:absolute;opacity:0;inset:0;cursor:pointer}
+.op span{display:flex;align-items:center;gap:10px;min-height:46px;border:1px solid var(--line-btn);border-radius:14px;padding:8px 12px;font-weight:600;font-size:13.5px;background:#fff;line-height:1.3}
+.op span::before{content:"";flex:0 0 18px;height:18px;border-radius:50%;border:2px solid var(--line-btn);background:#fff}
+.op input:checked+span{border-color:var(--blue);background:var(--blue-soft);color:var(--blue-ink)}
+.op input:checked+span::before{border-color:var(--blue);background:radial-gradient(circle,var(--blue) 0 4px,#fff 5px)}
+.op input:focus-visible+span{outline:3px solid rgba(3,105,161,.35);outline-offset:2px}
+.op span small{display:block;font-weight:400;font-size:12px;color:var(--ink3)}
+.tipo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tipo .op span{min-height:64px;font-size:14.5px}
+.consent{font-size:12.5px;color:var(--ink3)}
+.btn{font:600 15px var(--body);background:var(--blue);color:#fff;border:0;border-radius:999px;padding:14px 22px;cursor:pointer;width:100%}
+.pie-f{font-size:12.5px;color:var(--ink3);text-align:center}
+.pie{display:flex;flex-direction:column;align-items:center;gap:6px;padding:18px 20px 22px;border-top:1px solid var(--line-soft);text-align:center}
+.pie img{height:22px;width:auto}
+.pie .g{font-size:12.5px;color:var(--ink2);font-weight:600}
+.pie .s{font-size:11.5px;color:var(--ink3)}
+.listo{text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center}
+.listo .ok{width:56px;height:56px;border-radius:50%;background:var(--ok-bg);color:var(--ok-tx);display:flex;align-items:center;justify-content:center;font-size:28px}
+.listo h2{font-size:24px}
+.listo .ag{border:1px solid var(--line);border-radius:18px;padding:12px 16px;display:flex;gap:12px;align-items:center;text-align:left;width:100%;max-width:440px}
+.listo .ag .av{width:42px;height:42px;border-radius:50%;background:var(--blue-soft);color:var(--blue-ink);font-weight:600;display:flex;align-items:center;justify-content:center;flex:0 0 42px}
+.listo .ag b{display:block}
+.listo .ag small{color:var(--ink3);font-size:12px}
+@media (max-width:600px){
+  .fila2,.pasos{grid-template-columns:1fr}
+  .ops.c3,.ops.c4{grid-template-columns:1fr 1fr}
+  .panel{padding:20px 16px;border-radius:22px}
+  .band{padding:16px 10px 26px}
+}
+
+/* ===== ⚙ de JC ===== */
+.cfg{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:minmax(0,560px) minmax(0,1fr);gap:24px;align-items:start}
+.cfg-card{border:1px solid var(--line);border-radius:22px;padding:20px 22px;display:flex;flex-direction:column;gap:16px;background:#fff}
+.cfg-card h3{font-size:17px;font-weight:600}
+.cfg-card .sub{color:var(--ink2);font-size:13px;margin-top:-10px}
+.sw{display:flex;align-items:center;justify-content:space-between;gap:14px;border:1px solid var(--line);border-radius:16px;padding:12px 14px}
+.sw b{display:block;font-weight:600}
+.sw small{color:var(--ink3);font-size:12.5px}
+.tog{position:relative;width:46px;height:26px;flex:0 0 46px}
+.tog input{opacity:0;width:0;height:0}
+.tog i{position:absolute;inset:0;background:#B9C0C7;border-radius:999px;cursor:pointer;transition:background .15s}
+.tog i::after{content:"";position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.tog input:checked+i{background:var(--blue)}
+.tog input:checked+i::after{transform:translateX(20px)}
+.ags{display:flex;flex-direction:column;gap:8px}
+.agr{display:grid;grid-template-columns:34px minmax(0,1fr) auto 52px;gap:12px;align-items:center;border:1px solid var(--line);border-radius:16px;padding:10px 12px}
+.agr .dot{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:13px}
+.agr b{display:block;font-weight:600;font-size:14px}
+.agr small{display:block;color:var(--ink3);font:400 11.5px var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.step{display:flex;align-items:center;border:1px solid var(--line-btn);border-radius:999px;overflow:hidden}
+.step button{width:34px;height:34px;border:0;background:#fff;font:600 18px var(--body);color:var(--blue-ink);cursor:pointer}
+.step button:disabled{color:#C3C9CF;cursor:default}
+.step output{min-width:30px;text-align:center;font:600 16px var(--mono)}
+.agr .pct{font:500 12.5px var(--mono);color:var(--ink2);text-align:right}
+.agr.cero{background:#FAFBFC}.agr.cero b{color:var(--ink3)}
+.rapidos{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12.5px;color:var(--ink3)}
+.rapidos button{font:600 12.5px var(--mono);border:1px solid var(--line-btn);background:#fff;border-radius:999px;padding:5px 11px;cursor:pointer;color:var(--ink)}
+.rapidos button:hover{border-color:var(--blue);color:var(--blue-ink)}
+.vista{border-top:1px solid var(--line-soft);padding-top:14px;display:flex;flex-direction:column;gap:10px}
+.vista .t{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3)}
+.fila-turnos{display:flex;flex-wrap:wrap;gap:6px}
+.turno{min-width:44px;padding:6px 8px;border-radius:12px;color:#fff;font-weight:600;font-size:12.5px;text-align:center;position:relative}
+.turno small{display:block;font:500 10px var(--mono);opacity:.85}
+.turno.ahora{outline:3px solid var(--naranja);outline-offset:2px}
+.barra{display:flex;height:12px;border-radius:999px;overflow:hidden;background:var(--line-soft)}
+.aviso{border-radius:14px;padding:10px 14px;font-size:13px}
+.aviso.off{background:var(--oro-bg);color:var(--oro-tx)}
+.aviso.mal{background:var(--rosa-bg);color:var(--rosa-tx)}
+.guardar{display:flex;gap:10px;align-items:center;justify-content:flex-end}
+.guardar .btn{width:auto;padding:11px 20px;font-size:14px}
+.guardar small{color:var(--ink3);font-size:12px}
+.hoja{border:1px solid var(--line);border-radius:14px;overflow:auto}
+.hoja table{border-collapse:collapse;font-size:12px;min-width:760px;width:100%}
+.hoja th,.hoja td{border:1px solid #E3E6E8;padding:5px 8px;text-align:left;white-space:nowrap}
+.hoja th{background:#F1F3F4;font-weight:600;color:var(--ink2)}
+.hoja td.col-ag{background:#FFF8E1;font-weight:600}
+.hoja .nfila{background:#F8F9FA;color:var(--ink3);text-align:center;width:28px}
+@media (max-width:980px){.cfg{grid-template-columns:1fr}}
+
+/* ===== correos ===== */
+.correos{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}
+.mail-hd{background:#F8F9FA;border-bottom:1px solid var(--line);padding:10px 14px;font-size:12.5px;color:var(--ink2);line-height:1.6}
+.mail-hd b{color:var(--ink);font-weight:600}
+.mail{background:#F1F3F4;padding:18px 10px}
+.mail .cuerpo{max-width:560px;margin:0 auto;background:#fff;border-radius:6px;overflow:hidden;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#1B1F23;line-height:1.55}
+.mail .enc{padding:20px 22px;background:#0C2340;text-align:center}
+.mail .enc img{height:26px}
+.mail .in{padding:20px 22px;display:flex;flex-direction:column;gap:14px}
+.mail h2{font-family:Arial,Helvetica,sans-serif;font-size:20px;font-weight:700;letter-spacing:0}
+.mail .caja{border:1px solid #DADCE0;border-radius:10px;padding:10px 14px}
+.mail .caja table{border-collapse:collapse;width:100%;font-size:13px}
+.mail .caja td{padding:4px 0;vertical-align:top}
+.mail .caja td:first-child{color:#6B7681;width:42%;padding-right:10px}
+.mail .tit{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#6B7681;margin-bottom:4px}
+.mail ol{margin:0;padding-left:20px}.mail ol li{margin:3px 0}
+.mail .firma{border-top:1px solid #EDEFF2;padding-top:12px;font-size:13px}
+.mail .firma b{font-size:14px}
+.mail .boton{display:inline-block;background:#0369A1;color:#fff;text-decoration:none;font-weight:700;border-radius:999px;padding:11px 20px;font-size:14px}
+.mail .boton.wa{background:#037D61}
+.mail .chip{align-self:flex-start;display:inline-block;background:#FBF3DC;color:#7C5A00;border-radius:999px;padding:3px 11px;font-size:12px;font-weight:700}
+.mail .mpie{padding:18px 22px;text-align:center;font-size:11.5px;color:#94a3b8;background:#0C2340;line-height:1.5}
+.mail .mpie img{height:34px;display:block;margin:0 auto 8px}
+.mail .mpie b{color:#fff;font-weight:700}
+.quien{max-width:1100px;margin:0 auto 10px!important;display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:0 0 10px;font-size:12.5px;color:var(--ink3)}
+.quien button{font:600 12px var(--body);border:1px solid var(--line-btn);background:#fff;border-radius:999px;padding:5px 11px;cursor:pointer}
+.quien button[aria-pressed=true]{background:var(--blue);border-color:var(--blue);color:#fff}
+.falta{background:#FCE8EC;color:#9F1239;border-radius:4px;padding:0 4px}
+@media (max-width:980px){.correos{grid-template-columns:1fr}}
+
+/* modo "solo el formulario" para el iframe del celular */
+body.solo .mk-top,body.solo .mk-sec>h2.mk-h,body.solo .mk-sec>p.mk-p,body.solo .mk-nota,body.solo #sec-cfg,body.solo #sec-correos,body.solo .mk-cel{display:none!important}
+body.solo .mk-sec{padding:0;border:0}
+body.solo .mk-dos{display:block}
+body.solo .mk-marco{border:0;border-radius:0;box-shadow:none}
+body.solo .mk-marco .bar{display:none}
+</style>
+</head>
+<body>
+
+<div class="mk-top">
+  <div><b>Mockup · formulario propio de cotización</b> <small>· 5 nov 2026 · datos inventados, nada conectado</small></div>
+  <div class="mk-tabs" role="group" aria-label="Ir a">
+    <button type="button" data-ir="sec-form" aria-pressed="true">1 · Formulario</button>
+    <button type="button" data-ir="sec-cfg" aria-pressed="false">2 · Tu ⚙ reparto</button>
+    <button type="button" data-ir="sec-correos" aria-pressed="false">3 · Correos y hoja</button>
+  </div>
+</div>
+
+<!-- ============ 1 · EL FORMULARIO ============ -->
+<section class="mk-sec" id="sec-form">
+  <h2 class="mk-h">1 · El formulario que ve el cliente</h2>
+  <p class="mk-p">Las preguntas son las de tu Google Form, palabra por palabra. Lo que cambia es la cara (línea clara SDI) y que «Usado» o «Nuevo cero kilómetros» muestran sus campos en la misma página, sin pasar a otra sección. Tocá las opciones: funciona.</p>
+  <div class="mk-dos">
+    <div class="mk-marco">
+      <div class="bar">cotizador.appsegurosdigitales.com/cotizar/</div>
+      <div id="pagina">
+        <div class="filete"></div>
+        <div class="pg-top"><img src="../../../img/ins-logo-azul.png" alt="INS"><div class="marca"><b>Seguro de Automóviles</b>Agentes exclusivos del INS</div></div>
+
+        <div class="hero" id="hero">
+          <span class="c2"><i></i>Cotización sin costo</span>
+          <h1>¡Asegura tu vehículo sin salir de casa!</h1>
+          <p>Completá este formulario y te enviamos la cotización por correo.</p>
+          <div class="pasos">
+            <div><b><i>1</i>Completá el formulario</b>Con los datos del vehículo y del propietario.</div>
+            <div><b><i>2</i>Recibí tu cotización</b>Un agente del INS te la envía por correo.</div>
+            <div><b><i>3</i>Aseguralo</b>Si te gusta, agendamos la cita y listo.</div>
+          </div>
+          <p class="horario">Las solicitudes se atienden en horario hábil, de lunes a viernes.</p>
+        </div>
+
+        <div class="band">
+          <form class="panel" id="frm" onsubmit="return enviar(event)">
+            <div class="grupo">
+              <h3>Tus datos</h3>
+              <div class="campo"><label for="c-correo">Correo electrónico <span class="req">*</span></label><input id="c-correo" type="email" value="mariela.quesada@ejemplo.test"></div>
+              <div class="fila2">
+                <div class="campo"><label for="c-nom">Nombre del propietario <span class="req">*</span></label><input id="c-nom" value="Mariela Quesada Rojas"></div>
+                <div class="campo"><label for="c-ced">Número de Cédula <span class="req">*</span></label><input id="c-ced" inputmode="numeric" value="1 0000 0000"></div>
+              </div>
+              <div class="campo"><label for="c-tel">Número de teléfono de contacto <span class="req">*</span></label><input id="c-tel" inputmode="tel" value="8888-0000"></div>
+            </div>
+
+            <div class="grupo">
+              <h3>El vehículo</h3>
+              <div class="campo">
+                <span class="lb">Indicar el Interés Asegurable sobre el Vehículo <span class="req">*</span></span>
+                <span class="ay">Es el interés sustancial, legal y económico parcial o total demostrable al momento en que ocurre un evento siniestral y que el Asegurado tuviere en la preservación del automóvil asegurado contra su pérdida o destrucción.</span>
+                <div class="ops c1">
+                  <label class="op"><input type="radio" name="ia" checked><span>Soy el actual propietario Registral</span></label>
+                  <label class="op"><input type="radio" name="ia"><span>Lo acabo de comprar, está en proceso de traspaso</span></label>
+                  <label class="op"><input type="radio" name="ia"><span>Lo voy a comprar pero aún no he firmado el traspaso</span></label>
+                </div>
+              </div>
+              <div class="campo">
+                <span class="lb">Uso del Vehículo <span class="req">*</span></span>
+                <div class="ops c2">
+                  <label class="op"><input type="radio" name="uso" checked><span>Personal</span></label>
+                  <label class="op"><input type="radio" name="uso"><span>Comercial</span></label>
+                </div>
+              </div>
+              <div class="campo">
+                <span class="lb">Su vehículo es: <span class="req">*</span></span>
+                <div class="tipo">
+                  <label class="op"><input type="radio" name="tipo" value="usado" checked><span>Usado<small>Ya tiene placa</small></span></label>
+                  <label class="op"><input type="radio" name="tipo" value="nuevo"><span>Nuevo Cero Kilómetros<small>Recién salido de la agencia</small></span></label>
+                </div>
+              </div>
+            </div>
+
+            <div class="grupo" id="g-usado">
+              <h3>Vehículo usado</h3>
+              <div class="fila2">
+                <div class="campo"><label for="u-placa">Número de placa <span class="req">*</span></label><input id="u-placa" value="BDF482"></div>
+                <div class="campo"><label for="u-valor">Valor de mercado de su vehículo <span class="req">*</span></label><input id="u-valor" inputmode="numeric" value="₡ 9 500 000"></div>
+              </div>
+              <p class="ay" style="font-size:12.5px;color:var(--ink3);margin-top:-6px">Si no conoce el valor de su vehículo en el mercado consulte aquí: <a href="https://crautos.com/bluebook/" target="_blank" rel="noopener">crautos.com/bluebook</a></p>
+              <div class="campo"><label for="u-info">Información Adicional</label><textarea id="u-info" placeholder="Opcional"></textarea></div>
+            </div>
+
+            <div class="grupo" id="g-nuevo" hidden>
+              <h3>Vehículo nuevo cero kilómetros</h3>
+              <div class="fila2">
+                <div class="campo"><label for="n-ins">A nombre de quién se inscribe <span class="req">*</span></label><input id="n-ins" value="Mariela Quesada Rojas"></div>
+                <div class="campo"><label for="n-ced">Número de Cédula <span class="req">*</span></label><input id="n-ced" inputmode="numeric" value="1 0000 0000"></div>
+              </div>
+              <div class="fila2">
+                <div class="campo"><label for="n-mm">Marca y Modelo <span class="req">*</span></label><input id="n-mm" value="Toyota RAV4 2027"></div>
+                <div class="campo"><label for="n-val">Valor de Factura del Vehículo Nuevo <span class="req">*</span></label><input id="n-val" inputmode="numeric" value="₡ 24 900 000"></div>
+              </div>
+              <div class="campo">
+                <span class="lb">Tipo de Combustible <span class="req">*</span></span>
+                <div class="ops c4">
+                  <label class="op"><input type="radio" name="comb" checked><span>Gasolina</span></label>
+                  <label class="op"><input type="radio" name="comb"><span>Diesel</span></label>
+                  <label class="op"><input type="radio" name="comb"><span>Eléctrico</span></label>
+                  <label class="op"><input type="radio" name="comb"><span>Híbrido</span></label>
+                </div>
+              </div>
+              <div class="campo">
+                <span class="lb">Tipo de Vehículo <span class="req">*</span></span>
+                <div class="ops c3">
+                  <label class="op"><input type="radio" name="tv"><span>Sedan</span></label>
+                  <label class="op"><input type="radio" name="tv" checked><span>Rural</span></label>
+                  <label class="op"><input type="radio" name="tv"><span>Pick Up</span></label>
+                </div>
+              </div>
+              <div class="campo"><label for="n-info">Información Adicional</label><textarea id="n-info" placeholder="Opcional"></textarea></div>
+            </div>
+
+            <p class="consent">Al enviar esta solicitud autorizás el uso de estos datos únicamente para cotizar tu seguro de automóviles con el INS. No se usan para publicidad ni se comparten con terceros.</p>
+            <button class="btn" type="submit">Solicitar mi cotización</button>
+            <p class="pie-f">Te llega una confirmación a tu correo con el nombre del agente que te va a atender.</p>
+          </form>
+
+          <div class="panel listo" id="listo" hidden>
+            <div class="ok">✓</div>
+            <h2>¡Listo, Mariela! Recibimos tu solicitud</h2>
+            <p style="color:var(--ink2);max-width:46ch">Te va a atender:</p>
+            <div class="ag"><div class="av">JC</div><div><b>Juan Carlos Hernández</b><small>Agente exclusivo del INS · Licencia SUGESE 08-1318</small></div></div>
+            <p style="color:var(--ink2);max-width:52ch">Te enviamos la cotización por correo a <b>mariela.quesada@ejemplo.test</b>. Si no la ves, revisá la carpeta de spam o promociones.</p>
+            <button class="btn" type="button" style="max-width:260px;background:#fff;color:var(--blue-ink);border:1px solid var(--line-btn)" onclick="volver()">Ver el formulario otra vez</button>
+          </div>
+        </div>
+
+        <div class="pie">
+          <img src="../../../img/sdi-logo-compacto.svg" alt="">
+          <span class="g">Gestionado por SDI</span>
+          <span class="s">Seguros Digitales INS</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="mk-cel" aria-label="Vista en el celular"><iframe id="cel" title="Formulario en el celular" loading="lazy"></iframe></div>
+  </div>
+  <div class="mk-nota"><b>Lo único que corregí de las preguntas:</b> la errata «Numéro de Cédula» → «Número de Cédula». El resto va tal cual. La pantalla final dice qué agente le tocó; acá sale vos de ejemplo.</div>
+</section>
+
+<!-- ============ 2 · EL ⚙ DE JC ============ -->
+<section class="mk-sec" id="sec-cfg">
+  <h2 class="mk-h">2 · Tu ⚙ · el reparto se cambia cuando querás</h2>
+  <p class="mk-p">Solo lo ves vos (entrás con tu cuenta de Google). Cada agente lleva un número: cuántas cotizaciones seguidas le tocan en cada vuelta. Probá 5-1-1, 2-2-2, 3-2-1, o poné 0 a quien no deba recibir esa semana.</p>
+  <div class="cfg">
+    <div class="cfg-card">
+      <h3>Reparto de cotizaciones</h3>
+      <p class="sub">Formulario de cotización · quién recibe cada solicitud nueva</p>
+
+      <label class="sw"><span><b>Repartir entre agentes</b><small id="sw-txt">Encendido: las solicitudes se reparten por turnos.</small></span><span class="tog"><input type="checkbox" id="rep-on" checked><i></i></span></label>
+
+      <div id="rep-cuerpo">
+        <div class="ags" id="ags"></div>
+        <div class="rapidos" style="margin-top:12px">Rápidos:
+          <button type="button" data-p="3,1,1">3-1-1</button>
+          <button type="button" data-p="5,1,1">5-1-1</button>
+          <button type="button" data-p="2,2,2">2-2-2</button>
+          <button type="button" data-p="3,2,1">3-2-1</button>
+          <button type="button" data-p="1,1,0">1-1-0</button>
+        </div>
+      </div>
+
+      <div class="vista">
+        <span class="t">Así se reparten las próximas</span>
+        <div class="barra" id="barra"></div>
+        <div class="fila-turnos" id="turnos"></div>
+        <div class="aviso off" id="av-off" hidden>Repartir está apagado: todas las solicitudes te llegan a vos. Los números quedan guardados para cuando lo volvás a encender.</div>
+        <div class="aviso mal" id="av-cero" hidden>Todos están en 0. Así nadie recibiría: al guardar, las solicitudes te llegan a vos.</div>
+      </div>
+
+      <div class="guardar"><small id="g-txt">Último cambio: hoy 7:42 am</small><button class="btn" type="button" onclick="guardar()">Guardar</button></div>
+    </div>
+
+    <div class="cfg-card">
+      <h3>Cómo funciona</h3>
+      <div style="font-size:13.5px;color:var(--ink2);display:flex;flex-direction:column;gap:10px">
+        <p><b style="color:var(--ink)">Va por turnos, no al azar.</b> Con 3-1-1: vos, vos, vos, José, Cristian, y vuelve a empezar. Así nadie recibe de más por suerte.</p>
+        <p><b style="color:var(--ink)">El turno de hoy se ve marcado</b> (borde naranja): es a quién le toca la próxima solicitud.</p>
+        <p><b style="color:var(--ink)">Al cambiar los números, la vuelta arranca de nuevo</b> desde el primero de la lista. Lo ya repartido no se mueve.</p>
+        <p><b style="color:var(--ink)">Con 0, ese agente queda fuera</b> hasta que le pongás otro número. Su correo no se borra.</p>
+        <p><b style="color:var(--ink)">Apagado</b> (temporada baja): todo te llega a vos, como hoy con el Google Form.</p>
+        <p style="font-size:12.5px;color:var(--ink3)">El tope por agente es 9 por vuelta.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 3 · CORREOS Y HOJA ============ -->
+<section class="mk-sec" id="sec-correos">
+  <h2 class="mk-h">3 · Lo que llega a cada uno</h2>
+  <p class="mk-p">La confirmación al cliente la firma el agente que le tocó. Cambiá el agente para ver la firma de cada uno.</p>
+  <div class="quien" role="group" aria-label="Agente asignado">Le tocó a:
+    <button type="button" data-ag="0" aria-pressed="true">Juan Carlos</button>
+    <button type="button" data-ag="1" aria-pressed="false">José Alonso</button>
+    <button type="button" data-ag="2" aria-pressed="false">Cristian</button>
+  </div>
+  <div class="correos">
+    <div class="mk-marco">
+      <div class="mail-hd">
+        <div><b>De:</b> <span class="m-de"></span> &lt;cotizaciones@appsegurosdigitales.com&gt;</div>
+        <div><b>Para:</b> mariela.quesada@ejemplo.test · <b>Responder a:</b> <span class="m-co"></span></div>
+        <div><b>Asunto:</b> Recibimos tu solicitud de cotización · BDF482</div>
+      </div>
+      <div class="mail"><div class="cuerpo">
+        <div style="height:4px;background:linear-gradient(90deg,#0369A1 0 60%,#0D9488 60% 85%,#EA580C 85% 95%,#C9A227 95% 100%)"></div>
+        <div class="enc"><img src="../../../img/ins-logo.png" alt="INS"></div>
+        <div class="in">
+          <h2>¡Hola, Mariela! Recibimos tu solicitud</h2>
+          <p>Gracias por cotizar con nosotros. Soy <b class="m-nom"></b> y voy a preparar tu cotización del seguro para tu vehículo.</p>
+          <div class="caja"><div class="tit">Lo que nos enviaste</div><table>
+            <tr><td>Vehículo</td><td>Usado · placa BDF482</td></tr>
+            <tr><td>Valor de mercado</td><td>₡9 500 000</td></tr>
+            <tr><td>Uso</td><td>Personal</td></tr>
+            <tr><td>Interés asegurable</td><td>Soy el actual propietario Registral</td></tr>
+          </table></div>
+          <div><div class="tit">Qué sigue</div><ol>
+            <li>Te envío la cotización a este correo, en horario hábil.</li>
+            <li>Si te gusta, agendamos la cita para asegurarlo.</li>
+          </ol></div>
+          <p>Si tenés alguna duda, respondé este correo o escribime por WhatsApp.</p>
+          <p><a class="boton wa" href="#" onclick="return false">Escribirme por WhatsApp</a></p>
+          <div class="firma"><b class="m-nom"></b><br><span class="m-rol"></span><br>WhatsApp <span class="m-wa"></span> · <span class="m-co"></span></div>
+        </div>
+        <div class="mpie"><img src="../../../img/sdi-logo-email-ins.png" alt="SDI Seguros Digitales INS"><b>Gestionado por SDI</b><br>Seguros Digitales INS</div>
+      </div></div>
+    </div>
+
+    <div class="mk-marco">
+      <div class="mail-hd">
+        <div><b>De:</b> Cotizaciones · SDI &lt;cotizaciones@appsegurosdigitales.com&gt;</div>
+        <div><b>Para:</b> <span class="m-co"></span> · <b>Responder a:</b> mariela.quesada@ejemplo.test</div>
+        <div><b>Asunto:</b> Cotización solicitada · BDF482 · Mariela Quesada Rojas</div>
+      </div>
+      <div class="mail"><div class="cuerpo">
+        <div style="height:4px;background:linear-gradient(90deg,#0369A1 0 60%,#0D9488 60% 85%,#EA580C 85% 95%,#C9A227 95% 100%)"></div>
+        <div class="enc"><img src="../../../img/ins-logo.png" alt="INS"></div>
+        <div class="in">
+          <span class="chip m-turno"></span>
+          <h2>Nueva solicitud de cotización</h2>
+          <div class="caja"><div class="tit">Cliente</div><table>
+            <tr><td>Nombre del propietario</td><td>Mariela Quesada Rojas</td></tr>
+            <tr><td>Número de Cédula</td><td>1 0000 0000</td></tr>
+            <tr><td>Teléfono</td><td>8888-0000</td></tr>
+            <tr><td>Correo</td><td>mariela.quesada@ejemplo.test</td></tr>
+          </table></div>
+          <div class="caja"><div class="tit">Vehículo</div><table>
+            <tr><td>Su vehículo es</td><td>Usado</td></tr>
+            <tr><td>Número de placa</td><td>BDF482</td></tr>
+            <tr><td>Valor de mercado</td><td>₡9 500 000</td></tr>
+            <tr><td>Uso del Vehículo</td><td>Personal</td></tr>
+            <tr><td>Interés Asegurable</td><td>Soy el actual propietario Registral</td></tr>
+            <tr><td>Información Adicional</td><td style="color:#6B7681">(no indicó)</td></tr>
+          </table></div>
+          <p style="display:flex;gap:8px;flex-wrap:wrap"><a class="boton wa" href="#" onclick="return false">WhatsApp a Mariela</a> <a class="boton" href="#" onclick="return false">Abrir el cotizador</a></p>
+          <p style="font-size:12px;color:#6B7681">Solicitud del 5 nov 2026, 8:14 am. Quedó anotada en la hoja de registro.</p>
+        </div>
+        <div class="mpie"><img src="../../../img/sdi-logo-email-ins.png" alt="SDI Seguros Digitales INS"><b>Gestionado por SDI</b><br>Seguros Digitales INS</div>
+      </div></div>
+    </div>
+  </div>
+
+  <h2 class="mk-h" style="margin-top:30px">La hoja de registro (en tu Google Drive)</h2>
+  <p class="mk-p">Una fila por solicitud. La columna amarilla dice a quién le tocó. Solo vos la ves.</p>
+  <div style="max-width:1100px;margin:0 auto" class="hoja"><table>
+    <tr><th class="nfila"></th><th>Fecha</th><th>Agente asignado</th><th>Turno</th><th>Nombre</th><th>Cédula</th><th>Teléfono</th><th>Correo</th><th>Vehículo es</th><th>Placa / Marca y modelo</th><th>Valor</th><th>Uso</th></tr>
+    <tr><td class="nfila">2</td><td>05/11/2026 8:14</td><td class="col-ag">Juan Carlos</td><td>1 de 5</td><td>Mariela Quesada Rojas</td><td>1 0000 0000</td><td>8888-0000</td><td>mariela.quesada@…</td><td>Usado</td><td>BDF482</td><td>₡9 500 000</td><td>Personal</td></tr>
+    <tr><td class="nfila">3</td><td>05/11/2026 9:02</td><td class="col-ag">Juan Carlos</td><td>2 de 5</td><td>Andrés Mora Solís</td><td>2 0000 0000</td><td>8888-1212</td><td>andres.mora@…</td><td>Nuevo 0 km</td><td>Toyota RAV4 2027</td><td>₡24 900 000</td><td>Personal</td></tr>
+    <tr><td class="nfila">4</td><td>05/11/2026 10:37</td><td class="col-ag">Juan Carlos</td><td>3 de 5</td><td>Lucía Brenes Araya</td><td>3 0000 0000</td><td>8888-3434</td><td>lucia.brenes@…</td><td>Usado</td><td>CL 123456</td><td>₡7 200 000</td><td>Comercial</td></tr>
+    <tr><td class="nfila">5</td><td>05/11/2026 11:50</td><td class="col-ag">José</td><td>4 de 5</td><td>Diego Vargas Ulate</td><td>4 0000 0000</td><td>8888-5656</td><td>diego.vargas@…</td><td>Usado</td><td>MNP907</td><td>₡6 100 000</td><td>Personal</td></tr>
+    <tr><td class="nfila">6</td><td>05/11/2026 14:05</td><td class="col-ag">Cristian</td><td>5 de 5</td><td>Sofía Campos Leiva</td><td>5 0000 0000</td><td>8888-7878</td><td>sofia.campos@…</td><td>Usado</td><td>KTR215</td><td>₡11 300 000</td><td>Personal</td></tr>
+  </table></div>
+  <div class="mk-nota"><b>Firmas confirmadas por JC el 5 nov.</b> José es asesor de la oficina de Fernando Hernández (la licencia 08-1319 es de Fernando). Falta solo el WhatsApp de José y de Cristian, en rosado «por confirmar».</div>
+</section>
+
+<script>
+var solo = new URLSearchParams(location.search).get('solo') === '1';
+if (solo) document.body.classList.add('solo');
+else document.getElementById('cel').src = location.pathname + '?solo=1';
+
+// ---- formulario: usado / nuevo
+document.querySelectorAll('input[name=tipo]').forEach(function (r) {
+  r.addEventListener('change', function () {
+    var nuevo = document.querySelector('input[name=tipo]:checked').value === 'nuevo';
+    document.getElementById('g-usado').hidden = nuevo;
+    document.getElementById('g-nuevo').hidden = !nuevo;
+  });
+});
+function enviar(e) { e.preventDefault(); document.getElementById('frm').hidden = true; document.getElementById('hero').hidden = true; document.getElementById('listo').hidden = false; window.scrollTo(0, 0); return false; }
+function volver() { document.getElementById('frm').hidden = false; document.getElementById('hero').hidden = false; document.getElementById('listo').hidden = true; }
+
+// ---- pestañas del mockup
+document.querySelectorAll('[data-ir]').forEach(function (b) {
+  b.addEventListener('click', function () {
+    document.querySelectorAll('[data-ir]').forEach(function (x) { x.setAttribute('aria-pressed', x === b); });
+    var s = document.getElementById(b.dataset.ir);
+    window.scrollTo({ top: s.offsetTop - 50, behavior: 'smooth' });
+  });
+});
+
+// ---- reparto
+var AG = [
+  { n: 'Juan Carlos', ini: 'JC', co: 'jhernandez@segurosdelins.com', c: '#0369A1', peso: 3 },
+  { n: 'José', ini: 'J', co: 'tramites@segurosdelins.com', c: '#0D9488', peso: 1 },
+  { n: 'Cristian', ini: 'C', co: 'chernandez@seguros-ins.com', c: '#EA580C', peso: 1 }
+];
+var turnoActual = 0; // posición en la vuelta a la que le toca la próxima
+function pintarAgs() {
+  var cont = document.getElementById('ags'); cont.innerHTML = '';
+  var tot = AG.reduce(function (s, a) { return s + a.peso; }, 0);
+  AG.forEach(function (a, i) {
+    var r = document.createElement('div'); r.className = 'agr' + (a.peso ? '' : ' cero');
+    r.innerHTML = '<span class="dot" style="background:' + a.c + '">' + a.ini + '</span>' +
+      '<span><b>' + a.n + '</b><small>' + a.co + '</small></span>' +
+      '<span class="step"><button type="button" aria-label="Menos" ' + (a.peso <= 0 ? 'disabled' : '') + '>−</button><output>' + a.peso + '</output><button type="button" aria-label="Más" ' + (a.peso >= 9 ? 'disabled' : '') + '>+</button></span>' +
+      '<span class="pct">' + (tot ? Math.round(a.peso * 100 / tot) : 0) + ' %</span>';
+    var bs = r.querySelectorAll('button');
+    bs[0].onclick = function () { a.peso = Math.max(0, a.peso - 1); turnoActual = 0; todo(); };
+    bs[1].onclick = function () { a.peso = Math.min(9, a.peso + 1); turnoActual = 0; todo(); };
+    cont.appendChild(r);
+  });
+}
+function vuelta() { var v = []; AG.forEach(function (a) { for (var k = 0; k < a.peso; k++) v.push(a); }); return v; }
+function pintarVista() {
+  var on = document.getElementById('rep-on').checked;
+  var v = vuelta(); var tot = v.length;
+  document.getElementById('rep-cuerpo').style.opacity = on ? 1 : .45;
+  document.getElementById('rep-cuerpo').style.pointerEvents = on ? '' : 'none';
+  document.getElementById('sw-txt').textContent = on ? 'Encendido: las solicitudes se reparten por turnos.' : 'Apagado: todas te llegan a vos.';
+  document.getElementById('av-off').hidden = on;
+  document.getElementById('av-cero').hidden = !on || tot > 0;
+  if (!on || !tot) v = [AG[0]];
+  var barra = document.getElementById('barra'); barra.innerHTML = '';
+  AG.forEach(function (a) {
+    var p = !on || !tot ? (a === AG[0] ? 1 : 0) : a.peso / tot;
+    if (p) { var s = document.createElement('span'); s.style.cssText = 'flex:' + p + ';background:' + a.c; barra.appendChild(s); }
+  });
+  var t = document.getElementById('turnos'); t.innerHTML = '';
+  var n = Math.max(10, v.length * 2);
+  for (var i = 0; i < n; i++) {
+    var a = v[(turnoActual + i) % v.length];
+    var d = document.createElement('span'); d.className = 'turno' + (i === 0 ? ' ahora' : '');
+    d.style.background = a.c; d.innerHTML = a.ini + '<small>#' + (i + 1) + '</small>';
+    t.appendChild(d);
+  }
+}
+function todo() { pintarAgs(); pintarVista(); }
+document.getElementById('rep-on').addEventListener('change', pintarVista);
+document.querySelectorAll('[data-p]').forEach(function (b) {
+  b.onclick = function () { b.dataset.p.split(',').forEach(function (x, i) { AG[i].peso = +x; }); turnoActual = 0; todo(); };
+});
+function guardar() { document.getElementById('g-txt').textContent = 'Guardado ✓ (en el mockup no se guarda nada)'; }
+if (!solo) { turnoActual = 1; todo(); }
+
+// ---- correos: firma por agente
+var FIRMA = [
+  { de: 'Juan Carlos Hernández · SDI', nom: 'Juan Carlos Hernández', rol: 'Agente exclusivo del INS · Licencia SUGESE 08-1318', wa: '8822 1348', co: 'jhernandez@segurosdelins.com', turno: 'Te tocó por turno · 1 de 5' },
+  { de: 'José Alonso Hernández · SDI', nom: 'José Alonso Hernández', rol: 'Asesor de Seguros<br>Oficina de Fernando Hernández, agente · Licencia SUGESE 08-1319', wa: '<span class="falta">por confirmar</span>', co: 'tramites@segurosdelins.com', turno: 'Te tocó por turno · 4 de 5' },
+  { de: 'Cristian Hernández Vargas · SDI', nom: 'Cristian Hernández Vargas', rol: 'Agente exclusivo del INS · Licencia SUGESE 23-4069', wa: '<span class="falta">por confirmar</span>', co: 'chernandez@seguros-ins.com', turno: 'Te tocó por turno · 5 de 5' }
+];
+function firma(i) {
+  var f = FIRMA[i];
+  document.querySelectorAll('.m-de').forEach(function (e) { e.textContent = f.de; });
+  document.querySelectorAll('.m-nom').forEach(function (e) { e.innerHTML = f.nom; });
+  document.querySelectorAll('.m-rol').forEach(function (e) { e.innerHTML = f.rol; });
+  document.querySelectorAll('.m-wa').forEach(function (e) { e.innerHTML = f.wa; });
+  document.querySelectorAll('.m-co').forEach(function (e) { e.textContent = f.co; });
+  document.querySelectorAll('.m-turno').forEach(function (e) { e.textContent = f.turno; });
+  document.querySelectorAll('[data-ag]').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.ag == i); });
+}
+document.querySelectorAll('[data-ag]').forEach(function (b) { b.onclick = function () { firma(+b.dataset.ag); }; });
+firma(/#a(\d)/.test(location.hash) ? +location.hash.slice(2) : 0);
+</script>
+</body>
+</html>

@@ -302,6 +302,8 @@ function openProfileModal(firstTime) {
   }
 
   if (typeof _refreshDriveStatus === 'function') _refreshDriveStatus();
+  // Reparto del formulario de cotización: la sección solo se le muestra al administrador.
+  if (typeof cotzAlAbrirPerfil === 'function') cotzAlAbrirPerfil();
 
   modal.classList.add('active');
   setTimeout(function () { document.getElementById('p-name').focus(); }, 100);
@@ -442,6 +444,8 @@ function handleProfileSave() {
 
   showToast('Perfil guardado.', 'success');
   if (profile.citaModo === 'sdi') _verificarCitaAutorizada(profile.email);
+  // Formulario de cotización (5 nov 2026): si está en el reparto, su ficha queda al día en el servidor.
+  if (typeof cotzTrasGuardarPerfil === 'function') cotzTrasGuardarPerfil(profile);
   closeProfileModal();
   // Si estamos en la vista 3 (redactar), regenerar la previa con los nuevos datos
   if (S.step === 3) updatePreview();

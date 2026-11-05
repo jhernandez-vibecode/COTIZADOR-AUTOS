@@ -381,3 +381,63 @@ body.page-marcas{background:#fff}
   .asi-grid{grid-template-columns:1fr}
   .asi-prev-box{height:420px}
 }
+
+/* ============================================================
+   ⚙ · Reparto del formulario de cotización (5 nov 2026)
+   Transcrito del mockup aprobado (pestaña 2). Solo lo ve el administrador.
+   ============================================================ */
+.cotz-sec{margin:18px 0 6px;padding-top:14px;border-top:1px solid var(--gray-200,#e5e7eb);display:flex;flex-direction:column;gap:10px}
+.cotz-h{margin:0;font-size:13px;font-weight:700;color:var(--navy,#0c2340)}
+.cotz-sub{margin:-6px 0 0;font-size:11.5px;color:var(--gray-500,#64748b)}
+#cotzCuerpo{display:flex;flex-direction:column;gap:10px}
+#cotzCuerpo>.btn{align-self:flex-start}
+.cotz-sw{display:flex;align-items:center;justify-content:space-between;gap:14px;border:1px solid #DADCE0;border-radius:16px;padding:10px 14px;cursor:pointer}
+.cotz-sw b{display:block;font-size:13.5px}
+.cotz-sw small{color:#6B7681;font-size:12px}
+.cotz-tog{position:relative;width:46px;height:26px;flex:0 0 46px}
+.cotz-tog input{opacity:0;width:0;height:0;position:absolute}
+.cotz-tog i{position:absolute;inset:0;background:#8A939C;border-radius:999px;transition:background .15s}
+.cotz-tog i::after{content:"";position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.cotz-tog input:checked+i{background:#0369A1}
+.cotz-tog input:checked+i::after{transform:translateX(20px)}
+.cotz-tog input:focus-visible+i{outline:3px solid rgba(3,105,161,.35);outline-offset:2px}
+.cotz-ags{display:flex;flex-direction:column;gap:8px}
+.cotz-ags.off{opacity:.5}
+.cotz-agr{display:grid;grid-template-columns:34px minmax(0,1fr) auto auto;gap:10px;align-items:center;border:1px solid #DADCE0;border-radius:16px;padding:10px 12px}
+.cotz-agr.cero{background:#FAFBFC}
+.cotz-dot{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:12.5px}
+.cotz-quien{display:flex;flex-direction:column;gap:2px;min-width:0}
+.cotz-quien b{font-size:13.5px}
+.cotz-quien small{color:#6B7681;font:400 11.5px 'Google Sans Code',ui-monospace,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cotz-quien em{font-style:normal;font-size:11.5px;color:#7C5A00;background:#FBF3DC;border-radius:8px;padding:3px 8px;margin-top:2px}
+.cotz-cargo{margin-top:4px;font:400 12px inherit;border:1px solid #DADCE0;border-radius:8px;padding:5px 8px;width:100%;max-width:340px}
+.cotz-step{display:flex;align-items:center;border:1px solid #8A939C;border-radius:999px;overflow:hidden}
+.cotz-step button{width:32px;height:32px;border:0;background:#fff;font:600 18px inherit;color:#02557F;cursor:pointer}
+.cotz-step button:disabled{color:#C3C9CF;cursor:default}
+.cotz-step output{min-width:26px;text-align:center;font:600 15px 'Google Sans Code',ui-monospace,monospace}
+.cotz-pct{display:flex;flex-direction:column;align-items:flex-end;gap:4px;font:500 12px 'Google Sans Code',ui-monospace,monospace;color:#5A6570;min-width:44px}
+.cotz-quitar{border:0;background:none;color:#9F1239;font:600 11.5px inherit;cursor:pointer;padding:0;text-decoration:underline}
+.cotz-agregar{display:flex;gap:8px;flex-wrap:wrap}
+.cotz-agregar input{flex:1 1 200px;min-width:0;border:1px solid #8A939C;border-radius:10px;padding:8px 10px;font:inherit;font-size:13px}
+.cotz-rapidos{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;color:#6B7681}
+.cotz-rapidos button{font:600 12px 'Google Sans Code',ui-monospace,monospace;border:1px solid #8A939C;background:#fff;border-radius:999px;padding:4px 10px;cursor:pointer;color:#1B1F23}
+.cotz-rapidos button:hover{border-color:#0369A1;color:#02557F}
+.cotz-vista{border-top:1px solid #EDEFF2;padding-top:10px;display:flex;flex-direction:column;gap:8px}
+.cotz-t{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:#6B7681}
+.cotz-barra{display:flex;height:10px;border-radius:999px;overflow:hidden;background:#EDEFF2}
+.cotz-turnos{display:flex;flex-wrap:wrap;gap:6px}
+.cotz-turno{min-width:40px;padding:5px 7px;border-radius:10px;color:#fff;font-weight:600;font-size:12px;text-align:center}
+.cotz-turno small{display:block;font:500 10px 'Google Sans Code',ui-monospace,monospace;opacity:.85}
+.cotz-turno.ahora{outline:3px solid #EA580C;outline-offset:2px}
+.cotz-aviso{margin:0;border-radius:10px;padding:8px 12px;font-size:12.5px;background:#FBF3DC;color:#7C5A00}
+.cotz-mal{background:#FCE8EC;color:#9F1239}
+.cotz-guardar{display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+.cotz-guardar small{color:#6B7681;font-size:12px}
+.cotz-nota{margin:0;font-size:12px;color:#6B7681}
+p.cotz-nota.cotz-mal{border-radius:10px;padding:8px 12px}
+@media (max-width:560px){
+  .cotz-agr{grid-template-columns:34px minmax(0,1fr) auto}
+  .cotz-pct{grid-column:2/-1;flex-direction:row;justify-content:space-between;align-items:center}
+}
+.cotz-cargo-lb{display:flex;flex-direction:column;gap:2px;margin-top:4px;font-size:11px;font-weight:600;color:#6B7681}
+.cotz-cargo-lb .cotz-cargo{margin-top:0}
