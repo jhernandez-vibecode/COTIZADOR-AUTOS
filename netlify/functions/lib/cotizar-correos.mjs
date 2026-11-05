@@ -41,10 +41,16 @@ const p = (html, extra) => '<p style="margin:0 0 14px;font-family:' + F + ';font
 const boton = (href, texto, color) => '<a href="' + esc(href) + '" style="display:inline-block;background:' + color + ';color:#ffffff;text-decoration:none;font-family:' + F + ';font-weight:bold;border-radius:999px;padding:11px 20px;font-size:14px;margin:0 6px 6px 0;">' + esc(texto) + "</a>";
 const linkWa = (num, texto) => "https://web.whatsapp.com/send/?phone=" + waIntl(num) + "&text=" + encodeURIComponent(texto);
 
-/** Linea del cargo: "Agente exclusivo del INS · Licencia SUGESE 08-1318". */
+/**
+ * Lineas del cargo. "Agente exclusivo del INS · Licencia SUGESE 08-1318" en una linea.
+ * Si el cargo trae " · " (JC, 5 nov 2026, Jose), lo primero va arriba solo y el resto
+ * abajo con la licencia: "Asesor de Seguros" / "Oficina de Fernando Hernández, agente · Licencia SUGESE 08-1319".
+ */
 export function lineaCargo(agente) {
   const cargo = String(agente.cargo || "").trim() || CARGO_DEFECTO;
-  return cargo + (agente.licencia ? " · Licencia SUGESE " + agente.licencia : "");
+  const i = cargo.indexOf(" · ");
+  const lic = agente.licencia ? " · Licencia SUGESE " + agente.licencia : "";
+  return i > 0 ? cargo.slice(0, i) + "\n" + cargo.slice(i + 3) + lic : cargo + lic;
 }
 
 /** Filas del vehiculo, comunes a los dos correos. */
@@ -77,7 +83,7 @@ export function correoCliente(d, agente) {
     p(wa ? "Si tenés alguna duda, respondé este correo o escribime por WhatsApp." : "Si tenés alguna duda, respondé este correo.") +
     (wa ? '<p style="margin:0 0 14px;">' + boton(wa, "Escribirme por WhatsApp", "#037D61") + "</p>" : "") +
     '<div style="border-top:1px solid #EDEFF2;padding-top:12px;font-family:' + F + ';font-size:13px;line-height:1.55;color:#1B1F23;"><b style="font-size:14px;">' + esc(agente.nombre) + "</b><br>" +
-    esc(lineaCargo(agente)) + "<br>" + [agente.whatsapp ? "WhatsApp " + esc(agente.whatsapp) : "", esc(agente.email)].filter(Boolean).join(" &middot; ") + "</div>" +
+    esc(lineaCargo(agente)).replace(/\n/g, "<br>") + "<br>" + [agente.whatsapp ? "WhatsApp " + esc(agente.whatsapp) : "", esc(agente.email)].filter(Boolean).join(" &middot; ") + "</div>" +
     "</td></tr>" + PIE
   );
   const texto = [

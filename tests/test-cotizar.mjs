@@ -71,7 +71,8 @@ ok('ficha con WhatsApp corto → no', !validarFicha({ nombre: 'Agente Prueba', w
 console.log('-- correos --');
 const AG = { email: DOS, nombre: 'Agente Prueba Dos', licencia: '00-0002', whatsapp: '8888-2222', telefono: '', cargo: 'Asesor de Seguros · Oficina de Agente Prueba Uno, agente' };
 const cc = correoCliente(vu.datos, AG);
-ok('cliente: lo firma el agente que le toco', cc.html.includes('Soy <b>Agente Prueba Dos</b>') && cc.html.includes('Asesor de Seguros · Oficina de Agente Prueba Uno, agente · Licencia SUGESE 00-0002'));
+ok('cliente: lo firma el agente que le toco', cc.html.includes('Soy <b>Agente Prueba Dos</b>') && cc.html.includes('Asesor de Seguros<br>Oficina de Agente Prueba Uno, agente · Licencia SUGESE 00-0002') && cc.texto.includes('Asesor de Seguros\nOficina de Agente Prueba Uno, agente · Licencia SUGESE 00-0002'));
+ok('cargo simple: una sola linea con la licencia', correoCliente(vu.datos, { ...AG, cargo: 'Agente exclusivo del INS' }).html.includes('Agente exclusivo del INS · Licencia SUGESE 00-0002<br>'));
 ok('cliente: pie "Gestionado por SDI" / "Seguros Digitales INS"', cc.html.includes('Gestionado por SDI</b><br>Seguros Digitales INS') && cc.texto.endsWith('Gestionado por SDI\nSeguros Digitales INS'));
 ok('cliente: no repite la cedula', !cc.html.includes('1 0000 0000') && !cc.texto.includes('1 0000 0000'));
 ok('cliente: WhatsApp por web.whatsapp.com, nunca wa.me', cc.html.includes('https://web.whatsapp.com/send/?phone=50688882222') && !cc.html.includes('wa.me'));
