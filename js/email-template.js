@@ -333,7 +333,7 @@ function buildEmail(params) {
         <tr><td style="padding:28px 32px 0;text-align:center;border-top:1px solid #e0e7ef;margin-top:28px;">
           <p style="margin:24px 0 6px;font-family:${fontFam};font-style:italic;color:#475569;font-size:14px;">"Cualquier duda que tengas, hablemos. Estoy para vos."</p>
           <p style="margin:0;font-family:${fontFam};font-weight:700;color:#0c4a6e;font-size:14px;">&mdash; ${_escape(CFG.FROM_NAME)}</p>
-          <p style="margin:2px 0 0;font-size:11px;color:#64748b;">Tu agente &middot; Lic. SUGESE ${_escape(CFG.LICENSE)}</p>
+          <p style="margin:2px 0 0;font-size:11px;color:#64748b;">${_firmaRolCotizacion()}</p>
         </td></tr>
 
         <!-- 11. NOTA UBER (al puro final, disclaimer legal) -->
@@ -565,6 +565,17 @@ function _codificarCoberturas(coberturas) {
   }).filter(Boolean).join('.');
 }
 
+/** Cargo del asesor del perfil (5 nov 2026). Tolera que email-marca.js no este cargado (tests). */
+function _cargoDelPerfil() { return typeof _cargoAsesor === 'function' ? _cargoAsesor(CFG.FROM_EMAIL) : ''; }
+
+/** Linea bajo el nombre en la firma: "Tu agente · Lic." o, si es asesor (5 nov 2026), su cargo en dos lineas. */
+function _firmaRolCotizacion() {
+  const cg = _cargoDelPerfil();
+  const pc = cg ? _partesCargo(cg) : ['', ''];
+  if (!pc[0]) return 'Tu agente &middot; Lic. SUGESE ' + _escape(CFG.LICENSE);
+  return _escape(pc[0]) + '<br>' + (pc[1] ? _escape(pc[1]) + ' &middot; ' : '') + 'Lic. SUGESE ' + _escape(CFG.LICENSE);
+}
+
 function _buildGuideUrl(extras) {
   const base = CFG.GUIDE_URL;
   const params = [];
@@ -614,6 +625,8 @@ function _buildGuideUrl(extras) {
   // k0=1 (4 nov 2026): cero kilometros. La guia cambia "el dia de tu cita":
   // el unico requisito es la factura de la agencia, sin fotos.
   if (x.ceroKm) params.push('k0=1');
+  // cg: cargo del asesor (5 nov 2026). La guia, /cita/ y el configurador firman con el.
+  if (_cargoDelPerfil()) params.push('cg=' + encodeURIComponent(_cargoDelPerfil()));
   // asi=1: la guia muestra la seccion "Sumale asistencias" (17 set 2026). Solo
   // cuando el correo llevo la tarjeta; sin esto los enlaces viejos no cambian.
   // wa: el WhatsApp del agente, que la guia le pasa al configurador.
@@ -656,7 +669,7 @@ function _buildCitaUrl(extras) {
   };
   const num = function (val) { const n = (typeof asiMonto === 'function') ? asiMonto(val) : 0; return n > 0 ? String(n) : ''; };
   const x = extras || {};
-  add('n', CFG.FROM_NAME); add('l', CFG.LICENSE);
+  add('n', CFG.FROM_NAME); add('l', CFG.LICENSE); add('cg', _cargoDelPerfil());
   add('wa', CFG.WHATSAPP); add('tel', CFG.PHONE); add('ae', CFG.FROM_EMAIL);
   add('c', x.clientName); add('v', x.vehicle); add('p', x.plate); add('y', x.year);
   if (x.prices) { add('pa', num(x.prices.anual)); add('ps', num(x.prices.semestral)); add('pt', num(x.prices.trimestral)); }
@@ -689,6 +702,7 @@ function _buildPlanesUrl(extras) {
   if (!base) return '';
   const params = [];
   if (CFG.FROM_NAME)  params.push('n='  + encodeURIComponent(CFG.FROM_NAME));
+  if (_cargoDelPerfil()) params.push('cg=' + encodeURIComponent(_cargoDelPerfil()));
   if (CFG.LICENSE)    params.push('l='  + encodeURIComponent(CFG.LICENSE));
   if (CFG.WEBSITE)    params.push('w='  + encodeURIComponent(CFG.WEBSITE));
   if (CFG.AGENDA_URL) params.push('a='  + encodeURIComponent(CFG.AGENDA_URL));

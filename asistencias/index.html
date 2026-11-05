@@ -284,7 +284,7 @@ button{font:inherit;color:inherit}
   function urlCita(ids) {
     var q = [];
     function add(k, v) { if (v !== undefined && v !== null && String(v).trim() !== '') q.push(k + '=' + encodeURIComponent(String(v).trim())); }
-    add('n', param('n')); add('l', param('l')); add('wa', param('wa')); add('tel', param('tel')); add('ae', param('ae'));
+    add('n', param('n')); add('l', param('l')); add('cg', param('cg')); add('wa', param('wa')); add('tel', param('tel')); add('ae', param('ae'));
     add('c', CLIENTE); add('v', VEH); add('p', param('p')); add('y', param('y'));
     add('pa', COT.a || ''); add('ps', COT.s || ''); add('pt', COT.t || '');
     add('fp', fp);
@@ -315,7 +315,8 @@ button{font:inherit;color:inherit}
   var el;
   if ((el = $('#agNombre'))) el.textContent = AGENTE.nombre;
   if ((el = $('#agLic'))) el.textContent = 'SUGESE ' + AGENTE.licencia;
-  if ((el = $('#pieAgente'))) el.textContent = 'Seguros del INS · ' + AGENTE.nombre + ', agente autorizado · Licencia SUGESE ' + AGENTE.licencia;
+  // Asesor (5 nov 2026): su cargo en vez de "agente autorizado".
+  if ((el = $('#pieAgente'))) el.textContent = 'Seguros del INS · ' + AGENTE.nombre + ', ' + (param('cg') ? param('cg').slice(0, 120) : 'agente autorizado') + ' · Licencia SUGESE ' + AGENTE.licencia;
   if ((el = $('#pillWa'))) el.textContent = 'Escribirle a ' + pila;
   if ((el = $('#titulo'))) {
     el.textContent = (CLIENTE ? CLIENTE + ', armá' : 'Armá') + ' tus asistencias y mirá en cuánto queda tu ' + (MODO === 'cotizada' ? 'cotización' : 'seguro');

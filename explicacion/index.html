@@ -3051,6 +3051,9 @@ const data = {
   // k0=1: cero kilómetros (4 nov 2026). El día de la cita cambia: el único
   // requisito es la factura de la agencia, sin inspección ni fotos.
   k0: _params.get('k0') === '1',
+  // cg: cargo de un ASESOR (5 nov 2026), p. ej. "Asesor de Seguros · Oficina de X, agente".
+  // Si viene, la guia no dice "Tu agente" ni "Agente".
+  cg: (_params.get('cg') || '').slice(0, 120),
   ae: _params.get('ae') || '',
   tel: _params.get('tel') || '',
   // ia: interés asegurable que eligió el agente (12 oct 2026). La guía no lo
@@ -3164,7 +3167,7 @@ function _modoCitaSdi(d) {
 function _urlCita(d, as) {
   const q = [];
   const add = (k, v) => { if (v !== undefined && v !== null && String(v).trim() !== '') q.push(k + '=' + encodeURIComponent(String(v).trim())); };
-  add('n', d.n); add('l', d.l); add('wa', d.wa); add('tel', d.tel); add('ae', d.ae);
+  add('n', d.n); add('l', d.l); add('cg', d.cg); add('wa', d.wa); add('tel', d.tel); add('ae', d.ae);
   add('c', d.c); add('v', d.v); add('p', d.p); add('y', d.y);
   add('pa', d.pa); add('ps', d.ps); add('pt', d.pt);
   // Para el correo del agente (12 oct 2026): monto asegurado e interés asegurable.
@@ -3373,10 +3376,21 @@ function safeHttpUrl(u) {
 }
 
 // ============ APLICAR PERSONALIZACIÓN AL DOM ============
+/** "Asesor de Seguros · Oficina de X, agente" → ['Asesor de Seguros', 'Oficina de X, agente']; '' → ['','']. */
+function _partesCg(cg) {
+  const c = String(cg || '').trim(), i = c.indexOf(' · ');
+  return i > 0 ? [c.slice(0, i), c.slice(i + 3)] : [c, ''];
+}
+
 function applyPersonalization() {
   // Agente: header info
   const agentInfo = document.querySelector('.agent-info');
-  if (agentInfo) agentInfo.innerHTML = `Agente: <b>${esc(data.n)}</b><br/>Lic. SUGESE ${esc(data.l)}`;
+  const cgP = _partesCg(data.cg);
+  if (agentInfo) agentInfo.innerHTML = cgP[0]
+    ? `${esc(cgP[0])}: <b>${esc(data.n)}</b><br/>${cgP[1] ? esc(cgP[1]) + ' · ' : ''}Lic. SUGESE ${esc(data.l)}`
+    : `Agente: <b>${esc(data.n)}</b><br/>Lic. SUGESE ${esc(data.l)}`;
+  const chipRole = document.querySelector('.agent-chip-role');
+  if (chipRole && cgP[0]) chipRole.textContent = cgP[0] + ' · Te acompaña paso a paso';
   // Avatar JC del header → iniciales
   document.querySelectorAll('.avatar, .celeb-avatar').forEach(el => el.textContent = initials(data.n));
   // Chip del agente
@@ -3412,7 +3426,9 @@ function applyPersonalization() {
   }
   const closingSig = document.querySelector('.closing .signature');
   if (closingSig) {
-    closingSig.innerHTML = `— ${esc(data.n)}<span class="lic">Tu agente · Lic. SUGESE ${esc(data.l)}</span>`;
+    closingSig.innerHTML = cgP[0]
+      ? `— ${esc(data.n)}<span class="lic">${esc(cgP[0])}<br/>${cgP[1] ? esc(cgP[1]) + ' · ' : ''}Lic. SUGESE ${esc(data.l)}</span>`
+      : `— ${esc(data.n)}<span class="lic">Tu agente · Lic. SUGESE ${esc(data.l)}</span>`;
   }
   // Celebración — título y pasos
   const celebTitle = document.querySelector('.celeb-title');
@@ -3434,7 +3450,7 @@ function applyPersonalization() {
   const celebStepConfirm = document.getElementById('celebStepConfirm');
   if (celebStepConfirm) celebStepConfirm.textContent = `Llená el formulario de ${String(data.n).split(' ')[0]}`;
   const celebSigName = document.getElementById('celebSigName');
-  if (celebSigName) celebSigName.textContent = `Tu agente ${data.n} te acompaña`;
+  if (celebSigName) celebSigName.textContent = cgP[0] ? `${data.n}, ${cgP[0].toLowerCase()}, te acompaña` : `Tu agente ${data.n} te acompaña`;
 
   // Sección 1 — montos D, F, H usan valor asegurado
   if (data.va) {
@@ -3625,7 +3641,7 @@ const ASI_TONO = { verde: 't-verde', pizarra: 't-viol', cyan: 't-cyan', azul: 't
 function urlPlanesDesdeGuia() {
   const q = [];
   const add = (k, v) => { if (v !== undefined && v !== null && String(v).trim() !== '') q.push(k + '=' + encodeURIComponent(String(v).trim())); };
-  add('n', data.n); add('l', data.l); add('w', data.w); add('a', data.a); add('wa', data.wa);
+  add('n', data.n); add('l', data.l); add('cg', data.cg); add('w', data.w); add('a', data.a); add('wa', data.wa);
   add('c', data.c); add('v', data.v); add('p', data.p); add('y', data.y);
   // Las tres formas de pago (28 set 2026): el configurador las muestra todas.
   add('pa', data.pa); add('ps', data.ps); add('pt', data.pt);

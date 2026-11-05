@@ -451,7 +451,7 @@ function buildRenovacionEmail(params) {
     '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid ' + LINEA + ';"><tr><td style="padding-top:18px;">' +
       '<p style="margin:0;font-size:13px;color:#475569;line-height:1.5;">Gracias por renovar su confianza. Quedo a su disposici&oacute;n para cualquier consulta. Atentamente,</p>' +
       '<p style="margin:12px 0 0;font-family:' + fontFam + ';font-weight:700;color:' + NAVY + ';font-size:15px;">' + e(agente) + '</p>' +
-      '<p style="margin:3px 0 0;font-size:11.5px;color:' + GRIS + ';line-height:1.6;">Agente de Seguros Exclusivo &middot; Instituto Nacional de Seguros<br>' +
+      '<p style="margin:3px 0 0;font-size:11.5px;color:' + GRIS + ';line-height:1.6;">' + (_cargoAsesor(correoAg) ? _partesCargo(_cargoAsesor(correoAg)).map(e).join('<br>') : 'Agente de Seguros Exclusivo &middot; Instituto Nacional de Seguros') + '<br>' +
         'Licencia SUGESE ' + e(lic) + ' &middot; Tel: ' + e(tel) + '<br>' +
         '<a href="mailto:' + e(correoAg) + '" style="color:' + AZUL + ';text-decoration:none;">' + e(correoAg) + '</a>' + (web ? (' &middot; ' + e(web)) : '') +
       '</p>' +

@@ -142,6 +142,9 @@ export function validarCita(body, ctx) {
   d.ia = Object.prototype.hasOwnProperty.call(INTERESES, ia) ? ia : "";
   // Cero kilometros (4 nov 2026): cambia los pasos del correo al cliente. Solo `true` literal.
   d.k0 = body.k0 === true || d.ia === "cero-km";
+  // Cargo de un asesor (5 nov 2026): firma de la confirmacion. Si llega raro, se ignora.
+  const cg = String(body.cg == null ? "" : body.cg).trim();
+  d.cg = cg.length <= 120 && !/[\r\n\u0000<>]/.test(cg) ? cg : "";
 
   return { ok: true, datos: d };
 }

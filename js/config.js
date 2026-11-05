@@ -38,6 +38,10 @@ const CFG = {
   PHONE:       '8822-1348',
   WHATSAPP:    '8822-1348',  // WhatsApp del agente, sin código país (se normaliza al usar)
   LICENSE:     '08-1318',
+  // Asesores que venden con la licencia de otro agente (JC, 5 nov 2026): su firma no dice
+  // "Tu agente" ni "Agente exclusivo", sino este cargo; lo que va despues de " · " baja a
+  // una segunda linea con la licencia. Clave: el correo del perfil del ⚙, en minusculas.
+  ASESORES: { 'tramites@segurosdelins.com': 'Asesor de Seguros · Oficina de Fernando Hernández, agente' },
 
   // Envío de pólizas activas (sub-página polizas-activas/) — personalizables por agente desde ⚙
   // ASSIST_URL: Centro de Asistencia Digital (app de asistencia autos). El correo le añade

@@ -15,7 +15,7 @@ export const MAX_QS = 2000;
 // Lista blanca de parametros del explicador (ver _buildGuideUrl en
 // js/email-template.js). Cualquier clave fuera de aca hace que el enlace
 // se rechace: sin esto el endpoint seria un almacen abierto para cualquiera.
-export const CLAVES = new Set([
+export const CLAVES = new Set(["cg", 
   "n", "l", "w", "a",                       // agente
   "c", "v", "p", "y", "vt", "og", "ag",     // cliente y vehiculo
   "va", "sr", "dd", "pa", "ps", "pt",       // valor, repuestos, precios

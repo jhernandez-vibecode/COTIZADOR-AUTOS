@@ -45,6 +45,18 @@ const sello = (t) => '<span style="display:inline-block;background:#E9F5F0;color
 const FILETE = '<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td width="60%" height="4" bgcolor="#0369A1"></td><td width="25%" bgcolor="#0D9488"></td><td width="10%" bgcolor="#EA580C"></td><td width="5%" bgcolor="#C9A227"></td></tr></table>';
 const marco = (adentro) => '<!DOCTYPE html><html lang="es"><body style="margin:0;background:#f1f5f9;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:20px 10px;"><table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;">' + adentro + "</table></td></tr></table></body></html>";
 
+/**
+ * Linea bajo el nombre del agente. Asesor (5 nov 2026): "Asesor de Seguros" y abajo
+ * "Oficina de X, agente · Licencia SUGESE ...". Si no, "Agente exclusivo del INS · Licencia ...".
+ */
+function rolFirma(d, salto, sep, texto) {
+  const e = texto ? (s) => String(s) : esc;
+  const c = String(d.cg || ""), i = c.indexOf(" · ");
+  const lic = "Licencia SUGESE " + e(d.l);
+  if (!c) return "Agente exclusivo del INS" + sep + lic;
+  return i > 0 ? e(c.slice(0, i)) + salto + e(c.slice(i + 3)) + sep + lic : e(c) + sep + lic;
+}
+
 export function correoCliente(d) {
   const pila = nombrePila(d);
   const asi = nombresAsi(d.as);
@@ -71,7 +83,7 @@ export function correoCliente(d) {
     (km0 ? p("<b>1. Pedí la factura a la agencia.</b> Una factura proforma con los datos finales del vehículo o una copia de la factura de compra. Es el único requisito: no hace falta inspección ni fotos.<br><b>2. Enviámela.</b> Respondé este correo con la factura adjunta o mandámela por WhatsApp.<br><b>3. Aceptación.</b> Con la factura, te envío la póliza y la aceptás desde el celular con un token de seguridad, sin papeles.<br><b>4. Pago y listo.</b> Realizás el pago y tu vehículo queda asegurado al instante.") :
     p("<b>1. Preparate.</b> A la hora agendada, tené tu vehículo a mano, limpio y en un lugar iluminado.<br><b>2. Subí tus fotos.</b> Te envío un código QR a tu correo; lo escaneás con el celular y cargás las fotos ahí mismo.<br><b>3. Aceptación.</b> Una vez revisado, te envío la póliza y la aceptás desde el celular con un token de seguridad, sin papeles.<br><b>4. Pago y listo.</b> Realizás el pago y tu vehículo queda asegurado al instante.")) +
     '<p style="margin:0 0 14px;font-family:' + F + ';font-size:13px;color:#5A6570;">Podés pagar con tarjeta (enlace de pago), transferencia a cuentas del INS, SINPE Móvil o en insenlinea.grupoins.com.</p>' +
-    p("Cualquier duda, respondé este correo" + contacto + ".<br><b>" + esc(d.n) + '</b><br><span style="font-size:12.5px;color:#5A6570;">Agente exclusivo del INS &middot; Licencia SUGESE ' + esc(d.l) + "</span>") +
+    p("Cualquier duda, respondé este correo" + contacto + ".<br><b>" + esc(d.n) + '</b><br><span style="font-size:12.5px;color:#5A6570;">' + rolFirma(d, "<br>", " &middot; ") + "</span>") +
     "</td></tr>" +
     '<tr><td bgcolor="#0C2340" align="center" style="padding:18px;font-family:' + F + ';font-size:11.5px;color:#94a3b8;"><img src="' + LOGO_SDI + '" alt="SDI Seguros Digitales INS" height="34" style="height:34px;width:auto;border:0;display:block;margin:0 auto 8px;">Plataforma tecnológica SDI Seguros Digitales INS</td></tr>'
   );
@@ -82,7 +94,7 @@ export function correoCliente(d) {
     "Fecha solicitada: " + fechaLarga(d.fecha), "Horario: " + d.franja, "Forma de pago: " + d.formaPago,
     asi.length ? "Asistencias opcionales: " + asi.join(", ") : null, "",
     "Estamos revisando tu solicitud. En breve te confirmo el espacio. Si ese horario no está disponible, nos ponemos en contacto con vos para reprogramar al espacio más cercano.", "",
-    d.n, "Agente exclusivo del INS - Licencia SUGESE " + d.l,
+    d.n, rolFirma(d, "\n", " - ", true),
   ].filter((x) => x !== null).join("\n");
   return { asunto: "Recibimos tu solicitud de cita · " + (esCeroKm(d.placa) ? "0 KM" : d.placa), html, texto };
 }
