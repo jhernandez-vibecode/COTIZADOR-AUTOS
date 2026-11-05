@@ -10,6 +10,7 @@
 
 import planesMod from "../../../js/planes-asistencia.js";
 import { INTERESES } from "./cita-validacion.mjs";
+import { textoSeguro } from "./cita-agente.mjs";
 const PLANES = planesMod.PLANES_ASI || [];
 
 const LOGO_INS = "https://cotizador.appsegurosdigitales.com/img/ins-logo.png";
@@ -32,7 +33,9 @@ const utc = (f) => { const [y, m, d] = f.split("-").map(Number); return new Date
 export const fechaLarga = (f) => { const t = utc(f); return DIAS[t.getUTCDay()] + " " + t.getUTCDate() + " de " + MESES[t.getUTCMonth()] + " de " + t.getUTCFullYear(); };
 export const fechaCorta = (f) => { const t = utc(f); return DIAS[t.getUTCDay()].slice(0, 3).normalize("NFD").replace(/[\u0300-\u036f]/g, "") + " " + t.getUTCDate() + " " + MESES_CORTOS[t.getUTCMonth()]; };
 const fechaCR = (f) => f.split("-").reverse().join("/");
-export const nombrePila = (d) => (String(d.c || "").trim() || String(d.nombre || "").trim()).split(/\s+/)[0] || "";
+// Pila y placa vienen del navegador: en el correo al CLIENTE van acotadas, sin puntos ni barras (5 nov 2026).
+export const nombrePila = (d) => textoSeguro((String(d.c || "").trim() || String(d.nombre || "").trim()).split(/\s+/)[0] || "", 30);
+const placaCliente = (d) => textoSeguro(d.placa, 15);
 const colones = (v) => { const n = Number(String(v || "").replace(/\D/g, "")); return n > 0 ? "₡" + n.toLocaleString("de-DE") : ""; };
 const nombresAsi = (ids) => (ids || []).map((id) => (PLANES.find((p) => p.id === id) || {}).nom).filter(Boolean);
 const waIntl = (v) => { const n = String(v || "").replace(/\D/g, ""); return n.length === 8 ? "506" + n : n; };
@@ -63,7 +66,7 @@ export function correoCliente(d) {
   // Cero kilometros (JC, 4 nov 2026): sin inspeccion ni fotos; el unico requisito es la factura.
   const km0 = !!d.k0 || esCeroKm(d.placa);
   const solicitudDe = km0 ? "aseguramiento" : "aseguramiento e inspección virtual";
-  const placaTxt = km0 ? "tu vehículo cero kilómetros" : "el vehículo con placa <b>" + esc(d.placa) + "</b>";
+  const placaTxt = km0 ? "tu vehículo cero kilómetros" : "el vehículo con placa <b>" + esc(placaCliente(d)) + "</b>";
   const contacto = d.tel ? " o escribime al " + esc(d.tel) : "";
   const html = marco(
     '<tr><td bgcolor="#0C2340" align="center" style="padding:22px 24px;"><img src="' + LOGO_INS + '" alt="INS" height="26" style="height:26px;width:auto;border:0;">' +
@@ -89,14 +92,14 @@ export function correoCliente(d) {
   );
   const texto = [
     "Hola " + pila + ",", "",
-    "Recibimos tu solicitud de " + solicitudDe + (km0 ? " para tu vehículo cero kilómetros." : " para el vehículo con placa " + d.placa + "."),
+    "Recibimos tu solicitud de " + solicitudDe + (km0 ? " para tu vehículo cero kilómetros." : " para el vehículo con placa " + placaCliente(d) + "."),
     km0 ? "Como tu vehículo es cero kilómetros, el único requisito es una factura proforma con los datos finales del vehículo o una copia de la factura de compra. Pedísela a la agencia y enviámela respondiendo este correo o por WhatsApp." : null,
     "Fecha solicitada: " + fechaLarga(d.fecha), "Horario: " + d.franja, "Forma de pago: " + d.formaPago,
     asi.length ? "Asistencias opcionales: " + asi.join(", ") : null, "",
     "Estamos revisando tu solicitud. En breve te confirmo el espacio. Si ese horario no está disponible, nos ponemos en contacto con vos para reprogramar al espacio más cercano.", "",
     d.n, rolFirma(d, "\n", " - ", true),
   ].filter((x) => x !== null).join("\n");
-  return { asunto: "Recibimos tu solicitud de cita · " + (esCeroKm(d.placa) ? "0 KM" : d.placa), html, texto };
+  return { asunto: "Recibimos tu solicitud de cita · " + (esCeroKm(d.placa) ? "0 KM" : placaCliente(d)), html, texto };
 }
 
 // Cuota de la forma de pago elegida con las asistencias sumadas (28 set 2026): la de la

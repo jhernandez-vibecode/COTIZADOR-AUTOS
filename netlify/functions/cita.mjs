@@ -18,6 +18,7 @@ import { getStore } from "@netlify/blobs";
 import { validarCita, agentesAutorizados } from "./lib/cita-validacion.mjs";
 import { correoCliente, correoAgente } from "./lib/cita-correos.mjs";
 import { huella, cubeta, permitir, esDuplicado } from "./lib/cita-limite.mjs";
+import { firmaDelAgente, conFirma } from "./lib/cita-agente.mjs";
 
 export const config = { path: "/cita/enviar" };
 
@@ -83,7 +84,16 @@ export default async function handler(req, context) {
     console.warn("[cita] rechazada", v.estado || 400, v.campo, agenteRechazado);
     return json(v.estado || 400, { error: v.error, campo: v.campo });
   }
-  const d = v.datos;
+  // La firma (nombre, licencia, telefono, cargo) sale de la ficha del agente en el
+  // servidor, NUNCA del navegador (5 nov 2026: se podia suplantar al remitente).
+  let firma = null;
+  try { firma = await firmaDelAgente(getStore({ name: "cotizar", consistency: "strong" }), v.datos.ae); }
+  catch (e) { console.error("[cita] fichas no disponibles", e && e.message); }
+  if (!firma) {
+    console.warn("[cita] agente sin ficha", v.datos.ae);
+    return json(503, { error: "El formulario no está disponible." });
+  }
+  const d = conFirma(v.datos, firma);
 
   if (store) {
     try {

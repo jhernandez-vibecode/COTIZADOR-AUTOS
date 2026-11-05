@@ -12,6 +12,7 @@
 // =====================================================================
 import { TIPOS, vehiculoCorto } from "./cotizar-validacion.mjs";
 import { CARGO_DEFECTO } from "./cotizar-reparto.mjs";
+import { textoSeguro } from "./cita-agente.mjs";
 
 const LOGO_INS = "https://cotizador.appsegurosdigitales.com/img/ins-logo.png";
 const LOGO_SDI = "https://cotizador.appsegurosdigitales.com/img/sdi-logo-email-ins.png";
@@ -52,6 +53,12 @@ export function lineaCargo(agente) {
   return i > 0 ? cargo.slice(0, i) + "\n" + cargo.slice(i + 3) + lic : cargo + lic;
 }
 
+// Al CLIENTE solo le vuelve acotado lo que escribio quien lleno el formulario (5 nov 2026):
+// sin barras ni dos puntos, y el punto solo entre digitos ("2.5"): no cabe un enlace.
+const marcaCliente = (s) => String(s == null ? "" : s).replace(/[^\p{L}\p{N} .\-]/gu, "").replace(/\.(?!\d)|(?<!\d)\./g, "").replace(/\s+/g, " ").trim().slice(0, 80);
+/** Lo del cliente con el texto libre acotado. */
+const paraCliente = (d) => ({ ...d, placa: textoSeguro(d.placa, 12), marcaModelo: marcaCliente(d.marcaModelo) });
+
 /** Filas del vehiculo, comunes a los dos correos. */
 function filasVehiculo(d, conTodo) {
   const r = [["Vehículo", d.tipo === "usado" ? "Usado · placa " + d.placa : "Nuevo cero kilómetros · " + d.marcaModelo],
@@ -67,8 +74,9 @@ function filasVehiculo(d, conTodo) {
  * @param {object} d  datos validados
  * @param {object} agente  {email, nombre, licencia, whatsapp, telefono, cargo}
  */
-export function correoCliente(d, agente) {
-  const nom = pila(d.nombre);
+export function correoCliente(datos, agente) {
+  const d = paraCliente(datos);
+  const nom = textoSeguro(pila(d.nombre), 30);
   const wa = agente.whatsapp ? linkWa(agente.whatsapp, "Hola " + dosNombres(agente.nombre) + ", soy " + nom + ". Te escribo por la cotización de mi vehículo.") : "";
   const veh = filasVehiculo(d, false);
   const html = marco(

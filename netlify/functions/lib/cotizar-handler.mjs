@@ -30,6 +30,7 @@ import { correoCliente, correoAgente, filaRegistro, lineaCargo } from "./cotizar
 import { repartoInicial, normalizarReparto, elegir, proximos, normCorreo } from "./cotizar-reparto.mjs";
 import { correoDeSesion } from "./google-sesion.mjs";
 import { huella, cubeta, permitir, esDuplicado } from "./cita-limite.mjs";
+import { agentesAutorizados } from "./cita-validacion.mjs";
 
 const ORIGENES = new Set([
   "https://cotizador.appsegurosdigitales.com",
@@ -85,7 +86,8 @@ export function crearHandler(deps = {}) {
       if (!(await permitir(store, "lim:c:" + huella(ip) + ":" + cubeta(ahora()), MAX_CONSULTAS))) return json(429, { error: "Demasiadas consultas." });
       const email = normCorreo(body.email);
       const reparto = await leerReparto(store, admin);
-      return json(200, { enReparto: reparto.agentes.some((a) => a.email === email), admin: !!email && email === admin });
+      // cita: tiene el formulario de cita activo. Su ficha firma tambien esas confirmaciones (lib/cita-agente.mjs).
+      return json(200, { enReparto: reparto.agentes.some((a) => a.email === email), admin: !!email && email === admin, cita: !!email && agentesAutorizados(env.CITA_AGENTES).has(email) });
     }
     if (!["ficha", "ver", "guardar"].includes(accion)) return json(400, { error: "Acción desconocida." });
     if (!(await permitir(store, "lim:s:" + huella(ip) + ":" + cubeta(ahora()), MAX_CONSULTAS))) return json(429, { error: "Demasiadas consultas." });
@@ -94,7 +96,7 @@ export function crearHandler(deps = {}) {
 
     if (accion === "ficha") {
       const reparto = await leerReparto(store, admin);
-      if (email !== admin && !reparto.agentes.some((a) => a.email === email)) return json(403, { error: "Tu correo no está en el reparto de cotizaciones." });
+      if (email !== admin && !reparto.agentes.some((a) => a.email === email) && !agentesAutorizados(env.CITA_AGENTES).has(email)) return json(403, { error: "Tu correo no está en el reparto de cotizaciones." });
       const v = validarFicha(body.ficha);
       if (!v.ok) return json(400, { error: v.error });
       await store.setJSON("ficha:" + email, { ...v.ficha, actualizado: ahora().toISOString() });

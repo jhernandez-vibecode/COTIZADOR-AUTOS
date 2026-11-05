@@ -61,13 +61,14 @@ function _cotzConSesion(cuerpo) {
 function cotzTrasGuardarPerfil(profile) {
   if (!profile || !profile.email) return;
   _cotzPost({ accion: 'consulta', email: profile.email }).then(function (x) {
-    if (!(x.st === 200 && (x.j.enReparto || x.j.admin))) return;
+    // Tambien los que tienen el formulario de cita: esa confirmacion la firma esta misma ficha.
+    if (!(x.st === 200 && (x.j.enReparto || x.j.admin || x.j.cita))) return;
     return _cotzConSesion({ accion: 'ficha', ficha: { nombre: profile.name, licencia: profile.license, whatsapp: profile.whatsapp, telefono: profile.phone } })
       .then(function (r) {
         if (r.st === 200 && r.j.email !== String(profile.email).trim().toLowerCase()) {
           showToast('Tu ficha del formulario de cotización se guardó con la cuenta de Google ' + r.j.email + ', no con ' + profile.email + '.', 'error');
         } else if (r.st === 200) {
-          showToast('Tus datos del formulario de cotización quedaron al día.', 'success');
+          showToast('Tus datos de los formularios de cotización y de cita quedaron al día.', 'success');
           if (_cotz.vista) cotzAbrirReparto();
         } else {
           showToast('Formulario de cotización: ' + (r.j.error || 'no se pudo guardar tu ficha.'), 'error');
