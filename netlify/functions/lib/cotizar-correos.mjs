@@ -57,7 +57,7 @@ export function correoCliente(datos, agente, ahora = new Date()) {
   const h = siguienteHabil(ahora);
   const veh = d.tipo === "usado" ? "tu vehículo placa " : "tu vehículo nuevo ";
   const vehDato = d.tipo === "usado" ? d.placa : d.marcaModelo;
-  const cuandoTxt = h.enHorario ? "hoy mismo" : h.cuando;
+  const cuandoTxt = h.enHorario ? "" : h.cuando;   // en horario sin fecha (JC: "quita el hoy mismo")
   const html = marco(
     ENCABEZADO +
     '<tr><td style="padding:22px 24px;">' +
@@ -66,7 +66,7 @@ export function correoCliente(datos, agente, ahora = new Date()) {
     (h.enHorario ? "" : avisoHorario()) +
     '<div style="font-family:' + F + ';font-size:11px;letter-spacing:.06em;color:#6B7681;font-weight:bold;text-transform:uppercase;margin-bottom:4px;">Qué sigue</div>' +
     '<ol style="margin:0 0 14px;padding-left:20px;font-family:' + F + ';font-size:14px;line-height:1.55;color:#1B1F23;">' +
-    "<li>Te envío la cotización a este correo <b>" + esc(cuandoTxt) + "</b>.</li>" +
+    "<li>Te envío la cotización a este correo" + (cuandoTxt ? " <b>" + esc(cuandoTxt) + "</b>" : "") + ".</li>" +
     "<li>Si estás de acuerdo, agendás la cita para asegurarlo con el enlace que viene en la cotización.</li></ol>" +
     p(wa ? "Si tenés alguna duda, respondé este correo o escribime por WhatsApp." : "Si tenés alguna duda, respondé este correo.") +
     (wa ? '<p style="margin:0 0 14px;">' + boton(wa, "Escribirme por WhatsApp", "#037D61") + "</p>" : "") +
@@ -78,7 +78,7 @@ export function correoCliente(datos, agente, ahora = new Date()) {
     "¡Hola, " + nom + "! Recibimos tu solicitud.", "",
     "Este correo solo confirma que recibimos tu solicitud para " + veh + vehDato + ". Todavía no es la cotización: la estoy preparando.",
     ...(h.enHorario ? [] : ["Nos escribiste fuera de horario. Atendemos de " + HORARIO.texto + "."]), "",
-    "Qué sigue:", "1. Te envío la cotización a este correo " + cuandoTxt + ".", "2. Si estás de acuerdo, agendás la cita para asegurarlo con el enlace que viene en la cotización.", "",
+    "Qué sigue:", "1. Te envío la cotización a este correo" + (cuandoTxt ? " " + cuandoTxt : "") + ".", "2. Si estás de acuerdo, agendás la cita para asegurarlo con el enlace que viene en la cotización.", "",
     "Si tenés alguna duda, respondé este correo" + (agente.whatsapp ? " o escribime por WhatsApp al " + agente.whatsapp : "") + ".", "",
     agente.nombre, ...rolFirma(agente), "",
     "Gestionado por SDI", "Seguros Digitales INS",
