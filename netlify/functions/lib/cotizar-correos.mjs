@@ -36,14 +36,16 @@ export const lineaCargo = (ag) => rolFirma(ag).join("\n");
 const paraCliente = (d) => ({ ...d, placa: textoCliente(d.placa, 12), marcaModelo: textoCliente(d.marcaModelo, 80, { decimales: true }) });
 
 /** Recuadro del aviso fuera de horario (borde completo, sin border-left). */
-const avisoHorario = (cuando) => '<div style="background:#EAF3FB;border:1px solid #BFD9EE;border-radius:10px;padding:12px 14px;margin:0 0 14px;font-family:' + F + ';font-size:14px;line-height:1.5;color:#0C2340;">' +
-  "<b>Nos escribiste fuera de horario.</b><br>Atendemos de " + HORARIO.texto + ". Te enviamos la cotización <b>" + esc(cuando) + "</b>.</div>";
+const avisoHorario = () => '<div style="background:#EAF3FB;border:1px solid #BFD9EE;border-radius:10px;padding:12px 14px;margin:0 0 14px;font-family:' + F + ';font-size:14px;line-height:1.5;color:#0C2340;">' +
+  "<b>Nos escribiste fuera de horario.</b><br>Atendemos de " + HORARIO.texto + ".</div>";
 
 /**
  * Confirmacion al cliente, firmada por el agente que le toco. Version basica (opcion 2 del
  * mockup que eligio JC el 5 nov 2026: docs/superpowers/specs/2026-11-05-confirmacion-cliente-basica-mockup.html):
  * saludo, una linea con el vehiculo, cuando le llega la cotizacion, WhatsApp y firma.
- * Fuera de horario (lib/horario.mjs) agrega el recuadro con el siguiente dia habil.
+ * Fuera de horario (lib/horario.mjs) agrega el recuadro del horario y el paso 1 dice el siguiente dia habil.
+ * JC, 5 nov 2026 (noche): que quede claro que este correo NO es la cotizacion, y vuelve el
+ * "Que sigue": 1) la cotizacion llega a este correo, 2) la cita se agenda con el enlace de la cotizacion.
  * @param {object} d  datos validados
  * @param {object} agente  la firma del agente (lib/agentes.mjs: firmaDe)
  * @param {Date} [ahora]  cuando entro la solicitud
@@ -55,12 +57,18 @@ export function correoCliente(datos, agente, ahora = new Date()) {
   const h = siguienteHabil(ahora);
   const veh = d.tipo === "usado" ? "tu vehículo placa " : "tu vehículo nuevo ";
   const vehDato = d.tipo === "usado" ? d.placa : d.marcaModelo;
+  const cuandoTxt = h.enHorario ? "hoy mismo" : h.cuando;
   const html = marco(
     ENCABEZADO +
     '<tr><td style="padding:22px 24px;">' +
     '<div style="font-family:' + F + ';font-size:21px;font-weight:bold;color:#1B1F23;margin:0 0 12px;">¡Hola, ' + esc(nom) + "! Recibimos tu solicitud</div>" +
-    p("Estoy preparando la cotización del seguro para " + veh + "<b>" + esc(vehDato) + "</b>.") +
-    (h.enHorario ? p("Te la envío a este correo hoy mismo.") : avisoHorario(h.cuando)) +
+    p("Este correo solo confirma que recibimos tu solicitud para " + veh + "<b>" + esc(vehDato) + "</b>. <b>Todavía no es la cotización:</b> la estoy preparando.") +
+    (h.enHorario ? "" : avisoHorario()) +
+    '<div style="font-family:' + F + ';font-size:11px;letter-spacing:.06em;color:#6B7681;font-weight:bold;text-transform:uppercase;margin-bottom:4px;">Qué sigue</div>' +
+    '<ol style="margin:0 0 14px;padding-left:20px;font-family:' + F + ';font-size:14px;line-height:1.55;color:#1B1F23;">' +
+    "<li>Te envío la cotización a este correo <b>" + esc(cuandoTxt) + "</b>.</li>" +
+    "<li>Si estás de acuerdo, agendás la cita para asegurarlo con el enlace que viene en la cotización.</li></ol>" +
+    p(wa ? "Si tenés alguna duda, respondé este correo o escribime por WhatsApp." : "Si tenés alguna duda, respondé este correo.") +
     (wa ? '<p style="margin:0 0 14px;">' + boton(wa, "Escribirme por WhatsApp", "#037D61") + "</p>" : "") +
     '<div style="border-top:1px solid #EDEFF2;padding-top:12px;font-family:' + F + ';font-size:13px;line-height:1.55;color:#1B1F23;"><b style="font-size:14px;">' + esc(agente.nombre) + "</b><br>" +
     rolFirma(agente).map(esc).join("<br>") + "<br>" + [agente.whatsapp ? "WhatsApp " + esc(agente.whatsapp) : "", esc(agente.email)].filter(Boolean).join(" &middot; ") + "</div>" +
@@ -68,8 +76,9 @@ export function correoCliente(datos, agente, ahora = new Date()) {
   );
   const texto = [
     "¡Hola, " + nom + "! Recibimos tu solicitud.", "",
-    "Estoy preparando la cotización del seguro para " + veh + vehDato + ".",
-    h.enHorario ? "Te la envío a este correo hoy mismo." : "Nos escribiste fuera de horario. Atendemos de " + HORARIO.texto + ". Te enviamos la cotización " + h.cuando + ".", "",
+    "Este correo solo confirma que recibimos tu solicitud para " + veh + vehDato + ". Todavía no es la cotización: la estoy preparando.",
+    ...(h.enHorario ? [] : ["Nos escribiste fuera de horario. Atendemos de " + HORARIO.texto + "."]), "",
+    "Qué sigue:", "1. Te envío la cotización a este correo " + cuandoTxt + ".", "2. Si estás de acuerdo, agendás la cita para asegurarlo con el enlace que viene en la cotización.", "",
     "Si tenés alguna duda, respondé este correo" + (agente.whatsapp ? " o escribime por WhatsApp al " + agente.whatsapp : "") + ".", "",
     agente.nombre, ...rolFirma(agente), "",
     "Gestionado por SDI", "Seguros Digitales INS",

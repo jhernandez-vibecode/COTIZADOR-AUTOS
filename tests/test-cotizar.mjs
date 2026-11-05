@@ -79,10 +79,11 @@ ok('cliente: WhatsApp por web.whatsapp.com, nunca wa.me', cc.html.includes('http
 ok('cliente: sin WhatsApp no hay boton', !correoCliente(vu.datos, { ...AG, whatsapp: '' }).html.includes('web.whatsapp.com'));
 ok('cliente: cargo por defecto', correoCliente(vu.datos, { ...AG, cargo: '', oficina: '' }).html.includes('Agente exclusivo del INS · Licencia SUGESE 00-0002'));
 ok('cliente: asunto con la placa / 0 KM', cc.asunto === 'Recibimos tu solicitud de cotización · BDF482' && correoCliente(vn.datos, AG).asunto === 'Recibimos tu solicitud de cotización · 0 KM');
-ok('cliente basico (JC, 5 nov): sin la tabla de lo que envio ni el Que sigue', !cc.html.includes('Lo que nos enviaste') && !cc.html.includes('Qué sigue') && cc.html.includes('tu vehículo placa <b>BDF482</b>'));
+ok('cliente basico (JC, 5 nov): sin la tabla de lo que envio', !cc.html.includes('Lo que nos enviaste') && cc.html.includes('tu vehículo placa <b>BDF482</b>'));
+ok('cliente: dice que NO es la cotizacion y trae el Que sigue con la cita', cc.html.includes('<b>Todavía no es la cotización:</b>') && cc.html.includes('Qué sigue') && cc.html.includes('agendás la cita para asegurarlo con el enlace que viene en la cotización') && cc.texto.includes('Todavía no es la cotización'));
 const EN = new Date('2026-11-10T16:15:00Z'), FUERA = new Date('2026-11-07T01:40:00Z');
-ok('cliente en horario (martes 10:15 am): hoy mismo, sin recuadro', (() => { const c = correoCliente(vu.datos, AG, EN); return c.html.includes('Te la envío a este correo hoy mismo.') && !c.html.includes('fuera de horario'); })());
-ok('cliente fuera de horario (viernes 7:40 pm): el lunes 9 de noviembre', (() => { const c = correoCliente(vu.datos, AG, FUERA); return c.html.includes('Nos escribiste fuera de horario.') && c.html.includes('<b>el lunes 9 de noviembre</b>') && c.texto.includes('el lunes 9 de noviembre') && !c.html.includes('hoy mismo'); })());
+ok('cliente en horario (martes 10:15 am): hoy mismo, sin recuadro', (() => { const c = correoCliente(vu.datos, AG, EN); return c.html.includes('Te envío la cotización a este correo <b>hoy mismo</b>.') && !c.html.includes('fuera de horario'); })());
+ok('cliente fuera de horario (viernes 7:40 pm): el lunes 9 de noviembre', (() => { const c = correoCliente(vu.datos, AG, FUERA); return c.html.includes('Nos escribiste fuera de horario.') && c.html.includes('Te envío la cotización a este correo <b>el lunes 9 de noviembre</b>.') && c.texto.includes('1. Te envío la cotización a este correo el lunes 9 de noviembre.') && !c.html.includes('hoy mismo'); })());
 ok('cliente 0 KM: vehiculo nuevo con marca y modelo', correoCliente(vn.datos, AG, EN).html.includes('tu vehículo nuevo <b>Toyota RAV4 2027</b>'));
 ok('cliente: escapa lo que escribe el cliente', !correoCliente({ ...vu.datos, placa: '<script>' }, AG).html.includes('<script>'));
 const ca = correoAgente(vu.datos, { agente: AG, n: 4, de: 5, repartido: true, fecha: '5 nov 2026, 8:14 am', registrada: true });
