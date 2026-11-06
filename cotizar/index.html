@@ -87,10 +87,12 @@ a{color:var(--blue)}
 .listo .ok{width:56px;height:56px;border-radius:50%;background:var(--ok-bg);color:var(--ok-tx);display:flex;align-items:center;justify-content:center;font-size:28px}
 .listo h2{font-size:24px}
 .listo p{color:var(--ink2);max-width:52ch}
-.listo .ag{border:1px solid var(--line);border-radius:18px;padding:12px 16px;display:flex;gap:12px;align-items:center;text-align:left;width:100%;max-width:460px}
-.listo .ag .av{width:42px;height:42px;border-radius:50%;background:var(--blue-soft);color:var(--blue-ink);font-weight:600;display:flex;align-items:center;justify-content:center;flex:0 0 42px}
-.listo .ag b{display:block}
-.listo .ag small{color:var(--ink3);font-size:12px;white-space:pre-line;display:block}
+.listo .msg{font-size:15.5px;line-height:1.5;max-width:44ch}
+.listo .msg b{color:var(--ink)}
+.listo .expec{width:100%;max-width:460px;background:var(--ok-bg);border-radius:14px;padding:14px 16px;color:var(--ok-tx);font-size:16px;line-height:1.4;font-weight:600}
+.listo .fuera{width:100%;max-width:460px;background:#FCE8E6;border:1px solid #F5B7B1;border-radius:14px;padding:12px 16px;text-align:left;color:#A50E0E;font-size:14.5px;line-height:1.45}
+.listo .fuera b{display:block;font-size:15.5px;margin-bottom:2px}
+.listo .spam{font-size:12.5px;color:var(--ink3)}
 .fallo{background:var(--oro-bg);color:var(--oro-tx);border-radius:16px;padding:16px 18px;font-size:14px}
 .fallo b{display:block;font-size:15.5px;margin-bottom:2px}
 .bluebook{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:12px;align-items:center;background:var(--blue-soft);border:1px solid #B9D3E6;border-radius:16px;padding:12px 14px;margin-top:-4px}
@@ -213,15 +215,15 @@ a{color:var(--blue)}
 
     <p class="consent">Al enviar esta solicitud autorizás el uso de estos datos únicamente para cotizar tu seguro de automóviles con el INS. No se usan para publicidad ni se comparten con terceros.</p>
     <button class="btn" type="submit" id="btnEnviar">Solicitar mi cotización</button>
-    <p class="pie-f">Te llega una confirmación a tu correo con el nombre del agente que te va a atender.</p>
   </form>
 
   <div class="panel listo" id="listo" hidden>
     <div class="ok" aria-hidden="true">✓</div>
-    <h2 id="listoH">¡Listo! Recibimos tu solicitud</h2>
-    <p>Te va a atender:</p>
-    <div class="ag"><div class="av" id="agIni"></div><div><b id="agNom"></b><small id="agCargo"></small></div></div>
-    <p id="listoP"></p>
+    <h2 id="listoH">¡Listo!</h2>
+    <p class="msg" id="listoP">Recibimos tu solicitud y la vamos a procesar a la mayor brevedad posible.</p>
+    <div class="expec" id="listoExpec">Ya diste el primer paso: muy pronto vas a manejar con el respaldo del INS.</div>
+    <div class="fuera" id="listoFuera" hidden><b id="listoCuando"></b>Nos escribiste fuera de horario. Atendemos de lunes a viernes, de 8:00 am a 5:00 pm.</div>
+    <p class="spam" id="listoSpam">Si no la ves, revisá la carpeta de spam o promociones.</p>
   </div>
 
   <div class="panel" id="fallo" hidden>
@@ -351,18 +353,22 @@ a{color:var(--blue)}
   });
   $('falloReintentar').addEventListener('click', function () { mostrar('frm'); });
 
+  // 6 nov 2026 (JC, opcion B del mockup): sin correo de confirmacion ni tarjeta del agente.
+  // Todo queda en esta pantalla; fuera de horario, el recuadro rojo dice cuando le llega.
   function listo(d, j) {
     var pila = d.nombre.split(/\s+/)[0];
-    var ag = j.agente || {};
-    $('listoH').textContent = '¡Listo, ' + pila + '! Recibimos tu solicitud';
-    $('agNom').textContent = ag.nombre || 'Un agente del INS';
-    $('agCargo').textContent = ag.cargo || '';
-    $('agIni').textContent = String(ag.nombre || 'INS').split(/\s+/).slice(0, 2).map(function (w) { return w.charAt(0); }).join('').toUpperCase();
-    $('listoP').textContent = j.clienteAvisado === false
-      ? 'Te vamos a enviar la cotización a ' + d.correo + '. La confirmación no salió, pero tu solicitud sí llegó.'
-      : 'Te enviamos una confirmación a ' + d.correo + '. Si no la ves, revisá la carpeta de spam o promociones.';
-    if (j.repetida) $('listoP').textContent = 'Esta solicitud ya nos había llegado: no hace falta enviarla de nuevo.';
-    if (!j.agente) $('agNom').parentNode.parentNode.hidden = true;
+    $('listoH').textContent = '¡Listo, ' + pila + '!';
+    var p = $('listoP');
+    p.textContent = 'Recibimos tu solicitud y la vamos a procesar a la mayor brevedad posible. Te enviaremos la cotización a ';
+    var b = document.createElement('b'); b.textContent = d.correo; p.appendChild(b); p.appendChild(document.createTextNode('.'));
+    var fuera = j.enHorario === false && j.cuando;
+    $('listoFuera').hidden = !fuera;
+    if (fuera) $('listoCuando').textContent = 'Te llega ' + j.cuando;
+    $('listoExpec').hidden = $('listoSpam').hidden = false;
+    if (j.repetida) {
+      p.textContent = 'Esta solicitud ya nos había llegado: no hace falta enviarla de nuevo.';
+      $('listoExpec').hidden = $('listoSpam').hidden = $('listoFuera').hidden = true;
+    }
     mostrar('listo');
   }
 })();

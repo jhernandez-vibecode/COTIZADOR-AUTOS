@@ -13,7 +13,7 @@
 // SOLO orquesta: la logica vive en lib/cotizar-*.mjs y lib/google-sesion.mjs.
 //
 // PRIVACIDAD: las respuestas del cliente NO se guardan en Netlify ni van a
-// los logs. Viajan en los dos correos y en la fila de la hoja de registro de
+// los logs. Viajan en el aviso al agente y en la fila de la hoja de registro de
 // JC (Apps Script en su cuenta). En Blobs quedan: el reparto, el turno, las
 // fichas de los agentes (sus propios datos) y huellas/contadores del limite.
 //
@@ -22,11 +22,12 @@
 // Variables opcionales: COTIZAR_REGISTRO_URL + COTIZAR_REGISTRO_CLAVE (sin
 // ellas no se anota en la hoja, pero los correos salen igual).
 //
-// Orden: cliente → hoja → agente. El del AGENTE es el que no se puede perder:
+// Orden: hoja → agente (6 nov 2026: al cliente ya no le sale correo). El del AGENTE es el que no se puede perder:
 // si falla → 502 (el cliente ve el Google Form de respaldo).
 // =====================================================================
 import { validarCotizacion, validarFicha, vehiculoCorto } from "./cotizar-validacion.mjs";
-import { correoCliente, correoAgente, filaRegistro, lineaCargo } from "./cotizar-correos.mjs";
+import { correoAgente, filaRegistro, lineaCargo } from "./cotizar-correos.mjs";
+import { siguienteHabil } from "./horario.mjs";
 import { normalizarReparto, elegir, proximos, normCorreo } from "./cotizar-reparto.mjs";
 import { correoDeSesion } from "./google-sesion.mjs";
 import { huella, cubeta, permitir, esDuplicado } from "./cita-limite.mjs";
@@ -117,13 +118,10 @@ export function crearHandler(deps = {}) {
     const sel = elegir({ reparto, turno, admin, tieneFicha: (e) => !!fichas[e] });
     if (sel.turno) { try { await guardarTurno(store, sel.turno); } catch (e) { console.error("[cotizar] turno no guardado", e && e.message); } }
     const ag = firmaDe(sel.email, fichas[sel.email]) || firmaDe(sel.email, SIN_FICHA);
-    const info = { agente: ag, n: sel.n, de: sel.de, repartido: sel.repartido, fecha: fechaCR(now), clienteAvisado: true, registrada: false };
+    const info = { agente: ag, n: sel.n, de: sel.de, repartido: sel.repartido, fecha: fechaCR(now), registrada: false };
 
     const remite = "cotizaciones@" + direccionDe(from).split("@")[1];
-    const cl = correoCliente(d, ag, now);
-    try {
-      await enviarCorreo(fetchFn, apiKey, { from: visible(ag.nombre) + " · SDI <" + remite + ">", to: [d.correo], reply_to: ag.email, subject: cl.asunto, html: cl.html, text: cl.texto });
-    } catch (e) { info.clienteAvisado = false; console.error("[cotizar] no salio el del cliente", e && e.message); }
+    // 6 nov 2026 (JC): ya no sale correo al cliente. La pantalla final le dice cuando le llega la cotizacion.
 
     if (env.COTIZAR_REGISTRO_URL && env.COTIZAR_REGISTRO_CLAVE) {
       try {
@@ -145,7 +143,8 @@ export function crearHandler(deps = {}) {
       console.error("[cotizar] no salio el del agente", e && e.message);
       return json(502, { error: "No pudimos enviar tu solicitud." });
     }
-    return json(200, { ok: true, clienteAvisado: info.clienteAvisado, agente: { nombre: ag.nombre, cargo: lineaCargo(ag) } });
+    const h = siguienteHabil(now);
+    return json(200, { ok: true, enHorario: h.enHorario, cuando: h.cuando, agente: { nombre: ag.nombre, cargo: lineaCargo(ag) } });
   }
 
   return async function handler(req, context) {

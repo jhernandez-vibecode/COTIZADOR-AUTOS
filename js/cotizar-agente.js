@@ -4,7 +4,8 @@
  * Dos cosas, las dos contra la Function /cotizar/agente:
  *   1. FICHA: al guardar el ⚙, si el agente está en el reparto, se manda una
  *      copia de su nombre, licencia, WhatsApp y teléfono al servidor, firmada
- *      con su cuenta de Google. Con eso firma la confirmación al cliente.
+ *      con su cuenta de Google. Con eso firma el aviso de cada solicitud (al cliente ya
+ *      no le sale correo desde el 6 nov 2026: todo queda en la pantalla final).
  *   2. REPARTO (solo el administrador, JC): el panel para encenderlo o
  *      apagarlo y poner cuántas solicitudes seguidas le tocan a cada agente
  *      por vuelta (3-1-1, 5-1-1, 2-2-2…). Mockup aprobado el 5 nov 2026.

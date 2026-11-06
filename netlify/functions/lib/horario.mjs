@@ -1,7 +1,7 @@
 // =====================================================================
 // Horario de oficina y siguiente dia habil, en hora de Costa Rica (5 nov 2026)
 // ---------------------------------------------------------------------
-// Lo usa la confirmacion al cliente de /cotizar/ (lib/cotizar-correos.mjs):
+// Lo usa la pantalla final de /cotizar/ (lib/cotizar-handler.mjs, 6 nov 2026; antes el correo al cliente):
 // si la solicitud entra fuera de horario, el correo le dice que la cotizacion
 // le llega el siguiente dia habil.
 //   Horario: lunes a viernes, de 8:00 am a 5:00 pm (hora de Costa Rica, UTC-6, sin

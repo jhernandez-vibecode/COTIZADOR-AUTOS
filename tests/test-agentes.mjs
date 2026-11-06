@@ -13,7 +13,6 @@ import { textoCliente, rolFirma } from '../netlify/functions/lib/correo-base.mjs
 import { origenPermitido, ORIGENES, direccionDe } from '../netlify/functions/lib/http.mjs';
 import { validarCita } from '../netlify/functions/lib/cita-validacion.mjs';
 import { correoCliente } from '../netlify/functions/lib/cita-correos.mjs';
-import { correoCliente as correoCotizacion } from '../netlify/functions/lib/cotizar-correos.mjs';
 import { crearHandler } from '../netlify/functions/lib/cotizar-handler.mjs';
 import { CLIENT_ID_DEFECTO } from '../netlify/functions/lib/google-sesion.mjs';
 
@@ -63,8 +62,6 @@ ok('textoCliente quita puntos, barras y dos puntos', textoCliente('https://estaf
 ok('textoCliente con decimales deja "2.5" y quita el resto', textoCliente('RAV4 2.5 en estafa.test', 80, { decimales: true }) === 'RAV4 2.5 en estafatest');
 const cp = correoCliente({ ...v.datos, as: [], placa: 'BDF482 pague en estafa.test/x', c: 'Ana.estafa.test' }, f1);
 ok('cita: placa y pila sin enlaces', !/estafa\.test/.test(cp.html + cp.texto + cp.asunto));
-const cq = correoCotizacion({ tipo: 'nuevo', nombre: 'Ana www.estafa.test', marcaModelo: 'Toyota RAV4 2.5 pague en estafa.test/x', valor: 1000, combustible: 'Gasolina', tipoVeh: 'Rural', uso: 'Personal', interes: 'x', correo: 'a@ejemplo.test' }, { ...f1, whatsapp: '' });
-ok('cotizacion: marca y nombre sin enlaces, el 2.5 se queda', !/estafa\.test|www\./.test(cq.html + cq.texto) && cq.html.includes('Toyota RAV4 2.5'));
 
 console.log('-- quien puede guardar ficha --');
 const reparto = { agentes: [{ email: 'dos@ejemplo.test', peso: 1 }] };

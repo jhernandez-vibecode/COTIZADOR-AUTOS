@@ -1,0 +1,286 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cotizar · pantalla final nueva</title>
+<style>
+body{margin:0;background:#F1F3F4;font-family:Arial,Helvetica,sans-serif;color:#1B1F23}
+header{background:#0C2340;color:#fff;padding:18px 24px}header h1{margin:0;font-size:20px}header p{margin:4px 0 0;color:#cbd5e1;font-size:13px;max-width:900px}
+main{display:flex;flex-wrap:wrap;gap:22px;padding:22px;justify-content:center}
+section{background:#fff;border:1px solid #DADCE0;border-radius:16px;padding:16px;width:420px;max-width:100%;box-sizing:border-box}
+.tag{display:inline-block;background:#E8F0FE;color:#174EA6;font-weight:bold;font-size:12px;border-radius:999px;padding:3px 10px}
+h2{font-size:16px;margin:8px 0 2px}.sub{font-size:12.5px;color:#5F6368;margin:0 0 10px}
+.frame{border:1px solid #DADCE0;border-radius:12px;overflow:hidden;height:700px}iframe{width:100%;height:100%;border:0}
+</style></head><body>
+<header><h1>/cotizar/ · pantalla final nueva (propuesta)</h1><p>Un solo diseño. Al cliente ya no le sale ningún correo de confirmación: todo lo que necesita saber queda en esta pantalla. El aviso al agente sigue igual. Datos de ejemplo.</p></header>
+<main>
+<section><div class="tag">1</div><h2>En horario</h2><p class="sub">De lunes a viernes, de 8:00 am a 5:00 pm.</p>
+<div class="frame"><iframe sandbox="allow-same-origin" srcdoc="<!DOCTYPE html>
+<html lang=&quot;es&quot;>
+<head>
+<meta charset=&quot;utf-8&quot;>
+<meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1&quot;>
+
+<meta name=&quot;description&quot; content=&quot;Solicitá la cotización de tu seguro de automóviles del INS sin salir de casa.&quot;>
+<meta name=&quot;robots&quot; content=&quot;noindex&quot;>
+<link rel=&quot;icon&quot; type=&quot;image/svg+xml&quot; href=&quot;https://cotizador.appsegurosdigitales.com/img/favicon.svg&quot;>
+<link rel=&quot;preconnect&quot; href=&quot;https://fonts.googleapis.com&quot;>
+<link rel=&quot;preconnect&quot; href=&quot;https://fonts.gstatic.com&quot; crossorigin>
+<link href=&quot;https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&amp;family=Google+Sans+Code:wght@400;500;600&amp;family=Inter:wght@400;500;600&amp;display=swap&quot; rel=&quot;stylesheet&quot;>
+<style>
+/* ============================================================
+   /cotizar/ · formulario propio de solicitud de COTIZACION · linea clara SDI v1.3
+   Transcrito del mockup aprobado por JC el 5 nov 2026:
+   docs/superpowers/specs/2026-11-05-cotizacion-formulario-propio-mockup.html
+   Las preguntas son las del Google Form &quot;Cotización Seguro Automóviles.&quot;
+   palabra por palabra (solo se corrigio la errata &quot;Numéro&quot;).
+   ============================================================ */
+:root{
+  --blue:#0369A1;--blue-ink:#02557F;--blue-soft:#E8F1F8;--band:#EEF4F9;
+  --line:#DADCE0;--line-btn:#8A939C;--line-soft:#EDEFF2;
+  --ink:#1B1F23;--ink2:#5A6570;--ink3:#6B7681;--navy:#0C2340;
+  --ok-bg:#E9F5F0;--ok-tx:#037D61;--oro-bg:#FBF3DC;--oro-tx:#7C5A00;--rosa-tx:#9F1239;
+  --body:'Google Sans Flex','Inter',system-ui,sans-serif;--mono:'Google Sans Code','Inter',ui-monospace,monospace;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:#fff;color:var(--ink);font-family:var(--body);font-size:14.5px;line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3,p{margin:0}h1,h2,h3{font-weight:500;letter-spacing:-.02em;line-height:1.15;text-wrap:balance}
+a{color:var(--blue)}
+[hidden]{display:none!important}
+.filete{height:4px;background:linear-gradient(90deg,#0369A1 0 60%,#0D9488 60% 85%,#EA580C 85% 95%,#C9A227 95% 100%)}
+.pg-top{background:#F8F9FA;border-bottom:1px solid var(--line-soft);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 20px;height:50px}
+.pg-top img{height:21px;width:auto;display:block}
+.pg-top .marca{font-size:12px;color:var(--ink2);text-align:right;line-height:1.3}
+.pg-top .marca b{color:var(--ink);font-weight:600;display:block}
+.hero{padding:30px 20px 22px;text-align:center}
+.hero .c2{display:inline-flex;align-items:center;gap:8px;background:var(--blue-soft);color:var(--blue-ink);border-radius:999px;padding:5px 13px;font-size:12.5px;font-weight:600}
+.hero .c2 i{width:8px;height:8px;border-radius:50%;background:var(--blue)}
+.hero h1{font-size:clamp(26px,5vw,38px);margin:14px 0 10px}
+.hero p{color:var(--ink2);max-width:56ch;margin:0 auto;font-size:15px}
+.pasos{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:760px;margin:20px auto 0;text-align:left}
+.pasos div{border:1px solid var(--line);border-radius:16px;padding:12px 14px;font-size:13px;color:var(--ink2)}
+.pasos b{display:flex;align-items:center;gap:8px;color:var(--ink);font-weight:600;font-size:13.5px;margin-bottom:3px}
+.pasos b i{font-style:normal;width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:12px;flex:0 0 22px}
+.hero .horario{max-width:760px;margin:12px auto 0;font-size:12.5px;color:var(--ink3)}
+.band{background:var(--band);padding:22px 16px 34px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:28px;padding:26px 28px;max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+.grupo{display:flex;flex-direction:column;gap:14px}
+.grupo>h3{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);border-bottom:1px solid var(--line);padding-bottom:7px}
+.fila2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.campo{display:flex;flex-direction:column;gap:5px;min-width:0}
+.campo label,.campo .lb{font-weight:600;font-size:13.5px}
+.campo .req{color:var(--rosa-tx)}
+.campo .ay,.ay{font-size:12.5px;color:var(--ink3);line-height:1.45}
+.campo input,.campo textarea{font:400 15px var(--body);color:var(--ink);border:1px solid var(--line-btn);border-radius:12px;padding:11px 13px;background:#fff;width:100%;min-width:0;max-width:100%}
+.campo textarea{min-height:74px;resize:vertical}
+.campo input:focus,.campo textarea:focus{outline:3px solid rgba(3,105,161,.25);border-color:var(--blue)}
+.ops{display:grid;gap:8px}
+.ops.c3{grid-template-columns:repeat(3,1fr)}.ops.c2{grid-template-columns:1fr 1fr}.ops.c4{grid-template-columns:repeat(4,1fr)}.ops.c1{grid-template-columns:1fr}
+.op{position:relative}
+.op input{position:absolute;opacity:0;inset:0;cursor:pointer;margin:0}
+.op span{display:flex;align-items:center;gap:10px;min-height:46px;height:100%;border:1px solid var(--line-btn);border-radius:14px;padding:8px 12px;font-weight:600;font-size:13.5px;background:#fff;line-height:1.3}
+.op span::before{content:&quot;&quot;;flex:0 0 18px;height:18px;border-radius:50%;border:2px solid var(--line-btn);background:#fff}
+.op:hover span{border-color:var(--blue)}
+.op input:checked+span{border-color:var(--blue);background:var(--blue-soft);color:var(--blue-ink)}
+.op input:checked+span::before{border-color:var(--blue);background:radial-gradient(circle,var(--blue) 0 4px,#fff 5px)}
+.op input:focus-visible+span{outline:3px solid rgba(3,105,161,.35);outline-offset:2px}
+.op span small{display:block;font-weight:400;font-size:12px;color:var(--ink3)}
+.tipo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tipo .op span{min-height:64px;font-size:14.5px}
+.tipo .op span{display:grid;grid-template-columns:18px minmax(0,1fr);column-gap:10px;align-content:center}
+.tipo .op span small{grid-column:2}
+.campo .err{font-size:12.5px;color:var(--rosa-tx);font-weight:600}
+.campo.mal input,.campo.mal textarea,.campo.mal .op span{border-color:var(--rosa-tx)}
+.consent{font-size:12.5px;color:var(--ink3)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:600 15px var(--body);background:var(--blue);color:#fff;border:1px solid var(--blue);border-radius:999px;min-height:50px;padding:0 22px;cursor:pointer;width:100%;text-decoration:none}
+.btn.s{background:#fff;color:var(--blue-ink);border-color:var(--line-btn)}
+.btn[disabled]{opacity:.6;cursor:default}
+.pie-f{font-size:12.5px;color:var(--ink3);text-align:center}
+.pie{display:flex;flex-direction:column;align-items:center;gap:4px;padding:18px 20px 22px;border-top:1px solid var(--line-soft);text-align:center}
+.pie img{height:22px;width:auto;margin-bottom:2px}
+.pie .g{font-size:12.5px;color:var(--ink2);font-weight:600}
+.pie .s{font-size:11.5px;color:var(--ink3)}
+.listo{text-align:center;align-items:center}
+.listo .ok{width:56px;height:56px;border-radius:50%;background:var(--ok-bg);color:var(--ok-tx);display:flex;align-items:center;justify-content:center;font-size:28px}
+.listo h2{font-size:24px}
+.listo p{color:var(--ink2);max-width:52ch}
+.listo .ag{border:1px solid var(--line);border-radius:18px;padding:12px 16px;display:flex;gap:12px;align-items:center;text-align:left;width:100%;max-width:460px}
+.listo .ag .av{width:42px;height:42px;border-radius:50%;background:var(--blue-soft);color:var(--blue-ink);font-weight:600;display:flex;align-items:center;justify-content:center;flex:0 0 42px}
+.listo .ag b{display:block}
+.listo .ag small{color:var(--ink3);font-size:12px;white-space:pre-line;display:block}
+.fallo{background:var(--oro-bg);color:var(--oro-tx);border-radius:16px;padding:16px 18px;font-size:14px}
+.fallo b{display:block;font-size:15.5px;margin-bottom:2px}
+.bluebook{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:12px;align-items:center;background:var(--blue-soft);border:1px solid #B9D3E6;border-radius:16px;padding:12px 14px;margin-top:-4px}
+.bluebook .bb-ico{width:34px;height:34px;border-radius:50%;background:var(--blue);color:#fff;font-weight:700;font-size:17px;display:flex;align-items:center;justify-content:center}
+.bluebook p{font-size:13px;color:var(--ink2);line-height:1.4}
+.bluebook p b{display:block;color:var(--blue-ink);font-size:14px;font-weight:600;margin-bottom:1px}
+.bb-btn{display:inline-flex;align-items:center;gap:6px;background:var(--blue);color:#fff;text-decoration:none;font-weight:600;font-size:13.5px;border-radius:999px;padding:9px 16px;white-space:nowrap}
+.bb-btn:hover{background:var(--blue-ink)}
+@media (max-width:600px){.bluebook{grid-template-columns:34px minmax(0,1fr)}.bb-btn{grid-column:1/-1;justify-content:center}}
+.trampa{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+@media (max-width:600px){
+  .fila2,.pasos{grid-template-columns:1fr}
+  .ops.c4{grid-template-columns:1fr 1fr}
+  .ops.c3 .op span{padding:8px 9px;gap:7px}
+  .panel{padding:20px 16px;border-radius:22px}
+  .band{padding:16px 10px 26px}
+  .hero{padding:24px 16px 18px}
+}
+</style><style>
+.envio{font-size:15px;line-height:1.5;color:var(--ink2);max-width:46ch}
+.envio b{color:var(--ink)}
+.fuera{width:100%;max-width:460px;box-sizing:border-box;background:#FCE8E6;border:1px solid #F5B7B1;border-radius:14px;padding:12px 16px;text-align:left;color:#A50E0E;font-size:14.5px;line-height:1.45}
+.fuera b{display:block;font-size:15.5px;margin-bottom:2px}
+.spam{font-size:12.5px;color:var(--ink3)}
+</style></head><body>
+<div class=&quot;filete&quot;></div>
+<div class=&quot;pg-top&quot;><img src=&quot;https://cotizador.appsegurosdigitales.com/img/ins-logo-azul.png&quot; alt=&quot;INS&quot;><div class=&quot;marca&quot;><b>Seguro de Automóviles</b>Agentes exclusivos del INS</div></div>
+
+<div class=&quot;band&quot;>
+  <div class=&quot;panel listo&quot; id=&quot;listo&quot;>
+    <div class=&quot;ok&quot; aria-hidden=&quot;true&quot;>✓</div>
+    <h2>¡Listo, María! Recibimos tu solicitud</h2>
+    <p>Te va a atender:</p>
+    <div class=&quot;ag&quot;><div class=&quot;av&quot;>JC</div><div><b>Juan Carlos Hernández</b><small>Agente exclusivo del INS · Licencia SUGESE 08-1318</small></div></div>
+    <p class=&quot;envio&quot;>Te vamos a enviar la cotización a <b>cliente@ejemplo.com</b>.</p><p class=&quot;spam&quot;>Si no la ves, revisá la carpeta de spam o promociones.</p>
+  </div></div><div class=&quot;pie&quot;>
+  <img src=&quot;https://cotizador.appsegurosdigitales.com/img/sdi-logo-compacto.svg&quot; alt=&quot;&quot;>
+  <span class=&quot;g&quot;>Gestionado por SDI</span>
+  <span class=&quot;s&quot;>Seguros Digitales INS</span>
+</div>
+
+</body></html>"></iframe></div></section>
+<section><div class="tag">2</div><h2>Fuera de horario</h2><p class="sub">Ejemplo: la manda el sábado → recuadro rojo con el lunes.</p>
+<div class="frame"><iframe sandbox="allow-same-origin" srcdoc="<!DOCTYPE html>
+<html lang=&quot;es&quot;>
+<head>
+<meta charset=&quot;utf-8&quot;>
+<meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1&quot;>
+
+<meta name=&quot;description&quot; content=&quot;Solicitá la cotización de tu seguro de automóviles del INS sin salir de casa.&quot;>
+<meta name=&quot;robots&quot; content=&quot;noindex&quot;>
+<link rel=&quot;icon&quot; type=&quot;image/svg+xml&quot; href=&quot;https://cotizador.appsegurosdigitales.com/img/favicon.svg&quot;>
+<link rel=&quot;preconnect&quot; href=&quot;https://fonts.googleapis.com&quot;>
+<link rel=&quot;preconnect&quot; href=&quot;https://fonts.gstatic.com&quot; crossorigin>
+<link href=&quot;https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&amp;family=Google+Sans+Code:wght@400;500;600&amp;family=Inter:wght@400;500;600&amp;display=swap&quot; rel=&quot;stylesheet&quot;>
+<style>
+/* ============================================================
+   /cotizar/ · formulario propio de solicitud de COTIZACION · linea clara SDI v1.3
+   Transcrito del mockup aprobado por JC el 5 nov 2026:
+   docs/superpowers/specs/2026-11-05-cotizacion-formulario-propio-mockup.html
+   Las preguntas son las del Google Form &quot;Cotización Seguro Automóviles.&quot;
+   palabra por palabra (solo se corrigio la errata &quot;Numéro&quot;).
+   ============================================================ */
+:root{
+  --blue:#0369A1;--blue-ink:#02557F;--blue-soft:#E8F1F8;--band:#EEF4F9;
+  --line:#DADCE0;--line-btn:#8A939C;--line-soft:#EDEFF2;
+  --ink:#1B1F23;--ink2:#5A6570;--ink3:#6B7681;--navy:#0C2340;
+  --ok-bg:#E9F5F0;--ok-tx:#037D61;--oro-bg:#FBF3DC;--oro-tx:#7C5A00;--rosa-tx:#9F1239;
+  --body:'Google Sans Flex','Inter',system-ui,sans-serif;--mono:'Google Sans Code','Inter',ui-monospace,monospace;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:#fff;color:var(--ink);font-family:var(--body);font-size:14.5px;line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3,p{margin:0}h1,h2,h3{font-weight:500;letter-spacing:-.02em;line-height:1.15;text-wrap:balance}
+a{color:var(--blue)}
+[hidden]{display:none!important}
+.filete{height:4px;background:linear-gradient(90deg,#0369A1 0 60%,#0D9488 60% 85%,#EA580C 85% 95%,#C9A227 95% 100%)}
+.pg-top{background:#F8F9FA;border-bottom:1px solid var(--line-soft);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 20px;height:50px}
+.pg-top img{height:21px;width:auto;display:block}
+.pg-top .marca{font-size:12px;color:var(--ink2);text-align:right;line-height:1.3}
+.pg-top .marca b{color:var(--ink);font-weight:600;display:block}
+.hero{padding:30px 20px 22px;text-align:center}
+.hero .c2{display:inline-flex;align-items:center;gap:8px;background:var(--blue-soft);color:var(--blue-ink);border-radius:999px;padding:5px 13px;font-size:12.5px;font-weight:600}
+.hero .c2 i{width:8px;height:8px;border-radius:50%;background:var(--blue)}
+.hero h1{font-size:clamp(26px,5vw,38px);margin:14px 0 10px}
+.hero p{color:var(--ink2);max-width:56ch;margin:0 auto;font-size:15px}
+.pasos{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:760px;margin:20px auto 0;text-align:left}
+.pasos div{border:1px solid var(--line);border-radius:16px;padding:12px 14px;font-size:13px;color:var(--ink2)}
+.pasos b{display:flex;align-items:center;gap:8px;color:var(--ink);font-weight:600;font-size:13.5px;margin-bottom:3px}
+.pasos b i{font-style:normal;width:22px;height:22px;border-radius:50%;background:var(--blue);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:12px;flex:0 0 22px}
+.hero .horario{max-width:760px;margin:12px auto 0;font-size:12.5px;color:var(--ink3)}
+.band{background:var(--band);padding:22px 16px 34px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:28px;padding:26px 28px;max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+.grupo{display:flex;flex-direction:column;gap:14px}
+.grupo>h3{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);border-bottom:1px solid var(--line);padding-bottom:7px}
+.fila2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.campo{display:flex;flex-direction:column;gap:5px;min-width:0}
+.campo label,.campo .lb{font-weight:600;font-size:13.5px}
+.campo .req{color:var(--rosa-tx)}
+.campo .ay,.ay{font-size:12.5px;color:var(--ink3);line-height:1.45}
+.campo input,.campo textarea{font:400 15px var(--body);color:var(--ink);border:1px solid var(--line-btn);border-radius:12px;padding:11px 13px;background:#fff;width:100%;min-width:0;max-width:100%}
+.campo textarea{min-height:74px;resize:vertical}
+.campo input:focus,.campo textarea:focus{outline:3px solid rgba(3,105,161,.25);border-color:var(--blue)}
+.ops{display:grid;gap:8px}
+.ops.c3{grid-template-columns:repeat(3,1fr)}.ops.c2{grid-template-columns:1fr 1fr}.ops.c4{grid-template-columns:repeat(4,1fr)}.ops.c1{grid-template-columns:1fr}
+.op{position:relative}
+.op input{position:absolute;opacity:0;inset:0;cursor:pointer;margin:0}
+.op span{display:flex;align-items:center;gap:10px;min-height:46px;height:100%;border:1px solid var(--line-btn);border-radius:14px;padding:8px 12px;font-weight:600;font-size:13.5px;background:#fff;line-height:1.3}
+.op span::before{content:&quot;&quot;;flex:0 0 18px;height:18px;border-radius:50%;border:2px solid var(--line-btn);background:#fff}
+.op:hover span{border-color:var(--blue)}
+.op input:checked+span{border-color:var(--blue);background:var(--blue-soft);color:var(--blue-ink)}
+.op input:checked+span::before{border-color:var(--blue);background:radial-gradient(circle,var(--blue) 0 4px,#fff 5px)}
+.op input:focus-visible+span{outline:3px solid rgba(3,105,161,.35);outline-offset:2px}
+.op span small{display:block;font-weight:400;font-size:12px;color:var(--ink3)}
+.tipo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tipo .op span{min-height:64px;font-size:14.5px}
+.tipo .op span{display:grid;grid-template-columns:18px minmax(0,1fr);column-gap:10px;align-content:center}
+.tipo .op span small{grid-column:2}
+.campo .err{font-size:12.5px;color:var(--rosa-tx);font-weight:600}
+.campo.mal input,.campo.mal textarea,.campo.mal .op span{border-color:var(--rosa-tx)}
+.consent{font-size:12.5px;color:var(--ink3)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:600 15px var(--body);background:var(--blue);color:#fff;border:1px solid var(--blue);border-radius:999px;min-height:50px;padding:0 22px;cursor:pointer;width:100%;text-decoration:none}
+.btn.s{background:#fff;color:var(--blue-ink);border-color:var(--line-btn)}
+.btn[disabled]{opacity:.6;cursor:default}
+.pie-f{font-size:12.5px;color:var(--ink3);text-align:center}
+.pie{display:flex;flex-direction:column;align-items:center;gap:4px;padding:18px 20px 22px;border-top:1px solid var(--line-soft);text-align:center}
+.pie img{height:22px;width:auto;margin-bottom:2px}
+.pie .g{font-size:12.5px;color:var(--ink2);font-weight:600}
+.pie .s{font-size:11.5px;color:var(--ink3)}
+.listo{text-align:center;align-items:center}
+.listo .ok{width:56px;height:56px;border-radius:50%;background:var(--ok-bg);color:var(--ok-tx);display:flex;align-items:center;justify-content:center;font-size:28px}
+.listo h2{font-size:24px}
+.listo p{color:var(--ink2);max-width:52ch}
+.listo .ag{border:1px solid var(--line);border-radius:18px;padding:12px 16px;display:flex;gap:12px;align-items:center;text-align:left;width:100%;max-width:460px}
+.listo .ag .av{width:42px;height:42px;border-radius:50%;background:var(--blue-soft);color:var(--blue-ink);font-weight:600;display:flex;align-items:center;justify-content:center;flex:0 0 42px}
+.listo .ag b{display:block}
+.listo .ag small{color:var(--ink3);font-size:12px;white-space:pre-line;display:block}
+.fallo{background:var(--oro-bg);color:var(--oro-tx);border-radius:16px;padding:16px 18px;font-size:14px}
+.fallo b{display:block;font-size:15.5px;margin-bottom:2px}
+.bluebook{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:12px;align-items:center;background:var(--blue-soft);border:1px solid #B9D3E6;border-radius:16px;padding:12px 14px;margin-top:-4px}
+.bluebook .bb-ico{width:34px;height:34px;border-radius:50%;background:var(--blue);color:#fff;font-weight:700;font-size:17px;display:flex;align-items:center;justify-content:center}
+.bluebook p{font-size:13px;color:var(--ink2);line-height:1.4}
+.bluebook p b{display:block;color:var(--blue-ink);font-size:14px;font-weight:600;margin-bottom:1px}
+.bb-btn{display:inline-flex;align-items:center;gap:6px;background:var(--blue);color:#fff;text-decoration:none;font-weight:600;font-size:13.5px;border-radius:999px;padding:9px 16px;white-space:nowrap}
+.bb-btn:hover{background:var(--blue-ink)}
+@media (max-width:600px){.bluebook{grid-template-columns:34px minmax(0,1fr)}.bb-btn{grid-column:1/-1;justify-content:center}}
+.trampa{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+@media (max-width:600px){
+  .fila2,.pasos{grid-template-columns:1fr}
+  .ops.c4{grid-template-columns:1fr 1fr}
+  .ops.c3 .op span{padding:8px 9px;gap:7px}
+  .panel{padding:20px 16px;border-radius:22px}
+  .band{padding:16px 10px 26px}
+  .hero{padding:24px 16px 18px}
+}
+</style><style>
+.envio{font-size:15px;line-height:1.5;color:var(--ink2);max-width:46ch}
+.envio b{color:var(--ink)}
+.fuera{width:100%;max-width:460px;box-sizing:border-box;background:#FCE8E6;border:1px solid #F5B7B1;border-radius:14px;padding:12px 16px;text-align:left;color:#A50E0E;font-size:14.5px;line-height:1.45}
+.fuera b{display:block;font-size:15.5px;margin-bottom:2px}
+.spam{font-size:12.5px;color:var(--ink3)}
+</style></head><body>
+<div class=&quot;filete&quot;></div>
+<div class=&quot;pg-top&quot;><img src=&quot;https://cotizador.appsegurosdigitales.com/img/ins-logo-azul.png&quot; alt=&quot;INS&quot;><div class=&quot;marca&quot;><b>Seguro de Automóviles</b>Agentes exclusivos del INS</div></div>
+
+<div class=&quot;band&quot;>
+  <div class=&quot;panel listo&quot; id=&quot;listo&quot;>
+    <div class=&quot;ok&quot; aria-hidden=&quot;true&quot;>✓</div>
+    <h2>¡Listo, María! Recibimos tu solicitud</h2>
+    <p>Te va a atender:</p>
+    <div class=&quot;ag&quot;><div class=&quot;av&quot;>JC</div><div><b>Juan Carlos Hernández</b><small>Agente exclusivo del INS · Licencia SUGESE 08-1318</small></div></div>
+    <p class=&quot;envio&quot;>Te vamos a enviar la cotización a <b>cliente@ejemplo.com</b>.</p><div class=&quot;fuera&quot;><b>Te llega el lunes 9 de noviembre</b>Nos escribiste fuera de horario. Atendemos de lunes a viernes, de 8:00 am a 5:00 pm.</div><p class=&quot;spam&quot;>Si no la ves, revisá la carpeta de spam o promociones.</p>
+  </div></div><div class=&quot;pie&quot;>
+  <img src=&quot;https://cotizador.appsegurosdigitales.com/img/sdi-logo-compacto.svg&quot; alt=&quot;&quot;>
+  <span class=&quot;g&quot;>Gestionado por SDI</span>
+  <span class=&quot;s&quot;>Seguros Digitales INS</span>
+</div>
+
+</body></html>"></iframe></div></section>
+</main></body></html>

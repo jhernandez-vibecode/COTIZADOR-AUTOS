@@ -8,7 +8,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { normalizarReparto, elegir, vuelta, proximos, repartoInicial } from '../netlify/functions/lib/cotizar-reparto.mjs';
 import { validarCotizacion, validarFicha, INTERESES_COT } from '../netlify/functions/lib/cotizar-validacion.mjs';
-import { correoCliente, correoAgente, filaRegistro } from '../netlify/functions/lib/cotizar-correos.mjs';
+import { correoAgente, filaRegistro } from '../netlify/functions/lib/cotizar-correos.mjs';
 import { correoDeSesion, CLIENT_ID_DEFECTO } from '../netlify/functions/lib/google-sesion.mjs';
 import { crearHandler } from '../netlify/functions/lib/cotizar-handler.mjs';
 
@@ -70,29 +70,15 @@ ok('ficha con WhatsApp corto → no', !validarFicha({ nombre: 'Agente Prueba', w
 
 console.log('-- correos --');
 const AG = { email: DOS, nombre: 'Agente Prueba Dos', licencia: '00-0002', whatsapp: '8888-2222', telefono: '', cargo: 'Asesor de Seguros', oficina: 'Oficina de Agente Prueba Uno, agente' };
-const cc = correoCliente(vu.datos, AG);
-ok('cliente: lo firma el agente que le toco', cc.html.includes('<b style="font-size:14px;">Agente Prueba Dos</b>') && cc.html.includes('Asesor de Seguros<br>Oficina de Agente Prueba Uno, agente · Licencia SUGESE 00-0002') && cc.texto.includes('Asesor de Seguros\nOficina de Agente Prueba Uno, agente · Licencia SUGESE 00-0002'));
-ok('agente (sin cargo): una sola linea con la licencia', correoCliente(vu.datos, { ...AG, cargo: '', oficina: '' }).html.includes('Agente exclusivo del INS · Licencia SUGESE 00-0002<br>'));
-ok('cliente: pie "Gestionado por SDI" / "Seguros Digitales INS"', cc.html.includes('Gestionado por SDI</b><br>Seguros Digitales INS') && cc.texto.endsWith('Gestionado por SDI\nSeguros Digitales INS'));
-ok('cliente: no repite la cedula', !cc.html.includes('1 0000 0000') && !cc.texto.includes('1 0000 0000'));
-ok('cliente: WhatsApp por web.whatsapp.com, nunca wa.me', cc.html.includes('https://web.whatsapp.com/send/?phone=50688882222') && !cc.html.includes('wa.me'));
-ok('cliente: sin WhatsApp no hay boton', !correoCliente(vu.datos, { ...AG, whatsapp: '' }).html.includes('web.whatsapp.com'));
-ok('cliente: cargo por defecto', correoCliente(vu.datos, { ...AG, cargo: '', oficina: '' }).html.includes('Agente exclusivo del INS · Licencia SUGESE 00-0002'));
-ok('cliente: asunto con la placa / 0 KM', cc.asunto === 'Recibimos tu solicitud de cotización · BDF482' && correoCliente(vn.datos, AG).asunto === 'Recibimos tu solicitud de cotización · 0 KM');
-ok('cliente basico (JC, 5 nov): sin la tabla de lo que envio', !cc.html.includes('Lo que nos enviaste') && cc.html.includes('tu vehículo placa <b>BDF482</b>'));
-ok('cliente: dice que NO es la cotizacion y trae el Que sigue con la cita', cc.html.includes('<b>Todavía no es la cotización:</b>') && cc.html.includes('Qué sigue') && cc.html.includes('agendás la cita para asegurarlo con el enlace que viene en la cotización') && cc.texto.includes('Todavía no es la cotización'));
-const EN = new Date('2026-11-10T16:15:00Z'), FUERA = new Date('2026-11-07T01:40:00Z');
-ok('cliente en horario (martes 10:15 am): sin fecha ni "hoy mismo", sin recuadro', (() => { const c = correoCliente(vu.datos, AG, EN); return c.html.includes('<li>Te envío la cotización a este correo.</li>') && !c.html.includes('hoy mismo') && !c.texto.includes('hoy mismo') && !c.html.includes('fuera de horario'); })());
-ok('cliente fuera de horario (viernes 7:40 pm): el lunes 9 de noviembre', (() => { const c = correoCliente(vu.datos, AG, FUERA); return c.html.includes('Nos escribiste fuera de horario.') && c.html.includes('Te envío la cotización a este correo <b>el lunes 9 de noviembre</b>.') && c.texto.includes('1. Te envío la cotización a este correo el lunes 9 de noviembre.') && !c.html.includes('hoy mismo'); })());
-ok('cliente 0 KM: vehiculo nuevo con marca y modelo', correoCliente(vn.datos, AG, EN).html.includes('tu vehículo nuevo <b>Toyota RAV4 2027</b>'));
-ok('cliente: escapa lo que escribe el cliente', !correoCliente({ ...vu.datos, placa: '<script>' }, AG).html.includes('<script>'));
+ok('6 nov 2026: ya no existe el correo de confirmacion al cliente', !/export function correoCliente/.test(fs.readFileSync(path.join(raiz, 'netlify/functions/lib/cotizar-correos.mjs'), 'utf8')));
 const ca = correoAgente(vu.datos, { agente: AG, n: 4, de: 5, repartido: true, fecha: '5 nov 2026, 8:14 am', registrada: true });
 ok('agente: sin el chip del turno (JC, 5 nov)', !ca.html.includes('Te tocó por turno') && !ca.texto.includes('Te tocó por turno') && !ca.html.includes('#FBF3DC;color:#7C5A00;border-radius:999px'));
 ok('agente: sin el boton Abrir el cotizador (JC, 5 nov)', !ca.html.includes('Abrir el cotizador') && ca.html.includes('WhatsApp a '));
 ok('agente: trae la cedula y todas las respuestas', ca.html.includes('1 0000 0000') && ca.html.includes('(no indicó)') && ca.html.includes(INTERESES_COT[0]));
 ok('agente: asunto con 📝 al inicio', ca.asunto === '📝 Cotización solicitada · BDF482 · Mariela Quesada Rojas');
 ok('agente: nuevo trae marca, combustible y tipo', (() => { const h = correoAgente(vn.datos, { agente: AG, n: 0, de: 0, repartido: false, fecha: 'x' }).html; return h.includes('Toyota RAV4 2027') && h.includes('Híbrido') && h.includes('Rural'); })());
-ok('agente: aviso si no salio el del cliente', correoAgente(vu.datos, { agente: AG, n: 1, de: 1, repartido: true, fecha: 'x', clienteAvisado: false }).html.includes('No se pudo enviar la confirmación al cliente'));
+ok('agente: sin el aviso de confirmacion al cliente (ya no se envia)', !ca.html.includes('confirmación al cliente'));
+ok('hoja: la columna de la confirmacion dice "Solo en pantalla"', filaRegistro(vu.datos, { agente: AG, n: 1, de: 1, repartido: true, fecha: 'x' }).clienteAvisado === 'Solo en pantalla');
 ok('hoja: fila con el agente y el turno', (() => { const f = filaRegistro(vu.datos, { agente: AG, n: 4, de: 5, repartido: true, fecha: 'x' }); return f.agente === 'Agente Prueba Dos' && f.turno === '4 de 5' && f.cedula === '1 0000 0000'; })());
 
 console.log('-- sesion de Google --');
@@ -149,15 +135,20 @@ for (let i = 0; i < 5; i++) {
   const r = await llamar('/cotizar/enviar', { ...U, correo: 'cliente' + i + '@ejemplo.test', placa: 'ABC10' + i }, '2.2.2.' + i);
   quienes.push(r.j.agente && r.j.agente.nombre.split(' ').pop());
   if (i === 3) {
-    ok('salen dos correos: cliente y agente', enviados.length === 2 && enviados[0].to[0] === 'cliente3@ejemplo.test' && enviados[1].to[0] === DOS);
-    ok('el del cliente lo firma Dos y responde a Dos', enviados[0].from.startsWith('Agente Prueba Dos · SDI <cotizaciones@ejemplo.test>') && enviados[0].reply_to === DOS);
-    ok('el del agente responde al cliente y dice que quedo en la hoja', enviados[1].reply_to === 'cliente3@ejemplo.test' && enviados[1].html.includes('Quedó anotada en la hoja de registro'));
+    ok('sale UN solo correo, al agente (al cliente ya no)', enviados.length === 1 && enviados[0].to[0] === DOS && !enviados.some((x) => x.to[0] === 'cliente3@ejemplo.test'));
+    ok('el del agente responde al cliente y dice que quedo en la hoja', enviados[0].reply_to === 'cliente3@ejemplo.test' && enviados[0].html.includes('Quedó anotada en la hoja de registro'));
+    ok('lunes 9:00 am: la respuesta dice en horario', r.j.enHorario === true && r.j.cuando === 'hoy');
   }
 }
 ok('3-1-1 con Tres sin ficha: Uno Uno Uno Dos Uno (Tres se salta)', quienes.join(',') === 'Uno,Uno,Uno,Dos,Uno');
 ok('la hoja recibio una fila por solicitud, con la clave', hoja.length === 5 && hoja.every((x) => x.clave === 'c') && hoja[3].fila.agente === 'Agente Prueba Dos');
 ok('nada del cliente queda en el almacenamiento', [...store.m.values()].every((v) => !v.includes('cliente') && !v.includes('1 0000 0000')));
 ok('doble clic: la misma solicitud no sale dos veces', (await (async () => { reloj -= 70000; enviados.length = 0; const r = await llamar('/cotizar/enviar', { ...U, correo: 'cliente4@ejemplo.test', placa: 'ABC104' }, '3.3.3.3'); return r.j.repetida === true && enviados.length === 0; })()));
+ok('fuera de horario (viernes 7:40 pm): la respuesta trae el lunes', (await (async () => {
+  const h3 = crearHandler({ getStore: () => tienda(), env, fetchFn, ahora: () => new Date('2026-11-07T01:40:00Z') });
+  const s3 = await h3(new Request('https://x.test/cotizar/enviar', { method: 'POST', headers: { origin: 'https://cotizador.appsegurosdigitales.com' }, body: JSON.stringify({ ...U, correo: 'fuera@ejemplo.test' }) }), { ip: '8.8.8.8' });
+  const j = await s3.json(); return j.enHorario === false && j.cuando === 'el lunes 9 de noviembre';
+})()));
 ok('si falla el correo del agente → 502', (await (async () => {
   const h2 = crearHandler({ getStore: () => tienda(), env, ahora: () => new Date(), fetchFn: async (u, o) => { if (u === 'https://api.resend.com/emails' && JSON.parse(o.body).to[0] === ADM) return { ok: false, status: 500 }; return fetchFn(u, o); } });
   const s2 = await h2(new Request('https://x.test/cotizar/enviar', { method: 'POST', body: JSON.stringify(U) }), { ip: '9.9.9.9' });
@@ -171,6 +162,10 @@ ok('pie: Gestionado por SDI / Seguros Digitales INS', pag.includes('Gestionado p
 ok('respaldo: el Google Form de siempre', pag.includes('https://forms.gle/c34JknQmwu5ZnmX48'));
 ok('campo trampa', /name="sitio"/.test(pag));
 ok('manda a /cotizar/enviar', pag.includes("'/cotizar/enviar'"));
+ok('pantalla final (opcion B, JC 6 nov): mensaje y frase', pag.includes('Recibimos tu solicitud y la vamos a procesar a la mayor brevedad posible.') && pag.includes('Ya diste el primer paso: muy pronto vas a manejar con el respaldo del INS.'));
+ok('pantalla final: sin "Te va a atender" ni promesa de confirmacion por correo', !pag.includes('Te va a atender') && !/confirmaci[oó]n a tu correo|Te enviamos una confirmación/.test(pag));
+ok('pantalla final: recuadro rojo con el dia que le llega, escondido por defecto', /id="listoFuera" hidden/.test(pag) && pag.includes("'Te llega ' + j.cuando") && /j\.enHorario === false/.test(pag));
+ok('pantalla final: el correo del cliente entra como texto, no como HTML', /b\.textContent = d\.correo/.test(pag) && !/innerHTML/.test(pag.slice(pag.indexOf('function listo'))));
 
 console.log('-- la hoja de registro (Apps Script) --');
 const gs = fs.readFileSync(path.join(raiz, 'apps-script/registro-cotizaciones/registro-cotizaciones.js'), 'utf8');
