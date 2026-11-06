@@ -68,7 +68,7 @@ export function correoCliente(d, ag) {
     p("<b>Estamos revisando tu solicitud.</b> En breve te confirmo el espacio y te envío las instrucciones finales. Si ese horario no está disponible, nos ponemos en contacto con vos para reprogramar al espacio más cercano.") +
     rotulo("¿Qué pasará el día de tu cita?") +
     (km0 ? p("<b>1. Pedí la factura a la agencia.</b> Una factura proforma con los datos finales del vehículo o una copia de la factura de compra. Es el único requisito: no hace falta inspección ni fotos.<br><b>2. Enviámela.</b> Respondé este correo con la factura adjunta o mandámela por WhatsApp.<br><b>3. Aceptación.</b> Con la factura, te envío la póliza y la aceptás desde el celular con un token de seguridad, sin papeles.<br><b>4. Pago y listo.</b> Realizás el pago y tu vehículo queda asegurado al instante.") :
-    p("<b>1. Preparate.</b> A la hora agendada, tené tu vehículo a mano, limpio y en un lugar iluminado.<br><b>2. Subí tus fotos.</b> Te envío un código QR a tu correo; lo escaneás con el celular y cargás las fotos ahí mismo.<br><b>3. Aceptación.</b> Una vez revisado, te envío la póliza y la aceptás desde el celular con un token de seguridad, sin papeles.<br><b>4. Pago y listo.</b> Realizás el pago y tu vehículo queda asegurado al instante.")) +
+    p("<b>1. Preparate.</b> A la hora agendada, tené tu vehículo a mano, limpio y en un lugar iluminado.<br><b>2. Subí tus fotos.</b> Te envío un enlace a tu correo; lo abrís con el celular y cargás las fotos ahí mismo.<br><b>3. Aceptación.</b> Una vez revisado, te envío la póliza y la aceptás desde el celular con un token de seguridad, sin papeles.<br><b>4. Pago y listo.</b> Realizás el pago y tu vehículo queda asegurado al instante.")) +
     '<p style="margin:0 0 14px;font-family:' + F + ';font-size:13px;color:#5A6570;">Podés pagar con tarjeta (enlace de pago), transferencia a cuentas del INS, SINPE Móvil o en insenlinea.grupoins.com.</p>' +
     p("Cualquier duda, respondé este correo" + contacto + ".<br><b>" + esc(ag.nombre) + '</b><br><span style="font-size:12.5px;color:#5A6570;">' + rolFirma(ag).map(esc).join("<br>") + "</span>") +
     "</td></tr>" +
@@ -120,7 +120,7 @@ export function correoAgente(d, ag, opc) {
     fechaLarga(d.fecha) + ", de " + d.franja + ", y te confirmo el espacio.\n\n" +
     (d.k0 || esCeroKm(d.placa)
       ? "Como tu vehículo es cero kilómetros, no hacen falta fotos: solo necesito la factura proforma con los datos finales del vehículo o una copia de la factura de compra. Me la podés enviar por aquí o por correo.\n\n"
-      : "Ese día, a primera hora, te enviamos a tu correo un código QR para iniciar el aseguramiento: lo escaneás con el celular y subís las fotos del vehículo ahí mismo.\n\n") +
+      : "Ese día, a primera hora, te enviamos a tu correo un enlace para iniciar el aseguramiento: lo abrís en el celular y subís las fotos del vehículo ahí mismo.\n\n") +
     "Cualquier duda, escribime por aquí.";
   const copiar = [
     [d.nombre, d.telefono, d.correo].join(" | "), d.direccion.replace(/\s*\n\s*/g, " "),

@@ -262,6 +262,19 @@ function _statsListHtml(entries) {
         + '<button class="history-btn" data-copy="' + i + '" title="Copiar el enlace de la guía">📄</button>'
       : '';
 
+    // 📷 Fotos (6 nov 2026, F1/F3 de JC): el correo "Paso 1 · Fotografías"
+    // con el enlace del INS. Solo para quien todavía no tiene póliza; la marca
+    // dice cuándo se le mandó (no cuenta como cierre).
+    // Un cero kilómetros no lleva fotos (4 nov 2026: solo la factura de la
+    // agencia), así que tampoco el botón. La guía lo marca con k0=1.
+    const ceroKm = /[?&]k0=1(?:&|$)/.test(String(e.guideUrl || ''));
+    const fotos = (cerrada || ceroKm) ? ''
+      : '<button class="history-btn fotos" data-fotos="' + id + '" title="Enviarle el enlace del INS para las fotos">📷 Fotos</button>';
+    const fotosAt = (!cerrada && e.fotosAt)
+      ? '<span class="history-badge fotos" title="Ya se le envió el correo con el enlace de las fotos">📷 Fotos enviadas &middot; '
+        + _esc(new Date(e.fotosAt).toLocaleDateString('es-CR', { day: '2-digit', month: 'short' })) + '</span>'
+      : '';
+
     return '<div class="stat-row' + (cerrada ? ' con-poliza' : '') + '">'
       + '<div class="stat-fecha">' + _esc(fecha) + '</div>'
       + '<div class="stat-main">'
@@ -269,8 +282,9 @@ function _statsListHtml(entries) {
         + '<div class="stat-meta">' + meta + '</div>'
         + mail
       + '</div>'
-      + '<div class="stat-marca">' + marca + '</div>'
+      + '<div class="stat-marca">' + marca + fotosAt + '</div>'
       + '<div class="stat-acc">'
+        + fotos
         + guia
         + wa
         + '<button class="history-btn danger" data-del="' + id + '" title="Eliminar del registro">🗑</button>'
@@ -314,6 +328,13 @@ function _clearStatsSearch() {
 }
 
 function _onStatsListClick(e) {
+  // 📷 Fotos: abre el cuadro con los datos de esta cotización (fotos-ui.js).
+  const fot = e.target.closest('[data-fotos]');
+  if (fot) {
+    const entry = loadHistory().find(function (x) { return x && x.id === fot.dataset.fotos; });
+    if (entry && typeof openFotosModal === 'function') openFotosModal(entry);
+    return;
+  }
   // Eliminar registro (prueba/duplicado) — con confirmación, es permanente.
   const del = e.target.closest('[data-del]');
   if (del) {

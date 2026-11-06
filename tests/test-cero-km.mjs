@@ -103,7 +103,7 @@ ok('cliente 0 km: texto plano tambien pide la factura', /factura proforma/.test(
 ok('cliente 0 km: el asunto no cambia de forma (placa)', c0.asunto === 'Recibimos tu solicitud de cita · BDF482');
 const aN = correoAgente(dN, AG), a0 = correoAgente(d0, AG);
 const waTxt = (h) => decodeURIComponent((h.match(/&amp;text=([^"]+)"/) || [])[1] || '');
-ok('WhatsApp normal: codigo QR y fotos', /código QR/.test(waTxt(aN.html)));
+ok('WhatsApp normal: enlace de las fotos (6 nov 2026: ya no QR)', /un enlace para iniciar el aseguramiento/.test(waTxt(aN.html)) && !/código QR/.test(waTxt(aN.html)));
 ok('WhatsApp 0 km: pide la factura, sin QR', /factura proforma/.test(waTxt(a0.html)) && !/código QR/.test(waTxt(a0.html)));
 ok('correo del agente: el texto plano no cambia (lo lee el recordatorio)', aN.texto === a0.texto);
 

@@ -27,6 +27,10 @@ const CFG = {
   // decide si el interruptor "Incluir los planes de asistencia" del paso 3
   // arranca prendido (true, lo de siempre) o apagado en cada cotizacion.
   ASI_OFRECER: true,
+  // Guía de las fotografías (6 nov 2026): PDF de JC subido al sitio para que
+  // todo agente la mande sin configurar nada. Va como enlace en el correo
+  // "Paso 1 · Fotografías" (js/fotos-email.js).
+  FOTOS_GUIA_URL: 'https://cotizador.appsegurosdigitales.com/documentos-ins/guia-fotografias-autos.pdf',
   LOGO_URL:    'https://cotizador.appsegurosdigitales.com/img/ins-logo.png',
   // Logotipo SDI del pie del correo. Va como imagen y no recreado con tablas
   // porque su tipografia esta vectorizada en el kit de marca, y en correo las
@@ -75,17 +79,13 @@ const CFG = {
   // y anotar lo mismo en el registro de cambios del pie de index.html.
   // Solo la consola (index.html) la muestra; las sub-páginas no.
   NOVEDADES: {
-    version: '2026-09-19',
-    fecha: '19 sep 2026',
+    version: '2026-11-06',
+    fecha: '6 nov 2026',
     items: [
-      '<b>Nuevo: formulario de cita propio (opcional).</b> En Configuración aparece "Formulario de cita". Si elegís "Formulario SDI", el botón "Agendar mi cita" de la guía y del correo abre una página con tu nombre y tu licencia, con la placa del cliente ya puesta y las mismas preguntas del formulario de siempre. El cliente recibe la confirmación al instante y a vos te llega un correo "Cita solicitada" con sus respuestas y la cotización. <b>Viene apagado</b>: si no tocás nada, todo sigue igual.',
-      '<b>La pantalla de "Agendar mi cita" de la guía ya no parece una cita confirmada.</b> Decía "¡Muy bien!" con confeti; ahora dice "Falta un paso", aclara que la cita todavía no está agendada y el botón se llama "Abrir el formulario y agendar". El enlace a tu formulario es el mismo.',
-      '<b>Nuevo acceso "Asistencias a cliente" en el menú, bajo Enviar.</b> Para los clientes que ya tienen póliza: escribís su nombre, correo, la prima anual que paga hoy y su forma de pago, y le sale un correo con los seis planes de asistencia que el INS estrena el 28 de setiembre, más un botón a una página donde prende los que quiera y ve en cuánto quedaría su seguro. Después podés avisarle por WhatsApp. No se guarda en Cotizaciones.',
-      '<b>Desde el 28 de setiembre, el correo de cotización lleva una tarjeta con los seis planes</b> después de las formas de pago, con el mismo botón, <b>y la guía del cliente suma una sección "Sumale asistencias a tu póliza"</b> entre las formas de pago y el día de la cita. En el paso 3 aparece una casilla para apagarlos en una cotización concreta. Antes del 28 el correo y la guía salen igual que hoy.',
-      '<b>El correo de Renovación confirmada también cambió de imagen</b>: tarjeta del vehículo con la placa dibujada y el número de póliza, sello "Pago aplicado", el monto grande con el período y el comprobante, los pasos ante un evento con los teléfonos a la derecha, y las mismas tarjetas de Viaje y Estudiantil con icono. Con varios recibos, la tabla y el total van en blanco y negro.',
-      '<b>El correo de Póliza activa cambió de imagen</b>: después del saludo va la tarjeta del vehículo con la placa dibujada (roja si es carga liviana) y el número de póliza; luego el sello "Póliza activa", los documentos adjuntos y debajo el Centro de Asistencia Digital.',
-      '<b>Botones redondos azules, sin cajas con barra de color</b>, teléfonos de emergencia grandes y un icono sencillo en Seguro de Viaje y Seguro Estudiantil.',
-      '<b>Los textos y los enlaces son los mismos</b>; solo cambia cómo se ve. El de Viaje dice ahora "fuera del país".'
+      '<b>Nuevo: «Fotos para asegurar».</b> En Cotizaciones, cada cotización sin póliza tiene el botón <b>📷 Fotos</b>: le manda al cliente el correo «Paso 1 · Fotografías» con el enlace del INS para tomar las fotos del vehículo. El nombre, el correo, la placa y el vehículo ya salen de la cotización: solo pegás el enlace del INS de ese cliente.',
+      '<b>Si el cliente no está en la lista</b>, arriba de Cotizaciones está <b>«+ Fotos a un cliente que no está en la lista»</b>: el mismo cuadro, vacío, para escribir sus datos.',
+      'Después de enviar podés avisarle por WhatsApp con el mismo enlace, y la fila queda marcada «📷 Fotos enviadas» con la fecha. Solo se acepta un enlace de la plataforma del INS (asegurarte.grupoins.com).',
+      '<b>Va solo con el enlace, sin código QR</b>: la guía, el formulario de cita y su correo de confirmación ahora le dicen al cliente que le llega un enlace al correo.'
     ]
   }
 };
