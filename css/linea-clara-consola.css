@@ -438,3 +438,19 @@ p.cotz-nota.cotz-mal{border-radius:10px;padding:8px 12px}
   .cotz-agr{grid-template-columns:34px minmax(0,1fr) auto}
   .cotz-pct{grid-column:2/-1;flex-direction:row;justify-content:space-between;align-items:center}
 }
+
+/* ===== FOTOS PARA ASEGURAR (6 nov 2026) — cuadro #fotosModal y botón en Cotizaciones ===== */
+.fo-desde{margin:0 0 14px;font-size:12.5px;color:var(--lc-ink-2);background:var(--lc-band);border-radius:10px;padding:8px 12px}
+.fo-desde:empty{display:none}
+#fo-link-ok.fo-ok{color:var(--t-verde-tx)}
+#fo-link-ok.fo-mal{color:#b91c1c}
+.form-control.fo-inp-mal{border-color:#b91c1c}
+.btn.fo-nuevo{background:transparent;color:var(--lc-blue);border:1.5px dashed var(--lc-blue);border-radius:999px;padding:8px 16px;font-weight:600;font-size:13px;margin:4px 0 10px}
+.history-btn.fotos{width:auto;padding:0 10px;font-size:12px;font-weight:600;color:var(--lc-blue);border:1.5px solid var(--lc-blue);background:var(--lc-blue-soft);white-space:nowrap}
+.stat-marca{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.history-badge.fotos{background:var(--lc-blue-soft);color:var(--lc-blue-ink)}
+/* En celular la marca y los botones van en filas propias: con 🔗 📄 💬 🗑 (y ahora 📷 Fotos) no cabían junto a la marca y la fila se salía del ancho */
+@media (max-width:620px){
+  .stat-marca{grid-column:1/-1;grid-row:3}
+  .stat-acc{grid-column:1/-1;grid-row:4;justify-content:flex-start;flex-wrap:wrap}
+}

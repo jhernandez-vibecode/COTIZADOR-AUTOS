@@ -624,6 +624,27 @@ function marcarPolizaEmitida(datos) {
   return { creada: true, entry: nueva };
 }
 
+/**
+ * Marca que a esta cotizacion ya se le mando el correo "Paso 1 · Fotografias"
+ * (6 nov 2026, decision F3 de JC). Solo informa al agente en la fila de
+ * Cotizaciones: NO cuenta como cierre (eso lo sigue poniendo la poliza).
+ * Reenviar actualiza la fecha.
+ * @param {string} id
+ * @returns {boolean} true si encontro la entrada
+ */
+function marcarFotosEnviadas(id) {
+  if (!id) return false;  // sin id, find(undefined) marcaria una entrada legacy equivocada
+  const list = ensureHistoryIds();
+  const e = list.find(function (x) { return x && !esTombstone(x) && x.id === id; });
+  if (!e) return false;
+  const ahora = _nowIso();
+  e.fotosAt   = ahora;
+  e.updatedAt = ahora;
+  _persistHistory(list);
+  _afterHistoryChange();
+  return true;
+}
+
 // ===================================================================
 // RESUMEN MENSUAL DE LO PURGADO
 // ===================================================================

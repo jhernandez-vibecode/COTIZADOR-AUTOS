@@ -317,6 +317,7 @@
           <button type="button" id="statsSearchClear" class="stats-search-clear" aria-label="Limpiar búsqueda" title="Limpiar" hidden>×</button>
         </div>
         <div class="stats-search-count" id="statsSearchCount" aria-live="polite"></div>
+        <button type="button" class="btn fo-nuevo" id="btnFotosNuevo">+ Fotos a un cliente que no está en la lista</button>
         <div class="stats-filters" id="statsFilters"></div>
 
         <!-- Lista -->
@@ -327,6 +328,85 @@
       </div>
     </div>
   </div>
+
+  <!-- Fotos para asegurar (6 nov 2026): correo "Paso 1 · Fotografías" con el
+       enlace del INS. Va DESPUÉS de statsModal para quedar encima cuando se
+       abre desde la lista de Cotizaciones. Lo maneja js/fotos-ui.js. -->
+  <div class="modal-backdrop" id="fotosModal">
+    <div class="modal-card asi-card">
+      <div class="modal-header">
+        <div>
+          <h2 class="modal-title" id="fotosTitulo">Fotos para asegurar</h2>
+          <p class="asi-sub">Le mandás al cliente el enlace del INS para tomar las fotos del vehículo.</p>
+        </div>
+        <button class="modal-close" id="btnFotosClose" aria-label="Cerrar">×</button>
+      </div>
+
+      <div id="fotosForm">
+        <div class="asi-body">
+          <div class="asi-form">
+            <p class="fo-desde" id="fotosDesde"></p>
+            <div class="asi-grid">
+              <div class="form-row">
+                <label class="form-label" for="fo-nom">Nombre de pila</label>
+                <input class="form-control" id="fo-nom" autocomplete="off" />
+              </div>
+              <div class="form-row">
+                <label class="form-label" for="fo-placa">Placa <span class="asi-opt">(opcional)</span></label>
+                <input class="form-control asi-mono" id="fo-placa" autocomplete="off" placeholder="ABC123" />
+              </div>
+              <div class="form-row asi-full">
+                <label class="form-label" for="fo-veh">Vehículo <span class="asi-opt">(opcional)</span></label>
+                <input class="form-control" id="fo-veh" autocomplete="off" />
+              </div>
+              <div class="form-row asi-full">
+                <label class="form-label" for="fo-mail">Correo del cliente</label>
+                <input class="form-control" id="fo-mail" type="email" autocomplete="off" />
+              </div>
+              <div class="form-row asi-full">
+                <label class="form-label" for="fo-link">Enlace del INS para las fotos</label>
+                <input class="form-control asi-mono" id="fo-link" type="url" autocomplete="off" placeholder="https://asegurarte.grupoins.com/auto/…" />
+                <span class="asi-hint" id="fo-link-ok">Pegá el enlace que te da la plataforma del INS para este cliente.</span>
+              </div>
+              <div class="form-row">
+                <label class="form-label" for="fo-wa">WhatsApp del cliente <span class="asi-opt">(opcional)</span></label>
+                <input class="form-control asi-mono" id="fo-wa" type="tel" inputmode="numeric" placeholder="8888-8888" autocomplete="off" />
+              </div>
+              <div class="form-row asi-full">
+                <label class="form-label" for="fo-nota">Nota personal <span class="asi-opt">(opcional)</span></label>
+                <textarea class="form-control" id="fo-nota" rows="2"></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="asi-prev">
+            <div class="asi-rot">Vista previa del correo</div>
+            <div class="preview-box asi-prev-box" id="fo-prev"></div>
+          </div>
+        </div>
+        <div class="modal-footer asi-foot">
+          <span class="asi-quien">Sale desde tu Gmail con tu ficha de agente.</span>
+          <div class="asi-btns">
+            <button class="btn btn-secondary" id="btnFotosCancel">Cancelar</button>
+            <button class="btn btn-primary" id="btnFotosSend">Enviar correo</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="fotosDone" hidden>
+        <div class="modal-body success-box">
+          <div class="success-icon">✓</div>
+          <div class="success-title">¡Correo enviado!</div>
+          <div class="success-msg" id="fotosDoneMsg"></div>
+          <div class="success-actions">
+            <a class="btn btn-send btn-wa btn-step" id="btnFotosWa" href="#" target="_blank" rel="noopener" style="text-decoration:none;"><span class="btn-step-num">1</span> Avisar al cliente por WhatsApp</a>
+            <button class="btn btn-primary btn-step" id="btnFotosVolver"><span class="btn-step-num">2</span> Volver a Cotizaciones</button>
+          </div>
+          <p class="asi-hint" style="margin-top:14px;">El WhatsApp lleva el mismo enlace del INS. Si no pusiste su número, elegís el contacto dentro de WhatsApp.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
 
   <!-- ======================== CUERPO: MENÚ LATERAL + CONTENIDO ======================== -->
   <div class="app-shell">
@@ -750,8 +830,9 @@
        toca la app se agrega una linea aca. -->
   <footer class="app-foot">
     <details>
-      <summary>Última actualización: 5 nov 2026 — Formulario propio de cotización con reparto entre agentes</summary>
+      <summary>Última actualización: 6 nov 2026 — Fotos para asegurar desde Cotizaciones</summary>
       <ul>
+        <li><b>6 nov 2026</b> — <b>Nuevo: «Fotos para asegurar».</b> Desde Cotizaciones, el botón <b>📷 Fotos</b> le manda al cliente el correo «Paso 1 · Fotografías» con el enlace del INS para tomar las fotos del vehículo, con sus datos ya puestos; solo se pega el enlace de ese cliente. Para alguien que no está en la lista, el botón «+ Fotos a un cliente que no está en la lista» abre el mismo cuadro vacío. El correo trae los pasos de siempre, un botón grande al enlace y la guía de las fotografías. Después se le puede avisar por WhatsApp, y la fila queda marcada «📷 Fotos enviadas». No aparece en los cero kilómetros ni en las que ya tienen póliza. Además, la guía, el formulario de cita y su correo de confirmación ya no hablan de un código QR: dicen que le llega un enlace al correo.</li>
         <li><b>5 nov 2026</b> — <b>Firma de asesor.</b> Cuando el perfil del ⚙ es el de un asesor que vende con la licencia de otro agente (hoy José, de la oficina de Fernando Hernández), los correos, la guía, el configurador y el formulario de cita firman «Asesor de Seguros» y abajo «Oficina de Fernando Hernández, agente · Licencia SUGESE», en vez de «Tu agente» o «Agente exclusivo». Su pie ya no lleva «Propiedad intelectual de». Para los demás agentes no cambia nada.</li>
         <li><b>5 nov 2026</b> — <b>Formulario propio de cotización en <code>/cotizar/</code>, para reemplazar al Google Form.</b> Trae las mismas preguntas y reparte las solicitudes entre agentes por turnos. El reparto se cambia en ⚙ → «Reparto de cotizaciones», que solo ve el administrador: encenderlo o apagarlo y poner cuántas solicitudes seguidas le tocan a cada agente por vuelta (3-1-1, 5-1-1, 2-2-2…). La confirmación al cliente la firma el agente que le tocó, con los datos que cada uno guarda en su ⚙. Cada solicitud se anota en una hoja de Google. Queda apagado hasta configurarlo en Netlify; el Google Form sigue funcionando igual.</li>
         <li><b>4 nov 2026</b> — <b>Cuando la cotización es de un vehículo cero kilómetros, el cliente ya no lee que tiene que tomar fotos.</b> La guía, el formulario de cita y el correo de confirmación le explican que el único requisito es una factura proforma con los datos finales del vehículo o una copia de la factura de compra, que la pida a la agencia, que complete el formulario de cita y que se la envíe a usted por correo o WhatsApp. Se activa solo si en el paso 2 elige "Cero Kilómetros" en Interés asegurable o si el PDF del INS trae la placa temporal. El mensaje de WhatsApp del correo "Cita solicitada" también pide la factura en vez de hablar del código QR. Aplica a las cotizaciones que envíe desde hoy.</li>
@@ -953,6 +1034,7 @@
   <script src="js/email-marca.js"></script>
   <script src="js/email-template.js"></script>
   <script src="js/asistencias-email.js"></script>
+  <script src="js/fotos-email.js"></script>
   <script src="js/gmail-auth.js"></script>
   <script src="js/wizard.js"></script>
   <script src="js/mime-builder.js"></script>
@@ -961,6 +1043,7 @@
   <script src="js/datos-ui.js"></script>
   <script src="js/novedades.js"></script>
   <script src="js/asistencias-ui.js"></script>
+  <script src="js/fotos-ui.js"></script>
   <script src="js/cotizar-agente.js"></script>
   <script src="js/app.js"></script>
 

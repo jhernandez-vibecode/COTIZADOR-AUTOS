@@ -157,6 +157,10 @@ document.addEventListener('DOMContentLoaded', function () {
   // Con guard typeof: si el módulo no cargó, el resto del arranque sigue.
   if (typeof initAsistenciasModal === 'function') initAsistenciasModal();
 
+  // ============ FOTOS PARA ASEGURAR (6 nov 2026) ============
+  // Correo "Paso 1 · Fotografías" desde Cotizaciones o con datos manuales.
+  if (typeof initFotosModal === 'function') initFotosModal();
+
   // La casilla de asistencias del paso 3 solo aparece cuando el INS ya emite
   // con la V32 (28 set 2026). Antes no hay nada que ofrecer, y una casilla
   // prendida que no hace nada confunde.
