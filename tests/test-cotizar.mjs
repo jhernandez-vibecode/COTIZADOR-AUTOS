@@ -29,14 +29,14 @@ console.log('-- reparto por turnos, editable --');
 ok('3-1-1: U U U D T y vuelve', corrida(R(true, [3, 1, 1]), 10) === 'UUUDTUUUDT');
 ok('5-1-1', corrida(R(true, [5, 1, 1]), 7) === 'UUUUUDT');
 
-console.log('-- mas de 15 millones: siempre al admin (JC, 8 nov 2026) --');
+console.log('-- 15 millones o mas: siempre al admin (JC, 8 nov 2026) --');
 ok('el tope es 15.000.000', TOPE_PRINCIPAL === 15000000);
 {
   const r = R(true, [0, 1, 1]);
-  const s1 = elegir({ reparto: r, turno: null, admin: ADM, tieneFicha: todos, valor: 15000001 });
-  ok('15.000.001 → admin aunque tenga peso 0, marcado directo', s1.email === ADM && s1.directo === true && s1.turno === null);
-  const s2 = elegir({ reparto: r, turno: null, admin: ADM, tieneFicha: todos, valor: 15000000 });
-  ok('15.000.000 justos → van al reparto', s2.email === DOS && !s2.directo);
+  const s1 = elegir({ reparto: r, turno: null, admin: ADM, tieneFicha: todos, valor: 15000000 });
+  ok('15.000.000 justos → admin aunque tenga peso 0, marcado directo', s1.email === ADM && s1.directo === true && s1.turno === null);
+  const s2 = elegir({ reparto: r, turno: null, admin: ADM, tieneFicha: todos, valor: 14999999 });
+  ok('14.999.999 → van al reparto', s2.email === DOS && !s2.directo);
   const s3 = elegir({ reparto: R(false, [3, 1, 1]), turno: null, admin: ADM, tieneFicha: todos, valor: 40000000 });
   ok('con el reparto apagado tambien al admin', s3.email === ADM);
   const s4 = elegir({ reparto: r, turno: null, admin: ADM, tieneFicha: () => false, valor: 20000000 });
@@ -97,7 +97,7 @@ ok('hoja: la columna de la confirmacion dice "Solo en pantalla"', filaRegistro(v
 ok('hoja: fila con el agente y el turno', (() => { const f = filaRegistro(vu.datos, { agente: AG, n: 4, de: 5, repartido: true, fecha: 'x' }); return f.agente === 'Agente Prueba Dos' && f.turno === '4 de 5' && f.cedula === '1 0000 0000'; })());
 
 function filaRegistroDirecto() {
-  return filaRegistro({ tipo: 'usado', placa: 'X', valor: 20000000 }, { agente: { nombre: 'A', email: ADM }, n: 0, de: 5, repartido: false, directo: true, fecha: 'x' }).turno === 'Más de ₡15 millones · directo';
+  return filaRegistro({ tipo: 'usado', placa: 'X', valor: 20000000 }, { agente: { nombre: 'A', email: ADM }, n: 0, de: 5, repartido: false, directo: true, fecha: 'x' }).turno === '₡15 millones o más · directo';
 }
 console.log('-- sesion de Google --');
 const resp = (j, okk = true) => Promise.resolve({ ok: okk, json: () => Promise.resolve(j), text: () => Promise.resolve('ok') });
@@ -169,7 +169,7 @@ ok('doble clic: la misma solicitud no sale dos veces', (await (async () => { rel
   ok('Function: una de ₡18 millones le llega al admin', g1.st === 200 && enviados.length === 1 && enviados[0].to[0] === ADM);
   const despues = (await llamar('/cotizar/agente', { accion: 'ver', token: tk('tkUno') })).j.proximos;
   ok('Function: la grande no movio la vuelta', antes.join() === despues.join());
-  ok('Function: la hoja la anota como directa', hoja[hoja.length - 1].fila.turno.startsWith('Más de ₡15 millones'));
+  ok('Function: la hoja la anota como directa', hoja[hoja.length - 1].fila.turno.startsWith('₡15 millones o más'));
   hoja.pop();
 }
 ok('ficha de otro: solo el admin → 403', (await llamar('/cotizar/agente', { accion: 'ficha', para: TRES, token: tk('tkDos'), ficha: { nombre: 'Agente Prueba Tres' } })).st === 403);
