@@ -8,7 +8,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { normalizarReparto, elegir, vuelta, proximos, repartoInicial, TOPE_PRINCIPAL } from '../netlify/functions/lib/cotizar-reparto.mjs';
 import { validarCotizacion, validarFicha, INTERESES_COT } from '../netlify/functions/lib/cotizar-validacion.mjs';
-import { correoAgente, filaRegistro } from '../netlify/functions/lib/cotizar-correos.mjs';
+import { correoAgente, filaRegistro, presentacion } from '../netlify/functions/lib/cotizar-correos.mjs';
 import { correoDeSesion, CLIENT_ID_DEFECTO } from '../netlify/functions/lib/google-sesion.mjs';
 import { crearHandler } from '../netlify/functions/lib/cotizar-handler.mjs';
 
@@ -93,6 +93,14 @@ ok('agente: trae la cedula y todas las respuestas', ca.html.includes('1 0000 000
 ok('agente: asunto con 📝 al inicio', ca.asunto === '📝 Cotización solicitada · BDF482 · Mariela Quesada Rojas');
 ok('agente: nuevo trae marca, combustible y tipo', (() => { const h = correoAgente(vn.datos, { agente: AG, n: 0, de: 0, repartido: false, fecha: 'x' }).html; return h.includes('Toyota RAV4 2027') && h.includes('Híbrido') && h.includes('Rural'); })());
 ok('agente: sin el aviso de confirmacion al cliente (ya no se envia)', !ca.html.includes('confirmación al cliente'));
+{
+  const AS = { email: 'asesora@ejemplo.test', nombre: 'Asesora Prueba Tres', licencia: '', telefono: '', whatsapp: '', cargo: 'Asesora de Seguros', oficina: 'Oficina de Agente Prueba, agente' };
+  ok('presentacion: agente → "agente del INS"', presentacion({ cargo: '' }) === 'agente del INS');
+  ok('presentacion: asesora con su oficina', presentacion(AS) === 'asesora de seguros de la oficina de Agente Prueba');
+  const wa = decodeURIComponent((correoAgente(vu.datos, { agente: AS, n: 1, de: 5, repartido: true, fecha: 'x' }).html.match(/text=([^"&]+)/) || [, ''])[1]).replace(/\+/g, ' ');
+  ok('WhatsApp del aviso: la asesora no dice "agente del INS"', wa.includes('soy Asesora Prueba, asesora de seguros de la oficina de Agente Prueba.') && !wa.includes('agente del INS'));
+}
+ok('Melanie es asesora de la oficina de Fernando (JC, 8 nov 2026)', JSON.stringify((await import('../js/email-marca.js')).default.SDI_ASESORES['melanie.hernandez@seguros-del-ins.com']) === JSON.stringify({ cargo: 'Asesora de Seguros', oficina: 'Oficina de Fernando Hernández, agente' }));
 ok('hoja: la columna de la confirmacion dice "Solo en pantalla"', filaRegistro(vu.datos, { agente: AG, n: 1, de: 1, repartido: true, fecha: 'x' }).clienteAvisado === 'Solo en pantalla');
 ok('hoja: fila con el agente y el turno', (() => { const f = filaRegistro(vu.datos, { agente: AG, n: 4, de: 5, repartido: true, fecha: 'x' }); return f.agente === 'Agente Prueba Dos' && f.turno === '4 de 5' && f.cedula === '1 0000 0000'; })());
 

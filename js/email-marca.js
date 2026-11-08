@@ -310,6 +310,8 @@ function _bloqueAsistencias(o) {
  */
 var SDI_ASESORES = {
   'tramites@segurosdelins.com': { cargo: 'Asesor de Seguros', oficina: 'Oficina de Fernando Hernández, agente' },
+  // Melanie (JC, 8 nov 2026): asesora de la oficina de Fernando; recibe solicitudes del reparto en su Gmail.
+  'melanie.hernandez@seguros-del-ins.com': { cargo: 'Asesora de Seguros', oficina: 'Oficina de Fernando Hernández, agente' },
 };
 /** {cargo, oficina} del asesor, o null si el correo es de un agente. */
 function _asesor(correo) {

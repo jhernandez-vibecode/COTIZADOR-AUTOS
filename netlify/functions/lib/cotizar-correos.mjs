@@ -17,6 +17,15 @@ import { F, LOGO_INS, LOGO_SDI, esc, colones, waIntl, fila, FILETE, marco, rolFi
 
 export const pila = (nombre) => String(nombre || "").trim().split(/\s+/)[0] || "";
 const dosNombres = (n) => String(n || "").trim().split(/\s+/).slice(0, 2).join(" ");
+/**
+ * Como se presenta en el WhatsApp: "agente del INS", o el asesor con su oficina
+ * ("asesora de seguros de la oficina de Fernando Hernández"). JC, 8 nov 2026.
+ */
+export function presentacion(ag) {
+  if (!ag.cargo) return "agente del INS";
+  const of = String(ag.oficina || "").replace(/,\s*agente\s*$/i, "").trim();
+  return ag.cargo.toLowerCase() + (of ? " de la " + of.charAt(0).toLowerCase() + of.slice(1) : "");
+}
 
 const ENCABEZADO = "<tr><td>" + FILETE + "</td></tr>" +
   '<tr><td bgcolor="#0C2340" align="center" style="padding:20px 24px;"><img src="' + LOGO_INS + '" alt="INS" height="26" style="height:26px;width:auto;border:0;"></td></tr>';
@@ -40,7 +49,7 @@ export const lineaCargo = (ag) => rolFirma(ag).join("\n");
  */
 export function correoAgente(d, info) {
   const ag = info.agente;
-  const textoWa = "Hola " + pila(d.nombre) + ", soy " + dosNombres(ag.nombre) + ", agente del INS. Recibí tu solicitud de cotización para tu vehículo " +
+  const textoWa = "Hola " + pila(d.nombre) + ", soy " + dosNombres(ag.nombre) + ", " + presentacion(ag) + ". Recibí tu solicitud de cotización para tu vehículo " +
     (d.tipo === "usado" ? "placa " + d.placa : d.marcaModelo) + " y te la preparo en un momento.";
   const cliente = [["Nombre del propietario", d.nombre], ["Número de Cédula", d.cedula], ["Teléfono", d.telefono], ["Correo", d.correo]];
   const veh = [["Su vehículo es", TIPOS[d.tipo]]];
