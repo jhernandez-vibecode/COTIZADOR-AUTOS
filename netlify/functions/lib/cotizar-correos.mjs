@@ -85,5 +85,6 @@ export function filaRegistro(d, info) {
     uso: d.uso, interes: d.interes,
     inscribe: d.inscribe || "", cedulaInscribe: d.cedula2 || "", combustible: d.combustible || "", tipoVehiculo: d.tipoVeh || "",
     info: d.info || "", clienteAvisado: "Solo en pantalla",   // 6 nov 2026: ya no sale correo al cliente
+    mes: info.mes || "",   // 8 nov 2026: para filtrar y resumir por mes
   };
 }

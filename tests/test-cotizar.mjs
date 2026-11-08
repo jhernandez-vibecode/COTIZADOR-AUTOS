@@ -10,7 +10,7 @@ import { normalizarReparto, elegir, vuelta, proximos, repartoInicial, TOPE_PRINC
 import { validarCotizacion, validarFicha, INTERESES_COT } from '../netlify/functions/lib/cotizar-validacion.mjs';
 import { correoAgente, filaRegistro, presentacion } from '../netlify/functions/lib/cotizar-correos.mjs';
 import { correoDeSesion, CLIENT_ID_DEFECTO } from '../netlify/functions/lib/google-sesion.mjs';
-import { crearHandler } from '../netlify/functions/lib/cotizar-handler.mjs';
+import { crearHandler, mesCR } from '../netlify/functions/lib/cotizar-handler.mjs';
 
 const raiz = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 let pass = 0, fail = 0;
@@ -198,6 +198,7 @@ ok('doble clic: la misma solicitud no sale dos veces', (await (async () => { rel
   const c1 = await llamar('/cotizar/enviar', { ...U, correo: 'chica@ejemplo.test', placa: 'CHI001', valor: '₡ 2.500.000' }, '5.5.5.5');
   ok('Function: menos de ₡4 millones → no sale ningun correo, el cliente ve lo mismo', c1.st === 200 && c1.j.ok && enviados.length === 0 && typeof c1.j.enHorario === 'boolean');
   ok('Function: queda en la hoja como sin asignar', hoja.length === nh + 1 && hoja[nh].fila.turno === 'Menos de ₡4 millones · sin asignar' && hoja[nh].fila.agente === 'Sin asignar' && hoja[nh].fila.correoAgente === '');
+  ok('Function: la fila de la hoja lleva el Mes de la solicitud', /^\d{4}-\d{2} · [a-z]+$/.test(hoja[nh].fila.mes));
   const despues = (await llamar('/cotizar/agente', { accion: 'ver', token: tk('tkUno') })).j.proximos;
   ok('Function: la chica no movio la vuelta', antes.join() === despues.join());
   hoja.pop();
@@ -245,6 +246,15 @@ const gs = fs.readFileSync(path.join(raiz, 'apps-script/registro-cotizaciones/re
 const colsHoja = [...gs.matchAll(/\['(\w+)', '/g)].map((m) => m[1]);
 const clavesFila = Object.keys(filaRegistro(vn.datos, { agente: AG, n: 1, de: 1, repartido: true, fecha: 'x' }));
 ok('las columnas del Apps Script son las de filaRegistro', colsHoja.length === clavesFila.length && clavesFila.every((k) => colsHoja.includes(k)));
+ok('mes: hora de CR (11:30 pm del 30 nov = noviembre; 12:30 am del 1 dic = diciembre)', mesCR(new Date('2026-12-01T05:30:00Z')) === '2026-11 · noviembre' && mesCR(new Date('2026-12-01T06:30:00Z')) === '2026-12 · diciembre');
+ok('la fila de la hoja trae el mes', filaRegistro(vn.datos, { agente: AG, n: 1, de: 1, repartido: true, fecha: 'x', mes: '2026-11 · noviembre' }).mes === '2026-11 · noviembre');
+{
+  const vm = await import('node:vm');
+  const ctx = { Utilities: { formatDate: (d, tz, f) => (f === 'yyyy' ? String(d.getFullYear()) : String(d.getMonth() + 1)) } };
+  vm.createContext(ctx); vm.runInContext(gs, ctx);
+  ok('ordenar(): el Mes de las filas viejas sale del texto de la Fecha', ctx.mesDe_('8 nov 2026, 3:35 pm') === '2026-11 · noviembre' && ctx.mesDe_('1 set 2026, 9:00 am') === '2026-09 · septiembre' && ctx.mesDe_('PRUEBA') === '');
+  ok('ordenar(): un color por persona (JC azul, Cristian naranja, José verde, Melanie púrpura)', ctx.RG.PERSONAS.map((p) => p.correo + '=' + p.fuerte).join() === 'jhernandez@segurosdelins.com=#1A73E8,chernandez@seguros-ins.com=#E8710A,tramites@segurosdelins.com=#188038,melanie.hernandez@seguros-del-ins.com=#9334E6');
+}
 ok('el Apps Script exige la clave y responde "ok"', /cuerpo\.clave !== clave/.test(gs) && /salida\('ok'\)/.test(gs));
 
 console.log('-- el ⚙ --');

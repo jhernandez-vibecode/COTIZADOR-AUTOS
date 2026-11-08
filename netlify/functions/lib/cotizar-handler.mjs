@@ -46,6 +46,14 @@ export const fechaCR = (now) => new Intl.DateTimeFormat("es-CR", {
   timeZone: "America/Costa_Rica", day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit",
 }).format(now).replace(/\./g, "").replace(/\s+/g, " ");
 
+const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+/** "2026-11 · noviembre" en hora de Costa Rica: la columna Mes de la hoja (filtra y ordena bien). */
+export const mesCR = (now) => {
+  const cr = new Date(now.getTime() - 6 * 3600 * 1000);   // CR es UTC-6 todo el año (sin horario de verano)
+  const m = cr.getUTCMonth();
+  return cr.getUTCFullYear() + "-" + String(m + 1).padStart(2, "0") + " · " + MESES[m];
+};
+
 /**
  * Fabrica del handler: las dependencias se inyectan para el test.
  * @param {{getStore?:Function, fetchFn?:Function, env?:object, ahora?:()=>Date}} deps
@@ -133,7 +141,7 @@ export function crearHandler(deps = {}) {
     // Menos de TOPE_MANUAL: no se le asigna a nadie, JC la asigna por otro medio desde la hoja.
     const ag = sel.sinAsignar ? { email: "", nombre: "Sin asignar", licencia: "", telefono: "", whatsapp: "", cargo: "", oficina: "" }
       : firmaDe(sel.email, fichas[sel.email]) || firmaDe(sel.email, SIN_FICHA);
-    const info = { agente: ag, n: sel.n, de: sel.de, repartido: sel.repartido, directo: !!sel.directo, sinAsignar: !!sel.sinAsignar, fecha: fechaCR(now), registrada: false };
+    const info = { agente: ag, n: sel.n, de: sel.de, repartido: sel.repartido, directo: !!sel.directo, sinAsignar: !!sel.sinAsignar, fecha: fechaCR(now), mes: mesCR(now), registrada: false };
 
     const remite = "cotizaciones@" + direccionDe(from).split("@")[1];
     // 6 nov 2026 (JC): ya no sale correo al cliente. La pantalla final le dice cuando le llega la cotizacion.
