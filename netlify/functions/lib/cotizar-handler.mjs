@@ -28,7 +28,7 @@
 import { validarCotizacion, validarFicha, vehiculoCorto } from "./cotizar-validacion.mjs";
 import { correoAgente, filaRegistro, lineaCargo } from "./cotizar-correos.mjs";
 import { siguienteHabil } from "./horario.mjs";
-import { normalizarReparto, elegir, proximos, normCorreo, TOPE_PRINCIPAL } from "./cotizar-reparto.mjs";
+import { normalizarReparto, elegir, proximos, normCorreo, TOPE_PRINCIPAL, TOPE_MANUAL } from "./cotizar-reparto.mjs";
 import { correoDeSesion } from "./google-sesion.mjs";
 import { huella, cubeta, permitir, esDuplicado } from "./cita-limite.mjs";
 import {
@@ -61,7 +61,7 @@ export function crearHandler(deps = {}) {
     const [turno, todas] = await Promise.all([leerTurno(store), leerFichas(store, reparto.agentes.map((a) => a.email))]);
     const fichas = {};
     for (const [e, f] of Object.entries(todas)) fichas[e] = f ? { nombre: f.nombre, licencia: f.licencia, whatsapp: f.whatsapp, porAdmin: !!f.porAdmin, actualizado: f.actualizado } : null;
-    return { reparto, fichas, tope: TOPE_PRINCIPAL, proximos: proximos(reparto, turno, 10, (e) => !!fichas[e], admin), actualizado: reparto.actualizado || null };
+    return { reparto, fichas, tope: TOPE_PRINCIPAL, topeManual: TOPE_MANUAL, proximos: proximos(reparto, turno, 10, (e) => !!fichas[e], admin), actualizado: reparto.actualizado || null };
   }
 
   // ------------------------------------------------------------ ⚙ agentes
@@ -130,8 +130,10 @@ export function crearHandler(deps = {}) {
     const [turno, fichas] = await Promise.all([leerTurno(store), leerFichas(store, [admin, ...reparto.agentes.map((a) => a.email)])]);
     const sel = elegir({ reparto, turno, admin, valor: d.valor, tieneFicha: (e) => !!fichas[e] });
     if (sel.turno) { try { await guardarTurno(store, sel.turno); } catch (e) { console.error("[cotizar] turno no guardado", e && e.message); } }
-    const ag = firmaDe(sel.email, fichas[sel.email]) || firmaDe(sel.email, SIN_FICHA);
-    const info = { agente: ag, n: sel.n, de: sel.de, repartido: sel.repartido, directo: !!sel.directo, fecha: fechaCR(now), registrada: false };
+    // Menos de TOPE_MANUAL: no se le asigna a nadie, JC la asigna por otro medio desde la hoja.
+    const ag = sel.sinAsignar ? { email: "", nombre: "Sin asignar", licencia: "", telefono: "", whatsapp: "", cargo: "", oficina: "" }
+      : firmaDe(sel.email, fichas[sel.email]) || firmaDe(sel.email, SIN_FICHA);
+    const info = { agente: ag, n: sel.n, de: sel.de, repartido: sel.repartido, directo: !!sel.directo, sinAsignar: !!sel.sinAsignar, fecha: fechaCR(now), registrada: false };
 
     const remite = "cotizaciones@" + direccionDe(from).split("@")[1];
     // 6 nov 2026 (JC): ya no sale correo al cliente. La pantalla final le dice cuando le llega la cotizacion.
@@ -149,14 +151,22 @@ export function crearHandler(deps = {}) {
       } catch (e) { console.error("[cotizar] hoja no disponible", e && e.message); }
     }
 
-    const am = correoAgente(d, info);
+    const h = siguienteHabil(now);
+    let para = ag, prefijo = "";
+    if (info.sinAsignar) {
+      if (info.registrada) return json(200, { ok: true, enHorario: h.enHorario, cuando: h.cuando, agente: null });
+      // La hoja no la anoto: para que no se pierda en silencio, el aviso le llega al admin.
+      console.error("[cotizar] sin asignar y la hoja no la anoto: va al admin");
+      para = firmaDe(admin, fichas[admin]) || firmaDe(admin, SIN_FICHA);
+      prefijo = "⚠ Sin asignar (no quedó en la hoja) · ";
+    }
+    const am = correoAgente(d, { ...info, agente: para });
     try {
-      await enviarCorreo(fetchFn, apiKey, { from: "Cotizaciones · SDI <" + remite + ">", to: [ag.email], reply_to: d.correo, subject: am.asunto, html: am.html, text: am.texto });
+      await enviarCorreo(fetchFn, apiKey, { from: "Cotizaciones · SDI <" + remite + ">", to: [para.email], reply_to: d.correo, subject: prefijo + am.asunto, html: am.html, text: am.texto });
     } catch (e) {
       console.error("[cotizar] no salio el del agente", e && e.message);
       return json(502, { error: "No pudimos enviar tu solicitud." });
     }
-    const h = siguienteHabil(now);
     return json(200, { ok: true, enHorario: h.enHorario, cuando: h.cuando, agente: { nombre: ag.nombre, cargo: lineaCargo(ag) } });
   }
 

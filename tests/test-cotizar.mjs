@@ -6,7 +6,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { normalizarReparto, elegir, vuelta, proximos, repartoInicial, TOPE_PRINCIPAL } from '../netlify/functions/lib/cotizar-reparto.mjs';
+import { normalizarReparto, elegir, vuelta, proximos, repartoInicial, TOPE_PRINCIPAL, TOPE_MANUAL } from '../netlify/functions/lib/cotizar-reparto.mjs';
 import { validarCotizacion, validarFicha, INTERESES_COT } from '../netlify/functions/lib/cotizar-validacion.mjs';
 import { correoAgente, filaRegistro, presentacion } from '../netlify/functions/lib/cotizar-correos.mjs';
 import { correoDeSesion, CLIENT_ID_DEFECTO } from '../netlify/functions/lib/google-sesion.mjs';
@@ -43,6 +43,18 @@ ok('el tope es 15.000.000', TOPE_PRINCIPAL === 15000000);
   ok('aunque nadie tenga ficha', s4.email === ADM && s4.directo);
 }
 ok('hoja: la columna del turno dice que fue directo', filaRegistroDirecto());
+
+console.log('-- menos de 4 millones: sin asignar (JC, 8 nov 2026) --');
+ok('el tope manual es 4.000.000', TOPE_MANUAL === 4000000);
+{
+  const r = R(true, [3, 1, 1]);
+  const s1 = elegir({ reparto: r, turno: null, admin: ADM, tieneFicha: todos, valor: 3999999 });
+  ok('3.999.999 → a nadie, sin mover la vuelta', s1.email === '' && s1.sinAsignar === true && s1.turno === null);
+  const s2 = elegir({ reparto: r, turno: null, admin: ADM, tieneFicha: todos, valor: 4000000 });
+  ok('4.000.000 justos → entran al reparto', s2.email === ADM && !s2.sinAsignar && s2.turno);
+  ok('con el reparto apagado tampoco se asigna', elegir({ reparto: R(false, [3, 1, 1]), turno: null, admin: ADM, tieneFicha: todos, valor: 2000000 }).sinAsignar === true);
+  ok('hoja: dice sin asignar', filaRegistro({ tipo: 'usado', placa: 'X', valor: 2000000 }, { agente: { nombre: 'Sin asignar', email: '' }, n: 0, de: 5, repartido: false, sinAsignar: true, fecha: 'x' }).turno === 'Menos de ₡4 millones · sin asignar');
+}
 ok('2-2-2', corrida(R(true, [2, 2, 2]), 6) === 'UUDDTT');
 ok('3-2-1', corrida(R(true, [3, 2, 1]), 12) === 'UUUDDTUUUDDT');
 ok('peso 0 = fuera de la vuelta', corrida(R(true, [1, 1, 0]), 4) === 'UDUD');
@@ -180,6 +192,23 @@ ok('doble clic: la misma solicitud no sale dos veces', (await (async () => { rel
   ok('Function: la hoja la anota como directa', hoja[hoja.length - 1].fila.turno.startsWith('₡15 millones o más'));
   hoja.pop();
 }
+{
+  const antes = (await llamar('/cotizar/agente', { accion: 'ver', token: tk('tkUno') })).j.proximos;
+  enviados.length = 0; const nh = hoja.length;
+  const c1 = await llamar('/cotizar/enviar', { ...U, correo: 'chica@ejemplo.test', placa: 'CHI001', valor: '₡ 2.500.000' }, '5.5.5.5');
+  ok('Function: menos de ₡4 millones → no sale ningun correo, el cliente ve lo mismo', c1.st === 200 && c1.j.ok && enviados.length === 0 && typeof c1.j.enHorario === 'boolean');
+  ok('Function: queda en la hoja como sin asignar', hoja.length === nh + 1 && hoja[nh].fila.turno === 'Menos de ₡4 millones · sin asignar' && hoja[nh].fila.agente === 'Sin asignar' && hoja[nh].fila.correoAgente === '');
+  const despues = (await llamar('/cotizar/agente', { accion: 'ver', token: tk('tkUno') })).j.proximos;
+  ok('Function: la chica no movio la vuelta', antes.join() === despues.join());
+  hoja.pop();
+}
+ok('Function: si la hoja no la anota, la de menos de ₡4 millones le llega al admin', await (async () => {
+  const env2 = { ...env }; delete env2.COTIZAR_REGISTRO_URL;
+  const st2 = tienda(); for (const [k, v] of store.m) if (k.startsWith('ficha:')) st2.m.set(k, v);
+  const env3 = []; const h4 = crearHandler({ getStore: () => st2, env: env2, ahora: () => new Date('2030-01-07T15:00:00Z'), fetchFn: async (u, o) => { if (u === 'https://api.resend.com/emails') { env3.push(JSON.parse(o.body)); return { ok: true }; } return fetchFn(u, o); } });
+  const r = await h4(new Request('https://x.test/cotizar/enviar', { method: 'POST', headers: { origin: 'https://cotizador.appsegurosdigitales.com' }, body: JSON.stringify({ ...U, correo: 'chica2@ejemplo.test', valor: '1500000' }) }), { ip: '6.6.6.6' });
+  return r.status === 200 && env3.length === 1 && env3[0].to[0] === ADM && env3[0].subject.startsWith('⚠ Sin asignar');
+})());
 ok('ficha de otro: solo el admin → 403', (await llamar('/cotizar/agente', { accion: 'ficha', para: TRES, token: tk('tkDos'), ficha: { nombre: 'Agente Prueba Tres' } })).st === 403);
 ok('ficha de otro: fuera del reparto → 400', (await llamar('/cotizar/agente', { accion: 'ficha', para: 'nadie@ejemplo.test', token: tk('tkUno'), ficha: { nombre: 'Nadie Nadie' } })).st === 400);
 {

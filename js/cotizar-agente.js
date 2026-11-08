@@ -164,7 +164,7 @@ function _cotzPintar() {
     '</div>';
   });
   h += '</div>';
-  h += '<p class="cotz-nota cotz-tope">Las solicitudes de <b>₡' + Number(v.tope || 15000000).toLocaleString('de-DE') + ' o más</b> te llegan siempre a vos, esté como esté el reparto, y no cambian el turno.</p>';
+  h += '<p class="cotz-nota cotz-tope">Las solicitudes de <b>₡' + Number(v.tope || 15000000).toLocaleString('de-DE') + ' o más</b> te llegan siempre a vos, esté como esté el reparto, y no cambian el turno. Las de <b>menos de ₡' + Number(v.topeManual || 4000000).toLocaleString('de-DE') + '</b> no se le asignan a nadie: quedan en la hoja para que las asignés vos, y tampoco cambian el turno.</p>';
   h += '<div class="cotz-agregar"><input type="email" id="cotzNuevo" placeholder="correo@del-agente.com" aria-label="Correo del agente nuevo"><button type="button" class="btn btn-secondary" id="cotzAgregar">Agregar agente</button></div>';
   if (r.agentes.length === 3) {
     h += '<div class="cotz-rapidos">Rápidos: ' + ['3,1,1', '5,1,1', '2,2,2', '3,2,1', '1,1,0'].map(function (p) {
