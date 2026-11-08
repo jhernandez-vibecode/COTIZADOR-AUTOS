@@ -189,12 +189,9 @@ export function crearHandler(deps = {}) {
     const firmaAdmin = firmaDe(admin, fichas[admin]) || firmaDe(admin, SIN_FICHA);
     const hojaFallo = !!(env.COTIZAR_REGISTRO_URL && env.COTIZAR_REGISTRO_CLAVE) && !info.registrada;
     if (info.sinAsignar) {
-      // Si la hoja falla, al cliente no le llega nada (JC: "esas las vemos despues"), pero
-      // desde la alarma por falla (8 nov 2026) a JC le llega la solicitud para que no se pierda.
-      if (hojaFallo) {
-        console.error("[cotizar] sin asignar y la hoja no la anoto");
-        await alertar(apiKey, remite, admin, firmaAdmin, "La hoja de registro no anotó esta solicitud de menos de ₡4 millones (sin asignar). Acá van los datos para que no se pierda: anotala o asignala vos.", d, info);
-      }
+      // Si la hoja falla, no le llega nada a nadie, ni alerta (JC, 8 nov 2026: "esas las vemos
+      // despues"; y de noche: "no me interesa la alerta de los menos de 4.000.000"). Solo el log.
+      if (hojaFallo) console.error("[cotizar] sin asignar y la hoja no la anoto");
       return json(200, { ok: true, enHorario: h.enHorario, cuando: h.cuando, agente: null });
     }
     const am = correoAgente(d, info);

@@ -24,7 +24,7 @@ const PAGINA = "https://cotizador.appsegurosdigitales.com/cotizar/";
 /** "8 nov 2026, 10:15 am" de un instante, en hora de Costa Rica. */
 const horaCR = (t) => new Intl.DateTimeFormat("es-CR", {
   timeZone: "America/Costa_Rica", day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit",
-}).format(t).replace(/\./g, "").replace(/\s+/g, " ");
+}).format(t).replace(/\s*a\.\s*m\./, " am").replace(/\s*p\.\s*m\./, " pm").replace(/\./g, "").replace(/\s+/g, " ");
 
 /**
  * @param {{getStore:Function, fetchFn?:Function, env?:object, ahora?:()=>Date}} deps

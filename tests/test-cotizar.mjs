@@ -250,7 +250,7 @@ console.log('-- alarmas (8 nov 2026) --');
   }
   {
     const a = armar(); const r = await a.pedir({ ...U, correo: 'a2@ejemplo.test', valor: '2000000' });
-    ok('falla la hoja con una de menos de ₡4 millones: el cliente ve lo mismo y solo a JC le llega la alerta', r.status === 200 && a.mails.length === 1 && esAlerta(a.mails[0]) && a.mails[0].html.includes('sin asignar'));
+    ok('falla la hoja con una de menos de ₡4 millones: el cliente ve lo mismo y NO sale ninguna alerta (JC)', r.status === 200 && a.mails.length === 0);
   }
   {
     const a = armar({ agenteFalla: true }); const r = await a.pedir({ ...U, correo: 'a3@ejemplo.test' });
@@ -275,7 +275,7 @@ console.log('-- alarmas (8 nov 2026) --');
   ok('vigia: silencio de 3 horas', SILENCIO_HORAS === 3);
   // Lunes 7 ene 2030. 11:30 am CR = 17:30 UTC.
   let v = await correr('2030-01-07T17:30:00Z', '2030-01-07T12:00:00Z');   // ultima 6:00 am CR → cuenta desde las 8:00 → 3,5 h
-  ok('vigia: 3,5 h de jornada sin solicitudes → alerta a JC', v.r.alerta === true && v.mails.length === 1 && v.mails[0].to[0] === ADM && v.mails[0].subject.startsWith('⚠ Sin solicitudes') && v.st.m.get('alerta-silencio') === '2030-01-07T12:00:00Z');
+  ok('vigia: 3,5 h de jornada sin solicitudes → alerta a JC', v.r.alerta === true && v.mails.length === 1 && v.mails[0].to[0] === ADM && v.mails[0].subject === '⚠ Sin solicitudes de cotización desde el 7 ene 2030, 6:00 am' && v.st.m.get('alerta-silencio') === '2030-01-07T12:00:00Z');
   v = await correr('2030-01-07T17:30:00Z', '2030-01-07T12:00:00Z', '2030-01-07T12:00:00Z');
   ok('vigia: el mismo silencio no se avisa dos veces', v.r.alerta === false && v.r.yaAvisada && v.mails.length === 0);
   v = await correr('2030-01-07T17:30:00Z', '2030-01-07T15:00:00Z');
