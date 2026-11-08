@@ -28,7 +28,7 @@
 import { validarCotizacion, validarFicha, vehiculoCorto } from "./cotizar-validacion.mjs";
 import { correoAgente, filaRegistro, lineaCargo } from "./cotizar-correos.mjs";
 import { siguienteHabil } from "./horario.mjs";
-import { normalizarReparto, elegir, proximos, normCorreo } from "./cotizar-reparto.mjs";
+import { normalizarReparto, elegir, proximos, normCorreo, TOPE_PRINCIPAL } from "./cotizar-reparto.mjs";
 import { correoDeSesion } from "./google-sesion.mjs";
 import { huella, cubeta, permitir, esDuplicado } from "./cita-limite.mjs";
 import {
@@ -60,8 +60,8 @@ export function crearHandler(deps = {}) {
     const reparto = await leerReparto(store, admin);
     const [turno, todas] = await Promise.all([leerTurno(store), leerFichas(store, reparto.agentes.map((a) => a.email))]);
     const fichas = {};
-    for (const [e, f] of Object.entries(todas)) fichas[e] = f ? { nombre: f.nombre, licencia: f.licencia, whatsapp: f.whatsapp, actualizado: f.actualizado } : null;
-    return { reparto, fichas, proximos: proximos(reparto, turno, 10, (e) => !!fichas[e], admin), actualizado: reparto.actualizado || null };
+    for (const [e, f] of Object.entries(todas)) fichas[e] = f ? { nombre: f.nombre, licencia: f.licencia, whatsapp: f.whatsapp, porAdmin: !!f.porAdmin, actualizado: f.actualizado } : null;
+    return { reparto, fichas, tope: TOPE_PRINCIPAL, proximos: proximos(reparto, turno, 10, (e) => !!fichas[e], admin), actualizado: reparto.actualizado || null };
   }
 
   // ------------------------------------------------------------ ⚙ agentes
@@ -79,6 +79,19 @@ export function crearHandler(deps = {}) {
     const email = await correoDeSesion(body.token, { clientId: env.COTIZAR_GOOGLE_CLIENT_ID || undefined, fetchFn });
     if (!email) return json(401, { error: "Tu sesión de Google no es válida. Volvé a entrar." });
 
+    if (accion === "ficha" && body.para) {
+      // 8 nov 2026: el admin le pone la ficha a un agente que NO usa el cotizador (Melanie
+      // trabaja desde Gmail). Solo a alguien del reparto ya guardado. Si esa persona guarda
+      // despues su propio ⚙, su ficha reemplaza a esta.
+      if (email !== admin) return json(403, { error: "Solo el administrador pone la ficha de otro agente." });
+      const para = normCorreo(body.para);
+      const reparto = await leerReparto(store, admin);
+      if (!reparto.agentes.some((a) => a.email === para)) return json(400, { error: "Primero guardá el reparto con ese correo." });
+      const v = validarFicha(body.ficha);
+      if (!v.ok) return json(400, { error: v.error });
+      await guardarFicha(store, para, { ...v.ficha, porAdmin: true }, ahora());
+      return json(200, await vistaAdmin(store, admin));
+    }
     if (accion === "ficha") {
       if (!puedeTenerFicha(email, { admin, reparto: await leerReparto(store, admin), env })) return json(403, { error: "Tu correo no está en el reparto de cotizaciones." });
       const v = validarFicha(body.ficha);
@@ -115,10 +128,10 @@ export function crearHandler(deps = {}) {
     // tocarle al mismo agente; la vuelta se acomoda sola en las siguientes (se acepta).
     const reparto = await leerReparto(store, admin);
     const [turno, fichas] = await Promise.all([leerTurno(store), leerFichas(store, [admin, ...reparto.agentes.map((a) => a.email)])]);
-    const sel = elegir({ reparto, turno, admin, tieneFicha: (e) => !!fichas[e] });
+    const sel = elegir({ reparto, turno, admin, valor: d.valor, tieneFicha: (e) => !!fichas[e] });
     if (sel.turno) { try { await guardarTurno(store, sel.turno); } catch (e) { console.error("[cotizar] turno no guardado", e && e.message); } }
     const ag = firmaDe(sel.email, fichas[sel.email]) || firmaDe(sel.email, SIN_FICHA);
-    const info = { agente: ag, n: sel.n, de: sel.de, repartido: sel.repartido, fecha: fechaCR(now), registrada: false };
+    const info = { agente: ag, n: sel.n, de: sel.de, repartido: sel.repartido, directo: !!sel.directo, fecha: fechaCR(now), registrada: false };
 
     const remite = "cotizaciones@" + direccionDe(from).split("@")[1];
     // 6 nov 2026 (JC): ya no sale correo al cliente. La pantalla final le dice cuando le llega la cotizacion.

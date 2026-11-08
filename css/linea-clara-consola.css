@@ -454,3 +454,9 @@ p.cotz-nota.cotz-mal{border-radius:10px;padding:8px 12px}
   .stat-marca{grid-column:1/-1;grid-row:3}
   .stat-acc{grid-column:1/-1;grid-row:4;justify-content:flex-start;flex-wrap:wrap}
 }
+/* 8 nov 2026: ficha puesta por el admin (agente que no usa el cotizador) y nota del tope */
+.cotz-quien .cotz-porad{font:400 11.5px 'Google Sans Flex',system-ui,sans-serif;white-space:normal;color:#037D61}
+.cotz-ficha{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.cotz-ficha input{flex:1 1 140px;min-width:0;border:1px solid #8A939C;border-radius:10px;padding:7px 10px;font:inherit;font-size:13px}
+.cotz-ficha .btn{padding:7px 14px;font-size:13px}
+.cotz-tope{background:#EEF4F9;border-radius:12px;padding:8px 12px}

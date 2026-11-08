@@ -6,7 +6,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { normalizarReparto, elegir, vuelta, proximos, repartoInicial } from '../netlify/functions/lib/cotizar-reparto.mjs';
+import { normalizarReparto, elegir, vuelta, proximos, repartoInicial, TOPE_PRINCIPAL } from '../netlify/functions/lib/cotizar-reparto.mjs';
 import { validarCotizacion, validarFicha, INTERESES_COT } from '../netlify/functions/lib/cotizar-validacion.mjs';
 import { correoAgente, filaRegistro } from '../netlify/functions/lib/cotizar-correos.mjs';
 import { correoDeSesion, CLIENT_ID_DEFECTO } from '../netlify/functions/lib/google-sesion.mjs';
@@ -28,6 +28,21 @@ function corrida(reparto, n, tieneFicha = todos) {
 console.log('-- reparto por turnos, editable --');
 ok('3-1-1: U U U D T y vuelve', corrida(R(true, [3, 1, 1]), 10) === 'UUUDTUUUDT');
 ok('5-1-1', corrida(R(true, [5, 1, 1]), 7) === 'UUUUUDT');
+
+console.log('-- mas de 15 millones: siempre al admin (JC, 8 nov 2026) --');
+ok('el tope es 15.000.000', TOPE_PRINCIPAL === 15000000);
+{
+  const r = R(true, [0, 1, 1]);
+  const s1 = elegir({ reparto: r, turno: null, admin: ADM, tieneFicha: todos, valor: 15000001 });
+  ok('15.000.001 → admin aunque tenga peso 0, marcado directo', s1.email === ADM && s1.directo === true && s1.turno === null);
+  const s2 = elegir({ reparto: r, turno: null, admin: ADM, tieneFicha: todos, valor: 15000000 });
+  ok('15.000.000 justos → van al reparto', s2.email === DOS && !s2.directo);
+  const s3 = elegir({ reparto: R(false, [3, 1, 1]), turno: null, admin: ADM, tieneFicha: todos, valor: 40000000 });
+  ok('con el reparto apagado tambien al admin', s3.email === ADM);
+  const s4 = elegir({ reparto: r, turno: null, admin: ADM, tieneFicha: () => false, valor: 20000000 });
+  ok('aunque nadie tenga ficha', s4.email === ADM && s4.directo);
+}
+ok('hoja: la columna del turno dice que fue directo', filaRegistroDirecto());
 ok('2-2-2', corrida(R(true, [2, 2, 2]), 6) === 'UUDDTT');
 ok('3-2-1', corrida(R(true, [3, 2, 1]), 12) === 'UUUDDTUUUDDT');
 ok('peso 0 = fuera de la vuelta', corrida(R(true, [1, 1, 0]), 4) === 'UDUD');
@@ -81,6 +96,9 @@ ok('agente: sin el aviso de confirmacion al cliente (ya no se envia)', !ca.html.
 ok('hoja: la columna de la confirmacion dice "Solo en pantalla"', filaRegistro(vu.datos, { agente: AG, n: 1, de: 1, repartido: true, fecha: 'x' }).clienteAvisado === 'Solo en pantalla');
 ok('hoja: fila con el agente y el turno', (() => { const f = filaRegistro(vu.datos, { agente: AG, n: 4, de: 5, repartido: true, fecha: 'x' }); return f.agente === 'Agente Prueba Dos' && f.turno === '4 de 5' && f.cedula === '1 0000 0000'; })());
 
+function filaRegistroDirecto() {
+  return filaRegistro({ tipo: 'usado', placa: 'X', valor: 20000000 }, { agente: { nombre: 'A', email: ADM }, n: 0, de: 5, repartido: false, directo: true, fecha: 'x' }).turno === 'Más de ₡15 millones · directo';
+}
 console.log('-- sesion de Google --');
 const resp = (j, okk = true) => Promise.resolve({ ok: okk, json: () => Promise.resolve(j), text: () => Promise.resolve('ok') });
 const TK = 'ya29.' + 'x'.repeat(40);
@@ -144,6 +162,24 @@ ok('3-1-1 con Tres sin ficha: Uno Uno Uno Dos Uno (Tres se salta)', quienes.join
 ok('la hoja recibio una fila por solicitud, con la clave', hoja.length === 5 && hoja.every((x) => x.clave === 'c') && hoja[3].fila.agente === 'Agente Prueba Dos');
 ok('nada del cliente queda en el almacenamiento', [...store.m.values()].every((v) => !v.includes('cliente') && !v.includes('1 0000 0000')));
 ok('doble clic: la misma solicitud no sale dos veces', (await (async () => { reloj -= 70000; enviados.length = 0; const r = await llamar('/cotizar/enviar', { ...U, correo: 'cliente4@ejemplo.test', placa: 'ABC104' }, '3.3.3.3'); return r.j.repetida === true && enviados.length === 0; })()));
+{
+  const antes = (await llamar('/cotizar/agente', { accion: 'ver', token: tk('tkUno') })).j.proximos;
+  enviados.length = 0;
+  const g1 = await llamar('/cotizar/enviar', { ...U, correo: 'grande@ejemplo.test', placa: 'GRD001', valor: '₡ 18.000.000' }, '4.4.4.4');
+  ok('Function: una de ₡18 millones le llega al admin', g1.st === 200 && enviados.length === 1 && enviados[0].to[0] === ADM);
+  const despues = (await llamar('/cotizar/agente', { accion: 'ver', token: tk('tkUno') })).j.proximos;
+  ok('Function: la grande no movio la vuelta', antes.join() === despues.join());
+  ok('Function: la hoja la anota como directa', hoja[hoja.length - 1].fila.turno.startsWith('Más de ₡15 millones'));
+  hoja.pop();
+}
+ok('ficha de otro: solo el admin → 403', (await llamar('/cotizar/agente', { accion: 'ficha', para: TRES, token: tk('tkDos'), ficha: { nombre: 'Agente Prueba Tres' } })).st === 403);
+ok('ficha de otro: fuera del reparto → 400', (await llamar('/cotizar/agente', { accion: 'ficha', para: 'nadie@ejemplo.test', token: tk('tkUno'), ficha: { nombre: 'Nadie Nadie' } })).st === 400);
+{
+  const f3 = await llamar('/cotizar/agente', { accion: 'ficha', para: TRES, token: tk('tkUno'), ficha: { nombre: 'Agente Prueba Tres', licencia: '', whatsapp: '8888-3333', telefono: '' } });
+  ok('el admin le pone la ficha a Tres (no usa el cotizador)', f3.st === 200 && f3.j.fichas[TRES].nombre === 'Agente Prueba Tres' && f3.j.fichas[TRES].porAdmin === true);
+  ok('Tres ya entra en los proximos', f3.j.proximos.includes(TRES));
+  ok('la ficha del admin sigue siendo suya', store.m.get('ficha:' + ADM).includes('Agente Prueba Uno'));
+}
 ok('fuera de horario (viernes 7:40 pm): la respuesta trae el lunes', (await (async () => {
   const h3 = crearHandler({ getStore: () => tienda(), env, fetchFn, ahora: () => new Date('2026-11-07T01:40:00Z') });
   const s3 = await h3(new Request('https://x.test/cotizar/enviar', { method: 'POST', headers: { origin: 'https://cotizador.appsegurosdigitales.com' }, body: JSON.stringify({ ...U, correo: 'fuera@ejemplo.test' }) }), { ip: '8.8.8.8' });

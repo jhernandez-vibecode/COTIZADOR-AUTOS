@@ -70,7 +70,7 @@ export function correoAgente(d, info) {
 export function filaRegistro(d, info) {
   return {
     fecha: info.fecha, agente: info.agente.nombre, correoAgente: info.agente.email,
-    turno: info.repartido ? info.n + " de " + info.de : "Reparto apagado",
+    turno: info.directo ? "Más de ₡15 millones · directo" : info.repartido ? info.n + " de " + info.de : "Reparto apagado",
     nombre: d.nombre, cedula: d.cedula, telefono: d.telefono, correo: d.correo,
     tipo: TIPOS[d.tipo], vehiculo: d.tipo === "usado" ? d.placa : d.marcaModelo, valor: d.valor,
     uso: d.uso, interes: d.interes,

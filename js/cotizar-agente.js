@@ -133,6 +133,16 @@ function _cotzColor(email) {
   return COTZ_COLORES[(i < 0 ? 0 : i) % COTZ_COLORES.length];
 }
 
+/** Agente sin ficha: si ya está guardado en el reparto, el admin le pone el nombre aquí (8 nov 2026). */
+function _cotzSinFicha(email, i) {
+  var guardado = _cotz.vista.reparto.agentes.some(function (a) { return a.email === email; });
+  if (!guardado) return '<em>Guardá el reparto y después ponele el nombre, o que entre al cotizador y guarde su ⚙. Mientras tanto se salta su turno.</em>';
+  return '<em>Se salta su turno hasta tener nombre. Si no usa el cotizador, ponéselo vos:</em>' +
+    '<span class="cotz-ficha"><input type="text" data-fn="' + i + '" placeholder="Nombre y apellido" aria-label="Nombre de ' + _cotzEsc(email) + '">' +
+    '<input type="tel" data-fw="' + i + '" placeholder="WhatsApp (opcional)" aria-label="WhatsApp de ' + _cotzEsc(email) + '">' +
+    '<button type="button" class="btn btn-secondary" data-ff="' + i + '">Guardar nombre</button></span>';
+}
+
 function _cotzPintar() {
   var r = _cotz.editado, v = _cotz.vista;
   var total = r.agentes.reduce(function (s, a) { return s + a.peso; }, 0);
@@ -146,7 +156,7 @@ function _cotzPintar() {
     h += '<div class="cotz-agr' + (a.peso ? '' : ' cero') + '">' +
       '<span class="cotz-dot" style="background:' + _cotzColor(a.email) + '">' + _cotzEsc(_cotzIni(a.email)) + '</span>' +
       '<span class="cotz-quien"><b>' + _cotzEsc(_cotzNombre(a.email)) + '</b><small>' + _cotzEsc(a.email) + '</small>' +
-        (f ? '' : '<em>Falta que entre al cotizador con esta cuenta y guarde su ⚙. Mientras tanto se salta su turno.</em>') +
+        (f ? (f.porAdmin ? '<small class="cotz-porad">Sin cotizador · le llegan los avisos a su Gmail</small>' : '') : _cotzSinFicha(a.email, i)) +
       '</span>' +
       '<span class="cotz-step"><button type="button" data-i="' + i + '" data-d="-1" aria-label="Menos"' + (a.peso <= 0 ? ' disabled' : '') + '>−</button><output>' + a.peso + '</output><button type="button" data-i="' + i + '" data-d="1" aria-label="Más"' + (a.peso >= 9 ? ' disabled' : '') + '>+</button></span>' +
       '<span class="cotz-pct">' + (total ? Math.round(a.peso * 100 / total) : 0) + ' %' +
@@ -154,6 +164,7 @@ function _cotzPintar() {
     '</div>';
   });
   h += '</div>';
+  h += '<p class="cotz-nota cotz-tope">Las solicitudes de más de <b>₡' + Number(v.tope || 15000000).toLocaleString('de-DE') + '</b> te llegan siempre a vos, esté como esté el reparto, y no cambian el turno.</p>';
   h += '<div class="cotz-agregar"><input type="email" id="cotzNuevo" placeholder="correo@del-agente.com" aria-label="Correo del agente nuevo"><button type="button" class="btn btn-secondary" id="cotzAgregar">Agregar agente</button></div>';
   if (r.agentes.length === 3) {
     h += '<div class="cotz-rapidos">Rápidos: ' + ['3,1,1', '5,1,1', '2,2,2', '3,2,1', '1,1,0'].map(function (p) {
@@ -216,6 +227,21 @@ function _cotzEnganchar(c) {
     if (r.agentes.length >= 10) { showToast('Máximo 10 agentes.', 'error'); return; }
     r.agentes.push({ email: e, peso: 1 });
     _cotzCambio();
+  });
+  c.querySelectorAll('[data-ff]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      if (_cotz.sucio) { showToast('Primero guardá los cambios del reparto.', 'error'); return; }
+      var i = b.dataset.ff, a = r.agentes[+i];
+      var nombre = c.querySelector('[data-fn="' + i + '"]').value.trim();
+      var wa = c.querySelector('[data-fw="' + i + '"]').value.trim();
+      if (nombre.split(/\s+/).length < 2) { showToast('Escribí nombre y apellido.', 'error'); return; }
+      b.disabled = true; b.textContent = 'Guardando…';
+      _cotzConSesion({ accion: 'ficha', para: a.email, ficha: { nombre: nombre, licencia: '', whatsapp: wa, telefono: '' } }).then(function (x) {
+        if (x.st !== 200) { showToast(x.j.error || 'No se pudo guardar el nombre.', 'error'); b.disabled = false; b.textContent = 'Guardar nombre'; return; }
+        _cotzCargar(x.j);
+        showToast('Listo: ' + nombre + ' ya entra en el reparto.', 'success');
+      }).catch(function (e) { showToast(e.message, 'error'); b.disabled = false; b.textContent = 'Guardar nombre'; });
+    });
   });
   c.querySelector('#cotzGuardar').addEventListener('click', function () {
     var b = this; b.disabled = true; b.textContent = 'Guardando…';

@@ -15,6 +15,13 @@
 import { createHash } from "node:crypto";
 
 export const PESO_MAX = 9;
+/**
+ * JC, 8 nov 2026: "como yo soy el agente principal, cualquier solicitud de
+ * cotizacion con un valor superior a 15.000.000, esas todas sin excepcion me
+ * deben llegar a mi". Mayor ESTRICTO (15.000.000 justos van al reparto).
+ * No mueve la vuelta: la siguiente le sigue tocando a quien le tocaba.
+ */
+export const TOPE_PRINCIPAL = 15000000;
 export const MAX_AGENTES = 10;
 const RE_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -68,12 +75,14 @@ export function firmaReparto(reparto) {
  * @param {object|null} p.turno  {pos, firma} guardado
  * @param {(email:string)=>boolean} p.tieneFicha
  * @param {string} p.admin
- * @returns {{email:string, n:number, de:number, repartido:boolean, turno:{pos:number, firma:string}|null}}
+ * @param {number} [p.valor]  valor del vehiculo en colones; mayor a TOPE_PRINCIPAL → al admin
+ * @returns {{email:string, n:number, de:number, repartido:boolean, directo?:boolean, turno:{pos:number, firma:string}|null}}
  *   turno = lo que hay que guardar (null si no se mueve la vuelta).
  */
-export function elegir({ reparto, turno, tieneFicha, admin }) {
+export function elegir({ reparto, turno, tieneFicha, admin, valor }) {
   const adm = normCorreo(admin);
   const v = reparto && reparto.on ? vuelta(reparto) : [];
+  if (Number(valor) > TOPE_PRINCIPAL) return { email: adm, n: 0, de: v.length, repartido: false, directo: true, turno: null };
   if (!v.length) return { email: adm, n: 0, de: 0, repartido: false, turno: null };
   const firma = firmaReparto(reparto);
   let pos = turno && turno.firma === firma && Number.isInteger(turno.pos) && turno.pos >= 0 ? turno.pos % v.length : 0;
