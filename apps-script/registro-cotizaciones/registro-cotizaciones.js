@@ -38,11 +38,12 @@ var RG = {
     ['clienteAvisado', 'Confirmación al cliente'], ['mes', 'Mes']
   ],
   RESUMEN: 'Resumen',
-  // Un color por persona (JC, 8 nov 2026). Se reconoce por el correo del agente.
+  // Un color por persona (JC, 8 nov 2026). En «Cotizaciones» se reconoce por el correo del agente;
+  // en «Resumen», por cómo empieza el nombre de su ficha (por eso «Christian», con h).
   // Para alguien nuevo: agregar una línea y volver a correr ordenar().
   PERSONAS: [
     { correo: 'jhernandez@segurosdelins.com', nombre: 'Juan Carlos', fuerte: '#1A73E8', suave: '#E8F0FE' },
-    { correo: 'chernandez@seguros-ins.com', nombre: 'Cristian', fuerte: '#E8710A', suave: '#FEEFE3' },
+    { correo: 'chernandez@seguros-ins.com', nombre: 'Christian', fuerte: '#E8710A', suave: '#FEEFE3' },
     { correo: 'tramites@segurosdelins.com', nombre: 'José', fuerte: '#188038', suave: '#E6F4EA' },
     { correo: 'melanie.hernandez@seguros-del-ins.com', nombre: 'Melanie', fuerte: '#9334E6', suave: '#F3E8FD' }
   ],
@@ -132,6 +133,7 @@ function ordenar() {
       .setBackground(p.fuerte).setFontColor('#FFFFFF').setBold(true).setRanges([colRes]).build();
   }));
   res.setColumnWidth(1, 260);
+  res.setColumnWidths(2, 24, 150);   // un mes por columna: "2026-11 · noviembre" entero
   Logger.log('Listo: colores, filtros, columna Mes y pestaña ' + RG.RESUMEN + '. ' + libro.getUrl());
 }
 
