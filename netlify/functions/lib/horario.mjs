@@ -35,7 +35,7 @@ export function esFeriado(t) {
   const jueves = new Date(p.getTime() - 3 * 864e5), viernes = new Date(p.getTime() - 2 * 864e5);
   return mismoDia(t, jueves) || mismoDia(t, viernes);
 }
-const esHabil = (t) => t.getUTCDay() >= 1 && t.getUTCDay() <= 5 && !esFeriado(t);
+export const esHabil = (t) => t.getUTCDay() >= 1 && t.getUTCDay() <= 5 && !esFeriado(t);
 
 /**
  * ¿Entra en horario? Si no, ¿qué día le llega la cotización?

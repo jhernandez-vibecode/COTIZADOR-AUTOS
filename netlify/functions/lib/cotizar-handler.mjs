@@ -24,6 +24,12 @@
 //
 // Orden: hoja → agente (6 nov 2026: al cliente ya no le sale correo). El del AGENTE es el que no se puede perder:
 // si falla → 502 (el cliente ve el Google Form de respaldo).
+//
+// ALARMAS (JC, 8 nov 2026):
+//   · Por falla: si la hoja no confirma o el correo al agente no sale, le llega a JC
+//     (COTIZAR_ADMIN) un correo «⚠ Alerta» con la solicitud completa, para que no se pierda.
+//   · Por silencio: cada solicitud valida anota la hora en Blobs (clave `ultima`, solo
+//     la hora, ningun dato del cliente). La revisa cada hora lib/cotizar-vigia.mjs.
 // =====================================================================
 import { validarCotizacion, validarFicha, vehiculoCorto } from "./cotizar-validacion.mjs";
 import { correoAgente, filaRegistro, lineaCargo } from "./cotizar-correos.mjs";
@@ -36,6 +42,8 @@ import {
   leerFichas, guardarFicha, puedeTenerFicha, tieneCita, firmaDe,
 } from "./agentes.mjs";
 import { ORIGENES, json, origenPermitido, ipDe, visible, direccionDe, enviarCorreo } from "./http.mjs";
+
+const escHtml = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 const MAX_IP = 6, MAX_DESTINO = 3, MAX_CONSULTAS = 30;
 /** Si al que le toca no tiene ficha (no deberia pasar: elegir() lo salta), firma la marca. */
@@ -116,6 +124,22 @@ export function crearHandler(deps = {}) {
     return json(200, await vistaAdmin(store, admin));
   }
 
+  /**
+   * Alarma por falla: a JC le llega la solicitud completa con lo que fallo arriba.
+   * Va firmada como si fuera para el (su WhatsApp abre con su nombre). Si tampoco sale, queda en el log.
+   */
+  async function alertar(apiKey, remite, admin, firmaAdmin, motivo, d, info) {
+    const am = correoAgente(d, { ...info, agente: firmaAdmin });
+    const banda = '<div style="background:#FCE8E6;border:1px solid #D93025;color:#A50E0E;border-radius:8px;padding:12px 16px;margin:0 0 12px;font:600 14px Arial,sans-serif;">⚠ ' + escHtml(motivo) + "</div>";
+    try {
+      await enviarCorreo(fetchFn, apiKey, {
+        from: "Alertas · SDI <" + remite + ">", to: [admin], reply_to: d.correo,
+        subject: "⚠ Alerta del formulario de cotización · " + vehiculoCorto(d), html: banda + am.html, text: "⚠ " + motivo + "\n\n" + am.texto,
+      });
+      return true;
+    } catch (e) { console.error("[cotizar] la alerta tampoco salio", e && e.message); return false; }
+  }
+
   // ------------------------------------------------------------ cliente
   async function solicitud(body, store, admin, ip, apiKey, from) {
     const v = validarCotizacion(body);
@@ -131,6 +155,8 @@ export function crearHandler(deps = {}) {
         return json(429, { error: "Demasiadas solicitudes. Probá de nuevo más tarde." });
       }
     } catch (e) { console.error("[cotizar] limite no disponible", e && e.message); }
+    // Alarma por silencio: la hora de la ultima solicitud (sin datos del cliente).
+    try { await store.set("ultima", now.toISOString()); } catch (e) { console.error("[cotizar] ultima no guardada", e && e.message); }
 
     // ¿A quien le toca? Sin candado: si dos solicitudes caen en el mismo instante pueden
     // tocarle al mismo agente; la vuelta se acomoda sola en las siguientes (se acepta).
@@ -160,9 +186,15 @@ export function crearHandler(deps = {}) {
     }
 
     const h = siguienteHabil(now);
+    const firmaAdmin = firmaDe(admin, fichas[admin]) || firmaDe(admin, SIN_FICHA);
+    const hojaFallo = !!(env.COTIZAR_REGISTRO_URL && env.COTIZAR_REGISTRO_CLAVE) && !info.registrada;
     if (info.sinAsignar) {
-      // JC, 8 nov 2026: si la hoja falla, no le llega nada a nadie ("esas las vemos despues").
-      if (!info.registrada) console.error("[cotizar] sin asignar y la hoja no la anoto");
+      // Si la hoja falla, al cliente no le llega nada (JC: "esas las vemos despues"), pero
+      // desde la alarma por falla (8 nov 2026) a JC le llega la solicitud para que no se pierda.
+      if (hojaFallo) {
+        console.error("[cotizar] sin asignar y la hoja no la anoto");
+        await alertar(apiKey, remite, admin, firmaAdmin, "La hoja de registro no anotó esta solicitud de menos de ₡4 millones (sin asignar). Acá van los datos para que no se pierda: anotala o asignala vos.", d, info);
+      }
       return json(200, { ok: true, enHorario: h.enHorario, cuando: h.cuando, agente: null });
     }
     const am = correoAgente(d, info);
@@ -170,8 +202,10 @@ export function crearHandler(deps = {}) {
       await enviarCorreo(fetchFn, apiKey, { from: "Cotizaciones · SDI <" + remite + ">", to: [ag.email], reply_to: d.correo, subject: am.asunto, html: am.html, text: am.texto });
     } catch (e) {
       console.error("[cotizar] no salio el del agente", e && e.message);
+      await alertar(apiKey, remite, admin, firmaAdmin, "No salió el aviso a " + ag.nombre + " (" + ag.email + "). El cliente vio un error y se le ofreció el formulario de respaldo; puede que la mande de nuevo. Acá van sus datos." + (hojaFallo ? " Tampoco quedó en la hoja de registro." : ""), d, info);
       return json(502, { error: "No pudimos enviar tu solicitud." });
     }
+    if (hojaFallo) await alertar(apiKey, remite, admin, firmaAdmin, "La hoja de registro no anotó esta solicitud. El aviso sí le llegó a " + ag.nombre + " (" + ag.email + "); acá van los datos para que la anotés.", d, info);
     return json(200, { ok: true, enHorario: h.enHorario, cuando: h.cuando, agente: { nombre: ag.nombre, cargo: lineaCargo(ag) } });
   }
 

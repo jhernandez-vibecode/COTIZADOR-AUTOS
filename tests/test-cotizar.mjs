@@ -229,6 +229,71 @@ ok('si falla el correo del agente → 502', (await (async () => {
   return s2.status;
 })()) === 502);
 
+console.log('-- alarmas (8 nov 2026) --');
+{
+  // Hoja configurada que responde error + Resend que anota todo.
+  const armar = (opts = {}) => {
+    const st = tienda(), mails = [];
+    const hx = crearHandler({ getStore: () => st, env, ahora: () => new Date('2030-01-07T16:00:00Z'), fetchFn: async (u, o) => {
+      if (u === 'https://api.resend.com/emails') { const m = JSON.parse(o.body); if (opts.agenteFalla && !m.subject.startsWith('⚠')) return { ok: false, status: 500 }; mails.push(m); return { ok: true }; }
+      if (u === 'https://registro.ejemplo.test/exec') return { ok: true, text: async () => 'error' };
+      return fetchFn(u, o);
+    } });
+    const pedir = (cuerpo) => hx(new Request('https://x.test/cotizar/enviar', { method: 'POST', headers: { origin: 'https://cotizador.appsegurosdigitales.com' }, body: JSON.stringify(cuerpo) }), { ip: '7.7.7.7' });
+    return { st, mails, pedir };
+  };
+  const esAlerta = (m) => m.to[0] === ADM && m.subject.startsWith('⚠ Alerta') && m.html.includes(U.nombre) && m.html.includes(U.telefono);
+  {
+    const a = armar(); const r = await a.pedir({ ...U, correo: 'a1@ejemplo.test' });
+    ok('falla la hoja: el aviso sale igual y a JC le llega la alerta con los datos del cliente', r.status === 200 && a.mails.length === 2 && !a.mails[0].subject.startsWith('⚠') && esAlerta(a.mails[1]) && a.mails[1].html.includes('no anotó'));
+    ok('silencio: la solicitud deja la hora en `ultima` (solo la hora)', a.st.m.get('ultima') === '2030-01-07T16:00:00.000Z');
+  }
+  {
+    const a = armar(); const r = await a.pedir({ ...U, correo: 'a2@ejemplo.test', valor: '2000000' });
+    ok('falla la hoja con una de menos de ₡4 millones: el cliente ve lo mismo y solo a JC le llega la alerta', r.status === 200 && a.mails.length === 1 && esAlerta(a.mails[0]) && a.mails[0].html.includes('sin asignar'));
+  }
+  {
+    const a = armar({ agenteFalla: true }); const r = await a.pedir({ ...U, correo: 'a3@ejemplo.test' });
+    ok('falla el aviso al agente: 502 al cliente y alerta a JC con los datos', r.status === 502 && a.mails.length === 1 && esAlerta(a.mails[0]) && a.mails[0].html.includes('No salió el aviso'));
+  }
+  {
+    const st = tienda(); const env2 = { ...env };
+    const ok2 = crearHandler({ getStore: () => st, env: env2, ahora: () => new Date('2030-01-07T16:00:00Z'), fetchFn });
+    enviados.length = 0;
+    await ok2(new Request('https://x.test/cotizar/enviar', { method: 'POST', headers: { origin: 'https://cotizador.appsegurosdigitales.com' }, body: JSON.stringify({ ...U, correo: 'a4@ejemplo.test' }) }), { ip: '7.7.7.8' });
+    ok('todo bien: no sale ninguna alerta', enviados.length === 1 && !enviados[0].subject.startsWith('⚠')); hoja.pop();
+  }
+}
+{
+  const { crearVigia, SILENCIO_HORAS } = await import('../netlify/functions/lib/cotizar-vigia.mjs');
+  const correr = async (iso, ultima, previa) => {
+    const st = tienda(), mails = [];
+    if (ultima) st.m.set('ultima', ultima); if (previa) st.m.set('alerta-silencio', previa);
+    const r = await crearVigia({ getStore: () => st, env, ahora: () => new Date(iso), fetchFn: async (u, o) => { mails.push(JSON.parse(o.body)); return { ok: true }; } })();
+    return { r, mails, st };
+  };
+  ok('vigia: silencio de 3 horas', SILENCIO_HORAS === 3);
+  // Lunes 7 ene 2030. 11:30 am CR = 17:30 UTC.
+  let v = await correr('2030-01-07T17:30:00Z', '2030-01-07T12:00:00Z');   // ultima 6:00 am CR → cuenta desde las 8:00 → 3,5 h
+  ok('vigia: 3,5 h de jornada sin solicitudes → alerta a JC', v.r.alerta === true && v.mails.length === 1 && v.mails[0].to[0] === ADM && v.mails[0].subject.startsWith('⚠ Sin solicitudes') && v.st.m.get('alerta-silencio') === '2030-01-07T12:00:00Z');
+  v = await correr('2030-01-07T17:30:00Z', '2030-01-07T12:00:00Z', '2030-01-07T12:00:00Z');
+  ok('vigia: el mismo silencio no se avisa dos veces', v.r.alerta === false && v.r.yaAvisada && v.mails.length === 0);
+  v = await correr('2030-01-07T17:30:00Z', '2030-01-07T15:00:00Z');
+  ok('vigia: hubo una a las 9:00 → a las 11:30 no avisa', v.r.alerta === false && v.mails.length === 0);
+  v = await correr('2030-01-07T15:00:00Z', '2030-01-04T22:00:00Z');   // lunes 9:00 am; la ultima el viernes
+  ok('vigia: la noche y el fin de semana no cuentan (lunes 9:00, ultima el viernes → no avisa)', v.r.alerta === false && v.mails.length === 0);
+  v = await correr('2030-01-05T18:00:00Z', '2030-01-03T12:00:00Z');   // sabado
+  ok('vigia: sabado no revisa', v.r.revisa === false && v.mails.length === 0);
+  v = await correr('2030-12-25T18:00:00Z', '2030-12-24T12:00:00Z');   // feriado
+  ok('vigia: feriado no revisa', v.r.revisa === false);
+  v = await correr('2030-01-07T23:00:00Z', '2030-01-07T19:30:00Z');   // 5:00 pm CR, ultima 1:30 pm → 3,5 h
+  ok('vigia: la revision de las 5:00 pm tambien cuenta', v.r.alerta === true);
+  v = await correr('2030-01-07T17:30:00Z', null);
+  ok('vigia: sin dato todavia → lo arranca sin avisar', v.r.alerta === false && v.st.m.get('ultima') === '2030-01-07T17:30:00.000Z');
+  const fv = fs.readFileSync(path.join(raiz, 'netlify/functions/cotizar-vigia.mjs'), 'utf8');
+  ok('vigia: Netlify la corre cada hora', /schedule:\s*"@hourly"/.test(fv));
+}
+
 console.log('-- la pagina /cotizar/ --');
 const pag = fs.readFileSync(path.join(raiz, 'cotizar/index.html'), 'utf8');
 ok('trae las 3 opciones del interes, palabra por palabra', INTERESES_COT.every((t) => pag.includes(t)));
