@@ -152,17 +152,14 @@ export function crearHandler(deps = {}) {
     }
 
     const h = siguienteHabil(now);
-    let para = ag, prefijo = "";
     if (info.sinAsignar) {
-      if (info.registrada) return json(200, { ok: true, enHorario: h.enHorario, cuando: h.cuando, agente: null });
-      // La hoja no la anoto: para que no se pierda en silencio, el aviso le llega al admin.
-      console.error("[cotizar] sin asignar y la hoja no la anoto: va al admin");
-      para = firmaDe(admin, fichas[admin]) || firmaDe(admin, SIN_FICHA);
-      prefijo = "⚠ Sin asignar (no quedó en la hoja) · ";
+      // JC, 8 nov 2026: si la hoja falla, no le llega nada a nadie ("esas las vemos despues").
+      if (!info.registrada) console.error("[cotizar] sin asignar y la hoja no la anoto");
+      return json(200, { ok: true, enHorario: h.enHorario, cuando: h.cuando, agente: null });
     }
-    const am = correoAgente(d, { ...info, agente: para });
+    const am = correoAgente(d, info);
     try {
-      await enviarCorreo(fetchFn, apiKey, { from: "Cotizaciones · SDI <" + remite + ">", to: [para.email], reply_to: d.correo, subject: prefijo + am.asunto, html: am.html, text: am.texto });
+      await enviarCorreo(fetchFn, apiKey, { from: "Cotizaciones · SDI <" + remite + ">", to: [ag.email], reply_to: d.correo, subject: am.asunto, html: am.html, text: am.texto });
     } catch (e) {
       console.error("[cotizar] no salio el del agente", e && e.message);
       return json(502, { error: "No pudimos enviar tu solicitud." });

@@ -202,12 +202,12 @@ ok('doble clic: la misma solicitud no sale dos veces', (await (async () => { rel
   ok('Function: la chica no movio la vuelta', antes.join() === despues.join());
   hoja.pop();
 }
-ok('Function: si la hoja no la anota, la de menos de ₡4 millones le llega al admin', await (async () => {
+ok('Function: si la hoja no la anota, la de menos de ₡4 millones no le llega a nadie (JC)', await (async () => {
   const env2 = { ...env }; delete env2.COTIZAR_REGISTRO_URL;
   const st2 = tienda(); for (const [k, v] of store.m) if (k.startsWith('ficha:')) st2.m.set(k, v);
   const env3 = []; const h4 = crearHandler({ getStore: () => st2, env: env2, ahora: () => new Date('2030-01-07T15:00:00Z'), fetchFn: async (u, o) => { if (u === 'https://api.resend.com/emails') { env3.push(JSON.parse(o.body)); return { ok: true }; } return fetchFn(u, o); } });
   const r = await h4(new Request('https://x.test/cotizar/enviar', { method: 'POST', headers: { origin: 'https://cotizador.appsegurosdigitales.com' }, body: JSON.stringify({ ...U, correo: 'chica2@ejemplo.test', valor: '1500000' }) }), { ip: '6.6.6.6' });
-  return r.status === 200 && env3.length === 1 && env3[0].to[0] === ADM && env3[0].subject.startsWith('⚠ Sin asignar');
+  return r.status === 200 && env3.length === 0;
 })());
 ok('ficha de otro: solo el admin → 403', (await llamar('/cotizar/agente', { accion: 'ficha', para: TRES, token: tk('tkDos'), ficha: { nombre: 'Agente Prueba Tres' } })).st === 403);
 ok('ficha de otro: fuera del reparto → 400', (await llamar('/cotizar/agente', { accion: 'ficha', para: 'nadie@ejemplo.test', token: tk('tkUno'), ficha: { nombre: 'Nadie Nadie' } })).st === 400);
