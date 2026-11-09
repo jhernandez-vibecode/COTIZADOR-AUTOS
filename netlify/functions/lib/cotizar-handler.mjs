@@ -126,6 +126,7 @@ export function crearHandler(deps = {}) {
 
   /**
    * Alarma por falla: a JC le llega la solicitud completa con lo que fallo arriba.
+   * 🔴 NUNCA dice a que agente le toco (JC, 8 nov 2026: privacidad interna). Solo que fallo.
    * Va firmada como si fuera para el (su WhatsApp abre con su nombre). Si tampoco sale, queda en el log.
    */
   async function alertar(apiKey, remite, admin, firmaAdmin, motivo, d, info) {
@@ -199,10 +200,10 @@ export function crearHandler(deps = {}) {
       await enviarCorreo(fetchFn, apiKey, { from: "Cotizaciones · SDI <" + remite + ">", to: [ag.email], reply_to: d.correo, subject: am.asunto, html: am.html, text: am.texto });
     } catch (e) {
       console.error("[cotizar] no salio el del agente", e && e.message);
-      await alertar(apiKey, remite, admin, firmaAdmin, "No salió el aviso a " + ag.nombre + " (" + ag.email + "). El cliente vio un error y se le ofreció el formulario de respaldo; puede que la mande de nuevo. Acá van sus datos." + (hojaFallo ? " Tampoco quedó en la hoja de registro." : ""), d, info);
+      await alertar(apiKey, remite, admin, firmaAdmin, "Falló el envío de esta solicitud: no salió el aviso. El cliente vio un error y se le ofreció el formulario de respaldo; puede que la mande de nuevo. Acá van sus datos." + (hojaFallo ? " Tampoco quedó en la hoja de registro." : ""), d, info);
       return json(502, { error: "No pudimos enviar tu solicitud." });
     }
-    if (hojaFallo) await alertar(apiKey, remite, admin, firmaAdmin, "La hoja de registro no anotó esta solicitud. El aviso sí le llegó a " + ag.nombre + " (" + ag.email + "); acá van los datos para que la anotés.", d, info);
+    if (hojaFallo) await alertar(apiKey, remite, admin, firmaAdmin, "Falló el registro: la hoja no anotó esta solicitud. Acá van los datos para que la anotés.", d, info);
     return json(200, { ok: true, enHorario: h.enHorario, cuando: h.cuando, agente: { nombre: ag.nombre, cargo: lineaCargo(ag) } });
   }
 

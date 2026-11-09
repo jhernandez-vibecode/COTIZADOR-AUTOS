@@ -242,10 +242,12 @@ console.log('-- alarmas (8 nov 2026) --');
     const pedir = (cuerpo) => hx(new Request('https://x.test/cotizar/enviar', { method: 'POST', headers: { origin: 'https://cotizador.appsegurosdigitales.com' }, body: JSON.stringify(cuerpo) }), { ip: '7.7.7.7' });
     return { st, mails, pedir };
   };
-  const esAlerta = (m) => m.to[0] === ADM && m.subject.startsWith('⚠ Alerta') && m.html.includes(U.nombre) && m.html.includes(U.telefono);
+  // La franja de la alerta nunca nombra al agente (JC: privacidad interna), ni su correo.
+  const franja = (m) => (/⚠ ([^<]*)<\/div>/.exec(m.html) || [])[1] || '';
+  const esAlerta = (m) => m.to[0] === ADM && m.subject.startsWith('⚠ Alerta') && m.html.includes(U.nombre) && m.html.includes(U.telefono) && franja(m).startsWith('Falló') && !/@|Agente Prueba|Seguros Digitales INS/.test(franja(m));
   {
     const a = armar(); const r = await a.pedir({ ...U, correo: 'a1@ejemplo.test' });
-    ok('falla la hoja: el aviso sale igual y a JC le llega la alerta con los datos del cliente', r.status === 200 && a.mails.length === 2 && !a.mails[0].subject.startsWith('⚠') && esAlerta(a.mails[1]) && a.mails[1].html.includes('no anotó'));
+    ok('falla la hoja: el aviso sale igual y a JC le llega la alerta con los datos del cliente', r.status === 200 && a.mails.length === 2 && !a.mails[0].subject.startsWith('⚠') && esAlerta(a.mails[1]) && franja(a.mails[1]).includes('no anotó'));
     ok('silencio: la solicitud deja la hora en `ultima` (solo la hora)', a.st.m.get('ultima') === '2030-01-07T16:00:00.000Z');
   }
   {
@@ -254,7 +256,7 @@ console.log('-- alarmas (8 nov 2026) --');
   }
   {
     const a = armar({ agenteFalla: true }); const r = await a.pedir({ ...U, correo: 'a3@ejemplo.test' });
-    ok('falla el aviso al agente: 502 al cliente y alerta a JC con los datos', r.status === 502 && a.mails.length === 1 && esAlerta(a.mails[0]) && a.mails[0].html.includes('No salió el aviso'));
+    ok('falla el aviso al agente: 502 al cliente y alerta a JC con los datos', r.status === 502 && a.mails.length === 1 && esAlerta(a.mails[0]) && franja(a.mails[0]).includes('no salió el aviso'));
   }
   {
     const st = tienda(); const env2 = { ...env };
