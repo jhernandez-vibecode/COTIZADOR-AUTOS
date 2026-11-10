@@ -112,6 +112,8 @@ function cotzAbrirReparto() {
 function _cotzCargar(vista) {
   _cotz.vista = vista;
   _cotz.editado = JSON.parse(JSON.stringify(vista.reparto));
+  // 10 nov 2026: el "directo a vos" editable. Un servidor viejo no lo manda: 15M encendido.
+  if (!_cotz.editado.directo) _cotz.editado.directo = vista.directo ? { on: vista.directo.on, monto: vista.directo.monto } : { on: true, monto: vista.tope || 15000000 };
   _cotz.sucio = false;
   _cotzPintar();
 }
@@ -143,6 +145,46 @@ function _cotzSinFicha(email, i) {
     '<button type="button" class="btn btn-secondary" data-ff="' + i + '">Guardar nombre</button></span>';
 }
 
+/** Monto del directo: millones enteros entre los límites que manda el servidor. */
+function _cotzDirLimites() {
+  var v = _cotz.vista || {};
+  return { min: v.directoMin || 5000000, max: v.directoMax || 100000000 };
+}
+function _cotzDirOk(d) {
+  var L = _cotzDirLimites();
+  return Number.isInteger(d.monto) && d.monto % 1000000 === 0 && d.monto >= L.min && d.monto <= L.max;
+}
+function _cotzCol(n) { return '₡' + Number(n).toLocaleString('de-DE'); }
+
+/** Bloque "Las de valor alto, directo a vos" + qué pasa con cada solicitud (JC, 10 nov 2026). */
+function _cotzDirectoHtml(r, v) {
+  var d = r.directo, L = _cotzDirLimites(), ok = _cotzDirOk(d), mill = Math.round(d.monto / 1e6);
+  var manual = v.topeManual || 4000000;
+  var h = '<div class="cotz-dir">';
+  h += '<label class="cotz-sw"><span><b>Las de valor alto, directo a vos</b><small>' +
+       (d.on ? 'Encendido: las de ' + (ok ? _cotzCol(d.monto) : 'ese monto') + ' o más te llegan solo a vos.' : 'Apagado: las de valor alto también se reparten. El monto queda guardado.') +
+       '</small></span><span class="cotz-tog"><input type="checkbox" id="cotzDirOn"' + (d.on ? ' checked' : '') + '><i></i></span></label>';
+  h += '<div class="cotz-monto' + (d.on ? '' : ' off') + '"><label for="cotzDirMonto">A partir de</label>' +
+       '<span class="cotz-campo"><button type="button" data-dm="-1" aria-label="Un millón menos"' + (mill <= L.min / 1e6 ? ' disabled' : '') + '>−</button>' +
+       '<span class="cotz-cifra">₡<input id="cotzDirMonto" inputmode="numeric" maxlength="3" value="' + (d.monto ? mill : '') + '" aria-label="Monto en millones"></span><span class="cotz-u">millones</span>' +
+       '<button type="button" data-dm="1" aria-label="Un millón más"' + (mill >= L.max / 1e6 ? ' disabled' : '') + '>+</button></span></div>';
+  h += '<div class="cotz-rapidos' + (d.on ? '' : ' off') + '">Rápidos: ' + [10, 15, 20, 25, 30].map(function (m) {
+    return '<button type="button" data-dmr="' + m + '"' + (d.on && mill === m ? ' class="on"' : '') + '>' + m + '</button>';
+  }).join('') + '</div>';
+  if (d.on && !ok) h += '<p class="cotz-aviso cotz-mal">El monto va de ₡' + L.min / 1e6 + ' a ₡' + L.max / 1e6 + ' millones.</p>';
+  var quien = r.on && r.agentes.some(function (a) { return a.peso; }) ? 'Se reparte por turnos' : 'Te llega a vos (repartir está apagado)';
+  h += '<div class="cotz-camino"><span class="cotz-t">Qué pasa con cada solicitud</span>';
+  h += '<div class="cotz-regla man"><span>Menos de ' + _cotzCol(manual) + '</span><span>Sin asignar: queda en la hoja para que la asignés vos</span></div>';
+  if (d.on && ok) {
+    h += '<div class="cotz-regla vuelta"><span>' + _cotzCol(manual) + ' a ' + _cotzCol(d.monto - 1) + '</span><span>' + quien + '</span></div>';
+    h += '<div class="cotz-regla vos"><span>' + _cotzCol(d.monto) + ' o más</span><span>Directo a vos, sin cambiar el turno</span></div>';
+  } else {
+    h += '<div class="cotz-regla vuelta"><span>' + _cotzCol(manual) + ' o más</span><span>' + quien + ', sin importar el monto</span></div>';
+  }
+  h += '</div></div>';
+  return h;
+}
+
 function _cotzPintar() {
   var r = _cotz.editado, v = _cotz.vista;
   var total = r.agentes.reduce(function (s, a) { return s + a.peso; }, 0);
@@ -164,7 +206,7 @@ function _cotzPintar() {
     '</div>';
   });
   h += '</div>';
-  h += '<p class="cotz-nota cotz-tope">Las solicitudes de <b>₡' + Number(v.tope || 15000000).toLocaleString('de-DE') + ' o más</b> te llegan siempre a vos, esté como esté el reparto, y no cambian el turno. Las de <b>menos de ₡' + Number(v.topeManual || 4000000).toLocaleString('de-DE') + '</b> no se le asignan a nadie: quedan en la hoja para que las asignés vos, y tampoco cambian el turno.</p>';
+  h += _cotzDirectoHtml(r, v);
   h += '<div class="cotz-agregar"><input type="email" id="cotzNuevo" placeholder="correo@del-agente.com" aria-label="Correo del agente nuevo"><button type="button" class="btn btn-secondary" id="cotzAgregar">Agregar agente</button></div>';
   if (r.agentes.length === 3) {
     h += '<div class="cotz-rapidos">Rápidos: ' + ['3,1,1', '5,1,1', '2,2,2', '3,2,1', '1,1,0'].map(function (p) {
@@ -188,10 +230,11 @@ function _cotzPintar() {
   }).join('') + '</div>';
   if (!r.on) h += '<p class="cotz-aviso">Repartir está apagado: todas las solicitudes te llegan a vos. Los números quedan guardados para cuando lo volvás a encender.</p>';
   else if (!total) h += '<p class="cotz-aviso cotz-mal">Todos están en 0. Así nadie recibiría: las solicitudes te llegan a vos.</p>';
-  else if (_cotz.sucio) h += '<p class="cotz-aviso">Al guardar, la vuelta arranca de nuevo desde el primero de la lista.</p>';
+  else if (_cotz.sucio && JSON.stringify(r.agentes) !== JSON.stringify(v.reparto.agentes)) h += '<p class="cotz-aviso">Al guardar, la vuelta arranca de nuevo desde el primero de la lista.</p>';
+  else if (_cotz.sucio) h += '<p class="cotz-aviso">Cambiar el monto o apagarlo no reinicia la vuelta: la siguiente le sigue tocando a quien le tocaba.</p>';
   h += '</div>';
   h += '<div class="cotz-guardar"><small>' + (_cotz.sucio ? 'Hay cambios sin guardar.' : (v.actualizado ? 'Último cambio: ' + new Date(v.actualizado).toLocaleString('es-CR', { dateStyle: 'medium', timeStyle: 'short' }) : 'Todavía no lo has guardado.')) + '</small>' +
-       '<button type="button" class="btn btn-primary" id="cotzGuardar"' + (_cotz.sucio ? '' : ' disabled') + '>Guardar el reparto</button></div>';
+       '<button type="button" class="btn btn-primary" id="cotzGuardar"' + (_cotz.sucio && (!r.directo.on || _cotzDirOk(r.directo)) ? '' : ' disabled') + '>Guardar el reparto</button></div>';
   h += '<p class="cotz-nota">Enlace del formulario para tus clientes: <a href="' + COTZ_URL_PUBLICA + '" target="_blank" rel="noopener">' + COTZ_URL_PUBLICA.replace('https://', '') + '</a></p>';
 
   var cuerpo = document.getElementById('cotzCuerpo');
@@ -207,6 +250,25 @@ function cotzHayCambiosSinGuardar() { return !!(_cotz.vista && _cotz.sucio); }
 function _cotzEnganchar(c) {
   var r = _cotz.editado;
   c.querySelector('#cotzOn').addEventListener('change', function () { r.on = this.checked; _cotzCambio(); });
+  c.querySelector('#cotzDirOn').addEventListener('change', function () { r.directo.on = this.checked; _cotzCambio(); });
+  c.querySelectorAll('[data-dm]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var L = _cotzDirLimites(), m = Math.round((r.directo.monto || 0) / 1e6) + Number(b.dataset.dm);
+      r.directo.monto = Math.max(L.min / 1e6, Math.min(L.max / 1e6, m)) * 1e6;
+      _cotzCambio();
+    });
+  });
+  c.querySelectorAll('[data-dmr]').forEach(function (b) {
+    b.addEventListener('click', function () { r.directo.monto = Number(b.dataset.dmr) * 1e6; _cotzCambio(); });
+  });
+  c.querySelector('#cotzDirMonto').addEventListener('input', function () {
+    var t = this.value.replace(/[^0-9]/g, '').slice(0, 3);
+    r.directo.monto = t ? Number(t) * 1e6 : 0;
+    _cotzCambio();
+    // El repintado reemplaza el campo: se le devuelve el foco y el cursor al final.
+    var n = document.getElementById('cotzDirMonto');
+    if (n) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); }
+  });
   c.querySelectorAll('.cotz-step button').forEach(function (b) {
     b.addEventListener('click', function () {
       var a = r.agentes[+b.dataset.i];

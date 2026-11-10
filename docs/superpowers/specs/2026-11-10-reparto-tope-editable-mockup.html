@@ -1,0 +1,231 @@
+<title>Reparto · tope editable</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&family=Google+Sans+Code:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Mockup del panel «Reparto de cotizaciones» del ⚙, con el bloque nuevo del tope.
+   Página: banda de presentación + el panel tal cual (línea clara, siempre claro, como la consola). */
+:root{
+  --pg:#F2F7F4; --pg-ink:#1B1F23; --pg-ink2:#5A6570; --pg-line:#DADCE0; --pg-card:#fff;
+  /* panel (copia de linea-clara-consola.css, siempre claro como en la app) */
+  --blue:#0369A1; --blue-ink:#02557F; --band:#EEF4F9; --line:#DADCE0; --line-btn:#8A939C; --line-soft:#EDEFF2;
+  --ink:#1B1F23; --ink2:#5A6570; --ink3:#6B7681; --navy:#0C2340;
+  --oro-bg:#FBF3DC; --oro-tx:#7C5A00; --ok-bg:#E9F5F0; --ok-tx:#037D61; --gris-bg:#F1F3F4;
+  --body:'Google Sans Flex','Inter',system-ui,sans-serif; --mono:'Google Sans Code','Inter',ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--pg:#11181D;--pg-ink:#E6EAED;--pg-ink2:#A9B3BC;--pg-line:#2C363E;--pg-card:#182128;color-scheme:dark}}
+:root[data-theme="dark"]{--pg:#11181D;--pg-ink:#E6EAED;--pg-ink2:#A9B3BC;--pg-line:#2C363E;--pg-card:#182128;color-scheme:dark}
+body{background:var(--pg);color:var(--pg-ink);font-family:var(--body);padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+.intro h1{margin:0;font-size:24px;font-weight:500;text-wrap:balance}
+.intro p{margin:6px 0 0;color:var(--pg-ink2);font-size:14px;max-width:70ch;line-height:1.5}
+.cols{display:grid;grid-template-columns:minmax(0,560px) minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:900px){.cols{grid-template-columns:minmax(0,1fr)}}
+
+/* ---------- el modal ⚙ (recorte) ---------- */
+.modal{background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:24px;padding:20px;box-shadow:0 1px 3px rgba(12,35,64,.08)}
+.mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.mh b{font-size:16px;font-weight:600}
+.mh span{font-size:12px;color:var(--ink3)}
+.sec{margin-top:10px;padding-top:14px;border-top:1px solid #e5e7eb;display:flex;flex-direction:column;gap:10px}
+.h{margin:0;font-size:13px;font-weight:700;color:var(--navy)}
+.sub{margin:-6px 0 0;font-size:11.5px;color:#64748b}
+.sw{display:flex;align-items:center;justify-content:space-between;gap:14px;border:1px solid var(--line);border-radius:16px;padding:10px 14px;cursor:pointer}
+.sw b{display:block;font-size:13.5px}
+.sw small{color:var(--ink3);font-size:12px}
+.tog{position:relative;width:46px;height:26px;flex:0 0 46px}
+.tog input{opacity:0;width:0;height:0;position:absolute}
+.tog i{position:absolute;inset:0;background:var(--line-btn);border-radius:999px;transition:background .15s}
+.tog i::after{content:"";position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.tog input:checked+i{background:var(--blue)}
+.tog input:checked+i::after{transform:translateX(20px)}
+.tog input:focus-visible+i{outline:3px solid rgba(3,105,161,.35);outline-offset:2px}
+.ags{display:flex;flex-direction:column;gap:8px}
+.agr{display:grid;grid-template-columns:34px minmax(0,1fr) auto auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:16px;padding:10px 12px}
+.dot{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:12.5px}
+.quien{display:flex;flex-direction:column;gap:2px;min-width:0}
+.quien b{font-size:13.5px}
+.quien small{color:var(--ink3);font:400 11.5px var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.step{display:flex;align-items:center;border:1px solid var(--line-btn);border-radius:999px;overflow:hidden}
+.step button{width:32px;height:32px;border:0;background:#fff;font:600 18px var(--body);color:var(--blue-ink);cursor:pointer}
+.step button:disabled{color:#C3C9CF;cursor:default}
+.step output{min-width:26px;text-align:center;font:600 15px var(--mono)}
+.pct{font:500 12px var(--mono);color:var(--ink2);min-width:44px;text-align:right}
+.nota{margin:0;font-size:12px;color:var(--ink3)}
+
+/* ---------- BLOQUE NUEVO ---------- */
+.tope{border:2px solid var(--blue);border-radius:18px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;position:relative}
+.nuevo{position:absolute;top:-10px;right:14px;background:var(--blue);color:#fff;font:600 10.5px var(--body);letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:3px 9px}
+.tope .sw{border:0;padding:0}
+.monto{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.monto.off{opacity:.45;pointer-events:none}
+.monto label{font-size:13px;color:var(--ink2)}
+.campo{display:flex;align-items:center;border:1px solid var(--line-btn);border-radius:999px;overflow:hidden;background:#fff}
+.campo button{width:34px;height:36px;border:0;background:#fff;font:600 18px var(--body);color:var(--blue-ink);cursor:pointer}
+.campo button:disabled{color:#C3C9CF;cursor:default}
+.campo .cifra{display:flex;align-items:center;gap:4px;padding:0 4px;font:600 16px var(--mono);font-variant-numeric:tabular-nums}
+.campo input{width:44px;border:0;text-align:center;font:600 16px var(--mono);color:var(--ink);background:transparent;padding:6px 0}
+.campo input:focus{outline:none}
+.campo:focus-within{outline:3px solid rgba(3,105,161,.3);outline-offset:1px}
+.campo .u{font:500 13px var(--body);color:var(--ink2);padding-right:8px}
+.rap{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;color:var(--ink3)}
+.rap button{font:600 12px var(--mono);border:1px solid var(--line-btn);background:#fff;border-radius:999px;padding:4px 10px;cursor:pointer;color:var(--ink)}
+.rap button.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.rap.off{opacity:.45;pointer-events:none}
+.err{margin:0;font-size:12px;color:#9F1239;background:#FCE8EC;border-radius:10px;padding:6px 10px}
+
+/* qué pasa con cada solicitud */
+.camino{border-top:1px solid var(--line-soft);padding-top:10px;display:flex;flex-direction:column;gap:8px}
+.t{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3)}
+.reglas{display:grid;grid-template-columns:minmax(0,1fr);gap:6px}
+.regla{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px;align-items:center;border-radius:12px;padding:8px 12px;font-size:12.5px}
+.regla .r{font:600 12.5px var(--mono);font-variant-numeric:tabular-nums}
+.regla.vos{background:var(--band);color:var(--blue-ink)}
+.regla.vuelta{background:var(--ok-bg);color:var(--ok-tx)}
+.regla.man{background:var(--gris-bg);color:var(--ink2)}
+@media (max-width:480px){.regla{grid-template-columns:minmax(0,1fr)}.agr{grid-template-columns:34px minmax(0,1fr) auto}.pct{grid-column:2/-1;text-align:left}}
+
+.guardar{display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+.guardar small{color:var(--ink3);font-size:12px}
+.btn{font:600 14px var(--body);border-radius:999px;padding:9px 18px;border:0;cursor:pointer}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:disabled{background:#C3C9CF;cursor:default}
+.aviso{margin:0;border-radius:10px;padding:8px 12px;font-size:12.5px;background:var(--oro-bg);color:var(--oro-tx)}
+
+/* ---------- columna derecha: decisiones ---------- */
+.side{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--pg-card);border:1px solid var(--pg-line);border-radius:18px;padding:16px 18px}
+.card h2{margin:0 0 8px;font-size:15px;font-weight:600}
+.card p,.card li{font-size:13.5px;line-height:1.5;color:var(--pg-ink2)}
+.card p{margin:0}
+.card ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+.card li b{color:var(--pg-ink)}
+.estados{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.estados button{font:600 12.5px var(--body);border:1px solid var(--pg-line);background:transparent;color:var(--pg-ink);border-radius:999px;padding:6px 12px;cursor:pointer}
+.estados button:focus-visible,.rap button:focus-visible,.campo button:focus-visible,.step button:focus-visible{outline:3px solid rgba(3,105,161,.35);outline-offset:2px}
+</style>
+
+<div class="wrap">
+  <div class="intro">
+    <h1>Reparto de cotizaciones: tope editable</h1>
+    <p>Así quedaría el panel del ⚙. Lo nuevo es el recuadro con borde azul: un interruptor para apagar el «directo a vos» y el monto a partir del cual te llegan solo a vos. Podés tocarlo: los botones, el monto y el interruptor funcionan. Nombres de ejemplo.</p>
+  </div>
+
+  <div class="cols">
+    <div class="modal" aria-label="Mockup del panel">
+      <div class="mh"><b>Configuración</b><span>…perfil arriba…</span></div>
+      <div class="sec">
+        <p class="h">Reparto de cotizaciones</p>
+        <p class="sub">Solo lo ves vos, como administrador.</p>
+
+        <label class="sw"><span><b>Repartir entre agentes</b><small>Encendido: las solicitudes se reparten por turnos.</small></span>
+          <span class="tog"><input type="checkbox" id="mRep" checked><i></i></span></label>
+
+        <div class="ags">
+          <div class="agr"><span class="dot" style="background:#0369A1">JC</span><span class="quien"><b>Juan Carlos Hernández</b><small>agente principal</small></span><span class="step"><button type="button" disabled>−</button><output>3</output><button type="button" disabled>+</button></span><span class="pct">43 %</span></div>
+          <div class="agr"><span class="dot" style="background:#0D9488">CH</span><span class="quien"><b>Christian Hernández</b><small>agente</small></span><span class="step"><button type="button" disabled>−</button><output>2</output><button type="button" disabled>+</button></span><span class="pct">29 %</span></div>
+          <div class="agr"><span class="dot" style="background:#EA580C">JA</span><span class="quien"><b>José Alonso Hernández</b><small>asesor</small></span><span class="step"><button type="button" disabled>−</button><output>2</output><button type="button" disabled>+</button></span><span class="pct">29 %</span></div>
+        </div>
+
+        <!-- BLOQUE NUEVO -->
+        <div class="tope" id="tope">
+          <span class="nuevo">Nuevo</span>
+          <label class="sw"><span><b>Las de valor alto, directo a vos</b><small id="topeSub">Encendido: las de ese monto o más te llegan solo a vos.</small></span>
+            <span class="tog"><input type="checkbox" id="mTope" checked><i></i></span></label>
+          <div class="monto" id="montoRow">
+            <label for="mMonto">A partir de</label>
+            <span class="campo">
+              <button type="button" id="menos" aria-label="Un millón menos">−</button>
+              <span class="cifra">₡<input id="mMonto" inputmode="numeric" value="15" aria-label="Monto en millones"></span><span class="u">millones</span>
+              <button type="button" id="mas" aria-label="Un millón más">+</button>
+            </span>
+          </div>
+          <div class="rap" id="rap">Rápidos:
+            <button type="button" data-m="10">10</button><button type="button" data-m="15">15</button><button type="button" data-m="20">20</button><button type="button" data-m="25">25</button><button type="button" data-m="30">30</button>
+          </div>
+          <p class="err" id="err" hidden>El monto va de ₡5 a ₡100 millones.</p>
+
+          <div class="camino">
+            <span class="t">Qué pasa con cada solicitud</span>
+            <div class="reglas" id="reglas"></div>
+          </div>
+        </div>
+
+        <div class="guardar"><small id="estado">Todavía sin cambios.</small><button type="button" class="btn btn-primary" id="guardar" disabled>Guardar el reparto</button></div>
+        <p class="aviso" id="avisoGuardar" hidden>Cambiar el monto o apagarlo no reinicia la vuelta: la siguiente le sigue tocando a quien le tocaba.</p>
+      </div>
+    </div>
+
+    <div class="side">
+      <div class="card">
+        <h2>Probalo con un clic</h2>
+        <p>Atajos para ver los dos casos que pediste:</p>
+        <div class="estados">
+          <button type="button" data-e="hoy">Como hoy (₡15 millones)</button>
+          <button type="button" data-e="20">Subirlo a ₡20 millones</button>
+          <button type="button" data-e="bonanza">Época de bonanza (apagado)</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Lo que propongo, para que lo apruebes</h2>
+        <ol>
+          <li><b>El monto va en millones enteros, de ₡5 a ₡100 millones.</b> Tiene que quedar arriba de los ₡4 millones, que es donde empiezan las que se reparten.</li>
+          <li><b>Apagado, las de valor alto entran en la vuelta como cualquier otra.</b> El monto queda guardado para cuando lo volvás a encender.</li>
+          <li><b>Las que te llegan directo siguen sin contar como tu turno</b>, igual que hoy.</li>
+          <li><b>Cambiar el monto o apagarlo no reinicia la vuelta.</b> Solo la reinicia cambiar la lista o los números, como hoy.</li>
+          <li><b>La hoja anota el monto que estaba puesto</b>: «₡20 millones o más · directo». Con el directo apagado, esas solicitudes salen con el turno normal.</li>
+          <li><b>Los ₡4 millones siguen fijos</b>, porque no lo pediste. Si también lo querés editable, se hace igual.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var rep=document.getElementById('mRep'), tope=document.getElementById('mTope'), inp=document.getElementById('mMonto');
+  var row=document.getElementById('montoRow'), rap=document.getElementById('rap'), err=document.getElementById('err');
+  var reglas=document.getElementById('reglas'), sub=document.getElementById('topeSub');
+  var btnG=document.getElementById('guardar'), est=document.getElementById('estado'), av=document.getElementById('avisoGuardar');
+  var base={rep:true,tope:true,m:15};
+  function fmt(n){return '₡'+(n*1000000).toLocaleString('de-DE');}
+  function monto(){var n=parseInt(inp.value,10);return isNaN(n)?0:n;}
+  function pintar(){
+    var m=monto(), ok=m>=5&&m<=100, on=tope.checked;
+    err.hidden=ok||!on;
+    row.classList.toggle('off',!on); rap.classList.toggle('off',!on);
+    document.getElementById('menos').disabled=m<=5; document.getElementById('mas').disabled=m>=100;
+    rap.querySelectorAll('button').forEach(function(b){b.classList.toggle('on',+b.dataset.m===m);});
+    sub.textContent=on?'Encendido: las de '+(ok?fmt(m):'ese monto')+' o más te llegan solo a vos.':'Apagado: las de valor alto también se reparten. El monto queda guardado.';
+    var quien=rep.checked?'Se reparte por turnos entre los tres':'Te llega a vos (repartir está apagado)';
+    var h='<div class="regla man"><span class="r">Menos de ₡4.000.000</span><span>Sin asignar: queda en la hoja para que la asignés vos</span></div>';
+    if(on&&ok){
+      h+='<div class="regla vuelta"><span class="r">₡4.000.000 a ₡'+(m*1000000-1).toLocaleString('de-DE')+'</span><span>'+quien+'</span></div>';
+      h+='<div class="regla vos"><span class="r">'+fmt(m)+' o más</span><span>Directo a vos, sin cambiar el turno</span></div>';
+    } else {
+      h+='<div class="regla vuelta"><span class="r">₡4.000.000 o más</span><span>'+quien+', sin importar el monto</span></div>';
+    }
+    reglas.innerHTML=h;
+    var sucio=rep.checked!==base.rep||on!==base.tope||m!==base.m;
+    btnG.disabled=!sucio||(on&&!ok);
+    est.textContent=sucio?'Hay cambios sin guardar.':'Todavía sin cambios.';
+    av.hidden=!sucio;
+  }
+  function poner(m){inp.value=Math.max(5,Math.min(100,m));pintar();}
+  document.getElementById('menos').addEventListener('click',function(){poner(monto()-1);});
+  document.getElementById('mas').addEventListener('click',function(){poner(monto()+1);});
+  rap.querySelectorAll('button').forEach(function(b){b.addEventListener('click',function(){poner(+b.dataset.m);});});
+  inp.addEventListener('input',function(){inp.value=inp.value.replace(/\D/g,'').slice(0,3);pintar();});
+  tope.addEventListener('change',pintar); rep.addEventListener('change',pintar);
+  btnG.addEventListener('click',function(){base={rep:rep.checked,tope:tope.checked,m:monto()};pintar();est.textContent='Guardado (en el mockup no se guarda nada de verdad).';});
+  document.querySelectorAll('[data-e]').forEach(function(b){b.addEventListener('click',function(){
+    var e=b.dataset.e; rep.checked=true;
+    if(e==='hoy'){tope.checked=true;inp.value=15;}
+    if(e==='20'){tope.checked=true;inp.value=20;}
+    if(e==='bonanza'){tope.checked=false;inp.value=15;}
+    pintar(); document.getElementById('tope').scrollIntoView({behavior:'smooth',block:'center'});
+  });});
+  pintar();
+})();
+</script>

@@ -24,6 +24,16 @@ export const PESO_MAX = 9;
  */
 export const TOPE_PRINCIPAL = 15000000;
 /**
+ * JC, 10 nov 2026: el monto del "directo a vos" lo decide el desde el panel, y lo puede
+ * APAGAR en epocas de bonanza para que las de valor alto tambien se repartan.
+ * Vive en reparto.directo = {on, monto}. TOPE_PRINCIPAL es el valor por defecto (repartos
+ * guardados antes de este cambio no traen `directo` y siguen como siempre: encendido a 15M).
+ * Millones enteros entre DIRECTO_MIN y DIRECTO_MAX (siempre arriba de TOPE_MANUAL).
+ * Cambiarlo NO reinicia la vuelta: firmaReparto solo mira la lista y los pesos.
+ */
+export const DIRECTO_MIN = 5000000;
+export const DIRECTO_MAX = 100000000;
+/**
  * JC, 8 nov 2026: "de 4.000.000 para arriba entran en el reparto, menos las asigno
  * manualmente". Menos de este valor no se le asigna a nadie: solo se anota en la
  * hoja (el cliente ve la misma pantalla) y la vuelta no se mueve.
@@ -36,7 +46,16 @@ export const normCorreo = (s) => String(s || "").trim().toLowerCase();
 
 /** Reparto inicial: apagado y solo el admin. */
 export function repartoInicial(admin) {
-  return { on: false, agentes: [{ email: normCorreo(admin), peso: 1 }] };
+  return { on: false, agentes: [{ email: normCorreo(admin), peso: 1 }], directo: { on: true, monto: TOPE_PRINCIPAL } };
+}
+
+/** El "directo al admin" de un reparto, con el valor por defecto si no lo trae (repartos viejos). */
+export function directoDe(reparto) {
+  const d = reparto && reparto.directo;
+  if (!d || typeof d !== "object") return { on: true, monto: TOPE_PRINCIPAL };
+  const m = Number(d.monto);
+  const montoOk = Number.isInteger(m) && m >= DIRECTO_MIN && m <= DIRECTO_MAX && m % 1000000 === 0;
+  return { on: d.on !== false, monto: montoOk ? m : TOPE_PRINCIPAL };
 }
 
 /**
@@ -59,7 +78,17 @@ export function normalizarReparto(entrada, admin) {
     agentes.push({ email, peso });
   }
   if (adm && !vistos.has(adm)) agentes.unshift({ email: adm, peso: 0 });
-  return { ok: true, reparto: { on: entrada.on === true, agentes } };
+  let directo = { on: true, monto: TOPE_PRINCIPAL };
+  if (entrada.directo !== undefined) {
+    const d = entrada.directo;
+    if (!d || typeof d !== "object") return { ok: false, error: "Directo inválido." };
+    const m = Number(d.monto);
+    if (!Number.isInteger(m) || m % 1000000 !== 0 || m < DIRECTO_MIN || m > DIRECTO_MAX) {
+      return { ok: false, error: "El monto del directo va de ₡" + DIRECTO_MIN / 1e6 + " a ₡" + DIRECTO_MAX / 1e6 + " millones, en millones enteros." };
+    }
+    directo = { on: d.on !== false, monto: m };
+  }
+  return { ok: true, reparto: { on: entrada.on === true, agentes, directo } };
 }
 
 /** La vuelta expandida: [jc, jc, jc, jose, cristian]. */
@@ -82,14 +111,15 @@ export function firmaReparto(reparto) {
  * @param {object|null} p.turno  {pos, firma} guardado
  * @param {(email:string)=>boolean} p.tieneFicha
  * @param {string} p.admin
- * @param {number} [p.valor]  valor del vehiculo en colones; igual o mayor a TOPE_PRINCIPAL → al admin
+ * @param {number} [p.valor]  valor del vehiculo en colones; igual o mayor al monto del directo (si esta encendido) → al admin
  * @returns {{email:string, n:number, de:number, repartido:boolean, directo?:boolean, sinAsignar?:boolean, turno:{pos:number, firma:string}|null}}
  *   turno = lo que hay que guardar (null si no se mueve la vuelta).
  */
 export function elegir({ reparto, turno, tieneFicha, admin, valor }) {
   const adm = normCorreo(admin);
   const v = reparto && reparto.on ? vuelta(reparto) : [];
-  if (Number(valor) >= TOPE_PRINCIPAL) return { email: adm, n: 0, de: v.length, repartido: false, directo: true, turno: null };
+  const dir = directoDe(reparto);
+  if (dir.on && Number(valor) >= dir.monto) return { email: adm, n: 0, de: v.length, repartido: false, directo: true, turno: null };
   if (Number(valor) < TOPE_MANUAL) return { email: "", n: 0, de: v.length, repartido: false, sinAsignar: true, turno: null };
   if (!v.length) return { email: adm, n: 0, de: 0, repartido: false, turno: null };
   const firma = firmaReparto(reparto);

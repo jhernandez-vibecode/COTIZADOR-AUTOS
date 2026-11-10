@@ -6,7 +6,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { normalizarReparto, elegir, vuelta, proximos, repartoInicial, TOPE_PRINCIPAL, TOPE_MANUAL } from '../netlify/functions/lib/cotizar-reparto.mjs';
+import { normalizarReparto, elegir, vuelta, proximos, repartoInicial, directoDe, firmaReparto, TOPE_PRINCIPAL, TOPE_MANUAL } from '../netlify/functions/lib/cotizar-reparto.mjs';
 import { validarCotizacion, validarFicha, INTERESES_COT } from '../netlify/functions/lib/cotizar-validacion.mjs';
 import { correoAgente, filaRegistro, presentacion } from '../netlify/functions/lib/cotizar-correos.mjs';
 import { correoDeSesion, CLIENT_ID_DEFECTO } from '../netlify/functions/lib/google-sesion.mjs';
@@ -43,6 +43,29 @@ ok('el tope es 15.000.000', TOPE_PRINCIPAL === 15000000);
   ok('aunque nadie tenga ficha', s4.email === ADM && s4.directo);
 }
 ok('hoja: la columna del turno dice que fue directo', filaRegistroDirecto());
+
+console.log('-- directo editable y apagable (JC, 10 nov 2026) --');
+{
+  const conDir = (directo, pesos = [0, 1, 1]) => normalizarReparto({ on: true, agentes: [{ email: ADM, peso: pesos[0] }, { email: DOS, peso: pesos[1] }, { email: TRES, peso: pesos[2] }], directo }, ADM);
+  ok('reparto viejo sin directo → encendido a 15M', JSON.stringify(directoDe({ on: true, agentes: [] })) === JSON.stringify({ on: true, monto: 15000000 }));
+  ok('el reparto inicial trae el directo encendido a 15M', directoDe(repartoInicial(ADM)).on === true && directoDe(repartoInicial(ADM)).monto === 15000000);
+  const r20 = conDir({ on: true, monto: 20000000 }).reparto;
+  ok('a 20M: 18M entra en la vuelta', elegir({ reparto: r20, turno: null, admin: ADM, tieneFicha: todos, valor: 18000000 }).email === DOS);
+  ok('a 20M: 20M justos → admin', elegir({ reparto: r20, turno: null, admin: ADM, tieneFicha: todos, valor: 20000000 }).directo === true);
+  const rOff = conDir({ on: false, monto: 20000000 }).reparto;
+  const so = elegir({ reparto: rOff, turno: null, admin: ADM, tieneFicha: todos, valor: 90000000 });
+  ok('apagado: una de 90M entra en la vuelta y mueve el turno', so.email === DOS && !so.directo && so.turno);
+  ok('apagado: el monto queda guardado', rOff.directo.monto === 20000000 && rOff.directo.on === false);
+  ok('apagado: las de menos de 4M siguen sin asignar', elegir({ reparto: rOff, turno: null, admin: ADM, tieneFicha: todos, valor: 3000000 }).sinAsignar === true);
+  ok('apagado y reparto apagado: todo al admin', elegir({ reparto: { ...rOff, on: false }, turno: null, admin: ADM, tieneFicha: todos, valor: 90000000 }).email === ADM);
+  ok('cambiar el directo NO reinicia la vuelta (misma firma)', firmaReparto(r20) === firmaReparto(rOff) && firmaReparto(r20) === firmaReparto(R(true, [0, 1, 1])));
+  ok('monto menor a 5M → rechazado', conDir({ on: true, monto: 4000000 }).ok === false);
+  ok('monto mayor a 100M → rechazado', conDir({ on: true, monto: 101000000 }).ok === false);
+  ok('monto que no es millones enteros → rechazado', conDir({ on: true, monto: 12500000 }).ok === false);
+  ok('directo que no es objeto → rechazado', conDir('si').ok === false);
+  ok('5M y 100M justos → aceptados', conDir({ on: true, monto: 5000000 }).ok && conDir({ on: true, monto: 100000000 }).ok);
+  ok('hoja: anota el monto que estaba puesto', filaRegistro({ tipo: 'usado', placa: 'X', valor: 30000000 }, { agente: { nombre: 'A', email: ADM }, n: 0, de: 5, repartido: false, directo: true, topeDirecto: 25000000, fecha: 'x' }).turno === '₡25 millones o más · directo');
+}
 
 console.log('-- menos de 4 millones: sin asignar (JC, 8 nov 2026) --');
 ok('el tope manual es 4.000.000', TOPE_MANUAL === 4000000);
@@ -193,6 +216,31 @@ ok('doble clic: la misma solicitud no sale dos veces', (await (async () => { rel
   hoja.pop();
 }
 {
+  // Directo editable (10 nov 2026): el admin lo sube a 20M, despues lo apaga.
+  const base = { on: true, agentes: [{ email: ADM, peso: 3 }, { email: DOS, peso: 1 }, { email: TRES, peso: 1 }] };
+  const antes = (await llamar('/cotizar/agente', { accion: 'ver', token: tk('tkUno') })).j;
+  ok('Function: ver trae el directo y los limites', antes.directo && antes.directo.on === true && antes.directo.monto === 15000000 && antes.directoMin === 5000000 && antes.directoMax === 100000000);
+  const g20 = await llamar('/cotizar/agente', { accion: 'guardar', token: tk('tkUno'), reparto: { ...base, directo: { on: true, monto: 20000000 } } });
+  ok('Function: el admin pone el directo en 20M', g20.st === 200 && g20.j.directo.monto === 20000000 && g20.j.reparto.directo.monto === 20000000);
+  ok('Function: cambiar el directo no reinicia la vuelta', g20.j.proximos.join() === antes.proximos.join());
+  const malo = await llamar('/cotizar/agente', { accion: 'guardar', token: tk('tkUno'), reparto: { ...base, directo: { on: true, monto: 3000000 } } });
+  ok('Function: monto fuera de rango → 400 y no se guarda', malo.st === 400 && (await llamar('/cotizar/agente', { accion: 'ver', token: tk('tkUno') })).j.directo.monto === 20000000);
+  const viejo = await llamar('/cotizar/agente', { accion: 'guardar', token: tk('tkUno'), reparto: base });
+  ok('Function: un panel viejo (sin directo) conserva los 20M', viejo.st === 200 && viejo.j.directo.monto === 20000000 && viejo.j.directo.on === true);
+  enviados.length = 0;
+  const a = await llamar('/cotizar/enviar', { ...U, correo: 'dieciocho@ejemplo.test', placa: 'DIR018', valor: '₡ 18.000.000' }, '6.6.6.1');
+  ok('Function: a 20M, una de 18M NO es directa (entra en la vuelta)', a.st === 200 && !hoja[hoja.length - 1].fila.turno.includes('directo'));
+  const b = await llamar('/cotizar/enviar', { ...U, correo: 'veintidos@ejemplo.test', placa: 'DIR022', valor: '₡ 22.000.000' }, '6.6.6.2');
+  ok('Function: a 20M, una de 22M es directa y la hoja dice 20', b.st === 200 && enviados[enviados.length - 1].to[0] === ADM && hoja[hoja.length - 1].fila.turno === '₡20 millones o más · directo');
+  const off = await llamar('/cotizar/agente', { accion: 'guardar', token: tk('tkUno'), reparto: { ...base, directo: { on: false, monto: 20000000 } } });
+  ok('Function: el admin apaga el directo', off.st === 200 && off.j.directo.on === false && off.j.directo.monto === 20000000);
+  const c = await llamar('/cotizar/enviar', { ...U, correo: 'cuarenta@ejemplo.test', placa: 'DIR040', valor: '₡ 40.000.000' }, '6.6.6.3');
+  ok('Function: apagado, una de 40M sale con turno normal', c.st === 200 && /^\d+ de \d+$/.test(hoja[hoja.length - 1].fila.turno));
+  // Se deja como estaba para el resto del test.
+  await llamar('/cotizar/agente', { accion: 'guardar', token: tk('tkUno'), reparto: { ...base, directo: { on: true, monto: 15000000 } } });
+  hoja.splice(hoja.length - 3, 3);
+}
+{
   const antes = (await llamar('/cotizar/agente', { accion: 'ver', token: tk('tkUno') })).j.proximos;
   enviados.length = 0; const nh = hoja.length;
   const c1 = await llamar('/cotizar/enviar', { ...U, correo: 'chica@ejemplo.test', placa: 'CHI001', valor: '₡ 2.500.000' }, '5.5.5.5');
@@ -335,6 +383,9 @@ ok('el script se carga antes de app.js', idx.indexOf('js/cotizar-agente.js') > 0
 ok('la sesion se pide con scope "openid email"', cfgJs.includes("scope: 'openid email'"));
 ok('al abrir el ⚙ el reparto se vuelve a leer (no queda una vista vieja)', /function cotzAlAbrirPerfil[\s\S]{0,400}_cotz\.vista = null/.test(cfgJs));
 ok('cerrar el ⚙ con el reparto sin guardar pregunta', /cotzHayCambiosSinGuardar\(\) &&/.test(appJs));
+ok('panel: interruptor y monto del directo', cfgJs.includes('id="cotzDirOn"') && cfgJs.includes('id="cotzDirMonto"') && cfgJs.includes('_cotzDirectoHtml(r, v)'));
+ok('panel: la nota fija del tope de 15M ya no esta', !cfgJs.includes('cotz-nota cotz-tope'));
+ok('panel: no deja guardar un monto fuera de rango', cfgJs.includes('(!r.directo.on || _cotzDirOk(r.directo))'));
 
 console.log('\n' + pass + ' ok, ' + fail + ' fallas');
 process.exit(fail ? 1 : 0);
