@@ -45,6 +45,8 @@ var RG = {
     { correo: 'jhernandez@segurosdelins.com', nombre: 'Juan Carlos', fuerte: '#1A73E8', suave: '#E8F0FE' },
     { correo: 'chernandez@seguros-ins.com', nombre: 'Christian', fuerte: '#E8710A', suave: '#FEEFE3' },
     { correo: 'tramites@segurosdelins.com', nombre: 'José', fuerte: '#188038', suave: '#E6F4EA' },
+    { correo: 'fhernandez@segurosdelins.com', nombre: 'Melanie', fuerte: '#9334E6', suave: '#F3E8FD' },
+    // Su correo anterior (hasta el 11 nov 2026): se queda para que sus filas viejas conserven el color.
     { correo: 'melanie.hernandez@seguros-del-ins.com', nombre: 'Melanie', fuerte: '#9334E6', suave: '#F3E8FD' }
   ],
   SIN_ASIGNAR: { nombre: 'Sin asignar', fuerte: '#5F6368', suave: '#F1F3F4' }

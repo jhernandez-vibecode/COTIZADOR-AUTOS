@@ -135,7 +135,7 @@ ok('agente: sin el aviso de confirmacion al cliente (ya no se envia)', !ca.html.
   const wa = decodeURIComponent((correoAgente(vu.datos, { agente: AS, n: 1, de: 5, repartido: true, fecha: 'x' }).html.match(/text=([^"&]+)/) || [, ''])[1]).replace(/\+/g, ' ');
   ok('WhatsApp del aviso: la asesora no dice "agente del INS"', wa.includes('soy Asesora Prueba, asesora de seguros de la oficina de Agente Prueba.') && !wa.includes('agente del INS'));
 }
-ok('Melanie es asesora de la oficina de Fernando (JC, 8 nov 2026)', JSON.stringify((await import('../js/email-marca.js')).default.SDI_ASESORES['melanie.hernandez@seguros-del-ins.com']) === JSON.stringify({ cargo: 'Asesora de Seguros', oficina: 'Oficina de Fernando Hernández, agente' }));
+ok('Melanie es asesora de la oficina de Fernando (JC, 8 nov 2026)', JSON.stringify((await import('../js/email-marca.js')).default.SDI_ASESORES['fhernandez@segurosdelins.com']) === JSON.stringify({ cargo: 'Asesora de Seguros', oficina: 'Oficina de Fernando Hernández, agente' }));
 ok('hoja: la columna de la confirmacion dice "Solo en pantalla"', filaRegistro(vu.datos, { agente: AG, n: 1, de: 1, repartido: true, fecha: 'x' }).clienteAvisado === 'Solo en pantalla');
 ok('hoja: fila con el agente y el turno', (() => { const f = filaRegistro(vu.datos, { agente: AG, n: 4, de: 5, repartido: true, fecha: 'x' }); return f.agente === 'Agente Prueba Dos' && f.turno === '4 de 5' && f.cedula === '1 0000 0000'; })());
 
@@ -368,7 +368,7 @@ ok('la fila de la hoja trae el mes', filaRegistro(vn.datos, { agente: AG, n: 1, 
   const ctx = { Utilities: { formatDate: (d, tz, f) => (f === 'yyyy' ? String(d.getFullYear()) : String(d.getMonth() + 1)) } };
   vm.createContext(ctx); vm.runInContext(gs, ctx);
   ok('ordenar(): el Mes de las filas viejas sale del texto de la Fecha', ctx.mesDe_('8 nov 2026, 3:35 pm') === '2026-11 · noviembre' && ctx.mesDe_('1 set 2026, 9:00 am') === '2026-09 · septiembre' && ctx.mesDe_('PRUEBA') === '');
-  ok('ordenar(): un color por persona (JC azul, Cristian naranja, José verde, Melanie púrpura)', ctx.RG.PERSONAS.map((p) => p.correo + '=' + p.fuerte).join() === 'jhernandez@segurosdelins.com=#1A73E8,chernandez@seguros-ins.com=#E8710A,tramites@segurosdelins.com=#188038,melanie.hernandez@seguros-del-ins.com=#9334E6');
+  ok('ordenar(): un color por persona (JC azul, Cristian naranja, José verde, Melanie púrpura)', ctx.RG.PERSONAS.map((p) => p.correo + '=' + p.fuerte).join() === 'jhernandez@segurosdelins.com=#1A73E8,chernandez@seguros-ins.com=#E8710A,tramites@segurosdelins.com=#188038,fhernandez@segurosdelins.com=#9334E6,melanie.hernandez@seguros-del-ins.com=#9334E6');
 }
 ok('el Apps Script exige la clave y responde "ok"', /cuerpo\.clave !== clave/.test(gs) && /salida\('ok'\)/.test(gs));
 
