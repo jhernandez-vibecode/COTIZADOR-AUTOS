@@ -185,6 +185,15 @@ function _cotzDirectoHtml(r, v) {
   return h;
 }
 
+/** Desde donde sigue la vuelta nueva tras guardar. Copia de posTrasCambio (lib/cotizar-reparto.mjs). */
+function _cotzPosTrasCambio(v, u) {
+  var ini = u && u.ultimo ? v.indexOf(u.ultimo) : -1;
+  if (ini < 0) return 0;
+  var peso = v.lastIndexOf(u.ultimo) - ini + 1;
+  var k = u.k > 0 ? u.k : peso;
+  return k < peso ? ini + k : (ini + peso) % v.length;
+}
+
 function _cotzPintar() {
   var r = _cotz.editado, v = _cotz.vista;
   var total = r.agentes.reduce(function (s, a) { return s + a.peso; }, 0);
@@ -218,9 +227,15 @@ function _cotzPintar() {
   if (r.on && total) {
     if (!_cotz.sucio) prox = v.proximos;
     else {
-      // Sin guardar: la vuelta nueva desde el primero, saltando a quien no tiene ficha (como el servidor).
-      var vu = []; r.agentes.forEach(function (a) { if (v.fichas[a.email]) for (var k = 0; k < a.peso; k++) vu.push(a.email); });
-      for (var j = 0; j < 10; j++) prox.push(vu.length ? vu[j % vu.length] : r.agentes[0].email);
+      // Sin guardar: la vuelta nueva sigue desde quien recibio la ultima (12 nov 2026), saltando
+      // a quien no tiene ficha. Misma cuenta que posTrasCambio + elegir del servidor.
+      var vu = []; r.agentes.forEach(function (a) { for (var k = 0; k < a.peso; k++) vu.push(a.email); });
+      var pos = _cotzPosTrasCambio(vu, v.ultimo);
+      for (var j = 0; j < 10; j++) {
+        var e = r.agentes[0].email;
+        for (var i = 0; i < vu.length; i++) { var p = (pos + i) % vu.length; if (v.fichas[vu[p]]) { e = vu[p]; pos = p + 1; break; } }
+        prox.push(e);
+      }
     }
   }
   h += '<div class="cotz-vista"><span class="cotz-t">Así se reparten las próximas</span>';
@@ -230,7 +245,7 @@ function _cotzPintar() {
   }).join('') + '</div>';
   if (!r.on) h += '<p class="cotz-aviso">Repartir está apagado: todas las solicitudes te llegan a vos. Los números quedan guardados para cuando lo volvás a encender.</p>';
   else if (!total) h += '<p class="cotz-aviso cotz-mal">Todos están en 0. Así nadie recibiría: las solicitudes te llegan a vos.</p>';
-  else if (_cotz.sucio && JSON.stringify(r.agentes) !== JSON.stringify(v.reparto.agentes)) h += '<p class="cotz-aviso">Al guardar, la vuelta arranca de nuevo desde el primero de la lista.</p>';
+  else if (_cotz.sucio && JSON.stringify(r.agentes) !== JSON.stringify(v.reparto.agentes)) h += '<p class="cotz-aviso">Al guardar, la vuelta sigue donde iba: la siguiente le toca a quien le tocaba, con los números nuevos.</p>';
   else if (_cotz.sucio) h += '<p class="cotz-aviso">Cambiar el monto o apagarlo no reinicia la vuelta: la siguiente le sigue tocando a quien le tocaba.</p>';
   h += '</div>';
   h += '<div class="cotz-guardar"><small>' + (_cotz.sucio ? 'Hay cambios sin guardar.' : (v.actualizado ? 'Último cambio: ' + new Date(v.actualizado).toLocaleString('es-CR', { dateStyle: 'medium', timeStyle: 'short' }) : 'Todavía no lo has guardado.')) + '</small>' +

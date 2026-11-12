@@ -6,7 +6,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { normalizarReparto, elegir, vuelta, proximos, repartoInicial, directoDe, firmaReparto, TOPE_PRINCIPAL, TOPE_MANUAL } from '../netlify/functions/lib/cotizar-reparto.mjs';
+import { normalizarReparto, elegir, vuelta, proximos, repartoInicial, directoDe, firmaReparto, posTrasCambio, ultimoDe, TOPE_PRINCIPAL, TOPE_MANUAL } from '../netlify/functions/lib/cotizar-reparto.mjs';
 import { validarCotizacion, validarFicha, INTERESES_COT } from '../netlify/functions/lib/cotizar-validacion.mjs';
 import { correoAgente, filaRegistro, presentacion } from '../netlify/functions/lib/cotizar-correos.mjs';
 import { correoDeSesion, CLIENT_ID_DEFECTO } from '../netlify/functions/lib/google-sesion.mjs';
@@ -100,9 +100,42 @@ ok('nadie con ficha: al admin', corrida(R(true, [1, 1, 1]), 2, () => false) === 
   ok('numera el turno: 2 de 5', s2.n === 2 && s2.de === 5 && s2.repartido);
   const r2 = R(true, [2, 2, 2]);
   const s3 = elegir({ reparto: r2, turno: s2.turno, admin: ADM, tieneFicha: todos });
-  ok('al cambiar los pesos la vuelta arranca de nuevo', s3.n === 1 && s3.email === ADM);
+  ok('al cambiar a 2-2-2 la vuelta SIGUE: el admin ya llevaba 2, le toca al segundo', s3.email === DOS && s3.n === 3);
   ok('vista previa de los proximos', proximos(r1, s1.turno, 5).join(',') === [ADM, ADM, DOS, TRES, ADM].join(','));
   ok('vista previa: salta a quien no tiene ficha', proximos(r1, s1.turno, 5, (e) => e !== TRES, ADM).join(',') === [ADM, ADM, DOS, ADM, ADM].join(','));
+}
+console.log('-- guardar el reparto no reinicia la vuelta (JC, 12 nov 2026) --');
+{
+  const C = 'agente.cuatro@ejemplo.test';
+  const R4 = (p) => normalizarReparto({ on: true, agentes: [{ email: ADM, peso: p[0] }, { email: DOS, peso: p[1] }, { email: TRES, peso: p[2] }, { email: C, peso: p[3] }] }, ADM).reparto;
+  // El caso de JC: 3-2-1-1, a Jose (DOS) le toco la primera de sus dos y se guarda el reparto.
+  const r1 = R4([3, 2, 1, 1]);
+  let t = null; for (let i = 0; i < 4; i++) t = elegir({ reparto: r1, turno: t, admin: ADM, tieneFicha: todos }).turno;
+  ok('el turno anota a quien le toco y cuantas lleva', t.ultimo === DOS && t.k === 1);
+  const r2 = R4([3, 2, 2, 1]);
+  const s = elegir({ reparto: r2, turno: t, admin: ADM, tieneFicha: todos });
+  ok('tras guardar, la siguiente le sigue tocando a Jose (2 de su tanda)', s.email === DOS && s.n === 5);
+  const s2 = elegir({ reparto: r2, turno: s.turno, admin: ADM, tieneFicha: todos });
+  ok('y despues sigue el que viene en la lista', s2.email === TRES);
+  ok('si le bajan el numero a 1, ya completo: pasa al siguiente', elegir({ reparto: R4([3, 1, 1, 1]), turno: t, admin: ADM, tieneFicha: todos }).email === TRES);
+  ok('si lo dejan en 0, arranca desde el primero', elegir({ reparto: R4([3, 0, 1, 1]), turno: t, admin: ADM, tieneFicha: todos }).email === ADM);
+  ok('ultimo de la lista completo → vuelve al primero', posTrasCambio(vuelta(r1), { ultimo: C, k: 1 }) === 0);
+  ok('sin turno guardado → desde el primero', posTrasCambio(vuelta(r1), null) === 0);
+  ok('mayusculas en el correo no importan', posTrasCambio(vuelta(r1), { ultimo: DOS.toUpperCase(), k: 1 }) === 4);
+  // Turno guardado antes de este cambio (sin `ultimo`): se deduce de la posicion.
+  const legado = { pos: 4, firma: firmaReparto(r1) };
+  const u = ultimoDe(r1, legado);
+  ok('turno viejo: deduce que la ultima fue de Jose, 1 de 2', u && u.ultimo === DOS && u.k === 1);
+  ok('turno viejo con otra firma: no adivina', ultimoDe(r2, legado) === null);
+  ok('la vista previa del servidor tambien sigue', proximos(r2, t, 3).join() === [DOS, TRES, TRES].join());
+  // El panel hace la misma cuenta para la vista previa sin guardar: tiene que dar igual.
+  const fuente = fs.readFileSync(path.join(raiz, 'js/cotizar-agente.js'), 'utf8');
+  const ini = fuente.indexOf('function _cotzPosTrasCambio');
+  const fin = fuente.indexOf(String.fromCharCode(10) + '}', ini);
+  const pan = ini >= 0 && fin > ini && new Function(fuente.slice(ini, fin + 2) + '; return _cotzPosTrasCambio;')();
+  const casos = [[r2, t], [R4([3, 1, 1, 1]), t], [R4([3, 0, 1, 1]), t], [r1, { ultimo: C, k: 1 }], [r1, { ultimo: ADM, k: 2 }], [r1, null]];
+  ok('el panel calcula igual que el servidor', !!pan && casos.every(([r, tt]) => pan(vuelta(r), tt) === posTrasCambio(vuelta(r), tt)));
+  ok('el panel ya no dice que la vuelta arranca de nuevo', !fuente.includes('la vuelta arranca de nuevo') && fuente.includes('la vuelta sigue donde iba'));
 }
 ok('normalizar: el admin entra aunque no venga (peso 0)', (() => { const n = normalizarReparto({ on: true, agentes: [{ email: DOS, peso: 2 }] }, ADM); return n.ok && n.reparto.agentes[0].email === ADM && n.reparto.agentes[0].peso === 0; })());
 ok('normalizar: peso 10 no', !normalizarReparto({ on: true, agentes: [{ email: ADM, peso: 10 }] }, ADM).ok);
@@ -247,6 +280,17 @@ ok('doble clic: la misma solicitud no sale dos veces', (await (async () => { rel
   // Se deja como estaba para el resto del test.
   await llamar('/cotizar/agente', { accion: 'guardar', token: tk('tkUno'), reparto: { ...base, directo: { on: true, monto: 15000000 } } });
   hoja.splice(hoja.length - 3, 3);
+}
+{
+  // 12 nov 2026: un turno guardado ANTES del cambio (sin `ultimo`). Le toco la 4 (DOS, su unica);
+  // el admin le sube a DOS a 2 y guarda: la siguiente tiene que seguir siendo de DOS.
+  const base = { on: true, agentes: [{ email: ADM, peso: 3 }, { email: DOS, peso: 1 }, { email: TRES, peso: 1 }] };
+  const turnoAntes = await store.get('turno', { type: 'json' });
+  await store.setJSON('turno', { pos: 4, firma: firmaReparto(normalizarReparto(base, ADM).reparto) });
+  const g = await llamar('/cotizar/agente', { accion: 'guardar', token: tk('tkUno'), reparto: { ...base, agentes: [{ email: ADM, peso: 3 }, { email: DOS, peso: 2 }, { email: TRES, peso: 1 }] } });
+  ok('Function: guardar con turno viejo no reinicia la vuelta', g.st === 200 && g.j.proximos[0] === DOS && g.j.ultimo && g.j.ultimo.ultimo === DOS);
+  await llamar('/cotizar/agente', { accion: 'guardar', token: tk('tkUno'), reparto: { ...base, directo: { on: true, monto: 15000000 } } });
+  await store.setJSON('turno', turnoAntes);
 }
 {
   const antes = (await llamar('/cotizar/agente', { accion: 'ver', token: tk('tkUno') })).j.proximos;

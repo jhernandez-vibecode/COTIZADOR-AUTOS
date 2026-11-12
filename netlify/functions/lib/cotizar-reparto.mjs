@@ -8,7 +8,7 @@
 // agente lleva un peso (0-9) = cuantas solicitudes seguidas le tocan en cada
 // vuelta. 3-1-1 → JC, JC, JC, Jose, Cristian, y vuelve a empezar.
 // Peso 0 = fuera de la vuelta. Apagado (temporada baja) = todo al admin.
-// Al cambiar la lista o los pesos la vuelta arranca de nuevo (firma distinta).
+// Al cambiar la lista o los pesos la vuelta SIGUE donde iba (JC, 12 nov 2026: posTrasCambio).
 // Un agente sin ficha (no ha guardado su ⚙) se salta: nadie recibe una
 // confirmacion firmada por nadie.
 // =====================================================================
@@ -98,10 +98,42 @@ export function vuelta(reparto) {
   return v;
 }
 
-/** Huella de la lista y los pesos: si cambia, la vuelta arranca de nuevo. */
+/** Huella de la lista y los pesos: si cambia, la vuelta se reacomoda con posTrasCambio. */
 export function firmaReparto(reparto) {
   const base = ((reparto && reparto.agentes) || []).map((a) => a.email + ":" + a.peso).join("|");
   return createHash("sha256").update(base).digest("base64url").slice(0, 16);
+}
+
+/**
+ * JC, 12 nov 2026: "que no reinicie cuando guardo el reparto". El turno guarda a quien le
+ * toco la ultima (`ultimo`) y cuantas de su tanda lleva (`k`). Si la lista o los pesos
+ * cambiaron, la vuelta nueva sigue desde ahi: si todavia le quedan de su tanda, le toca a
+ * el; si ya completo (o le bajaron el numero), al siguiente de la lista. Solo si ese agente
+ * ya no esta en la vuelta (lo quitaron o quedo en 0) arranca desde el primero.
+ * La MISMA cuenta la hace el panel (js/cotizar-agente.js, _cotzPosTrasCambio) para la vista previa.
+ * @param {string[]} v  la vuelta nueva expandida
+ * @param {{ultimo?:string, k?:number}|null} turno
+ */
+export function posTrasCambio(v, turno) {
+  const u = turno && normCorreo(turno.ultimo);
+  const ini = u ? v.indexOf(u) : -1;
+  if (ini < 0) return 0;
+  const peso = v.lastIndexOf(u) - ini + 1;
+  const k = Number.isInteger(turno.k) && turno.k > 0 ? turno.k : peso;
+  return k < peso ? ini + k : (ini + peso) % v.length;
+}
+
+/**
+ * A quien le toco la ultima solicitud, sacado del turno guardado. Los turnos guardados
+ * antes del 12 nov 2026 no traen `ultimo`: se deduce de la posicion si la firma calza.
+ */
+export function ultimoDe(reparto, turno) {
+  if (!turno) return null;
+  if (turno.ultimo) return { ultimo: normCorreo(turno.ultimo), k: turno.k };
+  const v = vuelta(reparto);
+  if (!v.length || turno.firma !== firmaReparto(reparto) || !Number.isInteger(turno.pos)) return null;
+  const p = (turno.pos - 1 + v.length) % v.length;
+  return { ultimo: v[p], k: p - v.indexOf(v[p]) + 1 };
 }
 
 /**
@@ -123,10 +155,10 @@ export function elegir({ reparto, turno, tieneFicha, admin, valor }) {
   if (Number(valor) < TOPE_MANUAL) return { email: "", n: 0, de: v.length, repartido: false, sinAsignar: true, turno: null };
   if (!v.length) return { email: adm, n: 0, de: 0, repartido: false, turno: null };
   const firma = firmaReparto(reparto);
-  let pos = turno && turno.firma === firma && Number.isInteger(turno.pos) && turno.pos >= 0 ? turno.pos % v.length : 0;
+  const pos = turno && turno.firma === firma && Number.isInteger(turno.pos) && turno.pos >= 0 ? turno.pos % v.length : posTrasCambio(v, turno);
   for (let i = 0; i < v.length; i++) {
     const p = (pos + i) % v.length;
-    if (tieneFicha(v[p])) return { email: v[p], n: p + 1, de: v.length, repartido: true, turno: { pos: (p + 1) % v.length, firma } };
+    if (tieneFicha(v[p])) return { email: v[p], n: p + 1, de: v.length, repartido: true, turno: { pos: (p + 1) % v.length, firma, ultimo: v[p], k: p - v.indexOf(v[p]) + 1 } };
   }
   return { email: adm, n: 0, de: v.length, repartido: false, turno: null };
 }

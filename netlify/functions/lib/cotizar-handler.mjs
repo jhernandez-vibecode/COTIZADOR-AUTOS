@@ -34,7 +34,7 @@
 import { validarCotizacion, validarFicha, vehiculoCorto } from "./cotizar-validacion.mjs";
 import { correoAgente, filaRegistro, lineaCargo } from "./cotizar-correos.mjs";
 import { siguienteHabil } from "./horario.mjs";
-import { normalizarReparto, elegir, proximos, normCorreo, directoDe, TOPE_MANUAL, DIRECTO_MIN, DIRECTO_MAX } from "./cotizar-reparto.mjs";
+import { normalizarReparto, elegir, proximos, normCorreo, directoDe, ultimoDe, TOPE_MANUAL, DIRECTO_MIN, DIRECTO_MAX } from "./cotizar-reparto.mjs";
 import { correoDeSesion } from "./google-sesion.mjs";
 import { huella, cubeta, permitir, esDuplicado } from "./cita-limite.mjs";
 import {
@@ -78,7 +78,7 @@ export function crearHandler(deps = {}) {
     const fichas = {};
     for (const [e, f] of Object.entries(todas)) fichas[e] = f ? { nombre: f.nombre, licencia: f.licencia, whatsapp: f.whatsapp, porAdmin: !!f.porAdmin, actualizado: f.actualizado } : null;
     const directo = directoDe(reparto);
-    return { reparto: { ...reparto, directo }, fichas, directo, tope: directo.monto, topeManual: TOPE_MANUAL, directoMin: DIRECTO_MIN, directoMax: DIRECTO_MAX, proximos: proximos(reparto, turno, 10, (e) => !!fichas[e], admin), actualizado: reparto.actualizado || null };
+    return { reparto: { ...reparto, directo }, fichas, directo, tope: directo.monto, topeManual: TOPE_MANUAL, directoMin: DIRECTO_MIN, directoMax: DIRECTO_MAX, proximos: proximos(reparto, turno, 10, (e) => !!fichas[e], admin), ultimo: ultimoDe(reparto, turno), actualizado: reparto.actualizado || null };
   }
 
   // ------------------------------------------------------------ ⚙ agentes
@@ -123,6 +123,13 @@ export function crearHandler(deps = {}) {
       if (entrada && typeof entrada === "object" && entrada.directo === undefined) entrada = { ...entrada, directo: directoDe(await leerReparto(store, admin)) };
       const n = normalizarReparto(entrada, admin);
       if (!n.ok) return json(400, { error: n.error });
+      // 12 nov 2026: antes de cambiar la lista, el turno anota a quien le toco la ultima,
+      // para que la vuelta nueva siga desde ahi (los turnos viejos no lo traian).
+      try {
+        const [viejo, t] = await Promise.all([leerReparto(store, admin), leerTurno(store)]);
+        const u = ultimoDe(viejo, t);
+        if (u && t && !t.ultimo) await guardarTurno(store, { ...t, ...u });
+      } catch (e) { console.error("[cotizar] turno no anotado", e && e.message); }
       await guardarReparto(store, n.reparto, ahora());
     }
     return json(200, await vistaAdmin(store, admin));
