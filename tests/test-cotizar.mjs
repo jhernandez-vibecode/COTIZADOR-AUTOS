@@ -76,6 +76,14 @@ ok('el tope manual es 4.000.000', TOPE_MANUAL === 4000000);
   const s2 = elegir({ reparto: r, turno: null, admin: ADM, tieneFicha: todos, valor: 4000000 });
   ok('4.000.000 justos → entran al reparto', s2.email === ADM && !s2.sinAsignar && s2.turno);
   ok('con el reparto apagado tampoco se asigna', elegir({ reparto: R(false, [3, 1, 1]), turno: null, admin: ADM, tieneFicha: todos, valor: 2000000 }).sinAsignar === true);
+  // JC, 12 nov 2026: "si JC tiene 3 seguidos pero despues del segundo llega uno de menos
+  // de 4.000.000, ese no cuenta y se mantiene el turno".
+  {
+    const sec = [6000000, 6000000, 3000000, 6000000, 6000000, 6000000];
+    let t = null; const out = [];
+    for (const valor of sec) { const s = elegir({ reparto: r, turno: t, admin: ADM, tieneFicha: todos, valor }); out.push(s.sinAsignar ? '-' : s.email === ADM ? 'U' : s.email === DOS ? 'D' : 'T'); if (s.turno) t = s.turno; }
+    ok('3-1-1: JC, JC, (menos de 4M), JC, José, Cristian — la de menos de 4M no gasta turno', out.join('') === 'UU-UDT');
+  }
   ok('hoja: dice sin asignar', filaRegistro({ tipo: 'usado', placa: 'X', valor: 2000000 }, { agente: { nombre: 'Sin asignar', email: '' }, n: 0, de: 5, repartido: false, sinAsignar: true, fecha: 'x' }).turno === 'Menos de ₡4 millones · sin asignar');
 }
 ok('2-2-2', corrida(R(true, [2, 2, 2]), 6) === 'UUDDTT');
