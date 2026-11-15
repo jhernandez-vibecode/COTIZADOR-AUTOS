@@ -121,6 +121,12 @@ export function crearHandler(deps = {}) {
       // Un panel viejo (en cache) no manda `directo`: se conserva el guardado, no se vuelve a 15M.
       let entrada = body.reparto;
       if (entrada && typeof entrada === "object" && entrada.directo === undefined) entrada = { ...entrada, directo: directoDe(await leerReparto(store, admin)) };
+      // 15 nov 2026: un panel viejo tampoco manda `alto` por agente: se conserva lo guardado.
+      if (entrada && typeof entrada === "object" && Array.isArray(entrada.agentes) && entrada.agentes.some((a) => a && a.alto === undefined)) {
+        const guardado = await leerReparto(store, admin);
+        const marca = new Map(((guardado && guardado.agentes) || []).map((a) => [normCorreo(a.email), a.alto === true]));
+        entrada = { ...entrada, agentes: entrada.agentes.map((a) => (a && a.alto === undefined ? { ...a, alto: marca.get(normCorreo(a.email)) === true } : a)) };
+      }
       const n = normalizarReparto(entrada, admin);
       if (!n.ok) return json(400, { error: n.error });
       // 12 nov 2026: antes de cambiar la lista, el turno anota a quien le toco la ultima,
@@ -179,7 +185,7 @@ export function crearHandler(deps = {}) {
     // Menos de TOPE_MANUAL: no se le asigna a nadie, JC la asigna por otro medio desde la hoja.
     const ag = sel.sinAsignar ? { email: "", nombre: "Sin asignar", licencia: "", telefono: "", whatsapp: "", cargo: "", oficina: "" }
       : firmaDe(sel.email, fichas[sel.email]) || firmaDe(sel.email, SIN_FICHA);
-    const info = { agente: ag, n: sel.n, de: sel.de, repartido: sel.repartido, directo: !!sel.directo, topeDirecto: directoDe(reparto).monto, sinAsignar: !!sel.sinAsignar, fecha: fechaCR(now), mes: mesCR(now), registrada: false };
+    const info = { agente: ag, n: sel.n, de: sel.de, repartido: sel.repartido, directo: !!sel.directo, alto: !!sel.alto, adelanta: !!sel.adelanta, topeDirecto: directoDe(reparto).monto, sinAsignar: !!sel.sinAsignar, fecha: fechaCR(now), mes: mesCR(now), registrada: false };
 
     const remite = "cotizaciones@" + direccionDe(from).split("@")[1];
     // 6 nov 2026 (JC): ya no sale correo al cliente. La pantalla final le dice cuando le llega la cotizacion.

@@ -6,7 +6,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { normalizarReparto, elegir, vuelta, proximos, repartoInicial, directoDe, firmaReparto, posTrasCambio, ultimoDe, TOPE_PRINCIPAL, TOPE_MANUAL } from '../netlify/functions/lib/cotizar-reparto.mjs';
+import { normalizarReparto, elegir, vuelta, proximos, repartoInicial, directoDe, firmaReparto, posTrasCambio, ultimoDe, recibeAlto, hayOtrosAlto, TOPE_PRINCIPAL, TOPE_MANUAL } from '../netlify/functions/lib/cotizar-reparto.mjs';
 import { validarCotizacion, validarFicha, INTERESES_COT } from '../netlify/functions/lib/cotizar-validacion.mjs';
 import { correoAgente, filaRegistro, presentacion } from '../netlify/functions/lib/cotizar-correos.mjs';
 import { correoDeSesion, CLIENT_ID_DEFECTO } from '../netlify/functions/lib/google-sesion.mjs';
@@ -28,6 +28,40 @@ function corrida(reparto, n, tieneFicha = todos) {
 console.log('-- reparto por turnos, editable --');
 ok('3-1-1: U U U D T y vuelve', corrida(R(true, [3, 1, 1]), 10) === 'UUUDTUUUDT');
 ok('5-1-1', corrida(R(true, [5, 1, 1]), 7) === 'UUUUUDT');
+
+
+console.log('-- casilla «Valor alto» por agente (JC, 15 nov 2026) --');
+{
+  const RA = (pesos, altos, on = true, directo) => normalizarReparto({ on, directo, agentes: [{ email: ADM, peso: pesos[0] }, { email: DOS, peso: pesos[1], alto: altos[0] }, { email: TRES, peso: pesos[2], alto: altos[1] }] }, ADM).reparto;
+  const L = (e) => e === ADM ? 'U' : e === DOS ? 'D' : e === TRES ? 'T' : '-';
+  const r = RA([3, 1, 1], [true, false]);
+  ok('normalizar guarda la casilla y el admin siempre la tiene', r.agentes[0].alto === true && r.agentes[1].alto === true && r.agentes[2].alto === false);
+  ok('admin agregado solo entra marcado', normalizarReparto({ on: true, agentes: [{ email: DOS, peso: 1 }] }, ADM).reparto.agentes[0].alto === true);
+  ok('recibeAlto: admin si, marcado si, sin marcar no', recibeAlto(r, ADM, ADM) && recibeAlto(r, DOS, ADM) && !recibeAlto(r, TRES, ADM));
+  ok('marcar o desmarcar no cambia la firma (no reinicia la vuelta)', firmaReparto(r) === firmaReparto(RA([3, 1, 1], [false, false])) && firmaReparto(r) === firmaReparto(RA([3, 1, 1], [true, true])));
+  const s0 = elegir({ reparto: RA([3, 1, 1], [false, false]), turno: null, admin: ADM, tieneFicha: todos, valor: 20000000 });
+  ok('nadie marcado: 20M directo al admin sin turno', s0.email === ADM && s0.directo === true && s0.turno === null);
+  ok('marcado con peso 0 no cuenta: directo al admin', elegir({ reparto: RA([3, 0, 1], [true, false]), turno: null, admin: ADM, tieneFicha: todos, valor: 20000000 }).directo === true && !hayOtrosAlto(RA([3, 0, 1], [true, false]), ADM));
+  const s1 = elegir({ reparto: r, turno: null, admin: ADM, tieneFicha: todos, valor: 20000000 });
+  ok('le toca al admin: le llega por turno y la vuelta avanza', s1.email === ADM && s1.alto === true && !s1.adelanta && s1.turno && s1.turno.pos === 1 && !s1.directo);
+  const tD = { pos: 3, firma: firmaReparto(r) };
+  const s2 = elegir({ reparto: r, turno: tD, admin: ADM, tieneFicha: todos, valor: 20000000 });
+  ok('le toca a un marcado: le llega y la vuelta avanza', s2.email === DOS && s2.turno && s2.turno.pos === 4);
+  const tT = { pos: 4, firma: firmaReparto(r) };
+  const s3 = elegir({ reparto: r, turno: tT, admin: ADM, tieneFicha: todos, valor: 20000000 });
+  ok('le toca a uno sin marcar: se adelanta el siguiente marcado', s3.email === ADM && s3.adelanta === true && s3.turno === null && s3.repartido === true);
+  ok('...y la siguiente normal le sigue tocando al que se salto', elegir({ reparto: r, turno: tT, admin: ADM, tieneFicha: todos, valor: 8000000 }).email === TRES);
+  const s4 = elegir({ reparto: r, turno: tD, admin: ADM, tieneFicha: (e) => e !== DOS, valor: 20000000 });
+  ok('marcado sin ficha: pasa al siguiente marcado sin mover la vuelta', s4.email === TRES ? false : s4.email === ADM && s4.turno === null);
+  let t = null; const out = [];
+  for (const v of [8e6, 22e6, 6e6, 9e6, 18e6, 12e6, 30e6, 7e6]) { const s = elegir({ reparto: r, turno: t, admin: ADM, tieneFicha: todos, valor: v }); out.push(L(s.email)); if (s.turno) t = s.turno; }
+  ok('secuencia: U U U D, la de 18M se adelanta a U, T conserva su turno', out.join('') === 'UUUDUTUU');
+  const rOff = RA([3, 1, 1], [false, false], true, { on: false, monto: 15000000 });
+  ok('directo apagado: la de valor alto sigue el turno aunque no este marcado', elegir({ reparto: rOff, turno: tT, admin: ADM, tieneFicha: todos, valor: 40000000 }).email === TRES);
+  ok('reparto apagado: valor alto al admin', elegir({ reparto: { ...r, on: false }, turno: null, admin: ADM, tieneFicha: todos, valor: 20000000 }).email === ADM);
+  ok('a 20M de monto, una de 18M sigue normal', elegir({ reparto: RA([3, 1, 1], [true, false], true, { on: true, monto: 20000000 }), turno: tT, admin: ADM, tieneFicha: todos, valor: 18000000 }).email === TRES);
+  ok('hoja: anota «por turno»', filaRegistro({ tipo: 'usado', placa: 'X', valor: 20000000 }, { agente: { nombre: 'A', email: DOS }, n: 4, de: 5, repartido: true, alto: true, topeDirecto: 15000000, fecha: 'x' }).turno === '₡15 millones o más · por turno');
+}
 
 console.log('-- 15 millones o mas: siempre al admin (JC, 8 nov 2026) --');
 ok('el tope es 15.000.000', TOPE_PRINCIPAL === 15000000);
@@ -282,6 +316,23 @@ ok('doble clic: la misma solicitud no sale dos veces', (await (async () => { rel
   hoja.splice(hoja.length - 3, 3);
 }
 {
+  // Casilla «Valor alto» (15 nov 2026): el admin marca a DOS, un panel viejo la conserva y una de 20M va por turno.
+  const base = { on: true, agentes: [{ email: ADM, peso: 3 }, { email: DOS, peso: 1 }, { email: TRES, peso: 1 }] };
+  const antes = (await llamar('/cotizar/agente', { accion: 'ver', token: tk('tkUno') })).j;
+  const g = await llamar('/cotizar/agente', { accion: 'guardar', token: tk('tkUno'), reparto: { ...base, directo: { on: true, monto: 15000000 }, agentes: [{ email: ADM, peso: 3, alto: true }, { email: DOS, peso: 1, alto: true }, { email: TRES, peso: 1, alto: false }] } });
+  ok('Function: el admin marca a DOS para valor alto', g.st === 200 && g.j.reparto.agentes[1].alto === true && g.j.reparto.agentes[2].alto === false);
+  ok('Function: marcar no reinicia la vuelta', g.j.proximos.join() === antes.proximos.join());
+  const viejo = await llamar('/cotizar/agente', { accion: 'guardar', token: tk('tkUno'), reparto: { ...base, directo: { on: true, monto: 15000000 } } });
+  ok('Function: un panel viejo (sin la casilla) la conserva', viejo.st === 200 && viejo.j.reparto.agentes[1].alto === true);
+  enviados.length = 0;
+  const a = await llamar('/cotizar/enviar', { ...U, correo: 'veinte@ejemplo.test', placa: 'ALT020', valor: '₡ 20.000.000' }, '6.6.7.1');
+  ok('Function: con alguien marcado, una de 20M va por turno', a.st === 200 && hoja[hoja.length - 1].fila.turno === '₡15 millones o más · por turno');
+  await llamar('/cotizar/agente', { accion: 'guardar', token: tk('tkUno'), reparto: { ...base, directo: { on: true, monto: 15000000 }, agentes: [{ email: ADM, peso: 3, alto: true }, { email: DOS, peso: 1, alto: false }, { email: TRES, peso: 1, alto: false }] } });
+  hoja.pop();
+  const rv = (await llamar('/cotizar/agente', { accion: 'ver', token: tk('tkUno') })).j.reparto;
+  ok('Function: desmarcado, vuelve a ser directo', elegir({ reparto: rv, turno: null, admin: ADM, tieneFicha: todos, valor: 20000000 }).directo === true);
+}
+{
   // 12 nov 2026: un turno guardado ANTES del cambio (sin `ultimo`). Le toco la 4 (DOS, su unica);
   // el admin le sube a DOS a 2 y guarda: la siguiente tiene que seguir siendo de DOS.
   const base = { on: true, agentes: [{ email: ADM, peso: 3 }, { email: DOS, peso: 1 }, { email: TRES, peso: 1 }] };
@@ -438,6 +489,8 @@ ok('cerrar el ⚙ con el reparto sin guardar pregunta', /cotzHayCambiosSinGuarda
 ok('panel: interruptor y monto del directo', cfgJs.includes('id="cotzDirOn"') && cfgJs.includes('id="cotzDirMonto"') && cfgJs.includes('_cotzDirectoHtml(r, v)'));
 ok('panel: la nota fija del tope de 15M ya no esta', !cfgJs.includes('cotz-nota cotz-tope'));
 ok('panel: no deja guardar un monto fuera de rango', cfgJs.includes('(!r.directo.on || _cotzDirOk(r.directo))'));
+ok('panel: casilla «Valor alto» por agente, fija para el admin', cfgJs.includes('data-alto="') && cfgJs.includes("(esAdm || !r.directo.on ? ' disabled' : '')") && cfgJs.includes("a.alto = i === 0 || a.alto === true"));
+ok('panel: marcar la casilla no avisa que la vuelta cambia (compara solo correo y numero)', cfgJs.includes('_cotzFirma(r.agentes) !== _cotzFirma(v.reparto.agentes)'));
 
 console.log('\n' + pass + ' ok, ' + fail + ' fallas');
 process.exit(fail ? 1 : 0);

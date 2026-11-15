@@ -1,0 +1,231 @@
+<title>Reparto · valor alto por agente</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&family=Google+Sans+Code:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Mockup del panel «Reparto de cotizaciones» del ⚙ con la casilla «Valor alto» por agente.
+   Banda de presentación + el panel tal cual (línea clara, siempre claro, como la consola) + simulador. */
+:root{
+  --pg:#F2F7F4; --pg-ink:#1B1F23; --pg-ink2:#5A6570; --pg-line:#DADCE0; --pg-card:#fff;
+  --blue:#0369A1; --blue-ink:#02557F; --band:#EEF4F9; --line:#DADCE0; --line-btn:#8A939C; --line-soft:#EDEFF2;
+  --ink:#1B1F23; --ink2:#5A6570; --ink3:#6B7681; --navy:#0C2340;
+  --oro-bg:#FBF3DC; --oro-tx:#7C5A00; --ok-bg:#E9F5F0; --ok-tx:#037D61; --gris-bg:#F1F3F4;
+  --body:'Google Sans Flex','Inter',system-ui,sans-serif; --mono:'Google Sans Code','Inter',ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--pg:#11181D;--pg-ink:#E6EAED;--pg-ink2:#A9B3BC;--pg-line:#2C363E;--pg-card:#182128;color-scheme:dark}}
+:root[data-theme="dark"]{--pg:#11181D;--pg-ink:#E6EAED;--pg-ink2:#A9B3BC;--pg-line:#2C363E;--pg-card:#182128;color-scheme:dark}
+body{background:var(--pg);color:var(--pg-ink);font-family:var(--body);padding-block:24px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
+.intro h1{margin:0;font-size:24px;font-weight:500;text-wrap:balance}
+.intro p{margin:6px 0 0;color:var(--pg-ink2);font-size:14px;max-width:72ch;line-height:1.5}
+.cols{display:grid;grid-template-columns:minmax(0,580px) minmax(0,1fr);gap:22px;align-items:start}
+@media (max-width:960px){.cols{grid-template-columns:minmax(0,1fr)}}
+
+.modal{background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:24px;padding:20px;box-shadow:0 1px 3px rgba(12,35,64,.08)}
+.mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.mh b{font-size:16px;font-weight:600}
+.mh span{font-size:12px;color:var(--ink3)}
+.sec{margin-top:10px;padding-top:14px;border-top:1px solid #e5e7eb;display:flex;flex-direction:column;gap:10px}
+.h{margin:0;font-size:13px;font-weight:700;color:var(--navy)}
+.sub{margin:-6px 0 0;font-size:11.5px;color:#64748b}
+.sw{display:flex;align-items:center;justify-content:space-between;gap:14px;border:1px solid var(--line);border-radius:16px;padding:10px 14px;cursor:pointer}
+.sw b{display:block;font-size:13.5px}
+.sw small{color:var(--ink3);font-size:12px}
+.tog{position:relative;width:46px;height:26px;flex:0 0 46px}
+.tog input{opacity:0;width:0;height:0;position:absolute}
+.tog i{position:absolute;inset:0;background:var(--line-btn);border-radius:999px;transition:background .15s}
+.tog i::after{content:"";position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.tog input:checked+i{background:var(--blue)}
+.tog input:checked+i::after{transform:translateX(20px)}
+.tog input:focus-visible+i{outline:3px solid rgba(3,105,161,.35);outline-offset:2px}
+.ags{display:flex;flex-direction:column;gap:8px}
+.agr{display:grid;grid-template-columns:34px minmax(0,1fr) auto auto auto;gap:10px;align-items:center;border:1px solid var(--line);border-radius:16px;padding:10px 12px}
+.dot{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:600;font-size:12.5px}
+.quien{display:flex;flex-direction:column;gap:2px;min-width:0}
+.quien b{font-size:13.5px}
+.quien small{color:var(--ink3);font:400 11.5px var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.step{display:flex;align-items:center;border:1px solid var(--line-btn);border-radius:999px;overflow:hidden}
+.step button{width:32px;height:32px;border:0;background:#fff;font:600 18px var(--body);color:var(--blue-ink)}
+.step button:disabled{color:#C3C9CF}
+.step output{min-width:26px;text-align:center;font:600 15px var(--mono)}
+.pct{font:500 12px var(--mono);color:var(--ink2);min-width:40px;text-align:right}
+
+/* NUEVO: casilla «Valor alto» */
+.alto{display:flex;align-items:center;gap:6px;border:1px solid var(--line-btn);border-radius:999px;padding:5px 10px 5px 8px;font:600 12px var(--body);color:var(--ink2);cursor:pointer;white-space:nowrap;background:#fff;position:relative}
+.alto input{width:16px;height:16px;accent-color:var(--blue);margin:0;cursor:pointer}
+.alto.on{border-color:var(--blue);background:var(--band);color:var(--blue-ink)}
+.alto.fijo,.alto.fijo input{cursor:default}
+.alto.apag{opacity:.4;pointer-events:none}
+.alto:focus-within{outline:3px solid rgba(3,105,161,.3);outline-offset:1px}
+.nuevo{position:absolute;top:-9px;right:-6px;background:var(--blue);color:#fff;font:600 9.5px var(--body);letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:2px 7px}
+@media (max-width:560px){.agr{grid-template-columns:34px minmax(0,1fr) auto}.alto{grid-column:2/-1;justify-self:start}.pct{grid-column:2/-1;text-align:left}}
+
+.dirbox{border:1px solid var(--line);border-radius:16px;padding:10px 14px;display:flex;flex-direction:column;gap:8px}
+.dirbox .sw{border:0;padding:0}
+.reglas{display:grid;gap:6px}
+.regla{display:grid;grid-template-columns:150px minmax(0,1fr);gap:10px;align-items:center;border-radius:12px;padding:8px 12px;font-size:12.5px}
+.regla .r{font:600 12.5px var(--mono);font-variant-numeric:tabular-nums}
+.regla.vos{background:var(--band);color:var(--blue-ink)}
+.regla.vuelta{background:var(--ok-bg);color:var(--ok-tx)}
+.regla.man{background:var(--gris-bg);color:var(--ink2)}
+@media (max-width:480px){.regla{grid-template-columns:minmax(0,1fr)}}
+.guardar{display:flex;gap:10px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+.guardar small{color:var(--ink3);font-size:12px}
+.btn{font:600 14px var(--body);border-radius:999px;padding:9px 18px;border:0;cursor:pointer}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:disabled{background:#C3C9CF;cursor:default}
+.aviso{margin:0;border-radius:10px;padding:8px 12px;font-size:12.5px;background:var(--oro-bg);color:var(--oro-tx)}
+
+.side{display:flex;flex-direction:column;gap:14px;min-width:0}
+.card{background:var(--pg-card);border:1px solid var(--pg-line);border-radius:18px;padding:16px 18px;min-width:0}
+.card h2{margin:0 0 8px;font-size:15px;font-weight:600}
+.card p,.card li{font-size:13.5px;line-height:1.5;color:var(--pg-ink2)}
+.card p{margin:0}
+.card ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+.card li b{color:var(--pg-ink)}
+.estados{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.estados button{font:600 12.5px var(--body);border:1px solid var(--pg-line);background:transparent;color:var(--pg-ink);border-radius:999px;padding:6px 12px;cursor:pointer}
+.estados button:focus-visible,.btn:focus-visible{outline:3px solid rgba(3,105,161,.35);outline-offset:2px}
+.tw{overflow-x:auto;margin-top:12px}
+.sim{width:100%;border-collapse:collapse;font-size:12.5px;color:var(--pg-ink)}
+.sim th{text-align:left;font-weight:600;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--pg-ink2);padding:6px 8px;border-bottom:1px solid var(--pg-line)}
+.sim td{padding:7px 8px;border-bottom:1px solid var(--pg-line);vertical-align:middle}
+.sim td.m{font:600 12.5px var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.sim td.n{color:var(--pg-ink2);font:500 12px var(--mono)}
+.chip{display:inline-block;border-radius:999px;padding:2px 8px;font-size:11.5px;font-weight:600}
+.c-turno{background:var(--ok-bg);color:var(--ok-tx)}
+.c-adel{background:var(--oro-bg);color:var(--oro-tx)}
+.c-dir{background:var(--band);color:var(--blue-ink)}
+.c-man{background:var(--gris-bg);color:var(--ink2)}
+.who{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.who i{width:10px;height:10px;border-radius:50%;display:inline-block}
+</style>
+
+<div class="wrap">
+  <div class="intro">
+    <h1>Reparto: quién recibe las de valor alto</h1>
+    <p>Así quedaría el panel del ⚙. Lo nuevo es la casilla <b>«Valor alto»</b> en cada agente: marcada, a ese agente también le llegan por turno las de ₡15 millones o más. Marcala y desmarcala: la tabla muestra a quién le llegarían las próximas 12 solicitudes, y la vuelta nunca vuelve a empezar.</p>
+  </div>
+
+  <div class="cols">
+    <div class="modal" aria-label="Mockup del panel">
+      <div class="mh"><b>Configuración</b><span>…perfil arriba…</span></div>
+      <div class="sec">
+        <p class="h">Reparto de cotizaciones</p>
+        <p class="sub">Solo lo ves vos, como administrador.</p>
+
+        <label class="sw"><span><b>Repartir entre agentes</b><small>Encendido: las solicitudes se reparten por turnos.</small></span>
+          <span class="tog"><input type="checkbox" id="mRep" checked><i></i></span></label>
+
+        <div class="ags" id="ags"></div>
+
+        <div class="dirbox">
+          <label class="sw"><span><b>Las de valor alto, directo a vos</b><small id="dirSub"></small></span>
+            <span class="tog"><input type="checkbox" id="mDir" checked><i></i></span></label>
+          <div class="reglas" id="reglas"></div>
+        </div>
+
+        <div class="guardar"><small id="estado">Todavía sin cambios.</small><button type="button" class="btn btn-primary" id="guardar" disabled>Guardar el reparto</button></div>
+        <p class="aviso" id="avisoGuardar" hidden>Marcar o desmarcar «Valor alto» no reinicia la vuelta: la siguiente le sigue tocando a quien le tocaba.</p>
+      </div>
+    </div>
+
+    <div class="side">
+      <div class="card">
+        <h2>Las próximas 12 solicitudes</h2>
+        <p>Ejemplo con el reparto 3-2-2, la vuelta empezando en vos y el monto del directo en ₡15 millones. Probá:</p>
+        <div class="estados">
+          <button type="button" data-e="hoy">Como hoy (nadie marcado)</button>
+          <button type="button" data-e="ch">Solo Christian marcado</button>
+          <button type="button" data-e="todos">Los dos marcados</button>
+        </div>
+        <div class="tw"><table class="sim"><thead><tr><th>#</th><th style="text-align:right">Valor</th><th>Le llega a</th><th>Por qué</th></tr></thead><tbody id="sim"></tbody></table></div>
+      </div>
+      <div class="card">
+        <h2>Lo que propongo, para que lo apruebes</h2>
+        <ol>
+          <li><b>Vos siempre recibís las de valor alto.</b> Tu casilla va marcada y no se puede quitar.</li>
+          <li><b>Si nadie más está marcado, todo queda como hoy:</b> las de ₡15 millones o más te llegan directo y no gastan turno.</li>
+          <li><b>Si hay alguien marcado, las de valor alto entran en la vuelta</b> y cuentan como el turno de quien le toca.</li>
+          <li><b>Si le toca a alguien sin la casilla, no pierde su turno.</b> Esa solicitud pasa al siguiente marcado de la lista, y la próxima normal le sigue tocando al que se saltó (en la tabla sale en amarillo: «se adelanta»).</li>
+          <li><b>Marcar o desmarcar no reinicia la vuelta,</b> igual que cambiar el monto del directo.</li>
+          <li><b>Con el directo apagado, la casilla no hace nada:</b> las de valor alto ya se reparten entre todos.</li>
+          <li><b>La hoja anota «₡15 millones o más · por turno»</b> o «· directo», según cómo se asignó.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var AG=[
+    {email:'jc',nombre:'Juan Carlos Hernández',rol:'agente principal',ini:'JC',color:'#0369A1',peso:3,alto:true,admin:true},
+    {email:'ch',nombre:'Christian Hernández',rol:'agente',ini:'CH',color:'#0D9488',peso:2,alto:false},
+    {email:'ja',nombre:'José Alonso Hernández',rol:'asesor',ini:'JA',color:'#EA580C',peso:2,alto:false}
+  ];
+  var VAL=[8,22,6,9,18,3,12,30,7,16,5,25];
+  var rep=document.getElementById('mRep'), dir=document.getElementById('mDir');
+  function huella(){return AG.map(function(a){return a.alto?1:0;}).join('')+(dir.checked?'1':'0')+(rep.checked?'1':'0');}
+  var base;
+  function porId(e){for(var i=0;i<AG.length;i++)if(AG[i].email===e)return AG[i];}
+  function pila(a){return a.nombre.split(' ')[0];}
+  function vuelta(){var v=[];AG.forEach(function(a){for(var k=0;k<a.peso;k++)v.push(a.email);});return v;}
+  function col(m){return '₡'+(m*1e6).toLocaleString('de-DE');}
+  function pintarAgentes(){
+    var total=AG.reduce(function(s,a){return s+a.peso;},0);
+    document.getElementById('ags').innerHTML=AG.map(function(a,i){
+      var cls='alto'+(a.alto?' on':'')+(a.admin?' fijo':'')+(dir.checked?'':' apag');
+      return '<div class="agr"><span class="dot" style="background:'+a.color+'">'+a.ini+'</span>'+
+        '<span class="quien"><b>'+a.nombre+'</b><small>'+a.rol+'</small></span>'+
+        '<label class="'+cls+'"><input type="checkbox" id="alto'+i+'" data-i="'+i+'"'+(a.alto?' checked':'')+(a.admin?' disabled':'')+'>Valor alto'+(i===1?'<span class="nuevo">Nuevo</span>':'')+'</label>'+
+        '<span class="step"><button type="button" disabled>−</button><output>'+a.peso+'</output><button type="button" disabled>+</button></span>'+
+        '<span class="pct">'+Math.round(a.peso*100/total)+' %</span></div>';
+    }).join('');
+    document.querySelectorAll('#ags input').forEach(function(c){c.addEventListener('change',function(){AG[+c.dataset.i].alto=c.checked;pintar();});});
+  }
+  function simular(){
+    var v=vuelta(), pos=0, out=[];
+    var otros=AG.some(function(a){return !a.admin&&a.alto;});
+    VAL.forEach(function(m){
+      if(m<4){out.push({m:m,a:null,c:'man',t:'Sin asignar (menos de ₡4 millones)'});return;}
+      if(!rep.checked){out.push({m:m,a:'jc',c:'dir',t:'Repartir está apagado'});return;}
+      var alto=dir.checked&&m>=15;
+      if(alto&&!otros){out.push({m:m,a:'jc',c:'dir',t:'Directo a vos, sin gastar turno'});return;}
+      var e=v[pos];
+      if(!alto||porId(e).alto){out.push({m:m,a:e,c:'turno',t:alto?'Por turno · valor alto':'Por turno'});pos=(pos+1)%v.length;return;}
+      for(var i=1;i<v.length;i++){var e2=v[(pos+i)%v.length];if(porId(e2).alto){out.push({m:m,a:e2,c:'adel',t:'Se adelanta: le tocaba a '+pila(porId(e))+', que conserva su turno'});return;}}
+    });
+    document.getElementById('sim').innerHTML=out.map(function(r,k){
+      var a=r.a?porId(r.a):null;
+      return '<tr><td class="n">'+(k+1)+'</td><td class="m">'+col(r.m)+'</td><td>'+(a?'<span class="who"><i style="background:'+a.color+'"></i>'+pila(a)+'</span>':'—')+'</td><td><span class="chip c-'+r.c+'">'+r.t+'</span></td></tr>';
+    }).join('');
+  }
+  function pintar(){
+    pintarAgentes();
+    var otros=AG.filter(function(a){return !a.admin&&a.alto;}).map(pila);
+    document.getElementById('dirSub').textContent=dir.checked?(otros.length?'Encendido: las de ₡15.000.000 o más se reparten por turno entre vos y '+otros.join(' y ')+'.':'Encendido: las de ₡15.000.000 o más te llegan solo a vos.'):'Apagado: las de valor alto se reparten entre todos.';
+    var h='<div class="regla man"><span class="r">Menos de ₡4.000.000</span><span>Sin asignar: queda en la hoja para que la asignés vos</span></div>';
+    if(!rep.checked) h+='<div class="regla vos"><span class="r">₡4.000.000 o más</span><span>Te llega a vos (repartir está apagado)</span></div>';
+    else if(dir.checked){
+      h+='<div class="regla vuelta"><span class="r">₡4.000.000 a ₡14.999.999</span><span>Se reparte por turnos entre los tres</span></div>';
+      h+='<div class="regla vos"><span class="r">₡15.000.000 o más</span><span>'+(otros.length?'Por turno entre vos y '+otros.join(' y '):'Directo a vos, sin cambiar el turno')+'</span></div>';
+    } else h+='<div class="regla vuelta"><span class="r">₡4.000.000 o más</span><span>Se reparte por turnos entre los tres, sin importar el monto</span></div>';
+    document.getElementById('reglas').innerHTML=h;
+    var sucio=huella()!==base;
+    document.getElementById('guardar').disabled=!sucio;
+    document.getElementById('estado').textContent=sucio?'Hay cambios sin guardar.':'Todavía sin cambios.';
+    document.getElementById('avisoGuardar').hidden=!sucio;
+    simular();
+  }
+  rep.addEventListener('change',pintar); dir.addEventListener('change',pintar);
+  document.getElementById('guardar').addEventListener('click',function(){base=huella();pintar();document.getElementById('estado').textContent='Guardado (en el mockup no se guarda nada de verdad).';});
+  document.querySelectorAll('[data-e]').forEach(function(b){b.addEventListener('click',function(){
+    var e=b.dataset.e; dir.checked=true; rep.checked=true;
+    AG[1].alto=(e==='ch'||e==='todos'); AG[2].alto=(e==='todos'); pintar();
+  });});
+  base=huella();
+  AG[1].alto=true; pintar();
+})();
+</script>

@@ -40,13 +40,21 @@ export const DIRECTO_MAX = 100000000;
  */
 export const TOPE_MANUAL = 4000000;
 export const MAX_AGENTES = 10;
+/**
+ * JC, 15 nov 2026: casilla «Valor alto» por agente. Marcada (agente.alto === true), a ese
+ * agente tambien le llegan por turno las del directo (valor >= monto). El admin siempre
+ * las recibe. Si nadie mas esta marcado, el directo sigue como antes (al admin, sin turno).
+ * Si le toca a alguien sin la casilla, no pierde su turno: la de valor alto pasa al siguiente
+ * marcado y la vuelta no se mueve ("se adelanta"). Marcar o desmarcar NO reinicia la vuelta:
+ * firmaReparto no mira `alto`. Mockup aprobado: docs/superpowers/specs/2026-11-15-reparto-valor-alto-por-agente-mockup.html
+ */
 const RE_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const normCorreo = (s) => String(s || "").trim().toLowerCase();
 
 /** Reparto inicial: apagado y solo el admin. */
 export function repartoInicial(admin) {
-  return { on: false, agentes: [{ email: normCorreo(admin), peso: 1 }], directo: { on: true, monto: TOPE_PRINCIPAL } };
+  return { on: false, agentes: [{ email: normCorreo(admin), peso: 1, alto: true }], directo: { on: true, monto: TOPE_PRINCIPAL } };
 }
 
 /** El "directo al admin" de un reparto, con el valor por defecto si no lo trae (repartos viejos). */
@@ -75,9 +83,9 @@ export function normalizarReparto(entrada, admin) {
     vistos.add(email);
     const peso = Number(a.peso);
     if (!Number.isInteger(peso) || peso < 0 || peso > PESO_MAX) return { ok: false, error: "El número de cada agente va de 0 a " + PESO_MAX + "." };
-    agentes.push({ email, peso });
+    agentes.push({ email, peso, alto: email === adm || a.alto === true });
   }
-  if (adm && !vistos.has(adm)) agentes.unshift({ email: adm, peso: 0 });
+  if (adm && !vistos.has(adm)) agentes.unshift({ email: adm, peso: 0, alto: true });
   let directo = { on: true, monto: TOPE_PRINCIPAL };
   if (entrada.directo !== undefined) {
     const d = entrada.directo;
@@ -89,6 +97,19 @@ export function normalizarReparto(entrada, admin) {
     directo = { on: d.on !== false, monto: m };
   }
   return { ok: true, reparto: { on: entrada.on === true, agentes, directo } };
+}
+
+/** ¿Le llegan las de valor alto? El admin siempre. */
+export function recibeAlto(reparto, email, admin) {
+  const e = normCorreo(email);
+  if (e === normCorreo(admin)) return true;
+  return ((reparto && reparto.agentes) || []).some((a) => normCorreo(a.email) === e && a.alto === true);
+}
+
+/** ¿Hay algun agente, ademas del admin, marcado para valor alto y con peso en la vuelta? */
+export function hayOtrosAlto(reparto, admin) {
+  const adm = normCorreo(admin);
+  return ((reparto && reparto.agentes) || []).some((a) => normCorreo(a.email) !== adm && a.alto === true && a.peso > 0);
 }
 
 /** La vuelta expandida: [jc, jc, jc, jose, cristian]. */
@@ -144,18 +165,30 @@ export function ultimoDe(reparto, turno) {
  * @param {(email:string)=>boolean} p.tieneFicha
  * @param {string} p.admin
  * @param {number} [p.valor]  valor del vehiculo en colones; igual o mayor al monto del directo (si esta encendido) → al admin
- * @returns {{email:string, n:number, de:number, repartido:boolean, directo?:boolean, sinAsignar?:boolean, turno:{pos:number, firma:string}|null}}
+ * @returns {{email:string, n:number, de:number, repartido:boolean, directo?:boolean, alto?:boolean, adelanta?:boolean, sinAsignar?:boolean, turno:{pos:number, firma:string}|null}}
  *   turno = lo que hay que guardar (null si no se mueve la vuelta).
  */
 export function elegir({ reparto, turno, tieneFicha, admin, valor }) {
   const adm = normCorreo(admin);
   const v = reparto && reparto.on ? vuelta(reparto) : [];
   const dir = directoDe(reparto);
-  if (dir.on && Number(valor) >= dir.monto) return { email: adm, n: 0, de: v.length, repartido: false, directo: true, turno: null };
+  const alto = dir.on && Number(valor) >= dir.monto;
+  if (alto && !(v.length && hayOtrosAlto(reparto, adm))) return { email: adm, n: 0, de: v.length, repartido: false, directo: true, turno: null };
   if (Number(valor) < TOPE_MANUAL) return { email: "", n: 0, de: v.length, repartido: false, sinAsignar: true, turno: null };
   if (!v.length) return { email: adm, n: 0, de: 0, repartido: false, turno: null };
   const firma = firmaReparto(reparto);
   const pos = turno && turno.firma === firma && Number.isInteger(turno.pos) && turno.pos >= 0 ? turno.pos % v.length : posTrasCambio(v, turno);
+  if (alto) {
+    // Valor alto con agentes marcados (15 nov 2026). Le toca a quien tiene el turno si esta marcado
+    // (y gasta su turno); si no, al siguiente marcado SIN mover la vuelta: el saltado conserva su turno.
+    for (let i = 0; i < v.length; i++) {
+      const p = (pos + i) % v.length;
+      if (!recibeAlto(reparto, v[p], adm) || !tieneFicha(v[p])) continue;
+      const t = i === 0 ? { pos: (p + 1) % v.length, firma, ultimo: v[p], k: p - v.indexOf(v[p]) + 1 } : null;
+      return { email: v[p], n: p + 1, de: v.length, repartido: true, alto: true, adelanta: i > 0, turno: t };
+    }
+    return { email: adm, n: 0, de: v.length, repartido: false, directo: true, turno: null };
+  }
   for (let i = 0; i < v.length; i++) {
     const p = (pos + i) % v.length;
     if (tieneFicha(v[p])) return { email: v[p], n: p + 1, de: v.length, repartido: true, turno: { pos: (p + 1) % v.length, firma, ultimo: v[p], k: p - v.indexOf(v[p]) + 1 } };

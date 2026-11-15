@@ -114,6 +114,9 @@ function _cotzCargar(vista) {
   _cotz.editado = JSON.parse(JSON.stringify(vista.reparto));
   // 10 nov 2026: el "directo a vos" editable. Un servidor viejo no lo manda: 15M encendido.
   if (!_cotz.editado.directo) _cotz.editado.directo = vista.directo ? { on: vista.directo.on, monto: vista.directo.monto } : { on: true, monto: vista.tope || 15000000 };
+  // 15 nov 2026: casilla «Valor alto». El admin (primero de la lista) siempre la tiene.
+  _cotz.editado.agentes.forEach(function (a, i) { a.alto = i === 0 || a.alto === true; });
+  _cotz.base = JSON.stringify(_cotz.editado.agentes);
   _cotz.sucio = false;
   _cotzPintar();
 }
@@ -162,7 +165,7 @@ function _cotzDirectoHtml(r, v) {
   var manual = v.topeManual || 4000000;
   var h = '<div class="cotz-dir">';
   h += '<label class="cotz-sw"><span><b>Las de valor alto, directo a vos</b><small>' +
-       (d.on ? 'Encendido: las de ' + (ok ? _cotzCol(d.monto) : 'ese monto') + ' o más te llegan solo a vos.' : 'Apagado: las de valor alto también se reparten. El monto queda guardado.') +
+       (d.on ? 'Encendido: las de ' + (ok ? _cotzCol(d.monto) : 'ese monto') + ' o más te llegan a vos' + (r.agentes.some(function (a, i) { return i > 0 && a.alto && a.peso; }) && r.on ? ' y a los marcados con «Valor alto», por turno.' : ' solamente.') : 'Apagado: las de valor alto también se reparten. El monto queda guardado.') +
        '</small></span><span class="cotz-tog"><input type="checkbox" id="cotzDirOn"' + (d.on ? ' checked' : '') + '><i></i></span></label>';
   h += '<div class="cotz-monto' + (d.on ? '' : ' off') + '"><label for="cotzDirMonto">A partir de</label>' +
        '<span class="cotz-campo"><button type="button" data-dm="-1" aria-label="Un millón menos"' + (mill <= L.min / 1e6 ? ' disabled' : '') + '>−</button>' +
@@ -177,7 +180,8 @@ function _cotzDirectoHtml(r, v) {
   h += '<div class="cotz-regla man"><span>Menos de ' + _cotzCol(manual) + '</span><span>Sin asignar: queda en la hoja para que la asignés vos</span></div>';
   if (d.on && ok) {
     h += '<div class="cotz-regla vuelta"><span>' + _cotzCol(manual) + ' a ' + _cotzCol(d.monto - 1) + '</span><span>' + quien + '</span></div>';
-    h += '<div class="cotz-regla vos"><span>' + _cotzCol(d.monto) + ' o más</span><span>Directo a vos, sin cambiar el turno</span></div>';
+    var otros = r.on ? r.agentes.filter(function (a, i) { return i > 0 && a.alto && a.peso; }).map(function (a) { return _cotzNombre(a.email).split(/\s+/)[0]; }) : [];
+    h += '<div class="cotz-regla vos"><span>' + _cotzCol(d.monto) + ' o más</span><span>' + (otros.length ? 'Por turno entre vos y ' + otros.join(' y ') : 'Directo a vos, sin cambiar el turno') + '</span></div>';
   } else {
     h += '<div class="cotz-regla vuelta"><span>' + _cotzCol(manual) + ' o más</span><span>' + quien + ', sin importar el monto</span></div>';
   }
@@ -209,6 +213,7 @@ function _cotzPintar() {
       '<span class="cotz-quien"><b>' + _cotzEsc(_cotzNombre(a.email)) + '</b><small>' + _cotzEsc(a.email) + '</small>' +
         (f ? (f.porAdmin ? '<small class="cotz-porad">Sin cotizador · le llegan los avisos a su Gmail</small>' : '') : _cotzSinFicha(a.email, i)) +
       '</span>' +
+      '<label class="cotz-alto' + (a.alto ? ' on' : '') + (esAdm ? ' fijo' : '') + (r.directo.on ? '' : ' apag') + '" title="' + (esAdm ? 'Vos siempre recibís las de valor alto' : 'Marcada: también le llegan por turno las de valor alto') + '"><input type="checkbox" data-alto="' + i + '"' + (a.alto ? ' checked' : '') + (esAdm || !r.directo.on ? ' disabled' : '') + '>Valor alto</label>' +
       '<span class="cotz-step"><button type="button" data-i="' + i + '" data-d="-1" aria-label="Menos"' + (a.peso <= 0 ? ' disabled' : '') + '>−</button><output>' + a.peso + '</output><button type="button" data-i="' + i + '" data-d="1" aria-label="Más"' + (a.peso >= 9 ? ' disabled' : '') + '>+</button></span>' +
       '<span class="cotz-pct">' + (total ? Math.round(a.peso * 100 / total) : 0) + ' %' +
         (esAdm ? '' : '<button type="button" class="cotz-quitar" data-i="' + i + '" aria-label="Quitar a ' + _cotzEsc(a.email) + '">Quitar</button>') + '</span>' +
@@ -245,7 +250,8 @@ function _cotzPintar() {
   }).join('') + '</div>';
   if (!r.on) h += '<p class="cotz-aviso">Repartir está apagado: todas las solicitudes te llegan a vos. Los números quedan guardados para cuando lo volvás a encender.</p>';
   else if (!total) h += '<p class="cotz-aviso cotz-mal">Todos están en 0. Así nadie recibiría: las solicitudes te llegan a vos.</p>';
-  else if (_cotz.sucio && JSON.stringify(r.agentes) !== JSON.stringify(v.reparto.agentes)) h += '<p class="cotz-aviso">Al guardar, la vuelta sigue donde iba: la siguiente le toca a quien le tocaba, con los números nuevos.</p>';
+  else if (_cotz.sucio && _cotzFirma(r.agentes) !== _cotzFirma(v.reparto.agentes)) h += '<p class="cotz-aviso">Al guardar, la vuelta sigue donde iba: la siguiente le toca a quien le tocaba, con los números nuevos.</p>';
+  else if (_cotz.sucio && JSON.stringify(r.agentes) !== _cotz.base) h += '<p class="cotz-aviso">Marcar o desmarcar «Valor alto» no reinicia la vuelta: la siguiente le sigue tocando a quien le tocaba.</p>';
   else if (_cotz.sucio) h += '<p class="cotz-aviso">Cambiar el monto o apagarlo no reinicia la vuelta: la siguiente le sigue tocando a quien le tocaba.</p>';
   h += '</div>';
   h += '<div class="cotz-guardar"><small>' + (_cotz.sucio ? 'Hay cambios sin guardar.' : (v.actualizado ? 'Último cambio: ' + new Date(v.actualizado).toLocaleString('es-CR', { dateStyle: 'medium', timeStyle: 'short' }) : 'Todavía no lo has guardado.')) + '</small>' +
@@ -256,6 +262,9 @@ function _cotzPintar() {
   cuerpo.innerHTML = h;
   _cotzEnganchar(cuerpo);
 }
+
+/** Correo y número de cada agente: lo único que mueve la vuelta (como firmaReparto del servidor). */
+function _cotzFirma(ags) { return (ags || []).map(function (a) { return a.email + ':' + a.peso; }).join('|'); }
 
 function _cotzCambio() { _cotz.sucio = true; _cotzPintar(); }
 
@@ -284,6 +293,9 @@ function _cotzEnganchar(c) {
     var n = document.getElementById('cotzDirMonto');
     if (n) { n.focus(); n.setSelectionRange(n.value.length, n.value.length); }
   });
+  c.querySelectorAll('[data-alto]').forEach(function (b) {
+    b.addEventListener('change', function () { r.agentes[+b.dataset.alto].alto = b.checked; _cotzCambio(); });
+  });
   c.querySelectorAll('.cotz-step button').forEach(function (b) {
     b.addEventListener('click', function () {
       var a = r.agentes[+b.dataset.i];
@@ -302,7 +314,7 @@ function _cotzEnganchar(c) {
     if (!esEmailValido(e)) { showToast('Escribí el correo del agente.', 'error'); return; }
     if (r.agentes.some(function (a) { return a.email === e; })) { showToast('Ese agente ya está en la lista.', 'error'); return; }
     if (r.agentes.length >= 10) { showToast('Máximo 10 agentes.', 'error'); return; }
-    r.agentes.push({ email: e, peso: 1 });
+    r.agentes.push({ email: e, peso: 1, alto: false });
     _cotzCambio();
   });
   c.querySelectorAll('[data-ff]').forEach(function (b) {
