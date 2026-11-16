@@ -102,6 +102,10 @@ a{color:var(--blue)}
 .bb-btn{display:inline-flex;align-items:center;gap:6px;background:var(--blue);color:#fff;text-decoration:none;font-weight:600;font-size:13.5px;border-radius:999px;padding:9px 16px;white-space:nowrap}
 .bb-btn:hover{background:var(--blue-ink)}
 @media (max-width:600px){.bluebook{grid-template-columns:34px minmax(0,1fr)}.bb-btn{grid-column:1/-1;justify-content:center}}
+.dekra{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;background:var(--oro-bg);border:1px solid #EBD9A6;border-radius:14px;padding:12px 14px;color:var(--oro-tx);font-size:13.5px;line-height:1.45;text-align:left}
+.dekra .dk-ico{width:28px;height:28px;border-radius:50%;background:var(--oro-tx);color:#fff;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center}
+.dekra b{display:block;font-size:14.5px;margin-bottom:1px}
+.listo .dekra{width:100%;max-width:460px}
 .trampa{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
 @media (max-width:600px){
   .fila2,.pasos{grid-template-columns:1fr}
@@ -175,6 +179,7 @@ a{color:var(--blue)}
         <div class="campo" data-k="placa"><label for="placa">Número de placa <span class="req">*</span></label><input id="placa" autocomplete="off" autocapitalize="characters"></div>
         <div class="campo" data-k="valor-u"><label for="valor-u">Valor de mercado de su vehículo <span class="req">*</span></label><input id="valor-u" inputmode="numeric" placeholder="₡"></div>
       </div>
+      <div class="dekra" id="dekraPlaca"><span class="dk-ico" aria-hidden="true">!</span><p><b>La revisión técnica (Dekra) tiene que estar al día</b>Si tu vehículo no tiene la Dekra al día, no podemos enviarte la cotización.</p></div>
       <div class="bluebook">
         <span class="bb-ico" aria-hidden="true">?</span>
         <p><b>¿No sabe cuánto vale su vehículo?</b>Si no conoce el valor de su vehículo en el mercado consulte aquí:</p>
@@ -222,6 +227,7 @@ a{color:var(--blue)}
     <h2 id="listoH">¡Listo!</h2>
     <p class="msg" id="listoP">Recibimos tu solicitud y la vamos a procesar a la mayor brevedad posible.</p>
     <div class="expec" id="listoExpec">Ya diste el primer paso: muy pronto vas a manejar con el respaldo del INS.</div>
+    <div class="dekra" id="listoDekra" hidden><span class="dk-ico" aria-hidden="true">!</span><p><b>Recordá: la Dekra tiene que estar al día</b>Si tu vehículo no tiene la revisión técnica al día, no vas a recibir la cotización.</p></div>
     <div class="fuera" id="listoFuera" hidden><b id="listoCuando"></b>Nos escribiste fuera de horario. Atendemos de lunes a viernes, de 8:00 am a 5:00 pm.</div>
     <p class="spam" id="listoSpam">Si no la ves, revisá la carpeta de spam o promociones.</p>
   </div>
@@ -365,9 +371,11 @@ a{color:var(--blue)}
     $('listoFuera').hidden = !fuera;
     if (fuera) $('listoCuando').textContent = 'Te llega ' + j.cuando;
     $('listoExpec').hidden = $('listoSpam').hidden = false;
+    // 16 nov 2026 (JC): sin la Dekra al dia no hay cotizacion. Solo usados: un 0 km no la tiene todavia.
+    $('listoDekra').hidden = d.tipo !== 'usado';
     if (j.repetida) {
       p.textContent = 'Esta solicitud ya nos había llegado: no hace falta enviarla de nuevo.';
-      $('listoExpec').hidden = $('listoSpam').hidden = $('listoFuera').hidden = true;
+      $('listoExpec').hidden = $('listoSpam').hidden = $('listoFuera').hidden = $('listoDekra').hidden = true;
     }
     mostrar('listo');
   }

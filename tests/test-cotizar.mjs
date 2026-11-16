@@ -457,6 +457,9 @@ ok('manda a /cotizar/enviar', pag.includes("'/cotizar/enviar'"));
 ok('pantalla final (opcion B, JC 6 nov): mensaje y frase', pag.includes('Recibimos tu solicitud y la vamos a procesar a la mayor brevedad posible.') && pag.includes('Ya diste el primer paso: muy pronto vas a manejar con el respaldo del INS.'));
 ok('pantalla final: sin "Te va a atender" ni promesa de confirmacion por correo', !pag.includes('Te va a atender') && !/confirmaci[oó]n a tu correo|Te enviamos una confirmación/.test(pag));
 ok('pantalla final: recuadro rojo con el dia que le llega, escondido por defecto', /id="listoFuera" hidden/.test(pag) && pag.includes("'Te llega ' + j.cuando") && /j\.enHorario === false/.test(pag));
+ok('Dekra (JC 16 nov): aviso junto a la placa, dentro del bloque de usados', (() => { const u = pag.indexOf('id="g-usado"'), n = pag.indexOf('id="g-nuevo"'), k = pag.indexOf('id="dekraPlaca"'); return u > 0 && k > u && k < n && pag.includes('no podemos enviarte la cotización'); })());
+ok('Dekra: en la pantalla final, escondido por defecto y solo para usados', /id="listoDekra" hidden/.test(pag) && pag.includes("$('listoDekra').hidden = d.tipo !== 'usado';") && pag.includes('no vas a recibir la cotización'));
+ok('Dekra: una solicitud repetida no lo muestra', /\$\('listoFuera'\)\.hidden = \$\('listoDekra'\)\.hidden = true/.test(pag));
 ok('pantalla final: el correo del cliente entra como texto, no como HTML', /b\.textContent = d\.correo/.test(pag) && !/innerHTML/.test(pag.slice(pag.indexOf('function listo'))));
 
 console.log('-- la hoja de registro (Apps Script) --');
