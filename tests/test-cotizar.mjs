@@ -474,8 +474,20 @@ ok('la fila de la hoja trae el mes', filaRegistro(vn.datos, { agente: AG, n: 1, 
   const ctx = { Utilities: { formatDate: (d, tz, f) => (f === 'yyyy' ? String(d.getFullYear()) : String(d.getMonth() + 1)) } };
   vm.createContext(ctx); vm.runInContext(gs, ctx);
   ok('ordenar(): el Mes de las filas viejas sale del texto de la Fecha', ctx.mesDe_('8 nov 2026, 3:35 pm') === '2026-11 · noviembre' && ctx.mesDe_('1 set 2026, 9:00 am') === '2026-09 · septiembre' && ctx.mesDe_('PRUEBA') === '');
+  ok('por mes (17 nov): nombre de la pestaña', ctx.nombrePestana_('2026-11 · noviembre') === 'Noviembre 2026' && ctx.nombrePestana_('2027-01 · enero') === 'Enero 2027' && ctx.nombrePestana_('PRUEBA') === '');
+  ok('por mes: meses del archivo + el actual, del más nuevo al más viejo, sin basura', JSON.stringify(ctx.mesesDe_(['2026-11 · noviembre', '', 'PRUEBA', '2026-10 · octubre', '2026-11 · noviembre'], vm.runInContext('new Date(2026, 11, 1)', ctx))) === JSON.stringify(['2026-12 · diciembre', '2026-11 · noviembre', '2026-10 · octubre']));
+  ok('por mes: la pestaña es un FILTER del archivo por la columna Mes (T)', ctx.formulaMes_('2026-11 · noviembre') === `=IFERROR(FILTER('Cotizaciones'!A2:T, 'Cotizaciones'!T2:T="2026-11 · noviembre"), "Todavía no hay solicitudes en este mes.")`);
+  {
+    const f = ctx.filasEstadisticas_(6);
+    const mel = f.find((x) => x[0] === 'Melanie');
+    ok('estadísticas: una fila por persona (Melanie una sola, con sus dos correos) + Sin asignar, Otros y Total', f.map((x) => x[0].split(' ')[0]).join() === 'Juan,Christian,José,Melanie,Sin,Otros,Total' && (mel[2].match(/COUNTIFS/g) || []).length === 2 && mel[2].includes('melanie.hernandez@seguros-del-ins.com'));
+    ok('estadísticas: cuenta por correo del agente (D) y mes (T) según la celda B3', f[0][2] === `=COUNTIFS('Cotizaciones'!D:D,"jhernandez@segurosdelins.com",'Cotizaciones'!T:T,IF($B$3="Todos los meses","?*",$B$3))`);
+    ok('estadísticas: el % divide entre la fila del Total', f[0][3] === '=IFERROR(B6/$B$12,0)' && f[6][0] === 'Total' && f[6][2].startsWith('=COUNTIFS('));
+    ok('estadísticas: tipos de turno por el texto de la columna Turno (C)', f[0][4].includes('C:C,"* de *"') && f[0][5].includes('"*por turno"') && f[0][6].includes('"*directo"') && f[0][7].includes('"Reparto apagado"'));
+  }
   ok('ordenar(): un color por persona (JC azul, Cristian naranja, José verde, Melanie púrpura)', ctx.RG.PERSONAS.map((p) => p.correo + '=' + p.fuerte).join() === 'jhernandez@segurosdelins.com=#1A73E8,chernandez@seguros-ins.com=#E8710A,tramites@segurosdelins.com=#188038,fhernandez@segurosdelins.com=#9334E6,melanie.hernandez@seguros-del-ins.com=#9334E6');
 }
+ok('por mes: ordenar() arma las pestañas, el activador diario corre pestanasPorMes y la vieja Resumen se borra', /\n  pestanasPorMes\(\);/.test(gs.replace(/\r/g, '')) && /newTrigger\('pestanasPorMes'\)\.timeBased\(\)\.everyDays\(1\)/.test(gs) && /deleteSheet\(vieja\)/.test(gs));
 ok('el Apps Script exige la clave y responde "ok"', /cuerpo\.clave !== clave/.test(gs) && /salida\('ok'\)/.test(gs));
 
 console.log('-- el ⚙ --');

@@ -1,0 +1,161 @@
+<title>Registro por mes</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Inter:wght@400;600&display=swap">
+<style>
+/* Layout: una ventana de Google Sheets simulada; arriba la explicación, abajo la barra de pestañas que cambia de vista */
+:root{
+  --bg:#F2F4F7; --paper:#FFFFFF; --fg:#1F2328; --muted:#5F6368; --line:#E1E3E6; --head:#F1F3F4; --accent:#1A73E8;
+  --jc:#1A73E8; --jc2:#E8F0FE; --ch:#E8710A; --ch2:#FEEFE3; --jo:#188038; --jo2:#E6F4EA; --me:#9334E6; --me2:#F3E8FD; --sa:#5F6368; --sa2:#F1F3F4;
+  --note:#FFF8E1; --noteb:#F1C232;
+  --sans:'Roboto','Inter',system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#15171A;--paper:#1E2125;--fg:#E8EAED;--muted:#A9AEB4;--line:#33373C;--head:#2A2D31;--jc2:#1D2A40;--ch2:#3A2A1C;--jo2:#1C3324;--me2:#2E2240;--sa2:#2A2D31;--note:#33300F;--noteb:#8A7414;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#15171A;--paper:#1E2125;--fg:#E8EAED;--muted:#A9AEB4;--line:#33373C;--head:#2A2D31;--jc2:#1D2A40;--ch2:#3A2A1C;--jo2:#1C3324;--me2:#2E2240;--sa2:#2A2D31;--note:#33300F;--noteb:#8A7414;color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:14px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px}
+.wrap{max-width:1180px;margin:0 auto;display:grid;gap:18px}
+h1{font-size:22px;font-weight:500;margin:0;text-wrap:balance}
+.intro{color:var(--muted);max-width:72ch;margin:4px 0 0;line-height:1.5}
+.notas{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.nota{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 14px;line-height:1.45}
+.nota b{display:block;margin-bottom:4px}
+.win{background:var(--paper);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.bar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.bar .doc{font-weight:500}
+.bar .fx{margin-left:auto;font-size:12px;color:var(--muted);font-family:ui-monospace,Consolas,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%}
+.grid{overflow-x:auto}
+table{border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums;min-width:100%}
+th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;white-space:nowrap}
+th{background:var(--head);font-weight:700}
+td.num,th.num{text-align:right}
+.ag{color:#fff;font-weight:700}
+.tabs{display:flex;gap:2px;padding:6px 8px 0;background:var(--head);border-top:1px solid var(--line);overflow-x:auto}
+.tab{border:0;background:transparent;color:var(--muted);font:inherit;font-size:13px;padding:8px 14px;border-radius:8px 8px 0 0;cursor:pointer;white-space:nowrap}
+.tab[aria-selected="true"]{background:var(--paper);color:var(--accent);font-weight:500;box-shadow:inset 0 -2px 0 var(--accent)}
+.tab:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.tab .gris{opacity:.65}
+.pane{padding:14px}
+.pane h2{font-size:16px;font-weight:500;margin:0 0 4px}
+.pane .sub{color:var(--muted);margin:0 0 12px;font-size:13px}
+.sel{display:inline-flex;align-items:center;gap:8px;margin:0 0 12px;font-size:13px}
+.sel span.box{border:1px solid #8A939C;border-radius:4px;padding:4px 10px;background:var(--paper)}
+.sec{margin-top:22px}
+.prot{display:inline-block;font-size:12px;color:var(--muted);margin-left:8px}
+.fecha{color:var(--muted)}
+</style>
+
+<div class="wrap">
+  <div>
+    <h1>Registro de cotizaciones, una pestaña por mes</h1>
+    <p class="intro">Mockup con datos inventados. Tocá las pestañas de abajo para ver cada una. Los nombres de los clientes, placas y montos no son reales.</p>
+  </div>
+
+  <div class="notas">
+    <div class="nota"><b>Una pestaña por mes</b>Muestra solo las solicitudes de ese mes, con los mismos colores por agente y filtros. Se crea sola el día 1 a medianoche, y la más nueva queda adelante.</div>
+    <div class="nota"><b>Estadísticas, la primera</b>Elegís el mes en la celda amarilla y ves cuántas le tocaron a cada uno y de qué tipo. Abajo, el histórico mes a mes. Reemplaza a «Resumen».</div>
+    <div class="nota"><b>«Cotizaciones» queda al final</b>Es el archivo completo, donde siguen entrando las filas como hoy. Si querés anotar algo en una fila, se anota ahí y aparece en su mes.</div>
+  </div>
+
+  <div class="win">
+    <div class="bar"><span class="doc">Registro · Formulario de cotización SDI</span><span class="fx" id="fx"></span></div>
+
+    <div class="pane" id="p-est" role="tabpanel">
+      <h2>Asignación de solicitudes por agente</h2>
+      <p class="sub">Se actualiza sola con cada solicitud nueva.</p>
+      <div class="sel">Mes: <span class="box" style="background:var(--note);border-color:var(--noteb)">2026-11 · noviembre ▾</span><span class="prot">(lista con todos los meses + «Todos los meses»)</span></div>
+      <div class="grid"><table>
+        <thead><tr><th>Agente</th><th class="num">Solicitudes</th><th class="num">% del mes</th><th class="num">Por turno</th><th class="num">Valor alto · por turno</th><th class="num">Valor alto · directo</th><th class="num">Valor asegurado promedio</th></tr></thead>
+        <tbody>
+          <tr><td class="ag" style="background:var(--jc)">Juan Carlos</td><td class="num">58</td><td class="num">38,7 %</td><td class="num">41</td><td class="num">6</td><td class="num">11</td><td class="num">₡14.820.000</td></tr>
+          <tr><td class="ag" style="background:var(--ch)">Christian</td><td class="num">29</td><td class="num">19,3 %</td><td class="num">27</td><td class="num">2</td><td class="num">0</td><td class="num">₡9.150.000</td></tr>
+          <tr><td class="ag" style="background:var(--jo)">José</td><td class="num">28</td><td class="num">18,7 %</td><td class="num">26</td><td class="num">2</td><td class="num">0</td><td class="num">₡8.940.000</td></tr>
+          <tr><td class="ag" style="background:var(--me)">Melanie</td><td class="num">17</td><td class="num">11,3 %</td><td class="num">16</td><td class="num">1</td><td class="num">0</td><td class="num">₡8.300.000</td></tr>
+          <tr><td class="ag" style="background:var(--sa)">Sin asignar (menos de ₡4 M)</td><td class="num">18</td><td class="num">12,0 %</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">₡2.900.000</td></tr>
+          <tr><th>Total</th><th class="num">150</th><th class="num">100 %</th><th class="num">110</th><th class="num">11</th><th class="num">11</th><th class="num">₡10.480.000</th></tr>
+        </tbody>
+      </table></div>
+
+      <div class="sec">
+        <h2>Histórico por mes</h2>
+        <p class="sub">Solicitudes de cada agente, mes a mes (lo que hoy está en «Resumen»).</p>
+        <div class="grid"><table>
+          <thead><tr><th>Agente</th><th class="num">2026-11 · noviembre</th><th class="num">2026-10 · octubre</th><th class="num">Total</th></tr></thead>
+          <tbody>
+            <tr><td class="ag" style="background:var(--jc)">Juan Carlos</td><td class="num">58</td><td class="num">12</td><td class="num">70</td></tr>
+            <tr><td class="ag" style="background:var(--ch)">Christian</td><td class="num">29</td><td class="num">—</td><td class="num">29</td></tr>
+            <tr><td class="ag" style="background:var(--jo)">José</td><td class="num">28</td><td class="num">—</td><td class="num">28</td></tr>
+            <tr><td class="ag" style="background:var(--me)">Melanie</td><td class="num">17</td><td class="num">—</td><td class="num">17</td></tr>
+            <tr><td class="ag" style="background:var(--sa)">Sin asignar</td><td class="num">18</td><td class="num">—</td><td class="num">18</td></tr>
+            <tr><th>Total</th><th class="num">150</th><th class="num">12</th><th class="num">162</th></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <div class="pane" id="p-mes" role="tabpanel" hidden>
+      <h2>Noviembre 2026</h2>
+      <p class="sub">Solo las de este mes, en el orden en que entraron. Los filtros de los encabezados siguen funcionando.</p>
+      <div class="grid"><table>
+        <thead><tr><th>Fecha</th><th>Agente asignado</th><th>Turno</th><th>Nombre del propietario</th><th>Teléfono</th><th>Su vehículo es</th><th>Placa / Marca y modelo</th><th class="num">Valor</th><th>Uso</th><th>…</th></tr></thead>
+        <tbody id="filasMes"></tbody>
+      </table></div>
+    </div>
+
+    <div class="pane" id="p-oct" role="tabpanel" hidden>
+      <h2>Octubre 2026</h2>
+      <p class="sub">Así queda cada mes que pasa: su pestaña con sus filas, para consultarlo cuando haga falta.</p>
+      <div class="grid"><table>
+        <thead><tr><th>Fecha</th><th>Agente asignado</th><th>Turno</th><th>Nombre del propietario</th><th>Placa / Marca y modelo</th><th class="num">Valor</th><th>…</th></tr></thead>
+        <tbody>
+          <tr style="background:var(--jc2)"><td class="fecha">30 oct 2026, 4:12 pm</td><td class="ag" style="background:var(--jc)">Juan Carlos</td><td>Reparto apagado</td><td>CLIENTE INVENTADO UNO</td><td>BXY101</td><td class="num">₡9.000.000</td><td></td></tr>
+          <tr style="background:var(--jc2)"><td class="fecha">31 oct 2026, 9:40 am</td><td class="ag" style="background:var(--jc)">Juan Carlos</td><td>Reparto apagado</td><td>CLIENTE INVENTADO DOS</td><td>TOYOTA RAV4 2027</td><td class="num">₡28.500.000</td><td></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div class="pane" id="p-arch" role="tabpanel" hidden>
+      <h2>Cotizaciones (archivo completo)</h2>
+      <p class="sub">La pestaña de hoy, sin cambios: aquí sigue escribiendo el formulario y de aquí leen las demás. Pasa al final para que no estorbe.</p>
+      <div class="grid"><table>
+        <thead><tr><th>Fecha</th><th>Agente asignado</th><th>Turno</th><th>…</th><th>Mes</th></tr></thead>
+        <tbody>
+          <tr style="background:var(--jc2)"><td class="fecha">30 oct 2026, 4:12 pm</td><td class="ag" style="background:var(--jc)">Juan Carlos</td><td>Reparto apagado</td><td></td><td>2026-10 · octubre</td></tr>
+          <tr style="background:var(--jo2)"><td class="fecha">17 nov 2026, 8:05 am</td><td class="ag" style="background:var(--jo)">José</td><td>4 de 7</td><td></td><td>2026-11 · noviembre</td></tr>
+          <tr><td colspan="5" class="fecha">… las 162 filas</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" id="t-est" aria-selected="true" data-p="p-est">Estadísticas</button>
+      <button class="tab" role="tab" id="t-mes" aria-selected="false" data-p="p-mes">Noviembre 2026</button>
+      <button class="tab" role="tab" id="t-oct" aria-selected="false" data-p="p-oct">Octubre 2026</button>
+      <button class="tab" role="tab" id="t-arch" aria-selected="false" data-p="p-arch"><span class="gris">Cotizaciones (archivo)</span></button>
+    </div>
+  </div>
+</div>
+
+<script>
+var F = {
+  'p-est':'B3 = lista de meses   ·   =COUNTIFS(Cotizaciones!D:D; correo; Cotizaciones!T:T; $B$3)',
+  'p-mes':'A2 = FILTER(Cotizaciones!A2:T; Cotizaciones!T2:T = "2026-11 · noviembre")',
+  'p-oct':'A2 = FILTER(Cotizaciones!A2:T; Cotizaciones!T2:T = "2026-10 · octubre")',
+  'p-arch':'Aquí escribe el formulario, como hoy'
+};
+var C = {jc:['Juan Carlos','--jc','--jc2'],ch:['Christian','--ch','--ch2'],jo:['José','--jo','--jo2'],me:['Melanie','--me','--me2'],sa:['Sin asignar','--sa','--sa2']};
+var filas = [
+  ['17 nov 2026, 8:05 am','jo','4 de 7','CLIENTE INVENTADO TRES','8888-0001','Usado','ABC123','₡7.200.000','Personal'],
+  ['17 nov 2026, 8:31 am','jc','5 de 7','CLIENTE INVENTADO CUATRO','8888-0002','Usado','CL 301122','₡11.000.000','Comercial'],
+  ['17 nov 2026, 9:02 am','jc','₡15 millones o más · directo','CLIENTE INVENTADO CINCO','8888-0003','Nuevo Cero Kilómetros','HYUNDAI TUCSON 2027','₡24.900.000','Personal'],
+  ['17 nov 2026, 9:47 am','sa','Menos de ₡4 millones · sin asignar','CLIENTE INVENTADO SEIS','8888-0004','Usado','DEF456','₡3.100.000','Personal'],
+  ['17 nov 2026, 10:15 am','ch','6 de 7','CLIENTE INVENTADO SIETE','8888-0005','Usado','GHI789','₡8.400.000','Personal'],
+  ['17 nov 2026, 10:58 am','me','₡15 millones o más · por turno','CLIENTE INVENTADO OCHO','8888-0006','Usado','JKL012','₡17.000.000','Personal']
+];
+document.getElementById('filasMes').innerHTML = filas.map(function(f){
+  var c=C[f[1]];
+  return '<tr style="background:var('+c[2]+')"><td class="fecha">'+f[0]+'</td><td class="ag" style="background:var('+c[1]+')">'+c[0]+'</td><td>'+f[2]+'</td><td>'+f[3]+'</td><td>'+f[4]+'</td><td>'+f[5]+'</td><td>'+f[6]+'</td><td class="num">'+f[7]+'</td><td>'+f[8]+'</td><td></td></tr>';
+}).join('');
+var tabs=[].slice.call(document.querySelectorAll('.tab'));
+function ver(id){tabs.forEach(function(t){var on=t.dataset.p===id;t.setAttribute('aria-selected',on);document.getElementById(t.dataset.p).hidden=!on;});document.getElementById('fx').textContent=F[id];}
+tabs.forEach(function(t){t.addEventListener('click',function(){ver(t.dataset.p);});});
+ver('p-est');
+</script>
