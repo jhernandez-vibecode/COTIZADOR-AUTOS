@@ -50,7 +50,10 @@ function polizaAsistenciaUrl() {
   var tel    = CFG.PHONE || '';
   var pairs = [
     ['n',   CFG.FROM_NAME || ''], ['tel', tel], ['wa', polizaWaIntl(CFG.WHATSAPP || tel)],
-    ['em',  CFG.FROM_EMAIL || ''], ['lic', CFG.LICENSE || ''], ['web', webRaw]
+    ['em',  CFG.FROM_EMAIL || ''], ['lic', CFG.LICENSE || ''], ['web', webRaw],
+    // cg = "cargo · oficina" del asesor (17 nov 2026, José: la guía lo mostraba como agente).
+    // Vacío para un agente: la guía sigue diciendo "Tu agente". Sale de SDI_ASESORES (email-marca.js).
+    ['cg',  typeof _cgAsesor === 'function' ? _cgAsesor(CFG.FROM_EMAIL) : '']
   ];
   var qs = pairs
     .filter(function (x) { return x[1] != null && String(x[1]).trim() !== ''; })

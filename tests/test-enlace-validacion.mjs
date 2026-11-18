@@ -42,7 +42,8 @@ ok('a-acepta-espacios', esNuestro('n=Juan%20Carlos%20Hernandez%20Vargas&lic=08-1
 
 // ---------- Guia de emergencias (/a) ----------
 ok('a-acepta', esNuestro('n=Juan%20Carlos&tel=8822-1348&wa=50688221348&em=jc%40x.com&lic=08-1318&web=www.x.com', CLAVES_A));
-ok('a-acepta-roster', esNuestro('a=jc&n=Juan', CLAVES_A));   // el ?a=<id> viejo sigue valiendo
+ok('a-acepta-roster', esNuestro('a=jc&n=Juan', CLAVES_A));
+ok('a-acepta-cargo-asesor', esNuestro('n=Jos%C3%A9&lic=08-1319&cg=Asesor%20de%20Seguros%20%C2%B7%20Oficina%20de%20Fernando%20Hern%C3%A1ndez%2C%20agente', CLAVES_A));   // 17 nov 2026   // el ?a=<id> viejo sigue valiendo
 // Las dos listas son distintas a proposito: los precios del explicador no
 // tienen nada que hacer en la guia de emergencias, ni al reves.
 ok('a-rechaza-params-explicador', !esNuestro('pa=570891&va=10000000', CLAVES_A));

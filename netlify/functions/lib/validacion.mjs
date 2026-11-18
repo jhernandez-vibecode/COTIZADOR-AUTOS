@@ -28,7 +28,7 @@ export const CLAVES = new Set(["cg",
 
 // Parametros de la guia de emergencias (ver polizaAsistenciaUrl en
 // js/poliza-email.js): la ficha del agente + el `a=<id>` del roster viejo.
-export const CLAVES_A = new Set(["a", "n", "tel", "wa", "em", "lic", "web"]);
+export const CLAVES_A = new Set(["a", "n", "tel", "wa", "em", "lic", "web", "cg"]);   // cg: cargo del asesor (17 nov 2026)
 
 // Parametros del configurador de asistencias /asistencias/ (ver
 // _buildPlanesUrl en js/email-template.js): la ficha del agente + el cliente,

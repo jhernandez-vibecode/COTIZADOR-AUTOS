@@ -107,6 +107,12 @@ ok('multiagente-sep',    html2.indexOf('/?n=Pedro') !== -1);   // primer paráme
 // sin web propia — ni en la firma ni como fallback de los botones cross-sell.
 ok('multiagente-sin-web-owner', html2.indexOf('segurosdelins.com') === -1);
 
+// Asesor (17 nov 2026, José): la guía recibe su cargo en cg; un agente no lo lleva.
+ok('asesor-agente-sin-cg', _pe.polizaAsistenciaUrl().indexOf('cg=') === -1);
+global.CFG.FROM_EMAIL = 'tramites@segurosdelins.com';
+ok('asesor-cg', _pe.polizaAsistenciaUrl().indexOf('cg=' + encodeURIComponent('Asesor de Seguros · Oficina de Fernando Hernández, agente')) !== -1);
+global.CFG.FROM_EMAIL = 'pedro@correo.com';
+
 // Firma del owner (html = config JC): SU web sí debe salir en la firma.
 ok('firma-web-owner', html.indexOf(' &middot; www.segurosdelins.com') !== -1);
 
