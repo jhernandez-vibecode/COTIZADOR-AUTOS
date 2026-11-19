@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Mockup · Guía de aceptación en la consola</title>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&family=Google+Sans+Code:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="../../../../../css/styles.css" />
+<link rel="stylesheet" href="../../../../../css/linea-clara-consola.css" />
+<style>
+  /* solo para el mockup: lo nuevo va marcado con un borde punteado azul */
+  .nuevo{outline:2px dashed #0369A1;outline-offset:3px;border-radius:999px}
+  .ac-wa{white-space:pre-wrap;font-family:'Google Sans Flex','Inter',sans-serif;font-size:14px;line-height:1.5;color:#1F2933;
+         background:#E7F6E1;border-radius:14px 14px 4px 14px;padding:14px 16px;margin:0 0 0 auto;max-width:440px}
+  .ac-wa a{color:#0369A1}
+  .ac-chat{background:#EFEAE2;border-radius:16px;padding:22px 18px;height:100%;display:flex;flex-direction:column;justify-content:flex-end;gap:12px}
+  .ac-card{background:#fff;border-radius:12px;overflow:hidden;max-width:440px;margin-left:auto;border:1px solid #d9d4cc}
+  .ac-card img{display:block;width:100%;height:150px;object-fit:cover;object-position:top}
+  .ac-card div{padding:8px 12px;font-size:12.5px;color:#3C4650}
+  .ac-card b{display:block;color:#0C2340;font-size:13.5px}
+</style>
+</head>
+<body class="page-cotizar">
+
+<!-- VISTA 1: la fila de Cotizaciones con el botón nuevo -->
+<div class="modal-backdrop active" id="vFila" style="position:static;display:flex;background:transparent;padding:24px">
+  <div class="modal-card stats-card" style="margin:0 auto">
+    <div class="modal-header">
+      <h2 class="modal-title">Cotizaciones enviadas</h2>
+      <button class="modal-close" aria-label="Cerrar">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="stats-section-title">Cotizaciones</div>
+      <button type="button" class="btn fo-nuevo">+ Fotos a un cliente que no está en la lista</button>
+      <button type="button" class="btn fo-nuevo nuevo" style="margin-left:8px">+ Guía de aceptación a un cliente que no está en la lista</button>
+      <div id="statsList" style="margin-top:14px">
+        <div class="stat-row">
+          <div class="stat-fecha">17 nov</div>
+          <div class="stat-main">
+            <div class="stat-cli">DELGADO ARGUELLO SILVIA MARIEL</div>
+            <div class="stat-meta">BRK454 &middot; Toyota RAV4 2019 &middot; ₡10,0 M</div>
+            <div class="stat-mail">silvia.ejemplo@correo.com</div>
+          </div>
+          <div class="stat-marca"><span class="history-badge">Sin póliza · vence en 13 d</span><span class="history-badge fotos">📷 Fotos enviadas &middot; 18 nov</span></div>
+          <div class="stat-acc">
+            <button class="history-btn fotos">📷 Fotos</button>
+            <button class="history-btn fotos nuevo">✍ Aceptar póliza</button>
+            <a class="history-btn">🔗</a><button class="history-btn">📄</button><a class="history-btn">💬</a><button class="history-btn danger">🗑</button>
+          </div>
+        </div>
+        <div class="stat-row con-poliza">
+          <div class="stat-fecha">12 nov</div>
+          <div class="stat-main">
+            <div class="stat-cli">MORA SOLANO ANDRÉS</div>
+            <div class="stat-meta">BXR210 &middot; Hyundai Tucson 2022 &middot; póliza 0101AUT0000000</div>
+          </div>
+          <div class="stat-marca"><span class="history-badge">✓ Póliza emitida</span></div>
+          <div class="stat-acc"><a class="history-btn">🔗</a><button class="history-btn">📄</button><button class="history-btn danger">🗑</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- VISTA 2: el cuadro "Guía de aceptación" -->
+<div class="modal-backdrop active" id="vModal" style="position:static;display:flex;padding:24px">
+  <div class="modal-card asi-card" style="margin:0 auto">
+    <div class="modal-header">
+      <div>
+        <h2 class="modal-title">Guía para aceptar la póliza</h2>
+        <p class="asi-sub">Le mandás al cliente por WhatsApp los 6 pasos para aceptar la póliza en la página del INS. No sale correo: el del token lo manda el INS.</p>
+      </div>
+      <button class="modal-close" aria-label="Cerrar">×</button>
+    </div>
+    <div class="asi-body">
+      <div class="asi-form">
+        <p class="fo-desde">Desde la cotización de <b>Silvia</b> · BRK454</p>
+        <div class="asi-grid">
+          <div class="form-row">
+            <label class="form-label">Nombre de pila</label>
+            <input class="form-control" value="Silvia" />
+          </div>
+          <div class="form-row">
+            <label class="form-label">Placa <span class="asi-opt">(opcional)</span></label>
+            <input class="form-control asi-mono" value="BRK454" />
+          </div>
+          <div class="form-row asi-full">
+            <label class="form-label">Vehículo <span class="asi-opt">(opcional)</span></label>
+            <input class="form-control" value="Toyota RAV4" />
+          </div>
+          <div class="form-row asi-full">
+            <label class="form-label">WhatsApp del cliente <span class="asi-opt">(opcional)</span></label>
+            <input class="form-control asi-mono" value="8888-8888" />
+            <span class="asi-hint">Sin número, elegís el contacto dentro de WhatsApp.</span>
+          </div>
+        </div>
+      </div>
+      <div class="asi-prev">
+        <div class="asi-rot">Así le llega por WhatsApp</div>
+        <div class="ac-chat">
+          <div class="ac-card"><img src="p-jc.png" alt=""><div><b>Acepte su póliza en 6 pasos</b>guia.appsegurosdigitales.com</div></div>
+          <p class="ac-wa">Hola Silvia, soy Juan Carlos, su agente del INS. Ya tenemos las fotos de su Toyota RAV4 (BRK454). El siguiente paso es aceptar la póliza: el INS le va a enviar un correo con el asunto «Aceptación de proceso para emisión AutoVoluntario – INS».
+
+Aquí le dejo los 6 pasos para hacerlo sin enredos:
+<a>guia.appsegurosdigitales.com/k/7Hq2Lm</a>
+
+Cualquier duda me escribe por aquí.</p>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer asi-foot">
+      <span class="asi-quien">La guía sale con tu ficha del ⚙: tu nombre, cargo, licencia y WhatsApp.</span>
+      <div class="asi-btns">
+        <button class="btn btn-secondary">Copiar mensaje</button>
+        <button class="btn btn-send btn-wa">Abrir WhatsApp</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var v = new URLSearchParams(location.search).get('v');
+  if (v === 'fila') document.getElementById('vModal').remove();
+  if (v === 'modal') document.getElementById('vFila').remove();
+</script>
+</body>
+</html>

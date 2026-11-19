@@ -51,7 +51,7 @@ var SHORTLINK_RE_ID = /^[A-Z2-9]{10}$/;
  * Cambia un link largo por su alias corto.
  *
  * @param {string} urlLarga - URL completa, con sus parametros
- * @param {string} [tipo]   - 'g' guia de la cotizacion (default) · 'a' asistencia · 'p' planes
+ * @param {string} [tipo]   - 'g' guia de la cotizacion (default) · 'a' asistencia · 'p' planes · 'k' aceptar
  * @returns {Promise<string>} el alias corto, o la URL larga si no se pudo
  */
 async function acortarEnlace(urlLarga, tipo) {
@@ -59,7 +59,8 @@ async function acortarEnlace(urlLarga, tipo) {
   var i = larga.indexOf('?');
   if (i === -1) return larga;                       // sin parametros no hay nada que acortar
 
-  var ruta = tipo === 'a' ? '/a' : tipo === 'p' ? '/p' : '/g';
+  // 'k' = guia para aceptar la poliza /aceptar/ (19 nov 2026), mismo sitio que 'g' y 'p'.
+  var ruta = tipo === 'a' ? '/a' : tipo === 'p' ? '/p' : tipo === 'k' ? '/k' : '/g';
   var cuerpo = { q: larga.slice(i + 1) };
   // La guia de emergencias vive en OTRO sitio (la app de asistencia), asi que
   // hay que decirle a la Function a donde apunta. Ella lo valida contra su

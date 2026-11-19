@@ -30,6 +30,9 @@ const CFG = {
   // Guía de las fotografías (6 nov 2026): PDF de JC subido al sitio para que
   // todo agente la mande sin configurar nada. Va como enlace en el correo
   // "Paso 1 · Fotografías" (js/fotos-email.js).
+  // Guía para aceptar la póliza (19 nov 2026): página del cliente que se manda por
+  // WhatsApp desde Cotizaciones (js/aceptar-wa.js) con la ficha del agente.
+  ACEPTAR_URL: 'https://cotizador.appsegurosdigitales.com/aceptar/',
   FOTOS_GUIA_URL: 'https://cotizador.appsegurosdigitales.com/documentos-ins/guia-fotografias-autos.pdf',
   LOGO_URL:    'https://cotizador.appsegurosdigitales.com/img/ins-logo.png',
   // Logotipo SDI del pie del correo. Va como imagen y no recreado con tablas
@@ -79,13 +82,12 @@ const CFG = {
   // y anotar lo mismo en el registro de cambios del pie de index.html.
   // Solo la consola (index.html) la muestra; las sub-páginas no.
   NOVEDADES: {
-    version: '2026-11-06',
-    fecha: '6 nov 2026',
+    version: '2026-11-19',
+    fecha: '19 nov 2026',
     items: [
-      '<b>Nuevo: «Fotos para asegurar».</b> En Cotizaciones, cada cotización sin póliza tiene el botón <b>📷 Fotos</b>: le manda al cliente el correo «Paso 1 · Fotografías» con el enlace del INS para tomar las fotos del vehículo. El nombre, el correo, la placa y el vehículo ya salen de la cotización: solo pegás el enlace del INS de ese cliente.',
-      '<b>Si el cliente no está en la lista</b>, arriba de Cotizaciones está <b>«+ Fotos a un cliente que no está en la lista»</b>: el mismo cuadro, vacío, para escribir sus datos.',
-      'Después de enviar podés avisarle por WhatsApp con el mismo enlace, y la fila queda marcada «📷 Fotos enviadas» con la fecha. Solo se acepta un enlace de la plataforma del INS (asegurarte.grupoins.com).',
-      '<b>Va solo con el enlace, sin código QR</b>: la guía, el formulario de cita y su correo de confirmación ahora le dicen al cliente que le llega un enlace al correo.'
+      '<b>Nuevo: guía para aceptar la póliza.</b> Cuando el cliente ya mandó las fotos, en Cotizaciones tocás <b>✍ Aceptar póliza</b> y le mandás por WhatsApp los 6 pasos para aceptar la póliza con el enlace y el token que le llegan del INS.',
+      'El mensaje ya viene escrito con su nombre y su vehículo: tocás <b>«Abrir WhatsApp»</b> o <b>«Copiar mensaje»</b>. La guía sale con tu ficha del ⚙ (nombre, cargo, licencia y WhatsApp) y el cliente puede escribirte desde ahí.',
+      'Si el cliente no está en la lista, arriba de Cotizaciones está <b>«+ Guía de aceptación a un cliente que no está en la lista»</b>.'
     ]
   }
 };

@@ -46,12 +46,14 @@ import { getStore } from "@netlify/blobs";
 import { randomBytes, createHash } from "node:crypto";
 // Las listas blancas y los validadores viven en lib/ para poder testearlos con
 // Node pelado (este archivo no se puede importar sin @netlify/blobs instalado).
-import { esNuestro, baseAsistencia, CLAVES, CLAVES_A, CLAVES_P } from "./lib/validacion.mjs";
+import { esNuestro, baseAsistencia, CLAVES, CLAVES_A, CLAVES_P, CLAVES_K } from "./lib/validacion.mjs";
 
 // 17 set 2026 — /p: el configurador de planes de asistencia (/asistencias/),
 // mismo sitio que /g, con su propia lista blanca (CLAVES_P) y su propia clave
 // en el store ("p:" + id) para que un id de un tipo nunca se sirva por otro.
-export const config = { path: ["/g", "/g/:id", "/a", "/a/:id", "/p", "/p/:id"] };
+// 19 nov 2026 — /k: la guia para aceptar la poliza (/aceptar/), mismo sitio,
+// lista blanca CLAVES_K y clave propia ("k:" + id), igual que /p.
+export const config = { path: ["/g", "/g/:id", "/a", "/a/:id", "/p", "/p/:id", "/k", "/k/:id"] };
 
 // Sin 0/O/1/I: un id leido en voz alta o tecleado no se presta a confusion.
 const ALFABETO = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
@@ -59,6 +61,7 @@ const LARGO_ID = 10;
 const RE_ID = /^[A-Z2-9]{10}$/;
 const DESTINO = "/explicacion/";
 const DESTINO_P = "/asistencias/";
+const DESTINO_K = "/aceptar/";
 
 const store = () => getStore({ name: "enlaces-guia", consistency: "strong" });
 
@@ -88,6 +91,7 @@ export default async function handler(req) {
   const tipo = (partes[0] || "").toLowerCase();
   const esAsistencia = tipo === "a";
   const esPlanes = tipo === "p";
+  const esAceptar = tipo === "k";
 
   // ---- GET /g/:id  o  /a/:id  → redirige al enlace largo --------------
   if (req.method === "GET") {
@@ -97,7 +101,7 @@ export default async function handler(req) {
     // Los enlaces de asistencia viven bajo su propia clave: asi un id de /a
     // nunca se sirve por /g (mandaria al explicador con la ficha del agente
     // en vez de los datos del cliente) ni al reves.
-    const clave = esAsistencia ? "a:" + id : esPlanes ? "p:" + id : id;
+    const clave = esAsistencia ? "a:" + id : esPlanes ? "p:" + id : esAceptar ? "k:" + id : id;
 
     let guardado = null;
     try {
@@ -111,7 +115,7 @@ export default async function handler(req) {
     if (!esAsistencia) {
       // El destino se arma aca, del lado del servidor, sobre nuestro propio
       // sitio: lo guardado es SOLO el query string, nunca un host.
-      return redirige((esPlanes ? DESTINO_P : DESTINO) + "?" + guardado);
+      return redirige((esPlanes ? DESTINO_P : esAceptar ? DESTINO_K : DESTINO) + "?" + guardado);
     }
 
     // Asistencia: se guardo {b, q}. El host se revalida contra la lista
@@ -142,7 +146,7 @@ export default async function handler(req) {
   if (!body || typeof body !== "object") return json(400, { error: "Cuerpo invalido." });
 
   const qs = String(body.q || "").replace(/^[?&]+/, "");
-  if (!esNuestro(qs, esAsistencia ? CLAVES_A : esPlanes ? CLAVES_P : CLAVES)) {
+  if (!esNuestro(qs, esAsistencia ? CLAVES_A : esPlanes ? CLAVES_P : esAceptar ? CLAVES_K : CLAVES)) {
     return json(400, { error: "Ese enlace no corresponde a una guia." });
   }
 
@@ -170,7 +174,7 @@ export default async function handler(req) {
     // del cliente, asi que todos los avisos de un mismo agente comparten id a
     // proposito — es un enlace generico suyo. Eso NO es el bug de arriba y no
     // hay que "arreglarlo" agregandole nada que lo haga unico por cliente.
-    const huella = (esAsistencia ? "ha:" : esPlanes ? "hp:" : "h:") +
+    const huella = (esAsistencia ? "ha:" : esPlanes ? "hp:" : esAceptar ? "hk:" : "h:") +
       createHash("sha256").update(esAsistencia ? base + "?" + qs : qs).digest("base64url");
     const valor = esAsistencia ? JSON.stringify({ b: base, q: qs }) : qs;
 
@@ -179,12 +183,12 @@ export default async function handler(req) {
       // Cinturon: el id reusado tiene que apuntar EXACTAMENTE a este enlace.
       // Si por lo que sea no coincide, se emite uno nuevo en vez de mandar al
       // cliente a la guia de otro.
-      const g = await s.get(esAsistencia ? "a:" + previo : esPlanes ? "p:" + previo : previo);
+      const g = await s.get(esAsistencia ? "a:" + previo : esPlanes ? "p:" + previo : esAceptar ? "k:" + previo : previo);
       if (g === valor) return json(200, { id: previo, reusado: true });
     }
 
     const id = nuevoId();
-    await s.set(esAsistencia ? "a:" + id : esPlanes ? "p:" + id : id, valor);
+    await s.set(esAsistencia ? "a:" + id : esPlanes ? "p:" + id : esAceptar ? "k:" + id : id, valor);
     await s.set(huella, id);
     return json(200, { id, reusado: false });
   } catch (e) {

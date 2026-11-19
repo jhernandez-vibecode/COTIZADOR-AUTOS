@@ -270,6 +270,11 @@ function _statsListHtml(entries) {
     const ceroKm = /[?&]k0=1(?:&|$)/.test(String(e.guideUrl || ''));
     const fotos = (cerrada || ceroKm) ? ''
       : '<button class="history-btn fotos" data-fotos="' + id + '" title="Enviarle el enlace del INS para las fotos">📷 Fotos</button>';
+    // ✍ Aceptar póliza (19 nov 2026): la guía de los 6 pasos para aceptar la
+    // póliza en la página del INS, por WhatsApp. Toda fila sin póliza, también
+    // los cero kilómetros (el mensaje no les habla de fotos).
+    const aceptar = cerrada ? ''
+      : '<button class="history-btn fotos" data-aceptar="' + id + '" title="Mandarle por WhatsApp la guía para aceptar la póliza">✍ Aceptar póliza</button>';
     const fotosAt = (!cerrada && e.fotosAt)
       ? '<span class="history-badge fotos" title="Ya se le envió el correo con el enlace de las fotos">📷 Fotos enviadas &middot; '
         + _esc(new Date(e.fotosAt).toLocaleDateString('es-CR', { day: '2-digit', month: 'short' })) + '</span>'
@@ -285,6 +290,7 @@ function _statsListHtml(entries) {
       + '<div class="stat-marca">' + marca + fotosAt + '</div>'
       + '<div class="stat-acc">'
         + fotos
+        + aceptar
         + guia
         + wa
         + '<button class="history-btn danger" data-del="' + id + '" title="Eliminar del registro">🗑</button>'
@@ -333,6 +339,13 @@ function _onStatsListClick(e) {
   if (fot) {
     const entry = loadHistory().find(function (x) { return x && x.id === fot.dataset.fotos; });
     if (entry && typeof openFotosModal === 'function') openFotosModal(entry);
+    return;
+  }
+  // ✍ Aceptar póliza: abre el cuadro de la guía con esta cotización (aceptar-ui.js).
+  const ace = e.target.closest('[data-aceptar]');
+  if (ace) {
+    const entry = loadHistory().find(function (x) { return x && x.id === ace.dataset.aceptar; });
+    if (entry && typeof openAceptarModal === 'function') openAceptarModal(entry);
     return;
   }
   // Eliminar registro (prueba/duplicado) — con confirmación, es permanente.

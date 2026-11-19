@@ -317,7 +317,10 @@
           <button type="button" id="statsSearchClear" class="stats-search-clear" aria-label="Limpiar búsqueda" title="Limpiar" hidden>×</button>
         </div>
         <div class="stats-search-count" id="statsSearchCount" aria-live="polite"></div>
-        <button type="button" class="btn fo-nuevo" id="btnFotosNuevo">+ Fotos a un cliente que no está en la lista</button>
+        <div class="fo-nuevos">
+          <button type="button" class="btn fo-nuevo" id="btnFotosNuevo">+ Fotos a un cliente que no está en la lista</button>
+          <button type="button" class="btn fo-nuevo" id="btnAceptarNuevo">+ Guía de aceptación a un cliente que no está en la lista</button>
+        </div>
         <div class="stats-filters" id="statsFilters"></div>
 
         <!-- Lista -->
@@ -332,6 +335,59 @@
   <!-- Fotos para asegurar (6 nov 2026): correo "Paso 1 · Fotografías" con el
        enlace del INS. Va DESPUÉS de statsModal para quedar encima cuando se
        abre desde la lista de Cotizaciones. Lo maneja js/fotos-ui.js. -->
+  <!-- Guía para aceptar la póliza (19 nov 2026): solo WhatsApp, sin correo. Se abre desde
+       Cotizaciones (✍ Aceptar póliza) o desde «+ Guía de aceptación…». Lo maneja js/aceptar-ui.js. -->
+  <div class="modal-backdrop" id="aceptarModal">
+    <div class="modal-card asi-card">
+      <div class="modal-header">
+        <div>
+          <h2 class="modal-title">Guía para aceptar la póliza</h2>
+          <p class="asi-sub">Le mandás al cliente por WhatsApp los 6 pasos para aceptar la póliza en la página del INS. No sale correo: el del token lo manda el INS.</p>
+        </div>
+        <button class="modal-close" id="btnAceptarClose" aria-label="Cerrar">×</button>
+      </div>
+      <div class="asi-body">
+        <div class="asi-form">
+          <p class="fo-desde" id="aceptarDesde"></p>
+          <div class="asi-grid">
+            <div class="form-row">
+              <label class="form-label" for="ac-nom">Nombre de pila</label>
+              <input class="form-control" id="ac-nom" autocomplete="off" />
+            </div>
+            <div class="form-row">
+              <label class="form-label" for="ac-placa">Placa <span class="asi-opt">(opcional)</span></label>
+              <input class="form-control asi-mono" id="ac-placa" autocomplete="off" placeholder="ABC123" />
+            </div>
+            <div class="form-row asi-full">
+              <label class="form-label" for="ac-veh">Vehículo <span class="asi-opt">(opcional)</span></label>
+              <input class="form-control" id="ac-veh" autocomplete="off" />
+            </div>
+            <div class="form-row asi-full">
+              <label class="form-label" for="ac-wa">WhatsApp del cliente <span class="asi-opt">(opcional)</span></label>
+              <input class="form-control asi-mono" id="ac-wa" type="tel" inputmode="numeric" placeholder="8888-8888" autocomplete="off" />
+              <span class="asi-hint">Sin número, elegís el contacto dentro de WhatsApp.</span>
+            </div>
+            <label class="ac-check asi-full"><input type="checkbox" id="ac-0km" /> Es un cero kilómetros (no lleva fotos)</label>
+          </div>
+        </div>
+        <div class="asi-prev">
+          <div class="asi-rot">Así le llega por WhatsApp</div>
+          <div class="ac-chat">
+            <div class="ac-card"><img src="img/og-aceptar.png" alt="" /><div><b>Acepte su póliza en 6 pasos</b>guia.appsegurosdigitales.com</div></div>
+            <p class="ac-wa" id="ac-msg"></p>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer asi-foot">
+        <span class="asi-quien">La guía sale con tu ficha del ⚙: tu nombre, cargo, licencia y WhatsApp.</span>
+        <div class="asi-btns">
+          <button class="btn btn-secondary" id="btnAceptarCopiar">Copiar mensaje</button>
+          <button class="btn btn-send btn-wa" id="btnAceptarWa">Abrir WhatsApp</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-backdrop" id="fotosModal">
     <div class="modal-card asi-card">
       <div class="modal-header">
@@ -830,8 +886,9 @@
        toca la app se agrega una linea aca. -->
   <footer class="app-foot">
     <details>
-      <summary>Última actualización: 15 nov 2026 — casilla «Valor alto» en el reparto</summary>
+      <summary>Última actualización: 19 nov 2026 — guía para aceptar la póliza por WhatsApp</summary>
       <ul>
+        <li><b>19 nov 2026</b> — <b>Nuevo: guía para aceptar la póliza.</b> En Cotizaciones, cada cotización sin póliza tiene el botón <b>✍ Aceptar póliza</b>: le manda al cliente por WhatsApp los 6 pasos para aceptar la póliza con el enlace y el token que le llegan del INS. El mensaje ya viene escrito con su nombre y su vehículo; solo tocás «Abrir WhatsApp» o «Copiar mensaje». La guía sale con tu ficha del ⚙ (nombre, cargo, licencia y WhatsApp), y el cliente puede tocar «Escríbame» para abrir tu chat. Para alguien que no está en la lista, usá «+ Guía de aceptación a un cliente que no está en la lista». En un cero kilómetros el mensaje no habla de fotos.</li>
         <li><b>15 nov 2026</b> — <b>Reparto de cotizaciones: cada agente tiene una casilla «Valor alto».</b> Marcada, a ese agente también le llegan por turno las solicitudes del monto del directo (₡15.000.000 o más) o mayores; el agente principal siempre las recibe. Si nadie más está marcado, todo queda como antes: le llegan directo al agente principal sin gastar turno. Si le toca a alguien sin la casilla, no pierde su turno: esa solicitud pasa al siguiente marcado y la próxima normal le sigue tocando a él. Marcar o desmarcar no reinicia la vuelta. Con el directo apagado la casilla no hace nada. La hoja de registro anota «₡15 millones o más · por turno» o «· directo».</li>
         <li><b>12 nov 2026</b> — <b>Reparto de cotizaciones: guardar el reparto ya no hace que la vuelta empiece de nuevo.</b> Si se cambian los números o se agrega o quita a alguien, la siguiente solicitud le sigue tocando a quien le tocaba: si a un agente le faltaba una de su tanda, la recibe; si ya la había completado, pasa al siguiente de la lista. Solo si a ese agente se le quitó del reparto o quedó en 0, la vuelta empieza desde el primero. La vista previa del panel ya muestra cómo sigue antes de guardar.</li>
         <li><b>10 nov 2026</b> — <b>Reparto de cotizaciones: el agente principal decide desde qué monto le llegan las solicitudes directo a él, y lo puede apagar.</b> En el panel del reparto hay un recuadro nuevo, «Las de valor alto, directo a vos»: un interruptor y el monto (de ₡5 a ₡100 millones, en millones enteros, con botones rápidos de 10 a 30). Apagado, las de valor alto también se reparten por turnos entre todos; el monto queda guardado para cuando se vuelva a encender. Abajo, «Qué pasa con cada solicitud» muestra qué tramo se reparte y cuál va directo. Cambiar el monto o apagarlo no reinicia la vuelta. La hoja de registro anota el monto que estaba puesto («₡20 millones o más · directo»). Las de menos de ₡4.000.000 siguen sin asignarse.</li>
@@ -1042,6 +1099,7 @@
   <script src="js/email-template.js"></script>
   <script src="js/asistencias-email.js"></script>
   <script src="js/fotos-email.js"></script>
+  <script src="js/aceptar-wa.js"></script>
   <script src="js/gmail-auth.js"></script>
   <script src="js/wizard.js"></script>
   <script src="js/mime-builder.js"></script>
@@ -1051,6 +1109,7 @@
   <script src="js/novedades.js"></script>
   <script src="js/asistencias-ui.js"></script>
   <script src="js/fotos-ui.js"></script>
+  <script src="js/aceptar-ui.js"></script>
   <script src="js/cotizar-agente.js"></script>
   <script src="js/app.js"></script>
 

@@ -91,6 +91,11 @@ test('el 🗑 sigue en las dos', () => {
   ok(M._statsListHtml([ABIERTA]).indexOf('data-del="a1"') !== -1);
 });
 
+test('✍ Aceptar póliza: sale en la abierta y NO en la cerrada (19 nov 2026)', () => {
+  ok(M._statsListHtml([ABIERTA]).indexOf('data-aceptar="a1"') !== -1, 'falta el botón en una cotización sin póliza');
+  noContiene(M._statsListHtml([CERRADA]), 'data-aceptar', 'le ofrece aceptar la póliza a quien ya la tiene');
+});
+
 // ===== 2. Lo que muestra la fila =====
 console.log('\n-- la fila --');
 

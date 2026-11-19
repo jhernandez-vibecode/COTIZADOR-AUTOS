@@ -160,6 +160,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // ============ FOTOS PARA ASEGURAR (6 nov 2026) ============
   // Correo "Paso 1 · Fotografías" desde Cotizaciones o con datos manuales.
   if (typeof initFotosModal === 'function') initFotosModal();
+  if (typeof initAceptarModal === 'function') initAceptarModal();
 
   // La casilla de asistencias del paso 3 solo aparece cuando el INS ya emite
   // con la V32 (28 set 2026). Antes no hay nada que ofrecer, y una casilla

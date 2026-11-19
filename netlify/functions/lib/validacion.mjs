@@ -35,6 +35,11 @@ export const CLAVES_A = new Set(["a", "n", "tel", "wa", "em", "lic", "web", "cg"
 // su prima (cotizada `pa` o vigente `pv`) y la forma de pago. 17 set 2026.
 export const CLAVES_P = new Set(["n", "l", "w", "a", "wa", "c", "v", "p", "pa", "pv", "fp"]);
 
+// Parametros de la guia para aceptar la poliza /aceptar/ (ver aceptarGuiaUrl
+// en js/aceptar-wa.js): la ficha del agente, el nombre de pila del cliente y
+// la marca del cero kilometros. 19 nov 2026.
+export const CLAVES_K = new Set(["n", "l", "w", "wa", "em", "cg", "c", "k0"]);
+
 // Hosts a los que /a tiene permitido redirigir. La app de asistencia vive
 // en su propio repo (APP-ASISTENCIA-SEGURO-AUTOS). Si algun dia estrena
 // dominio propio, se agrega aca — hasta entonces ese enlace no se acorta
