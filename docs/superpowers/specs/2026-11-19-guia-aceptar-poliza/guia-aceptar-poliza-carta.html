@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Acepte su póliza en 6 pasos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&family=Google+Sans+Code:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  @page { size: Letter; margin: 0; }
+  :root{
+    --azul:#0369A1; --tinta:#0C2340; --texto:#3C4650; --gris:#5F6B76;
+    --borde:#DADCE0; --control:#8A939C; --banda:#EEF4F9;
+    --verde:#037D61; --verde-p:#E9F5F0; --ambar:#B45309; --ambar-p:#FDF3E1;
+    --azul-p:#E6F0F7;
+    --flex:'Google Sans Flex','Inter',system-ui,sans-serif;
+    --code:'Google Sans Code','Inter',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#fff}
+  body{width:8.5in;height:11in;font-family:var(--flex);color:var(--texto);
+       -webkit-print-color-adjust:exact;print-color-adjust:exact;
+       display:flex;flex-direction:column;padding:26px 40px 18px;overflow:hidden}
+  html{height:11in;overflow:hidden}
+
+  /* encabezado: INS arriba (cara del cliente) */
+  .top{display:flex;align-items:center;justify-content:space-between;
+       padding-bottom:12px;position:relative}
+  .top::after{content:"";position:absolute;left:0;right:0;bottom:-4px;height:4px;
+    background:linear-gradient(90deg,#0369A1 0 60%,#0D9488 60% 85%,#EA580C 85% 95%,#C9A227 95% 100%)}
+  .top + .hero{margin-top:4px}
+  .top img{height:34px}
+  .top .rotulo{font-size:11.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gris)}
+
+  .hero{text-align:center;padding:14px 30px 12px}
+  .regla{width:28px;height:3px;background:var(--azul);border-radius:2px;margin:0 auto 10px}
+  .hero h1{font-size:36px;font-weight:500;color:var(--tinta);letter-spacing:-.01em;line-height:1.08;text-wrap:balance}
+  .hero h1 b{font-weight:500;color:var(--azul)}
+  .hero p{max-width:640px;margin:8px auto 0;font-size:14px;line-height:1.5;color:var(--gris);text-wrap:balance}
+  .hero p strong{color:var(--tinta);font-weight:600}
+
+  /* banda pálida + panel */
+  .banda{background:var(--banda);border-radius:32px;padding:16px;display:flex;flex-direction:column;gap:14px}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .paso{background:#fff;border:1px solid var(--borde);border-radius:22px;padding:15px 16px 14px;
+        display:flex;flex-direction:column}
+  .paso.saltar{border-style:dashed;border-color:var(--control)}
+  .paso.ojo{background:#fff;border-color:var(--control)}
+  .cab{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .num{font-size:30px;font-weight:500;color:var(--tinta);line-height:1;font-variant-numeric:tabular-nums}
+  .ico{width:42px;height:42px;border-radius:50%;background:var(--azul-p);display:grid;place-items:center}
+  .ico svg{width:24px;height:24px;stroke:var(--azul);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+  .ico.ok{background:var(--verde-p)} .ico.ok svg{stroke:var(--verde)}
+  .chip{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:600;
+        letter-spacing:.08em;text-transform:uppercase;color:var(--gris);background:#F1F3F4;
+        border-radius:999px;padding:4px 10px;margin-bottom:9px}
+  .chip i{width:7px;height:7px;border-radius:50%;background:var(--azul);display:inline-block}
+  .chip.am{color:var(--ambar);background:var(--ambar-p)} .chip.am i{background:var(--ambar)}
+  .chip.ve{color:var(--verde);background:var(--verde-p)} .chip.ve i{background:var(--verde)}
+  .paso h2{font-size:17px;font-weight:600;color:var(--tinta);line-height:1.22;margin-bottom:6px}
+  .paso p{font-size:12.8px;line-height:1.44;color:var(--texto)}
+  .paso p strong{color:var(--tinta);font-weight:600}
+
+  /* botones de la página del INS, de muestra */
+  .ui{margin-top:auto;padding-top:10px;display:flex;gap:7px;flex-wrap:wrap}
+  .b{font-size:11.5px;font-weight:600;border-radius:999px;padding:5px 12px;border:1px solid var(--control);color:var(--tinta);background:#fff}
+  .b.on{border:2px solid var(--azul);color:var(--azul);background:var(--azul-p)}
+  .b.off{color:#9AA3AB;border-color:var(--borde)}
+  .campo{width:100%;font-family:var(--code);font-size:11.5px;color:#9AA3AB;border:1px solid var(--control);
+         border-radius:10px;padding:7px 10px;margin-bottom:7px}
+
+  /* tome en cuenta */
+  .nota{background:#fff;border:1px solid var(--borde);border-radius:22px;padding:11px 18px;
+        display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:18px;align-items:center}
+  .nota h3{font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--tinta);line-height:1.35}
+  .tip{display:flex;gap:10px;align-items:flex-start;font-size:12.5px;line-height:1.42}
+  .tip i{flex:0 0 8px;height:8px;border-radius:50%;background:var(--azul);margin-top:5px}
+  .tip strong{color:var(--tinta);font-weight:600}
+
+  /* contacto del agente */
+  .duda{display:flex;align-items:center;justify-content:center;gap:16px;padding:12px 0 0;margin-top:auto}
+  .duda span{font-size:15px;color:var(--tinta);font-weight:500}
+  .pill{display:inline-flex;align-items:center;gap:8px;background:var(--azul);color:#fff;border-radius:999px;
+        padding:9px 20px;font-size:15px;font-weight:600}
+  .pill b{font-family:var(--code);font-weight:500;letter-spacing:.02em}
+  .pill svg{width:17px;height:17px;stroke:#fff;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+  .pie{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--borde);
+       margin-top:12px;padding-top:10px}
+  .agente{font-size:12px;line-height:1.5;color:var(--gris)}
+  .agente strong{display:block;font-size:14px;font-weight:600;color:var(--tinta)}
+  .agente code{font-family:var(--code);font-weight:500;color:var(--tinta)}
+  .pie img{height:34px}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></symbol>
+  <symbol id="i-cam-off" viewBox="0 0 24 24"><path d="M2 2l20 20"/><path d="M7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16"/><path d="M9.5 4h5L17 7h3a2 2 0 0 1 2 2v7.5"/><path d="M14.12 15.12A3 3 0 1 1 9.88 10.88"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M12 18v-6"/><path d="m9 15 3 3 3-3"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5 5.5 5.5 0 0 1-5.5 5.5H11"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M21.8 10A10 10 0 1 1 17 3.34"/><path d="m9 11 3 3L22 4"/></symbol>
+  <symbol id="i-msg" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
+</svg>
+
+<header class="top">
+  <img src="ins-logo-azul.png" alt="INS">
+  <span class="rotulo">Guía para el cliente · Seguro de Automóviles</span>
+</header>
+
+<section class="hero">
+  <div class="regla"></div>
+  <h1>Acepte su póliza en <b>6 pasos</b></h1>
+  <p>El INS le envía un correo con el asunto <strong>“Aceptación de proceso para emisión AutoVoluntario – INS”</strong>. Trae un <strong>enlace</strong> y un <strong>token</strong>: guarde el token antes de empezar.</p>
+</section>
+
+<main class="banda">
+  <div class="grid">
+    <article class="paso">
+      <div class="cab"><span class="num">1</span><span class="ico"><svg><use href="#i-mail"/></svg></span></div>
+      <span class="chip"><i></i>Su correo</span>
+      <h2>Abra el correo y guarde el token</h2>
+      <p>Trae un enlace y un token. <strong>Copie o anote el token</strong>: lo va a necesitar en el paso 5. Luego presione el enlace.</p>
+    </article>
+
+    <article class="paso saltar">
+      <div class="cab"><span class="num">2</span><span class="ico"><svg><use href="#i-cam-off"/></svg></span></div>
+      <span class="chip"><i></i>Pantalla 1 · Fotos</span>
+      <h2>No suba fotos: presione “Avanzar”</h2>
+      <p>La página le pide fotos del vehículo, pero <strong>esas ya las enviamos</strong>. Solo presione <strong>“Avanzar”</strong>.</p>
+      <div class="ui"><span class="b on">Avanzar</span></div>
+    </article>
+
+    <article class="paso">
+      <div class="cab"><span class="num">3</span><span class="ico"><svg><use href="#i-down"/></svg></span></div>
+      <span class="chip"><i></i>Pantalla 2</span>
+      <h2>Descargue el perfeccionamiento</h2>
+      <p>Presione <strong>“Descargar”</strong> para guardar el documento con la información de su seguro.</p>
+      <div class="ui"><span class="b off">Aceptar</span><span class="b on">Descargar</span></div>
+    </article>
+
+    <article class="paso ojo">
+      <div class="cab"><span class="num">4</span><span class="ico"><svg><use href="#i-back"/></svg></span></div>
+      <span class="chip am"><i></i>Ojo · Pantalla 2</span>
+      <h2>Regrese y presione “Aceptar”</h2>
+      <p>Al descargar, <strong>se sale de la página del INS</strong>. Vuelva atrás (o a la pestaña anterior) y presione <strong>“Aceptar”</strong>.</p>
+      <div class="ui"><span class="b on">Aceptar</span><span class="b off">Descargar</span></div>
+    </article>
+
+    <article class="paso">
+      <div class="cab"><span class="num">5</span><span class="ico"><svg><use href="#i-lock"/></svg></span></div>
+      <span class="chip"><i></i>Pantalla 3 · Token</span>
+      <h2>Escriba el token y confirme</h2>
+      <p>Escriba el token que <strong>guardó en el paso 1</strong> y presione <strong>“Confirmar”</strong>. Es personal: <strong>no lo comparta</strong>.</p>
+      <div class="ui"><span class="campo">Ingrese un token</span><span class="b on">Confirmar</span><span class="b off">Cancelar</span></div>
+    </article>
+
+    <article class="paso">
+      <div class="cab"><span class="num">6</span><span class="ico ok"><svg><use href="#i-check"/></svg></span></div>
+      <span class="chip ve"><i></i>Listo</span>
+      <h2>¡Ya está asegurado!</h2>
+      <p>Su póliza se emite y le llegan por correo las <strong>Condiciones Generales y Particulares</strong>.</p>
+    </article>
+  </div>
+
+  <div class="nota">
+    <h3>Tome en<br>cuenta</h3>
+    <div class="tip"><i></i><span>¿No ve el correo? Revise <strong>Spam</strong> o <strong>Correo no deseado</strong>.</span></div>
+    <div class="tip"><i></i><span>Use <strong>Chrome o Edge</strong> actualizados.</span></div>
+    <div class="tip"><i></i><span>Complete <strong>todo el proceso de una vez</strong>, hasta escribir el token.</span></div>
+  </div>
+</main>
+
+<div class="duda">
+  <span>¿Tiene alguna duda en el proceso? Escríbame</span>
+  <span class="pill"><svg><use href="#i-msg"/></svg><b>8822-1348</b></span>
+</div>
+
+<footer class="pie">
+  <div class="agente">
+    <strong>Juan Carlos Hernández Vargas</strong>
+    Agente de Seguros del INS · Licencia SUGESE <code>08-1318</code><br>
+    jhernandez@segurosdelins.com · segurosdelins.com
+  </div>
+  <img src="sdi-logo.svg" alt="SDI Seguros Digitales INS">
+</footer>
+
+</body>
+</html>

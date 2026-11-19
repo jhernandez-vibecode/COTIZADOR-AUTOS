@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,400..700&family=Google+Sans+Code:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  @page { size: Letter; margin: 0; }
+  @page { size: 440px 1400px; margin: 0; }
   :root{
     --azul:#0369A1; --tinta:#0C2340; --texto:#3C4650; --gris:#5F6B76;
     --borde:#DADCE0; --control:#8A939C; --banda:#EEF4F9;
@@ -91,6 +91,46 @@
   .agente strong{display:block;font-size:14px;font-weight:600;color:var(--tinta)}
   .agente code{font-family:var(--code);font-weight:500;color:var(--tinta)}
   .pie img{height:34px}
+
+  /* ===== VERTICAL (celular): una columna, a lo largo ===== */
+  html{height:auto;overflow:visible}
+  body{width:440px;height:auto;overflow:visible;padding:22px 20px 18px;display:block}
+  .top{flex-direction:column;align-items:flex-start;gap:8px}
+  .top img{height:30px}
+  .top .rotulo{font-size:10px;letter-spacing:.12em}
+  .hero{padding:20px 4px 16px}
+  .hero h1{font-size:32px}
+  .hero p{font-size:14px}
+  .banda{border-radius:28px;padding:12px;gap:12px}
+  .grid{grid-template-columns:1fr;gap:10px}
+  .paso{padding:16px 18px 16px}
+  .paso h2{font-size:18px}
+  .paso p{font-size:14px}
+  .b{font-size:12.5px;padding:6px 14px}
+  .campo{font-size:12.5px}
+  .nota{grid-template-columns:1fr;gap:10px;padding:16px 18px}
+  .tip{font-size:13.5px}
+  .duda{flex-direction:column;gap:10px;padding:20px 0 4px}
+  .pie{flex-direction:column;align-items:flex-start;gap:12px;margin-top:18px;padding-top:14px}
+  .pie img{height:34px}
+
+  /* ===== OPCIÓN A: línea de tiempo, sin burbujas ===== */
+  .banda{background:transparent;padding:6px 2px 0;border-radius:0}
+  .grid{gap:0}
+  .paso{position:relative;border:0!important;background:transparent!important;border-radius:0;padding:0 0 26px 62px}
+  .paso::before{content:"";position:absolute;left:21px;top:48px;bottom:4px;width:2px;background:#C9D3DC}
+  .paso:last-child::before{display:none}
+  .cab{position:absolute;left:0;top:0;margin:0}
+  .ico{display:none}
+  .num{width:44px;height:44px;border-radius:50%;background:var(--azul);color:#fff;display:grid;place-items:center;font-size:22px;font-weight:600}
+  .paso.saltar .num{background:#fff;color:var(--azul);border:2px dashed var(--azul)}
+  .paso.ojo .num{background:var(--ambar)}
+  .paso:last-child .num{background:var(--verde)}
+  .chip{margin-bottom:6px}
+  .paso h2{font-size:19px;margin-bottom:5px}
+  .paso p{font-size:15px;line-height:1.45}
+  .ui{padding-top:10px}
+  .nota{margin-top:6px}
 </style>
 </head>
 <body>
@@ -166,7 +206,7 @@
   </div>
 
   <div class="nota">
-    <h3>Tome en<br>cuenta</h3>
+    <h3>Tome en cuenta</h3>
     <div class="tip"><i></i><span>¿No ve el correo? Revise <strong>Spam</strong> o <strong>Correo no deseado</strong>.</span></div>
     <div class="tip"><i></i><span>Use <strong>Chrome o Edge</strong> actualizados.</span></div>
     <div class="tip"><i></i><span>Complete <strong>todo el proceso de una vez</strong>, hasta escribir el token.</span></div>
@@ -187,5 +227,13 @@
   <img src="sdi-logo.svg" alt="SDI Seguros Digitales INS">
 </footer>
 
+<script>
+  // la página del PDF mide lo mismo que el contenido
+  document.fonts.ready.then(function(){
+    var h=Math.ceil(document.body.getBoundingClientRect().height);
+    var st=document.createElement('style');st.textContent='@page{size:440px '+h+'px;margin:0}';
+    document.head.appendChild(st);
+  });
+</script>
 </body>
 </html>
