@@ -34,12 +34,12 @@
 import { validarCotizacion, validarFicha, vehiculoCorto } from "./cotizar-validacion.mjs";
 import { correoAgente, filaRegistro, lineaCargo } from "./cotizar-correos.mjs";
 import { siguienteHabil } from "./horario.mjs";
-import { normalizarReparto, elegir, proximos, normCorreo, directoDe, ultimoDe, TOPE_MANUAL, DIRECTO_MIN, DIRECTO_MAX } from "./cotizar-reparto.mjs";
+import { normalizarReparto, elegir, proximos, normCorreo, directoDe, ultimoDe, vuelta, recibeAlto, TOPE_MANUAL, DIRECTO_MIN, DIRECTO_MAX } from "./cotizar-reparto.mjs";
 import { correoDeSesion } from "./google-sesion.mjs";
 import { huella, cubeta, permitir, esDuplicado } from "./cita-limite.mjs";
 import {
   abrirStore, leerReparto, guardarReparto, leerTurno, guardarTurno,
-  leerFichas, guardarFicha, puedeTenerFicha, tieneCita, firmaDe,
+  leerFichas, guardarFicha, puedeTenerFicha, tieneCita, firmaDe, clienteReciente, recordarCliente,
 } from "./agentes.mjs";
 import { ORIGENES, json, origenPermitido, ipDe, visible, direccionDe, enviarCorreo } from "./http.mjs";
 
@@ -180,12 +180,25 @@ export function crearHandler(deps = {}) {
     // tocarle al mismo agente; la vuelta se acomoda sola en las siguientes (se acepta).
     const reparto = await leerReparto(store, admin);
     const [turno, fichas] = await Promise.all([leerTurno(store), leerFichas(store, [admin, ...reparto.agentes.map((a) => a.email)])]);
-    const sel = elegir({ reparto, turno, admin, valor: d.valor, tieneFicha: (e) => !!fichas[e] });
+    let sel = elegir({ reparto, turno, admin, valor: d.valor, tieneFicha: (e) => !!fichas[e] });
+    // Repetida (19 nov 2026, JC): si este vehiculo ya se le asigno a alguien en los ultimos
+    // 30 dias, le llega al MISMO agente y no mueve la vuelta. Mandan antes las dos reglas de
+    // JC: las de menos de ₡4 millones quedan sin asignar y las del directo van al admin.
+    // Solo si ese agente sigue en el reparto (o es el admin) y tiene ficha; si no, turno normal.
+    let previa = null;
+    if (!sel.sinAsignar && !sel.directo) {
+      try { previa = await clienteReciente(store, d, now); } catch (e) { console.error("[cotizar] memoria de clientes no disponible", e && e.message); }
+      const pe = previa && previa.email;
+      const sigue = pe && fichas[pe] && (pe === admin || (reparto.on && vuelta(reparto).includes(pe))) && (!sel.alto || recibeAlto(reparto, pe, admin));
+      if (sigue) sel = { email: pe, n: 0, de: sel.de, repartido: false, repetida: true, turno: null };
+    }
     if (sel.turno) { try { await guardarTurno(store, sel.turno); } catch (e) { console.error("[cotizar] turno no guardado", e && e.message); } }
     // Menos de TOPE_MANUAL: no se le asigna a nadie, JC la asigna por otro medio desde la hoja.
     const ag = sel.sinAsignar ? { email: "", nombre: "Sin asignar", licencia: "", telefono: "", whatsapp: "", cargo: "", oficina: "" }
       : firmaDe(sel.email, fichas[sel.email]) || firmaDe(sel.email, SIN_FICHA);
-    const info = { agente: ag, n: sel.n, de: sel.de, repartido: sel.repartido, directo: !!sel.directo, alto: !!sel.alto, adelanta: !!sel.adelanta, topeDirecto: directoDe(reparto).monto, sinAsignar: !!sel.sinAsignar, fecha: fechaCR(now), mes: mesCR(now), registrada: false };
+    if (!sel.sinAsignar) { try { await recordarCliente(store, d, sel.email, now); } catch (e) { console.error("[cotizar] cliente no recordado", e && e.message); } }
+    const info = { agente: ag, n: sel.n, de: sel.de, repartido: sel.repartido, directo: !!sel.directo, repetida: !!sel.repetida,
+      repetidaDe: sel.repetida && previa ? fechaCR(new Date(previa.fecha)).replace(/,.*$/, "") : "", alto: !!sel.alto, adelanta: !!sel.adelanta, topeDirecto: directoDe(reparto).monto, sinAsignar: !!sel.sinAsignar, fecha: fechaCR(now), mes: mesCR(now), registrada: false };
 
     const remite = "cotizaciones@" + direccionDe(from).split("@")[1];
     // 6 nov 2026 (JC): ya no sale correo al cliente. La pantalla final le dice cuando le llega la cotizacion.

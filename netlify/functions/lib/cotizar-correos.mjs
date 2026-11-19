@@ -47,6 +47,10 @@ export const lineaCargo = (ag) => rolFirma(ag).join("\n");
  * @param {object} d  datos validados
  * @param {object} info  {agente, n, de, repartido, clienteAvisado, fecha (texto)}
  */
+// 19 nov 2026: el cliente ya habia mandado este vehiculo y le llega al mismo agente.
+const REPETIDA_TXT = (info) => "Este cliente ya había enviado una solicitud de este vehículo" +
+  (info.repetidaDe ? " el " + info.repetidaDe : "") + ": te llega a vos de nuevo para que no la atiendan dos personas.";
+
 export function correoAgente(d, info) {
   const ag = info.agente;
   const textoWa = "Hola " + pila(d.nombre) + ", soy " + dosNombres(ag.nombre) + ", " + presentacion(ag) + ". Recibí tu solicitud de cotización para tu vehículo " +
@@ -66,11 +70,12 @@ export function correoAgente(d, info) {
     // Sin botón "Abrir el cotizador" (JC, 5 nov 2026: "quitemos el botón abrir cotizador").
     (waIntl(d.telefono).length >= 11 ? '<p style="margin:0 0 10px;">' + boton(linkWa(d.telefono, textoWa), "WhatsApp a " + pila(d.nombre), "#037D61") + "</p>" : "") +
     p("Solicitud del " + esc(info.fecha) + "." + (info.registrada ? " Quedó anotada en la hoja de registro." : ""), "font-size:12px;color:#6B7681;") +
+    (info.repetida ? p(esc(REPETIDA_TXT(info)), "font-size:12px;color:#6B7681;") : "") +
     "</td></tr>" + PIE
   );
   const texto = ["NUEVA SOLICITUD DE COTIZACIÓN", "",
     ...cliente.map(([k, v]) => k + ": " + v), "", ...veh.map(([k, v]) => k + ": " + v), "",
-    "Solicitud del " + info.fecha + "."].join("\n");
+    "Solicitud del " + info.fecha + ".", ...(info.repetida ? [REPETIDA_TXT(info)] : [])].join("\n");
   // 📝 al inicio (JC, 5 nov 2026): en la bandeja se distingue de la cita (📅) sin leer el asunto.
   return { asunto: "📝 Cotización solicitada · " + vehiculoCorto(d) + " · " + d.nombre, html, texto };
 }
@@ -79,7 +84,7 @@ export function correoAgente(d, info) {
 export function filaRegistro(d, info) {
   return {
     fecha: info.fecha, agente: info.agente.nombre, correoAgente: info.agente.email,
-    turno: info.sinAsignar ? "Menos de ₡4 millones · sin asignar" : info.directo ? "₡" + Math.round((info.topeDirecto || 15000000) / 1e6) + " millones o más · directo" : info.alto ? "₡" + Math.round((info.topeDirecto || 15000000) / 1e6) + " millones o más · por turno" : info.repartido ? info.n + " de " + info.de : "Reparto apagado",
+    turno: info.sinAsignar ? "Menos de ₡4 millones · sin asignar" : info.repetida ? "Repetida · mismo agente" : info.directo ? "₡" + Math.round((info.topeDirecto || 15000000) / 1e6) + " millones o más · directo" : info.alto ? "₡" + Math.round((info.topeDirecto || 15000000) / 1e6) + " millones o más · por turno" : info.repartido ? info.n + " de " + info.de : "Reparto apagado",
     nombre: d.nombre, cedula: d.cedula, telefono: d.telefono, correo: d.correo,
     tipo: TIPOS[d.tipo], vehiculo: d.tipo === "usado" ? d.placa : d.marcaModelo, valor: d.valor,
     uso: d.uso, interes: d.interes,

@@ -447,6 +447,48 @@ console.log('-- alarmas (8 nov 2026) --');
   ok('vigia: Netlify la corre cada hora', /schedule:\s*"@hourly"/.test(fv));
 }
 
+console.log('-- solicitud repetida → mismo agente (19 nov 2026) --');
+{
+  const ver = async () => (await llamar('/cotizar/agente', { accion: 'ver', token: tk('tkUno') })).j.proximos.join();
+  const ultimaFila = () => hoja[hoja.length - 1].fila;
+  enviados.length = 0;
+  const r1 = await llamar('/cotizar/enviar', { ...U, correo: 'astrid1@ejemplo.test', placa: 'REP847' }, '7.7.7.1');
+  const ag1 = enviados[0] && enviados[0].to[0];
+  ok('repetida: la primera sale por turno', r1.st === 200 && !!ag1 && /^\d+ de \d+$/.test(ultimaFila().turno));
+  const antes = await ver();
+  enviados.length = 0;
+  const r2 = await llamar('/cotizar/enviar', { ...U, correo: 'astrid2@ejemplo.test', placa: 'rep-847', telefono: '7000-0001' }, '7.7.7.2');
+  ok('repetida: la misma placa (con guion y minúsculas) le llega al MISMO agente', r2.st === 200 && enviados.length === 1 && enviados[0].to[0] === ag1);
+  ok('repetida: no mueve la vuelta', (await ver()) === antes);
+  ok('repetida: la hoja la anota «Repetida · mismo agente»', ultimaFila().turno === 'Repetida · mismo agente' && ultimaFila().correoAgente === ag1);
+  ok('repetida: el aviso al agente le explica que ya la había mandado', enviados[0].html.includes('ya había enviado una solicitud de este vehículo') && enviados[0].text.includes('para que no la atiendan dos personas'));
+  ok('repetida: el almacenamiento no guarda la placa', [...store.m.entries()].every(([k, v]) => !/847/.test(k + v)));
+  // Otra placa: turno normal.
+  enviados.length = 0;
+  await llamar('/cotizar/enviar', { ...U, correo: 'otro@ejemplo.test', placa: 'OTR111' }, '7.7.7.3');
+  ok('repetida: otra placa va por turno', /^\d+ de \d+$/.test(ultimaFila().turno));
+  // Más de 30 días: se olvida.
+  const k = [...store.m.keys()].find((x) => x.startsWith('cli:') && JSON.parse(store.m.get(x)).email === ag1 && Date.now() - 0 > 0);
+  for (const x of [...store.m.keys()].filter((x) => x.startsWith('cli:'))) {
+    const v = JSON.parse(store.m.get(x)); v.fecha = new Date(reloj - 31 * 86400000).toISOString(); store.m.set(x, JSON.stringify(v));
+  }
+  await llamar('/cotizar/enviar', { ...U, correo: 'astrid3@ejemplo.test', placa: 'REP847' }, '7.7.7.4');
+  ok('repetida: después de 30 días vuelve a ir por turno', !!k && /^\d+ de \d+$/.test(ultimaFila().turno));
+  // Mandan antes las reglas de JC: menos de ₡4M sin asignar y el directo al admin.
+  await llamar('/cotizar/enviar', { ...U, correo: 'astrid4@ejemplo.test', placa: 'REP847', valor: '₡ 3.000.000' }, '7.7.7.5');
+  ok('repetida: la de menos de ₡4 millones sigue sin asignar', ultimaFila().turno === 'Menos de ₡4 millones · sin asignar');
+  enviados.length = 0;
+  await llamar('/cotizar/enviar', { ...U, correo: 'astrid5@ejemplo.test', placa: 'REP847', valor: '₡ 30.000.000' }, '7.7.7.6');
+  ok('repetida: la del directo sigue yendo al admin', enviados[0].to[0] === ADM && ultimaFila().turno.endsWith('· directo'));
+  // Cero kilómetros: misma cédula de quien inscribe + marca y modelo.
+  enviados.length = 0;
+  await llamar('/cotizar/enviar', { ...N, correo: 'nuevo1@ejemplo.test', cedula2: '1 1111 1111', marcaModelo: 'Kia Seltos 2027', valor: '9000000' }, '7.7.7.7');
+  const ag0 = enviados[0].to[0];
+  enviados.length = 0;
+  await llamar('/cotizar/enviar', { ...N, correo: 'nuevo2@ejemplo.test', cedula2: '111111111', marcaModelo: 'KIA SELTOS 2027', valor: '9000000' }, '7.7.7.8');
+  ok('repetida: el cero km con la misma cédula y marca le llega al mismo agente', enviados[0].to[0] === ag0 && ultimaFila().turno === 'Repetida · mismo agente');
+}
+
 console.log('-- la pagina /cotizar/ --');
 const pag = fs.readFileSync(path.join(raiz, 'cotizar/index.html'), 'utf8');
 ok('trae las 3 opciones del interes, palabra por palabra', INTERESES_COT.every((t) => pag.includes(t)));

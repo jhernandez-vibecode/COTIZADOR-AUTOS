@@ -11,10 +11,44 @@
 // lista SDI_ASESORES de js/email-marca.js (la misma de los correos de la consola).
 //
 // Claves del store:  reparto · turno · ficha:<correo> · lim:* y dup:* (limites)
+//                    cli:<huella> (a que agente se le asigno un vehiculo, 19 nov 2026)
 // =====================================================================
 import marca from "../../../js/email-marca.js";
 import { repartoInicial, normCorreo } from "./cotizar-reparto.mjs";
 import { agentesAutorizados } from "./cita-validacion.mjs";
+import { huella } from "./cita-limite.mjs";
+
+// ---------------------------------------------------------------------
+// Solicitud REPETIDA → mismo agente (19 nov 2026). JC: un cliente mando la
+// cotizacion dos veces y le llego una a Christian y otra a Melanie. Se recuerda
+// por CLIENTE_DIAS a que agente se le asigno cada vehiculo: el usado por su
+// placa; el cero km por la cedula de quien inscribe + marca y modelo.
+// Solo se guarda una huella (sha256) y el correo del AGENTE: nada del cliente.
+// ---------------------------------------------------------------------
+export const CLIENTE_DIAS = 30;
+const soloAlfa = (s) => String(s || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+/** La clave que identifica el vehiculo de la solicitud, o "" si no hay con que. */
+export function claveCliente(d) {
+  if (!d) return "";
+  if (d.tipo === "usado") {
+    const p = soloAlfa(d.placa);
+    return p.length >= 4 ? "cli:" + huella("p|" + p) : "";
+  }
+  const ced = String(d.cedula2 || "").replace(/\D/g, ""), mm = soloAlfa(d.marcaModelo);
+  return ced.length >= 9 && mm ? "cli:" + huella("n|" + ced + "|" + mm) : "";
+}
+/** {email, fecha} si ese vehiculo se le asigno a alguien en los ultimos CLIENTE_DIAS; si no, null. */
+export async function clienteReciente(store, d, ahora) {
+  const k = claveCliente(d);
+  if (!k) return null;
+  const r = await store.get(k, { type: "json" });
+  if (!r || !r.email || !r.fecha) return null;
+  return ahora.getTime() - Date.parse(r.fecha) <= CLIENTE_DIAS * 86400000 ? r : null;
+}
+export async function recordarCliente(store, d, email, ahora) {
+  const k = claveCliente(d);
+  if (k && email) await store.setJSON(k, { email: normCorreo(email), fecha: ahora.toISOString() });
+}
 
 const ASESORES = marca.SDI_ASESORES || {};
 
